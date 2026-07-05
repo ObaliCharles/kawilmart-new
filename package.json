@@ -16,7 +16,7 @@
     "clerk": "^0.8.3",
     "cloudinary": "^2.8.0",
     "dotenv": "^17.4.0",
-    "inngest": "^3.44.3",
+    "inngest": "^3.54.2",
     "mongoose": "^8.19.2",
     "next": "^15.5.6",
     "react": "^19.0.0",
