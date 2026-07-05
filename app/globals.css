@@ -1,0 +1,109 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+* {
+    scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: #f8fafc;
+  color: #111827;
+}
+
+@layer base {
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 35%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.2) 65%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: skeleton-shimmer 1.45s ease-in-out infinite;
+}
+
+.pattern-category-sketch {
+  position: relative;
+  isolation: isolate;
+  background-color: #fcfbf7;
+  background-image:
+    radial-gradient(circle at top left, rgba(251, 146, 60, 0.1), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.08), transparent 24%);
+  background-size: auto, auto;
+  background-position: 0 0, 100% 100%;
+}
+
+.pattern-category-sketch-soft {
+  position: relative;
+  isolation: isolate;
+  background-color: #faf8f4;
+  background-image:
+    radial-gradient(circle at 14% 18%, rgba(251, 191, 36, 0.08), transparent 22%),
+    radial-gradient(circle at 88% 84%, rgba(251, 146, 60, 0.06), transparent 20%);
+  background-size: auto, auto;
+  background-position: 0 0, 100% 100%;
+}
+
+.pattern-category-sketch::before,
+.pattern-category-sketch-soft::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('/category-sketch-pattern.svg');
+  background-position: center center;
+  background-repeat: repeat;
+  filter: blur(1.5px);
+}
+
+.pattern-category-sketch::before {
+  background-size: 190px 190px;
+  opacity: 0.34;
+}
+
+.pattern-category-sketch-soft::before {
+  background-size: 170px 170px;
+  opacity: 0.28;
+}
+
+.pattern-category-sketch > *,
+.pattern-category-sketch-soft > * {
+  position: relative;
+  z-index: 1;
+}
