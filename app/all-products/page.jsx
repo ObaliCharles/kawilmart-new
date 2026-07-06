@@ -48,6 +48,12 @@ const ratingOptions = [
 
 const filterCategoryHighlights = marketplaceFilterCategories.slice(0, 8);
 
+const CategoryGlyph = ({ className = "h-4 w-4" }) => (
+  <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+    <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+  </svg>
+);
+
 const normalizeSearchText = (value = "") => (
   value
     .toLowerCase()
@@ -306,11 +312,8 @@ function AllProductsInner() {
 
   const filteredProducts = filterAndSort();
   const sellerReferenceProduct = selectedSeller ? products.find((product) => product.userId === selectedSeller) : null;
-  const sellerFilterLabel = sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
+  const sellerFilterLabel = sellerReferenceProduct?.sellerProfile?.name || sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
-  const heroProduct = filteredProducts[0] || products[0];
-  const heroActivity = heroProduct ? getProductActivitySnapshot(heroProduct) : null;
-
   const resetFilters = () => {
     setSelectedCategory("All");
     setSelectedPriceRange(0);
@@ -469,50 +472,6 @@ function AllProductsInner() {
           )}
         </div>
 
-        {heroProduct ? (
-          <section className="mb-6 grid overflow-hidden rounded-md bg-gradient-to-r from-gray-950 via-gray-900 to-orange-800 text-white lg:grid-cols-[minmax(0,1.1fr)_320px]">
-            <div className="flex min-h-[210px] flex-col justify-center px-5 py-7 sm:px-7 lg:px-9">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-200">
-                {hasActiveSearch ? "Matched marketplace picks" : selectedCategoryMeta?.label || "Fresh marketplace finds"}
-              </p>
-              <h1 className="mt-2 max-w-2xl text-3xl font-extrabold leading-tight sm:text-4xl">
-                {hasActiveSearch ? `Best results for "${deferredSearchQuery.trim()}"` : "Shop fast deals, verified sellers, and fresh arrivals"}
-              </h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">
-                {filteredProducts.length} item{filteredProducts.length !== 1 ? "s" : ""} ready to browse with live price, category, brand, rating, and deal filters.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {conditionOptions.slice(1, 4).map((condition) => (
-                  <button
-                    key={condition.value}
-                    type="button"
-                    onClick={() => setSelectedCondition(condition.value)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                      selectedCondition === condition.value ? "bg-white text-gray-950" : "bg-white/10 text-white hover:bg-white/20"
-                    }`}
-                  >
-                    {condition.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="relative hidden min-h-[210px] items-center justify-center bg-white/10 p-5 sm:flex">
-              <img
-                src={Array.isArray(heroProduct.image) ? heroProduct.image[0] : heroProduct.image}
-                alt={heroProduct.name}
-                className="h-48 w-full object-contain drop-shadow-2xl"
-              />
-              <div className="absolute bottom-4 left-4 right-4 rounded-md bg-white p-3 text-gray-950 shadow-xl">
-                <p className="line-clamp-1 text-sm font-bold">{heroProduct.name}</p>
-                <p className="mt-1 text-xs text-gray-500">
-                  {heroActivity?.hasDiscount ? `${heroActivity.priceDropPercent}% off` : heroActivity?.freshnessLabel || "Featured item"}
-                  {heroActivity?.displayRating ? ` · ${heroActivity.displayRating}/5` : ""}
-                </p>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
         <section className="mb-6 overflow-x-auto">
           <div className="flex min-w-max gap-2 pb-1">
             <button
@@ -535,7 +494,7 @@ function AllProductsInner() {
                     selectedCategory === category ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
                   }`}
                 >
-                  <span>{meta.icon}</span>
+                  <span><CategoryGlyph /></span>
                   <span>{meta.label}</span>
                 </button>
               );

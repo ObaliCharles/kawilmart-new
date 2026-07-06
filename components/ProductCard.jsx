@@ -19,6 +19,7 @@ const ProductCard = ({ product }) => {
     const { addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike } = useAppContext();
     const productHref = `/product/${product._id}`;
     const [liking, setLiking] = useState(false);
+    const [liked, setLiked] = useState(Boolean(product.likedByCurrentUser));
     const [isAdding, setIsAdding] = useState(false);
     const [addedFeedback, setAddedFeedback] = useState(false);
     const feedbackTimeoutRef = useRef(null);
@@ -34,8 +35,15 @@ const ProductCard = ({ product }) => {
         e.stopPropagation();
         if (liking) return;
 
+        const nextLiked = !liked;
+        setLiked(nextLiked);
         setLiking(true);
-        await toggleProductLike(product._id);
+        const result = await toggleProductLike(product._id);
+        if (!result?.success) {
+            setLiked(!nextLiked);
+        } else if (typeof result.product?.likedByCurrentUser === "boolean") {
+            setLiked(result.product.likedByCurrentUser);
+        }
         setLiking(false);
     };
 
@@ -66,6 +74,10 @@ const ProductCard = ({ product }) => {
             navigate('/cart');
         }
     };
+
+    useEffect(() => {
+        setLiked(Boolean(product.likedByCurrentUser));
+    }, [product.likedByCurrentUser]);
 
     useEffect(() => {
         return () => {
@@ -103,13 +115,15 @@ const ProductCard = ({ product }) => {
                 <button
                   onClick={handleLikeClick}
                   className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border transition ${
-                    product.likedByCurrentUser
-                      ? "border-orange-200 bg-orange-50"
+                    liked
+                      ? "border-red-100 bg-red-50 text-red-600"
                       : "border-gray-200 bg-white hover:border-orange-200"
                   } ${liking ? "opacity-60" : ""}`}
-                  aria-label={product.likedByCurrentUser ? "Unlike product" : "Like product"}
+                  aria-label={liked ? "Unlike product" : "Like product"}
                 >
-                    <Image className="h-4 w-4" src={assets.heart_icon} alt="" />
+                    <svg className="h-4 w-4" aria-hidden="true" viewBox="0 0 24 24" fill={liked ? "currentColor" : "none"}>
+                        <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
+                    </svg>
                 </button>
             </div>
 

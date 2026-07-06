@@ -232,6 +232,7 @@ const Navbar = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
+    closeDropdown();
     if (searchQuery.trim()) {
       navigate(`/all-products?search=${encodeURIComponent(searchQuery)}`);
       setSearchQuery('');
@@ -427,6 +428,7 @@ const Navbar = () => {
                 type="text"
                 placeholder="Find product"
                 value={searchQuery}
+                onFocus={closeDropdown}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="min-w-0 flex-1 py-3 text-sm outline-none placeholder:text-gray-400"
               />
@@ -538,8 +540,8 @@ const Navbar = () => {
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 py-2 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] md:hidden">
-        <div className="mx-auto grid max-w-sm grid-cols-5 text-[11px] font-medium text-gray-500">
+      <nav className="fixed inset-x-0 bottom-0 z-40 bg-white/95 px-4 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.10)] backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-sm grid-cols-5 rounded-2xl border border-gray-100 bg-white px-1 py-1.5 text-[11px] font-semibold text-gray-500 shadow-sm">
           {[
             { label: "Home", href: "/", icon: <HomeIcon /> },
             { label: "Categories", href: "/all-products", icon: <BoxIcon /> },
@@ -551,7 +553,7 @@ const Navbar = () => {
               key={item.label}
               type="button"
               onClick={() => item.href ? navigate(item.href) : openSignIn()}
-              className={`flex flex-col items-center gap-1 ${pathname === item.href ? "text-orange-600" : "text-gray-500"}`}
+              className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl transition ${pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href?.split("?")[0] || " ")) ? "bg-orange-50 text-orange-600" : "text-gray-500"}`}
             >
               {item.icon}
               {item.label}

@@ -84,7 +84,7 @@ const HomeOfferCollections = () => {
           ? `Currently listing ${sellerCategories.join(", ")}`
           : "Explore this seller's active offers.",
         badge: `${sortedSellerProducts.length} product${sortedSellerProducts.length === 1 ? "" : "s"}`,
-        href: `/all-products?seller=${encodeURIComponent(sellerId)}`,
+        href: `/store/${encodeURIComponent(sellerId)}`,
         footer: `Best price ${formatCurrency(bestOffer)}`,
       };
     })

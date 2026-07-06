@@ -362,9 +362,12 @@ const Product = () => {
                         <button
                           type="button"
                           onClick={handleLikeClick}
-                          className="w-fit text-sm font-semibold text-orange-600"
+                          className={`inline-flex w-fit items-center gap-2 text-sm font-semibold ${productData.likedByCurrentUser ? "text-red-600" : "text-orange-600"}`}
                         >
-                          Heart Add to wishlist
+                          <svg className="h-4 w-4" aria-hidden="true" viewBox="0 0 24 24" fill={productData.likedByCurrentUser ? "currentColor" : "none"}>
+                            <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
+                          </svg>
+                          {productData.likedByCurrentUser ? "Saved to wishlist" : "Add to wishlist"}
                         </button>
                     </div>
                     <div className="mt-5 space-y-3 rounded-xl border border-orange-100 bg-orange-50 p-4 text-[13px] text-gray-700">
