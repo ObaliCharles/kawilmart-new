@@ -8,7 +8,11 @@ import { useAppContext } from "@/context/AppContext";
 
 const Banner = ({ banner = defaultSiteContent.promoBanner }) => {
   const { navigate, prefetchRoute } = useAppContext();
-  const ctaHref = banner.productId ? `/product/${banner.productId}` : (banner.href || "/all-products");
+  const ctaHref = banner.linkType === "category" && banner.category
+    ? `/all-products?category=${encodeURIComponent(banner.category)}`
+    : banner.linkType === "store" && banner.storeId
+      ? `/store/${encodeURIComponent(banner.storeId)}`
+      : banner.productId ? `/product/${banner.productId}` : (banner.href || "/all-products");
 
   return (
     <section className="my-16 overflow-hidden rounded-[2rem] bg-[#E6E9F2]">

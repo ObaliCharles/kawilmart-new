@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useAppContext } from '@/context/AppContext';
 import { defaultSiteContent, resolveSiteContent } from '@/lib/defaultSiteContent';
+import { homeCategoryValues, getCategoryMeta } from '@/lib/marketplaceCategories';
 import { PromotionsPageSkeleton } from '@/components/dashboard/DashboardSkeletons';
 
 const emptyHeroForm = {
@@ -13,6 +14,9 @@ const emptyHeroForm = {
     offer: '',
     primaryButtonText: 'Shop Now',
     secondaryButtonText: 'Explore Deals',
+    linkType: 'category',
+    category: '',
+    storeId: '',
     productId: '',
     primaryHref: '',
     secondaryHref: '/all-products?filter=flash',
@@ -24,6 +28,9 @@ const emptyFeaturedForm = {
     title: '',
     description: '',
     buttonText: 'Buy now',
+    linkType: 'category',
+    category: '',
+    storeId: '',
     productId: '',
     href: '',
     imageUrl: '',
@@ -34,10 +41,164 @@ const emptyPromoForm = {
     title: '',
     description: '',
     buttonText: 'Get offer',
+    linkType: 'category',
+    category: '',
+    storeId: '',
     productId: '',
     href: '/all-products?filter=flash',
     imageUrl: '',
     imageFile: null,
+};
+
+const linkTypeOptions = [
+    { value: 'category', label: 'Category' },
+    { value: 'store', label: 'Store' },
+    { value: 'product', label: 'Product' },
+    { value: 'custom', label: 'Custom URL' },
+];
+
+const getTargetHref = (form, hrefKey = 'href') => {
+    if (form.linkType === 'category' && form.category) {
+        return `/all-products?category=${encodeURIComponent(form.category)}`;
+    }
+
+    if (form.linkType === 'store' && form.storeId) {
+        return `/store/${encodeURIComponent(form.storeId)}`;
+    }
+
+    if (form.linkType === 'product') {
+        return '';
+    }
+
+    return form[hrefKey] || '';
+};
+
+const inferLinkType = (item, hrefKey = 'href') => {
+    if (item.linkType) return item.linkType;
+    if (item.productId) return 'product';
+    const href = item[hrefKey] || '';
+    if (href.startsWith('/store/')) return 'store';
+    if (href.includes('category=')) return 'category';
+    return 'custom';
+};
+
+const decodeCategoryFromHref = (href = '') => {
+    try {
+        const search = href.includes('?') ? href.slice(href.indexOf('?')) : '';
+        return new URLSearchParams(search).get('category') || '';
+    } catch {
+        return '';
+    }
+};
+
+const decodeStoreFromHref = (href = '') => {
+    if (!href.startsWith('/store/')) return '';
+    return decodeURIComponent(href.replace('/store/', '').split('?')[0] || '');
+};
+
+const TargetSelector = ({ label = 'Click target', form, setForm, hrefKey = 'href', products, stores }) => {
+    const linkType = form.linkType || 'custom';
+
+    const setLinkType = (nextType) => {
+        setForm((prev) => ({
+            ...prev,
+            linkType: nextType,
+            productId: nextType === 'product' ? prev.productId : '',
+            category: nextType === 'category' ? prev.category : '',
+            storeId: nextType === 'store' ? prev.storeId : '',
+            [hrefKey]: nextType === 'custom' ? prev[hrefKey] : getTargetHref({ ...prev, linkType: nextType }, hrefKey),
+        }));
+    };
+
+    return (
+        <div className="space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+            <div>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">{label}</label>
+                <select
+                    value={linkType}
+                    onChange={(e) => setLinkType(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+                >
+                    {linkTypeOptions.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                </select>
+            </div>
+
+            {linkType === 'category' ? (
+                <select
+                    value={form.category}
+                    onChange={(e) => setForm((prev) => ({
+                        ...prev,
+                        category: e.target.value,
+                        productId: '',
+                        storeId: '',
+                        [hrefKey]: e.target.value ? `/all-products?category=${encodeURIComponent(e.target.value)}` : '',
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+                >
+                    <option value="">Select a category</option>
+                    {homeCategoryValues.map((category) => (
+                        <option key={category} value={category}>{getCategoryMeta(category).label}</option>
+                    ))}
+                </select>
+            ) : null}
+
+            {linkType === 'store' ? (
+                <select
+                    value={form.storeId}
+                    onChange={(e) => setForm((prev) => ({
+                        ...prev,
+                        storeId: e.target.value,
+                        productId: '',
+                        category: '',
+                        [hrefKey]: e.target.value ? `/store/${encodeURIComponent(e.target.value)}` : '',
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+                >
+                    <option value="">Select a store</option>
+                    {stores.map((store) => (
+                        <option key={store.id} value={store.id}>{store.name}</option>
+                    ))}
+                </select>
+            ) : null}
+
+            {linkType === 'product' ? (
+                <select
+                    value={form.productId}
+                    onChange={(e) => setForm((prev) => ({
+                        ...prev,
+                        productId: e.target.value,
+                        category: '',
+                        storeId: '',
+                        [hrefKey]: '',
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+                >
+                    <option value="">Select a product</option>
+                    {products.map((product) => (
+                        <option key={product._id} value={product._id}>{product.name}</option>
+                    ))}
+                </select>
+            ) : null}
+
+            {linkType === 'custom' ? (
+                <input
+                    type="text"
+                    placeholder="Custom URL"
+                    value={form[hrefKey]}
+                    onChange={(e) => setForm((prev) => ({
+                        ...prev,
+                        productId: '',
+                        category: '',
+                        storeId: '',
+                        [hrefKey]: e.target.value,
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-white"
+                />
+            ) : null}
+        </div>
+    );
 };
 
 const toDateTimeLocal = (value) => {
@@ -71,6 +232,23 @@ export default function AdminPromotions() {
     });
     const [newsletterForm, setNewsletterForm] = useState(defaultSiteContent.newsletter);
     const [savingContent, setSavingContent] = useState(false);
+    const stores = useMemo(() => {
+        const storeMap = new Map();
+
+        products.forEach((product) => {
+            const id = product.sellerProfile?.id || product.userId;
+            if (!id || storeMap.has(id)) {
+                return;
+            }
+
+            storeMap.set(id, {
+                id,
+                name: product.sellerProfile?.name || product.sellerName || `Store ${id.slice(-6)}`,
+            });
+        });
+
+        return Array.from(storeMap.values()).sort((left, right) => left.name.localeCompare(right.name));
+    }, [products]);
 
     const applySiteContent = (content) => {
         const resolved = resolveSiteContent(content);
@@ -122,6 +300,27 @@ export default function AdminPromotions() {
     const productName = (productId) => {
         const product = products.find((item) => item._id === productId);
         return product?.name || 'No product linked';
+    };
+
+    const storeName = (storeId) => {
+        const store = stores.find((item) => item.id === storeId);
+        return store?.name || 'No store linked';
+    };
+
+    const targetLabel = (item, hrefKey = 'href') => {
+        if (item.linkType === 'category' && item.category) {
+            return `Category: ${getCategoryMeta(item.category).label}`;
+        }
+
+        if (item.linkType === 'store' && item.storeId) {
+            return `Store: ${storeName(item.storeId)}`;
+        }
+
+        if (item.productId) {
+            return `Product: ${productName(item.productId)}`;
+        }
+
+        return item[hrefKey] || 'None';
     };
 
     const updatePromotion = async () => {

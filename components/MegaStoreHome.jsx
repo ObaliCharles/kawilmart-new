@@ -733,6 +733,14 @@ const RecommendedCard = ({ product, navigate, prefetchRoute, formatCurrency }) =
 };
 
 const getContentHref = (item, fallback = "/all-products") => {
+  if (item?.linkType === "category" && item.category) {
+    return `/all-products?category=${encodeURIComponent(item.category)}`;
+  }
+
+  if (item?.linkType === "store" && item.storeId) {
+    return `/store/${encodeURIComponent(item.storeId)}`;
+  }
+
   if (item?.productId) {
     return `/product/${item.productId}`;
   }

@@ -23,7 +23,11 @@ const FeaturedProduct = ({ cards = defaultSiteContent.featuredCards }) => {
 
       <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {featuredCards.map((card, index) => {
-          const ctaHref = card.productId ? `/product/${card.productId}` : (card.href || "/all-products");
+          const ctaHref = card.linkType === "category" && card.category
+            ? `/all-products?category=${encodeURIComponent(card.category)}`
+            : card.linkType === "store" && card.storeId
+              ? `/store/${encodeURIComponent(card.storeId)}`
+              : card.productId ? `/product/${card.productId}` : (card.href || "/all-products");
 
           return (
             <div key={card._id || index} className="group relative isolate min-h-[360px] overflow-hidden rounded-[2rem]">
