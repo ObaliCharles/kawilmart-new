@@ -46,6 +46,35 @@ const MenuIcon = () => (
   </svg>
 );
 
+const AccountMenuIcon = ({ type, className = "h-5 w-5" }) => {
+  const paths = {
+    profile: "M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z",
+    address: "M12 21s7-4.4 7-11a7 7 0 1 0-14 0c0 6.6 7 11 7 11Zm0-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
+    payment: "M4 7h16v10H4V7Zm0 3h16M7 15h3",
+    admin: "M12 3 19 6v5c0 4.4-2.9 8.4-7 10-4.1-1.6-7-5.6-7-10V6l7-3Zm0 6v4m0 3h.01",
+    seller: "M5 8h14l-1 11H6L5 8Zm2-4h10l2 4H5l2-4Zm2 8h.01M15 12h.01",
+    vendor: "M6 3h12v18H6V3Zm3 4h6m-6 4h6m-6 4h3",
+    orders: "M6 8h12l-1 13H7L6 8Zm3 0a3 3 0 0 1 6 0",
+    track: "M4 7h10v9H4V7Zm10 3h3l3 3v3h-6v-6ZM7 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm10 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z",
+    delivery: "M4 7 12 3l8 4-8 4-8-4Zm0 0v10l8 4 8-4V7m-8 4v10",
+    returns: "M4 7v5h5M20 17v-5h-5M6.4 9A7 7 0 0 1 18 7.8M17.6 15A7 7 0 0 1 6 16.2",
+    wishlist: "M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z",
+    help: "M12 18h.01M9.2 9a3 3 0 1 1 4.5 2.6c-1 .6-1.7 1.2-1.7 2.4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
+    chat: "M4 5h16v11H8l-4 4V5Zm5 5h.01M12 10h.01M15 10h.01",
+    bell: "M12 5a4 4 0 0 0-4 4v2.9c0 .5-.2 1-.5 1.4L6 15h12l-1.5-1.7c-.3-.4-.5-.9-.5-1.4V9a4 4 0 0 0-4-4Zm0 14a2.5 2.5 0 0 0 2.4-2H9.6A2.5 2.5 0 0 0 12 19Z",
+    globe: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 0 1 0 18m0-18a14 14 0 0 0 0 18",
+    settings: "M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm0-12v2m0 13v2m8.5-8.5h-2m-13 0h-2m14.5-6.5-1.4 1.4M6.9 17.1l-1.4 1.4m0-13 1.4 1.4m10.2 10.2 1.4 1.4",
+    account: "M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z",
+    plus: "M12 5v14M5 12h14",
+  };
+
+  return (
+    <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d={paths[type] || paths.profile} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+};
+
 const SearchIcon = () => (
   <svg className="h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="m21 21-4.3-4.3m1.3-5.2a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z" />
@@ -191,6 +220,31 @@ const NavAction = ({ children, label, onClick, badge }) => (
   </button>
 );
 
+const AccountMenuSection = ({ title, items, onNavigate }) => (
+  <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <h2 className="border-b border-gray-100 px-4 py-3 text-sm font-bold text-gray-600">{title}</h2>
+    <div className="divide-y divide-gray-100">
+      {items.map((item) => (
+        <button
+          key={item.label}
+          type="button"
+          onClick={() => onNavigate(item.href)}
+          className="flex w-full items-center gap-4 px-4 py-4 text-left"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center text-gray-950">
+            <AccountMenuIcon type={item.icon} className="h-6 w-6" />
+          </span>
+          <span className="min-w-0 flex-1 text-base font-semibold text-gray-950">{item.label}</span>
+          {item.badge ? (
+            <span className="rounded-lg border border-orange-200 px-3 py-1 text-sm font-bold text-orange-600">{item.badge}</span>
+          ) : null}
+          <ChevronRight />
+        </button>
+      ))}
+    </div>
+  </section>
+);
+
 const Navbar = () => {
   const appContext = useAppContext();
   if (!appContext) {
@@ -211,13 +265,14 @@ const Navbar = () => {
   } = appContext;
   const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded: isAuthLoaded } = useAuth();
-  const { openSignIn } = useClerk();
+  const { openSignIn, openUserProfile } = useClerk();
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDesktopViewport, setIsDesktopViewport] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [activeCategory, setActiveCategory] = useState(homeCategoryValues[0]);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isMobileAccountOpen, setIsMobileAccountOpen] = useState(false);
   const mobileSearchRef = useRef(null);
   const mobileSearchInputRef = useRef(null);
   const clerkReady = isUserLoaded && isAuthLoaded;
@@ -252,13 +307,26 @@ const Navbar = () => {
   const goTo = (href) => {
     closeDropdown();
     setIsMobileSearchOpen(false);
+    setIsMobileAccountOpen(false);
     navigate(href);
   };
 
   const openMobileSearch = () => {
     setIsMobileSearchOpen(true);
+    setIsMobileAccountOpen(false);
     closeDropdown();
     window.setTimeout(() => mobileSearchInputRef.current?.focus(), 80);
+  };
+
+  const openMobileAccount = () => {
+    if (!user) {
+      openSignIn();
+      return;
+    }
+
+    closeDropdown();
+    setIsMobileSearchOpen(false);
+    setIsMobileAccountOpen(true);
   };
 
   useEffect(() => {
@@ -266,7 +334,17 @@ const Navbar = () => {
     const params = new URLSearchParams(window.location.search);
     setSearchQuery(params.get('search') || '');
     setIsMobileSearchOpen(false);
+    setIsMobileAccountOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    document.body.style.overflow = isMobileAccountOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileAccountOpen]);
 
   useEffect(() => {
     if (!isMobileSearchOpen || typeof window === 'undefined') return undefined;
@@ -352,8 +430,106 @@ const Navbar = () => {
     </div>
   );
 
+  const accountSections = [
+    {
+      title: "Account & Management",
+      items: [
+        { label: "My Profile", href: "profile", icon: "profile" },
+        { label: "Address Book", href: "/add-address", icon: "address" },
+        { label: "My Payment Methods", href: "/cart", icon: "payment" },
+        showAdmin ? { label: "Admin Dashboard", href: "/admin", icon: "admin", badge: "Admin" } : null,
+        showSeller ? { label: "Seller Dashboard", href: "/seller", icon: "seller", badge: "Seller" } : null,
+        { label: "Vendor Center", href: "/seller", icon: "vendor", badge: "Vendor" },
+      ].filter(Boolean),
+    },
+    {
+      title: "Orders & Services",
+      items: [
+        { label: "My Orders", href: "/my-orders", icon: "orders" },
+        { label: "Track Order", href: "/my-orders", icon: "track" },
+        showRider ? { label: "Deliveries", href: "/dashboard/rider", icon: "delivery" } : { label: "Deliveries", href: "/my-orders", icon: "delivery" },
+        { label: "Returns & Refunds", href: "/legal#terms", icon: "returns" },
+        { label: "Wishlist", href: "/all-products", icon: "wishlist" },
+      ],
+    },
+    {
+      title: "Support & More",
+      items: [
+        { label: "Help Center", href: "/about", icon: "help" },
+        { label: "Become a Vendor", href: "/seller", icon: "seller" },
+        { label: "Chat with Us", href: "/inbox?tab=support", icon: "chat" },
+        { label: "Notifications", href: "/inbox", icon: "bell" },
+        { label: "Language & Currency", href: "/about", icon: "globe" },
+      ],
+    },
+  ];
+
+  const handleAccountNavigate = (href) => {
+    if (href === "profile") {
+      setIsMobileAccountOpen(false);
+      openUserProfile?.();
+      return;
+    }
+
+    goTo(href);
+  };
+
   return (
     <>
+      {isMobileAccountOpen && user ? (
+        <div className="fixed inset-x-0 top-0 bottom-[4.75rem] z-50 overflow-y-auto bg-white md:hidden">
+          <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-5 pb-4 pt-10 backdrop-blur">
+            <div className="flex items-center justify-between">
+              <button type="button" onClick={() => setIsMobileAccountOpen(false)} aria-label="Close account menu" className="flex h-10 w-10 items-center justify-center rounded-full text-gray-950">
+                <svg className="h-7 w-7" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <h1 className="text-xl font-extrabold text-gray-950">My Account</h1>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => handleAccountNavigate("/inbox")} aria-label="Notifications" className="relative flex h-10 w-10 items-center justify-center rounded-full text-gray-950">
+                  <AccountMenuIcon type="bell" className="h-7 w-7" />
+                  {unreadNotificationsCount > 0 ? (
+                    <span className="absolute right-0 top-0 inline-flex min-w-[1.35rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-1 text-[11px] font-extrabold leading-none text-white">
+                      {formatBadgeCount(unreadNotificationsCount)}
+                    </span>
+                  ) : null}
+                </button>
+                <button type="button" onClick={() => openUserProfile?.()} aria-label="Account settings" className="flex h-10 w-10 items-center justify-center rounded-full text-gray-950">
+                  <AccountMenuIcon type="settings" className="h-7 w-7" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-4 pb-6 pt-5">
+            <section className="flex items-center gap-4">
+              <Image
+                src={user.imageUrl || assets.user_icon}
+                alt={user.fullName || "Account avatar"}
+                width={72}
+                height={72}
+                className="h-[72px] w-[72px] rounded-full object-cover ring-1 ring-gray-200"
+              />
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-2xl font-extrabold text-gray-950">{user.fullName || user.username || "KawilMart shopper"}</h2>
+                <p className="mt-1 truncate text-base font-medium text-gray-600">{user.primaryEmailAddress?.emailAddress || "No email added"}</p>
+                <p className="mt-2 inline-flex items-center gap-2 text-base font-semibold text-gray-600"><UgandaFlag className="h-6 w-6" />Uganda, UGX</p>
+              </div>
+              <button type="button" onClick={() => openUserProfile?.()} className="shrink-0 rounded-lg border border-orange-300 px-4 py-3 text-sm font-extrabold text-orange-600">
+                View Profile
+              </button>
+            </section>
+
+            <div className="mt-6 space-y-5">
+              {accountSections.map((section) => (
+                <AccountMenuSection key={section.title} title={section.title} items={section.items} onNavigate={handleAccountNavigate} />
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white">
         <div className="hidden border-b border-gray-100 text-xs text-gray-600 lg:block">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
@@ -595,11 +771,15 @@ const Navbar = () => {
               <span>Account</span>
             </div>
           ) : user ? (
-            <div className="relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-gray-500">
-              {renderUserButton({
-                includeMobileLinks: true,
-                badgeClassName: "pointer-events-none absolute right-0 top-0 z-20 inline-flex min-w-[1.05rem] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white shadow-sm",
-              })}
+            <div className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl transition ${isMobileAccountOpen ? "text-orange-600" : "text-gray-500"}`}>
+              <button type="button" onClick={openMobileAccount} aria-label="Open account menu" className="relative flex flex-col items-center gap-1">
+                <AccountMenuIcon type="account" />
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute -right-2 -top-2 inline-flex min-w-[1.05rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
+                    {formatBadgeCount(unreadNotificationsCount)}
+                  </span>
+                )}
+              </button>
               <span>Account</span>
             </div>
           ) : (

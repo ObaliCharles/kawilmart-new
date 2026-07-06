@@ -188,6 +188,62 @@ const SectionHeader = ({ title, onViewAll }) => (
   </div>
 );
 
+const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className = "", imageClassName = "", priority = false }) => {
+  const safeSlides = slides.filter((slide) => slide?.imageUrl);
+
+  if (!safeSlides.length) {
+    return null;
+  }
+
+  return (
+    <section className={`relative overflow-hidden ${className}`}>
+      <div
+        className="flex h-full transition-transform duration-700 ease-in-out"
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+      >
+        {safeSlides.map((slide, index) => {
+          const href = getContentHref(slide, "/all-products");
+
+          return (
+            <button
+              key={slide._id || index}
+              type="button"
+              onClick={() => navigate(href)}
+              className="relative min-w-full overflow-hidden bg-gray-950 text-left"
+            >
+              <ContentImage
+                src={slide.imageUrl}
+                alt={slide.title || `KawilMart offer ${index + 1}`}
+                width={1200}
+                height={520}
+                priority={priority && index === 0}
+                className={`h-full w-full object-cover ${imageClassName}`}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      {safeSlides.length > 1 ? (
+        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/20 px-2.5 py-1.5 backdrop-blur-sm">
+          {safeSlides.map((slide, index) => (
+            <button
+              key={slide._id || index}
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelect(index);
+              }}
+              className={`h-2 rounded-full transition-all ${currentIndex === index ? "w-5 bg-white" : "w-2 bg-white/55"}`}
+              aria-label={`Show offer ${index + 1}`}
+            />
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+};
+
 const productForCategory = (products, category) => (
   products.find((product) => categoryMatchesSelection(product.category, category)) || products[0]
 );
@@ -339,7 +395,9 @@ const MobileProductCard = ({ product, navigate, prefetchRoute, formatCurrency, t
 };
 
 const MobileHome = ({
-  activeHero,
+  heroSlides,
+  activeHeroIndex,
+  setActiveHeroIndex,
   activePromo,
   dealProducts,
   recommendedProducts,
@@ -355,33 +413,20 @@ const MobileHome = ({
   const topStoreProducts = uniqueById(sortedProducts).filter((product) => product.userId).slice(0, 8);
   const promoProduct = sortedProducts[1] || heroFallback;
   const secondPromoProduct = sortedProducts[2] || heroFallback;
-  const heroHref = getContentHref(activeHero, "/all-products?filter=flash");
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
+  const mobileHeroSlides = heroSlides.length ? heroSlides : [{ ...defaultSiteContent.heroSlides[0], imageUrl: getImage(heroFallback) }];
 
   return (
     <main className="bg-white px-4 pb-8 pt-4 md:hidden">
-      <section className="relative overflow-hidden rounded-lg bg-[#fff0df] px-6 py-6 shadow-sm">
-        <div className="relative z-10 max-w-[58%]">
-          <span className="rounded-md bg-orange-600 px-2 py-1 text-[10px] font-extrabold text-white">SUPER DEAL</span>
-          <h1 className="mt-4 text-[24px] font-extrabold leading-[28px] text-gray-950">{activeHero.title || "New Trending Summer Fashion"}</h1>
-          <p className="mt-2 text-[12px] font-medium text-gray-800">{activeHero.offer || "Hot marketplace discounts ending soon"}</p>
-          <span className="mt-4 inline-flex rounded-md bg-rose-500 px-3 py-1.5 text-sm font-extrabold text-white">-{dealOfDay ? Math.max(getProductActivitySnapshot(dealOfDay).priceDropPercent, 20) : 20}%</span>
-          <button type="button" onClick={() => navigate(heroHref)} className="mt-4 block rounded-md bg-orange-600 px-4 py-2.5 text-[12px] font-bold text-white">
-            {activeHero.primaryButtonText || "Get Deals Now"} -&gt;
-          </button>
-          <button type="button" onClick={() => navigate(activeHero.secondaryHref || "/all-products?filter=flash")} className="mt-4 text-[12px] font-bold text-orange-600">
-            {activeHero.secondaryButtonText || "Explore Deals"} -&gt;
-          </button>
-        </div>
-        <div className="absolute bottom-4 right-0 top-8 flex w-[54%] items-end justify-center">
-          <ContentImage src={activeHero.imageUrl || getImage(heroFallback)} alt={activeHero.title} width={260} height={260} priority className="h-full w-full object-contain drop-shadow-xl" />
-        </div>
-        <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
-          <span className="h-2 w-2 rounded-full bg-orange-600" />
-          <span className="h-2 w-2 rounded-full bg-orange-200" />
-          <span className="h-2 w-2 rounded-full bg-orange-200" />
-        </div>
-      </section>
+      <HeroImageSlider
+        slides={mobileHeroSlides}
+        currentIndex={activeHeroIndex % Math.max(mobileHeroSlides.length, 1)}
+        onSelect={setActiveHeroIndex}
+        navigate={navigate}
+        priority
+        className="aspect-[2.12/1] rounded-lg bg-gray-950 shadow-sm"
+        imageClassName="object-cover"
+      />
 
       <section className="mt-6 grid grid-cols-4 gap-x-3 gap-y-5">
         {mobileFeaturedCategories.map(([label, category]) => (
@@ -795,7 +840,9 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   return (
     <>
     <MobileHome
-      activeHero={activeHero}
+      heroSlides={heroSlides}
+      activeHeroIndex={activeHeroIndex}
+      setActiveHeroIndex={setActiveHeroIndex}
       activePromo={activePromo}
       dealProducts={dealProducts}
       recommendedProducts={recommendedProducts}
@@ -835,19 +882,15 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             </div>
           </aside>
 
-          <section className="grid min-h-[270px] overflow-hidden rounded-md bg-gradient-to-r from-orange-50 to-orange-100 md:grid-cols-[0.9fr_1.1fr]">
-            <div className="flex flex-col justify-center p-6 lg:p-8">
-              {activeHero.offer ? <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-orange-600">{activeHero.offer}</p> : null}
-              <h1 className="max-w-sm text-[28px] font-extrabold leading-tight text-gray-950">{activeHero.title}</h1>
-              <p className="mt-3 max-w-xs text-[13px] leading-5 text-gray-600">Discover current marketplace offers, fresh uploads, and seller-backed deals.</p>
-              <button type="button" onClick={() => navigate(getContentHref(activeHero, "/all-products"))} className="mt-5 w-fit rounded-md border border-orange-600 px-4 py-2 text-xs font-semibold text-orange-600 transition hover:bg-orange-600 hover:text-white">
-                {activeHero.primaryButtonText || "Learn more"} -&gt;
-              </button>
-            </div>
-            <div className="flex items-center justify-center p-6">
-              <Image src={activeHero.imageUrl || assets.header_macbook_image} alt={activeHero.title || "Homepage offer"} width={620} height={380} className="h-full max-h-[230px] w-full object-contain transition-opacity duration-300" priority />
-            </div>
-          </section>
+          <HeroImageSlider
+            slides={heroSlides.length ? heroSlides : [activeHero]}
+            currentIndex={activeHeroIndex % Math.max(heroSlides.length || 1, 1)}
+            onSelect={setActiveHeroIndex}
+            navigate={navigate}
+            priority
+            className="min-h-[270px] rounded-md bg-gray-950"
+            imageClassName="object-cover"
+          />
 
           <aside className="relative overflow-hidden rounded-md bg-gray-950 p-5 text-white">
             <div className="relative z-10 max-w-[190px]">
