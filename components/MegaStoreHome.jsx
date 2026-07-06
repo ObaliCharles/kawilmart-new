@@ -404,6 +404,7 @@ const MobileHome = ({
   activeHeroIndex,
   setActiveHeroIndex,
   activePromo,
+  marketingBanners,
   dealProducts,
   recommendedProducts,
   sortedProducts,
@@ -520,6 +521,20 @@ const MobileHome = ({
         </div>
       </section>
 
+      {marketingBanners?.length ? (
+        <section className="mt-6 grid gap-2">
+          {marketingBanners.slice(0, 3).map((item, index) => (
+            <MarketingBannerTile
+              key={item._id || `mobile-market-banner-${index}`}
+              item={item}
+              navigate={navigate}
+              prefetchRoute={prefetchRoute}
+              className="aspect-[2.35/1]"
+            />
+          ))}
+        </section>
+      ) : null}
+
       {dealOfDay ? (
         <section onClick={() => navigate(`/product/${dealOfDay._id}`)} className="relative mt-6 cursor-pointer overflow-hidden rounded-lg bg-[#101923] px-6 py-7 text-white shadow-sm">
           <div className="relative z-10 max-w-[58%]">
@@ -633,6 +648,60 @@ const DealCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
   );
 };
 
+const MarketingBannerTile = ({ item, navigate, prefetchRoute, className = "", priority = false }) => {
+  const href = getContentHref(item, item?.href || "/all-products");
+
+  if (!item?.imageUrl) {
+    return null;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(href)}
+      onMouseEnter={() => prefetchRoute(href)}
+      onFocus={() => prefetchRoute(href)}
+      className={`group relative block overflow-hidden rounded-lg bg-gray-100 text-left shadow-sm ring-1 ring-gray-100 ${className}`}
+    >
+      <ContentImage
+        src={item.imageUrl}
+        alt={item.title || "Marketplace promotion"}
+        width={900}
+        height={420}
+        priority={priority}
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+      />
+    </button>
+  );
+};
+
+const MarketingBannerGrid = ({ items, navigate, prefetchRoute, className = "" }) => {
+  const banners = uniqueById(items.filter((item) => item?.imageUrl)).slice(0, 5);
+
+  if (!banners.length) {
+    return null;
+  }
+
+  return (
+    <section className={`grid gap-2.5 md:grid-cols-2 xl:grid-cols-6 ${className}`}>
+      {banners.map((item, index) => (
+        <MarketingBannerTile
+          key={item._id || `market-banner-${index}`}
+          item={item}
+          navigate={navigate}
+          prefetchRoute={prefetchRoute}
+          priority={index === 0}
+          className={
+            index < 2
+              ? "aspect-[2.45/1] xl:col-span-3"
+              : "aspect-[1.85/1] md:aspect-[2.1/1] xl:col-span-2"
+          }
+        />
+      ))}
+    </section>
+  );
+};
+
 const RecommendedCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
   const activity = getProductActivitySnapshot(product);
   const activityLabel = activity.hasRating
@@ -738,6 +807,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const recommendedProducts = sortedProducts;
   const heroSlides = resolvedContent.heroSlides.filter((slide) => slide.imageUrl);
   const promoSlides = resolvedContent.promoBanners.filter((banner) => banner.imageUrl);
+  const featuredCards = resolvedContent.featuredCards.filter((card) => card.imageUrl);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [activePromoIndex, setActivePromoIndex] = useState(0);
   const [activeDealIndex, setActiveDealIndex] = useState(0);
@@ -804,6 +874,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     ...(promoSlides[activePromoIndex % Math.max(promoSlides.length, 1)] || resolvedContent.promoBanner),
     _activeDealIndex: activeDealIndex,
   };
+  const marketingBanners = [...promoSlides, ...featuredCards];
   const timeLeft = getTimeParts(earliestDealDeadline ? earliestDealDeadline - now : 0);
 
   if (!heroProduct && loadingProducts) {
@@ -843,6 +914,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       activeHeroIndex={activeHeroIndex}
       setActiveHeroIndex={setActiveHeroIndex}
       activePromo={activePromo}
+      marketingBanners={marketingBanners.length ? marketingBanners : [...defaultSiteContent.heroSlides, ...defaultSiteContent.featuredCards]}
       dealProducts={dealProducts}
       recommendedProducts={recommendedProducts}
       sortedProducts={sortedProducts}
@@ -855,7 +927,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     <main className="hidden bg-white px-4 pb-16 pt-4 md:block">
       <div className="mx-auto max-w-[1420px]">
         <section className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)_245px]">
-          <aside className="rounded-md border border-gray-200 bg-white p-2.5">
+          <aside className="rounded-md border border-gray-200 bg-white p-2.5 lg:row-span-2">
             <div className="space-y-1">
               {compactCategories.map(([label, icon, href]) => (
                 <div
@@ -897,6 +969,18 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
           >
             <Image src={activePromo.imageUrl || getImage(heroProduct)} alt={activePromo.title || "Promotional offer"} width={420} height={520} className="absolute inset-0 h-full w-full object-cover" />
           </button>
+
+          <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
+            {(featuredCards.length ? featuredCards : defaultSiteContent.featuredCards).slice(0, 3).map((card, index) => (
+              <MarketingBannerTile
+                key={card._id || `hero-feature-${index}`}
+                item={card}
+                navigate={navigate}
+                prefetchRoute={prefetchRoute}
+                className="aspect-[2.15/1] rounded-md"
+              />
+            ))}
+          </div>
         </section>
 
         {dealProducts.length ? (
@@ -957,6 +1041,13 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             </div>
           </section>
         ) : null}
+
+        <MarketingBannerGrid
+          items={marketingBanners.length ? marketingBanners : [...defaultSiteContent.heroSlides, ...defaultSiteContent.featuredCards]}
+          navigate={navigate}
+          prefetchRoute={prefetchRoute}
+          className="mt-8"
+        />
 
         <section className="mt-8">
           <h2 className="mb-3 text-lg font-bold text-gray-950">All marketplace items</h2>

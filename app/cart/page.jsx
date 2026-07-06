@@ -70,13 +70,6 @@ const Cart = () => {
   const visibleCartItemIds = Object.keys(resolvedCartItems).filter((itemId) => resolvedCartItems[itemId] > 0);
   const isCartHydrating = loadingUser || (loadingProducts && visibleCartItemIds.length > 0);
   const cartCount = getCartCount();
-  const subtotal = visibleCartItemIds.reduce((sum, itemId) => {
-    const product = products.find((entry) => entry._id === itemId);
-    return sum + (product ? Number(product.offerPrice || product.price || 0) * resolvedCartItems[itemId] : 0);
-  }, 0);
-  const freeShippingTarget = 50000;
-  const remainingForFreeShipping = Math.max(0, freeShippingTarget - subtotal);
-  const shippingProgress = Math.min(100, Math.max(16, (subtotal / freeShippingTarget) * 100));
 
   return (
     <>
@@ -102,21 +95,7 @@ const Cart = () => {
             Shopping Cart <span className="text-2xl">({cartCount} items)</span>
           </h1>
 
-          <section className="mb-4 rounded-xl border border-green-100 bg-green-50 px-4 py-3 md:hidden">
-            <div className="flex items-start justify-between gap-3 text-sm">
-              <p className="font-semibold text-gray-950">You're eligible for <span className="text-green-600">FREE shipping!</span></p>
-              {remainingForFreeShipping > 0 ? (
-                <p className="shrink-0 text-right text-xs text-gray-500">
-                  Add <span className="block font-extrabold text-green-600">{formatCurrency(remainingForFreeShipping)}</span>
-                </p>
-              ) : null}
-            </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-green-100">
-              <div className="h-full rounded-full bg-green-600" style={{ width: `${shippingProgress}%` }} />
-            </div>
-          </section>
-
-          <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,65fr)_minmax(22rem,35fr)]">
+          <div className="mt-0 grid gap-6 md:mt-6 lg:grid-cols-[minmax(0,65fr)_minmax(22rem,35fr)]">
             <section className="overflow-hidden rounded-xl border border-gray-200 bg-white md:space-y-4 md:overflow-visible md:border-0">
               {isCartHydrating && (
                 <>
@@ -146,7 +125,7 @@ const Cart = () => {
                 }
 
                 return (
-                    <article key={itemId} className="relative grid grid-cols-[96px_minmax(0,1fr)] gap-x-4 gap-y-3 border-b border-gray-200 bg-white p-4 last:border-b-0 md:rounded-xl md:border md:grid-cols-[80px_minmax(0,1fr)_10rem_9rem] md:items-center">
+                    <article key={itemId} className="relative grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] gap-x-3 gap-y-3 border-b border-gray-200 bg-white p-3 last:border-b-0 min-[380px]:grid-cols-[5.5rem_minmax(0,1fr)] min-[380px]:gap-x-4 min-[380px]:p-4 md:rounded-xl md:border md:grid-cols-[80px_minmax(0,1fr)_10rem_9rem] md:items-center">
                       <button
                         type="button"
                         className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center text-gray-500 hover:text-red-500"
@@ -157,7 +136,7 @@ const Cart = () => {
                           <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                         </svg>
                       </button>
-                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-gray-100 bg-white md:h-20 md:w-20 md:border-0">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-gray-100 bg-white min-[380px]:h-[5.5rem] min-[380px]:w-[5.5rem] md:h-20 md:w-20 md:border-0">
                       <CartProductImage product={product} />
                     </div>
 
@@ -167,7 +146,8 @@ const Cart = () => {
                       <p className="mt-2 hidden text-sm text-gray-500 md:block">Unit price: {formatCurrency(product.offerPrice)}</p>
                     </div>
 
-                    <div className="col-start-2 flex h-11 w-36 items-center justify-between rounded-md border border-gray-200 bg-white px-3 md:col-start-auto">
+                    <div className="col-start-2 flex min-w-0 flex-wrap items-center justify-between gap-2 md:contents">
+                    <div className="flex h-10 w-32 max-w-full items-center justify-between rounded-md border border-gray-200 bg-white px-2 md:h-11 md:w-36 md:px-3">
                       <button type="button" onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-8 w-8 items-center justify-center text-orange-600" aria-label="Decrease quantity">
                         <Image src={assets.decrease_arrow} alt="" className="h-3 w-3" />
                       </button>
@@ -182,9 +162,10 @@ const Cart = () => {
                       </button>
                     </div>
 
-                    <p className="col-start-2 row-start-3 self-center text-right text-base font-bold text-orange-600 md:col-start-auto md:row-start-auto md:text-left">
+                    <p className="min-w-0 flex-1 text-right text-sm font-bold text-orange-600 [overflow-wrap:anywhere] md:flex-none md:text-left md:text-base">
                       {formatCurrency(product.offerPrice * quantity)}
                     </p>
+                    </div>
                   </article>
                 );
               })}
