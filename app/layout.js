@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AppContextProvider } from "@/context/AppContext";
+import { Suspense } from 'react';
 import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/nextjs";
 import RouteLoader from "@/components/RouteLoader";
@@ -64,10 +65,12 @@ export default function RootLayout({ children }) {
               },
             }}
           />
-          <AppContextProvider>
-            <RouteLoader />
-            {children}
-          </AppContextProvider>
+          <Suspense fallback={null}>
+            <AppContextProvider>
+              <RouteLoader />
+              {children}
+            </AppContextProvider>
+          </Suspense>
         </ClerkProvider>
       </body>
     </html>
