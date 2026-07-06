@@ -20,13 +20,10 @@ const compactCategories = [
 ];
 
 const mobileFeaturedCategories = [
-  ["Fashion", "Fashion"],
-  ["Beauty", "Beauty & Cosmetics"],
-  ["Electronics", "Computers & Electronics"],
-  ["Home & Living", "Home & Living"],
   ["Phones", "Phones & Tablets"],
+  ["Laptops", "Computers & Electronics"],
   ["Audio", "Audio"],
-  ["Watches", "Watches & Wearables"],
+  ["TV sets", "Computers & Electronics"],
 ];
 
 const mobileTopCategories = [
@@ -188,8 +185,31 @@ const SectionHeader = ({ title, onViewAll }) => (
   </div>
 );
 
-const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className = "", imageClassName = "", priority = false }) => {
+const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className = "", priority = false }) => {
   const safeSlides = slides.filter((slide) => slide?.imageUrl);
+  const palette = [
+    {
+      bg: "from-[#060b18] via-[#0d1422] to-[#05070d]",
+      glow: "bg-blue-500/25",
+      pill: "MEGA SALE",
+      title: ["New trending", "Electronic items"],
+      href: "/all-products?category=Computers%20%26%20Electronics",
+    },
+    {
+      bg: "from-[#170807] via-[#27100c] to-[#080605]",
+      glow: "bg-orange-500/25",
+      pill: "HOT DEAL",
+      title: ["Fresh fashion", "Daily picks"],
+      href: "/all-products?category=Fashion",
+    },
+    {
+      bg: "from-[#071612] via-[#0c241e] to-[#050806]",
+      glow: "bg-emerald-500/25",
+      pill: "FAST MOVING",
+      title: ["Audio gear", "Ready now"],
+      href: "/all-products?category=Audio",
+    },
+  ];
 
   if (!safeSlides.length) {
     return null;
@@ -202,22 +222,45 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {safeSlides.map((slide, index) => {
-          const href = getContentHref(slide, "/all-products");
+          const theme = palette[index % palette.length];
+          const href = getContentHref(slide, theme.href);
+          const title = slide.title
+            ? slide.title.split(" ").reduce((lines, word) => {
+                const current = lines[lines.length - 1] || "";
+                if (`${current} ${word}`.trim().length > 18 && lines.length < 2) {
+                  return [...lines, word];
+                }
+                return [...lines.slice(0, -1), `${current} ${word}`.trim()];
+              }, [""]).slice(0, 2)
+            : theme.title;
 
           return (
             <button
               key={slide._id || index}
               type="button"
               onClick={() => navigate(href)}
-              className="relative min-w-full overflow-hidden bg-gray-950 text-left"
+              className={`relative min-w-full overflow-hidden bg-gradient-to-br ${theme.bg} text-left`}
             >
+              <span className={`absolute right-[10%] top-[8%] h-[75%] w-[48%] rounded-full ${theme.glow} blur-3xl`} />
+              <span className="absolute -right-[8%] bottom-[-24%] h-[72%] w-[50%] rounded-full bg-white/10 blur-2xl" />
+              <span className="absolute left-5 top-5 z-10 rounded-md bg-white/10 px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white sm:left-7 sm:top-7">
+                {slide.offer || theme.pill}
+              </span>
+              <span className="absolute left-5 top-[34%] z-10 max-w-[52%] text-[21px] font-extrabold leading-[1.08] text-white sm:left-7 sm:text-3xl lg:text-4xl">
+                <span className="block">{title[0] || theme.title[0]}</span>
+                <span className="block text-orange-500">{title[1] || theme.title[1]}</span>
+              </span>
+              <span className="absolute bottom-5 left-5 z-10 inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-[12px] font-extrabold text-white shadow-lg shadow-orange-950/20 sm:left-7 sm:px-5 sm:py-2.5">
+                {slide.primaryButtonText || "Shop now"}
+                <span aria-hidden="true">-&gt;</span>
+              </span>
               <ContentImage
                 src={slide.imageUrl}
                 alt={slide.title || `KawilMart offer ${index + 1}`}
                 width={1200}
                 height={520}
                 priority={priority && index === 0}
-                className={`h-full w-full object-cover ${imageClassName}`}
+                className="absolute bottom-0 right-0 h-[86%] w-[56%] object-contain object-right-bottom drop-shadow-2xl sm:h-[92%] sm:w-[58%]"
               />
             </button>
           );
@@ -225,7 +268,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
       </div>
 
       {safeSlides.length > 1 ? (
-        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/20 px-2.5 py-1.5 backdrop-blur-sm">
+        <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/25 px-2.5 py-1.5 backdrop-blur-sm">
           {safeSlides.map((slide, index) => (
             <button
               key={slide._id || index}
@@ -255,16 +298,16 @@ const MobileRoundCategory = ({ label, category, products, navigate }) => {
     <button
       type="button"
       onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
-      className="flex min-w-0 flex-col items-center gap-2 text-center"
+      className="flex min-w-0 flex-col items-center gap-1.5 text-center"
     >
-      <span className="flex h-[4.15rem] w-[4.15rem] items-center justify-center overflow-hidden rounded-full bg-[#f7f3ef] shadow-sm ring-1 ring-gray-100">
+      <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-gray-100">
         {product ? (
-          <ProductImage product={product} alt={label} width={90} height={90} className="h-full w-full object-cover" />
+          <ProductImage product={product} alt={label} width={76} height={76} className="h-full w-full object-contain p-1" />
         ) : (
           <span className="text-xl">{getCategoryMeta(category).icon}</span>
         )}
       </span>
-      <span className="line-clamp-2 min-h-8 text-[12px] font-bold leading-4 text-gray-950">{label}</span>
+      <span className="line-clamp-2 min-h-7 text-[10px] font-bold leading-[14px] text-gray-950">{label}</span>
     </button>
   );
 };
@@ -291,10 +334,12 @@ const MobileTopCategory = ({ label, category, products, navigate }) => {
 };
 
 const MobileServiceCard = ({ title, text, icon }) => (
-  <div className="rounded-lg border border-gray-200 bg-white px-2 py-3 text-center shadow-sm">
-    <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-orange-100 text-orange-600">{icon}</div>
-    <p className="mt-2 text-[11px] font-extrabold text-gray-950">{title}</p>
-    <p className="mt-1 text-[10px] leading-4 text-gray-500">{text}</p>
+  <div className="flex items-center gap-2 px-2.5 py-3">
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-orange-600">{icon}</div>
+    <div className="min-w-0 text-left">
+      <p className="text-[11px] font-extrabold leading-4 text-gray-950">{title}</p>
+      <p className="mt-0.5 truncate text-[10px] leading-4 text-gray-500">{text}</p>
+    </div>
   </div>
 );
 
@@ -417,32 +462,31 @@ const MobileHome = ({
   const mobileHeroSlides = heroSlides.length ? heroSlides : [{ ...defaultSiteContent.heroSlides[0], imageUrl: getImage(heroFallback) }];
 
   return (
-    <main className="bg-white px-4 pb-8 pt-4 md:hidden">
+    <main className="bg-[#fbfbfb] px-3 pb-8 pt-3 md:hidden">
       <HeroImageSlider
         slides={mobileHeroSlides}
         currentIndex={activeHeroIndex % Math.max(mobileHeroSlides.length, 1)}
         onSelect={setActiveHeroIndex}
         navigate={navigate}
         priority
-        className="aspect-[2.12/1] rounded-lg bg-gray-950 shadow-sm"
-        imageClassName="object-cover"
+        className="aspect-[2.08/1] rounded-xl bg-gray-950 shadow-sm"
       />
 
-      <section className="mt-6 grid grid-cols-4 gap-x-3 gap-y-5">
+      <section className="mt-4 grid grid-cols-5 gap-x-2 gap-y-3">
         {mobileFeaturedCategories.map(([label, category]) => (
           <MobileRoundCategory key={label} label={label} category={category} products={sortedProducts} navigate={navigate} />
         ))}
         <button type="button" onClick={() => navigate("/all-products")} className="flex min-w-0 flex-col items-center gap-2 text-center">
-          <span className="flex h-[4.15rem] w-[4.15rem] items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 shadow-sm"><UtilityIcon type="grid" /></span>
-          <span className="line-clamp-2 min-h-8 text-[12px] font-bold leading-4 text-gray-950">All Categories</span>
+          <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm"><UtilityIcon type="grid" /></span>
+          <span className="line-clamp-2 min-h-7 text-[10px] font-bold leading-[14px] text-gray-950">More</span>
         </button>
       </section>
 
-      <section className="mt-6 grid grid-cols-4 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <MobileServiceCard title="Free Delivery" text="On orders over UGX 100,000" icon={<UtilityIcon type="delivery" />} />
-        <MobileServiceCard title="14 Days Returns" text="No questions asked" icon={<UtilityIcon type="returns" />} />
-        <MobileServiceCard title="Secure Payment" text="100% protected" icon={<UtilityIcon type="shield" />} />
-        <MobileServiceCard title="24/7 Support" text="We're here to help" icon={<UtilityIcon type="support" />} />
+      <section className="mt-4 grid grid-cols-2 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
+        <MobileServiceCard title="100% Original" text="Genuine products" icon={<UtilityIcon type="shield" />} />
+        <MobileServiceCard title="Fast Delivery" text="Get it in 24 - 48hrs" icon={<UtilityIcon type="delivery" />} />
+        <MobileServiceCard title="Easy Returns" text="7-day return policy" icon={<UtilityIcon type="returns" />} />
+        <MobileServiceCard title="Secure Payment" text="Pay safely" icon={<UtilityIcon type="grid" />} />
       </section>
 
       <section className="mt-8">
@@ -889,7 +933,6 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             navigate={navigate}
             priority
             className="min-h-[270px] rounded-md bg-gray-950"
-            imageClassName="object-cover"
           />
 
           <aside className="relative overflow-hidden rounded-md bg-gray-950 p-5 text-white">
