@@ -91,6 +91,8 @@ export const AppContextProvider = (props) => {
 
     const currency = 'UGX '
     const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
 
     const { user, isLoaded: isUserLoaded } = useUser()
     const { getToken, isLoaded: isAuthLoaded } = useAuth()
@@ -536,8 +538,34 @@ export const AppContextProvider = (props) => {
         }).format(safeAmount)}`
     }
 
+    const normalizeHref = (href) => {
+        if (!href || typeof href !== 'string') {
+            return ''
+        }
+
+        if (typeof window === 'undefined') {
+            return href
+        }
+
+        try {
+            const url = new URL(href, window.location.origin)
+            return `${url.pathname}${url.search}${url.hash}`
+        } catch {
+            return href
+        }
+    }
+
     const navigate = (href, options = {}) => {
         if (!href) {
+            return
+        }
+
+        const nextHref = normalizeHref(href)
+        const currentHref = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
+        const currentHrefWithHash = typeof window !== 'undefined' ? `${currentHref}${window.location.hash || ''}` : currentHref
+
+        if (nextHref === currentHref || nextHref === currentHrefWithHash) {
+            setIsRouteLoading(false)
             return
         }
 

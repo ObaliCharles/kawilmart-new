@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { assets, BagIcon, BoxIcon, CartIcon, HomeIcon } from "@/assets/assets";
 import Link from "next/link"
 import { useAppContext } from "@/context/AppContext";
@@ -217,6 +217,9 @@ const Navbar = () => {
   const [isDesktopViewport, setIsDesktopViewport] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [activeCategory, setActiveCategory] = useState(homeCategoryValues[0]);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const mobileSearchRef = useRef(null);
+  const mobileSearchInputRef = useRef(null);
   const clerkReady = isUserLoaded && isAuthLoaded;
   const cartCount = getCartCount();
   const userRole = resolvedRole || user?.publicMetadata?.role;
@@ -236,6 +239,7 @@ const Navbar = () => {
     if (searchQuery.trim()) {
       navigate(`/all-products?search=${encodeURIComponent(searchQuery)}`);
       setSearchQuery('');
+      setIsMobileSearchOpen(false);
     }
   };
 
@@ -247,14 +251,36 @@ const Navbar = () => {
 
   const goTo = (href) => {
     closeDropdown();
+    setIsMobileSearchOpen(false);
     navigate(href);
+  };
+
+  const openMobileSearch = () => {
+    setIsMobileSearchOpen(true);
+    closeDropdown();
+    window.setTimeout(() => mobileSearchInputRef.current?.focus(), 80);
   };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     setSearchQuery(params.get('search') || '');
+    setIsMobileSearchOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!isMobileSearchOpen || typeof window === 'undefined') return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!mobileSearchRef.current?.contains(event.target)) {
+        setIsMobileSearchOpen(false);
+        closeDropdown();
+      }
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    return () => window.removeEventListener('pointerdown', handlePointerDown);
+  }, [isMobileSearchOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -403,7 +429,7 @@ const Navbar = () => {
           </div>
 
           <div className="ml-auto flex items-center gap-3 md:hidden">
-            <button type="button" onClick={() => navigate('/all-products')} aria-label="Search products" className="text-gray-900">
+            <button type="button" onClick={openMobileSearch} aria-label="Search products" className={`rounded-full p-1 text-gray-900 transition ${isMobileSearchOpen ? "bg-orange-50 text-orange-600" : ""}`}>
               <SearchIcon />
             </button>
             <button type="button" onClick={() => navigate('/all-products')} aria-label="Saved items" className="text-gray-900">
@@ -420,46 +446,51 @@ const Navbar = () => {
           </div>
         </div>
 
-        <div className="mx-auto px-4 pb-3 sm:px-6 md:hidden">
-          <form onSubmit={handleSearch} className="flex overflow-hidden rounded-md border border-gray-200 bg-white">
-            <div className="flex min-w-0 flex-1 items-center gap-2 px-3">
-              <SearchIcon />
-              <input
-                type="text"
-                placeholder="Find product"
-                value={searchQuery}
-                onFocus={closeDropdown}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="min-w-0 flex-1 py-3 text-sm outline-none placeholder:text-gray-400"
-              />
+        <div ref={mobileSearchRef} className="mx-auto px-4 pb-3 sm:px-6 md:hidden">
+          <div className={`grid transition-all duration-300 ease-out ${isMobileSearchOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+            <div className="overflow-hidden">
+              <form onSubmit={handleSearch} className="flex overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
+                <div className="flex min-w-0 flex-1 items-center gap-2 px-3">
+                  <SearchIcon />
+                  <input
+                    ref={mobileSearchInputRef}
+                    type="text"
+                    placeholder="Find product"
+                    value={searchQuery}
+                    onFocus={closeDropdown}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="min-w-0 flex-1 py-3 text-sm outline-none placeholder:text-gray-400"
+                  />
+                </div>
+                <button type="button" onClick={() => toggleDropdown('mobile-categories')} className="border-l border-gray-200 px-3 text-xs font-semibold text-gray-900">
+                  All category
+                </button>
+                <button type="submit" className="bg-orange-600 px-4 text-xs font-semibold text-white">
+                  Search
+                </button>
+              </form>
+              {openDropdown === 'mobile-categories' ? (
+                <div className="mt-2 grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-lg">
+                  {homeCategoryValues.slice(0, 8).map((category) => {
+                    const meta = getCategoryMeta(category);
+                    return (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => goTo(buildCategoryHref(category))}
+                        className="flex items-center gap-2 rounded-md px-2 py-2 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                      >
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-orange-50 text-orange-600">
+                          <CategoryGlyph category={category} className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0 truncate">{meta.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
-            <button type="button" onClick={() => toggleDropdown('mobile-categories')} className="border-l border-gray-200 px-3 text-xs font-semibold text-gray-900">
-              All category
-            </button>
-            <button type="submit" className="bg-orange-600 px-4 text-xs font-semibold text-white">
-              Search
-            </button>
-          </form>
-          {openDropdown === 'mobile-categories' ? (
-            <div className="mt-2 grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-lg">
-              {homeCategoryValues.slice(0, 8).map((category) => {
-                const meta = getCategoryMeta(category);
-                return (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => goTo(buildCategoryHref(category))}
-                    className="flex items-center gap-2 rounded-md px-2 py-2 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-orange-50 text-orange-600">
-                      <CategoryGlyph category={category} className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 truncate">{meta.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
+          </div>
           <div className="mt-3 flex items-center justify-between gap-2 overflow-x-auto">
             <div className="inline-flex shrink-0 items-center gap-2 rounded-md px-1 py-1 text-sm font-semibold text-gray-900">
               <UgandaFlag className="h-5 w-5" />
@@ -547,7 +578,6 @@ const Navbar = () => {
             { label: "Categories", href: "/all-products", icon: <BoxIcon /> },
             { label: "Deals", href: "/all-products?filter=flash", icon: <NotificationIcon /> },
             { label: "Orders", href: "/my-orders", icon: <BagIcon /> },
-            { label: "Account", href: user ? "/my-orders" : null, icon: <UserLineIcon /> },
           ].map((item) => (
             <button
               key={item.label}
@@ -559,6 +589,29 @@ const Navbar = () => {
               {item.label}
             </button>
           ))}
+          {!clerkReady ? (
+            <div className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-gray-500">
+              <NavbarUserSkeleton />
+              <span>Account</span>
+            </div>
+          ) : user ? (
+            <div className="relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-gray-500">
+              {renderUserButton({
+                includeMobileLinks: true,
+                badgeClassName: "pointer-events-none absolute right-0 top-0 z-20 inline-flex min-w-[1.05rem] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white shadow-sm",
+              })}
+              <span>Account</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={openSignIn}
+              className="relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-gray-500 transition hover:text-orange-600"
+            >
+              <UserLineIcon />
+              Account
+            </button>
+          )}
         </div>
       </nav>
     </>
