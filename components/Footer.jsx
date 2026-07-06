@@ -67,7 +67,46 @@ const Footer = () => {
   const onNavigate = () => setIsRouteLoading(true);
 
   return (
-    <footer className="bg-[#101923] text-white">
+    <>
+    <footer className="bg-white px-4 pb-24 pt-2 text-white md:hidden">
+      <div className="rounded-xl bg-[#101923] px-6 py-7 shadow-lg">
+        <div className="inline-flex items-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-600 text-xl font-extrabold text-white">K</div>
+          <span className="text-2xl font-extrabold">KawilMart</span>
+        </div>
+        <p className="mt-4 text-[13px] leading-6 text-slate-300">
+          Your one-stop destination for the best fashion, electronics, home and living and more.
+        </p>
+        <div className="mt-5 flex items-center gap-3">
+          {["f", "IG", "X", "YT"].map((item) => (
+            <span key={item} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs text-white/90">
+              {item}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-6 divide-y divide-white/10 border-y border-white/10">
+          {footerColumns.map((column) => (
+            <Link
+              key={column.title}
+              href={column.links[0][1]}
+              onClick={onNavigate}
+              className="flex items-center justify-between py-4 text-sm font-bold text-white"
+            >
+              {column.title}
+              <span className="text-xl text-white/75">&rsaquo;</span>
+            </Link>
+          ))}
+          <Link href="/legal#terms" onClick={onNavigate} className="flex items-center justify-between py-4 text-sm font-bold text-white">
+            Payment
+            <span className="text-xl text-white/75">&rsaquo;</span>
+          </Link>
+        </div>
+        <p className="pt-6 text-center text-xs text-slate-400">(c) {currentYear} KawilMart. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <footer className="hidden bg-[#101923] text-white md:block">
       <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-9 sm:px-6 md:grid-cols-[1.35fr_1fr_1fr] lg:grid-cols-[1.5fr_repeat(4,1fr)_1.35fr] lg:px-5">
         <div className="max-w-sm">
           <div className="inline-flex rounded-md bg-white px-2.5 py-2">
@@ -137,6 +176,7 @@ const Footer = () => {
         </div>
       </div>
     </footer>
+    </>
   );
 };
 

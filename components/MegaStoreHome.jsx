@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import { defaultSiteContent, resolveSiteContent } from "@/lib/defaultSiteContent";
-import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
+import { categoryMatchesSelection, getCategoryMeta } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 
 const compactCategories = [
@@ -16,6 +16,26 @@ const compactCategories = [
   ["Electronic gadgets", "phone", "/all-products?category=Computers%20%26%20Electronics"],
   ["Clothing", "shirt", "/all-products?category=Fashion"],
   ["Sports & Outdoor", "ball", "/all-products?category=Sports%20%26%20Outdoors"],
+];
+
+const mobileFeaturedCategories = [
+  ["Fashion", "Fashion"],
+  ["Beauty", "Beauty & Cosmetics"],
+  ["Electronics", "Computers & Electronics"],
+  ["Home & Living", "Home & Living"],
+  ["Phones", "Phones & Tablets"],
+  ["Audio", "Audio"],
+  ["Watches", "Watches & Wearables"],
+];
+
+const mobileTopCategories = [
+  ["T-Shirt", "Fashion"],
+  ["Shirt", "Fashion"],
+  ["Shoes", "Fashion"],
+  ["Watches", "Watches & Wearables"],
+  ["Bag", "Accessories"],
+  ["Jeans", "Fashion"],
+  ["Jacket", "Fashion"],
 ];
 
 const takeProducts = (products, count) => products.slice(0, count);
@@ -110,6 +130,324 @@ const Price = ({ product, className = "" }) => {
   const { formatCurrency } = useAppContext();
   const price = getPriceValue(product.offerPrice || product.price);
   return <span className={`font-bold text-orange-600 ${className}`}>{formatCurrency(price)}</span>;
+};
+
+const SectionHeader = ({ title, onViewAll }) => (
+  <div className="mb-4 flex items-center justify-between">
+    <h2 className="text-xl font-extrabold text-gray-950">{title}</h2>
+    <button type="button" onClick={onViewAll} className="text-sm font-bold text-orange-600">
+      View all -&gt;
+    </button>
+  </div>
+);
+
+const productForCategory = (products, category) => (
+  products.find((product) => categoryMatchesSelection(product.category, category)) || products[0]
+);
+
+const MobileRoundCategory = ({ label, category, products, navigate }) => {
+  const product = productForCategory(products, category);
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
+      className="flex min-w-0 flex-col items-center gap-2 text-center"
+    >
+      <span className="flex h-[4.15rem] w-[4.15rem] items-center justify-center overflow-hidden rounded-full bg-[#f7f3ef] shadow-sm ring-1 ring-gray-100">
+        {product ? (
+          <ProductImage product={product} alt={label} width={90} height={90} className="h-full w-full object-cover" />
+        ) : (
+          <span className="text-xl">{getCategoryMeta(category).icon}</span>
+        )}
+      </span>
+      <span className="line-clamp-2 min-h-8 text-[12px] font-bold leading-4 text-gray-950">{label}</span>
+    </button>
+  );
+};
+
+const MobileTopCategory = ({ label, category, products, navigate }) => {
+  const product = productForCategory(products, category);
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
+      className="flex h-[6.7rem] min-w-0 flex-col items-center justify-center rounded-xl border border-gray-200 bg-white px-2 py-3 text-center shadow-sm"
+    >
+      <span className="flex h-12 w-full items-center justify-center">
+        {product ? (
+          <ProductImage product={product} alt={label} width={86} height={62} className="h-full w-full object-contain" />
+        ) : (
+          <span className="text-xl">{getCategoryMeta(category).icon}</span>
+        )}
+      </span>
+      <span className="mt-2 line-clamp-1 text-[12px] font-bold text-gray-950">{label}</span>
+    </button>
+  );
+};
+
+const MobileServiceCard = ({ title, text, icon }) => (
+  <div className="rounded-lg border border-gray-200 bg-white px-2 py-3 text-center shadow-sm">
+    <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-orange-100 text-orange-600">{icon}</div>
+    <p className="mt-2 text-[11px] font-extrabold text-gray-950">{title}</p>
+    <p className="mt-1 text-[10px] leading-4 text-gray-500">{text}</p>
+  </div>
+);
+
+const MobileFlashCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
+  const activity = getProductActivitySnapshot(product);
+  const originalPrice = getPriceValue(product.price);
+  const offerPrice = getPriceValue(product.offerPrice || product.price);
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(`/product/${product._id}`)}
+      onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
+      onFocus={() => prefetchRoute(`/product/${product._id}`)}
+      className="relative w-[9.6rem] shrink-0 rounded-lg border border-gray-200 bg-white p-2 text-left shadow-sm"
+    >
+      <span className="absolute left-2 top-2 z-10 rounded bg-rose-500 px-2 py-1 text-[11px] font-bold text-white">
+        -{Math.max(activity.priceDropPercent, 15)}%
+      </span>
+      <span className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm">
+        ♡
+      </span>
+      <span className="flex aspect-square items-center justify-center rounded-md bg-gray-50">
+        <ProductImage product={product} alt={product.name} width={150} height={150} className="h-full w-full object-contain p-1" />
+      </span>
+      <span className="mt-2 block line-clamp-2 min-h-9 text-[12px] font-bold leading-[18px] text-gray-950">{product.name}</span>
+      <span className="mt-1 block text-[11px] text-gray-500">{activity.localTrend}</span>
+      <span className="mt-1 block text-sm font-extrabold text-orange-600">{formatCurrency(offerPrice)}</span>
+      {originalPrice > offerPrice ? <span className="text-[11px] text-gray-400 line-through">{formatCurrency(originalPrice)}</span> : null}
+      <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-gray-100">
+        <span className="block h-full w-3/5 rounded-full bg-orange-600" />
+      </span>
+    </button>
+  );
+};
+
+const MobileProductCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
+  const activity = getProductActivitySnapshot(product);
+  const originalPrice = getPriceValue(product.price);
+  const offerPrice = getPriceValue(product.offerPrice || product.price);
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(`/product/${product._id}`)}
+      onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
+      onFocus={() => prefetchRoute(`/product/${product._id}`)}
+      className="relative rounded-lg border border-gray-200 bg-white p-2 text-left shadow-sm"
+    >
+      <span className={`absolute left-2 top-2 z-10 rounded px-2 py-1 text-[10px] font-bold text-white ${activity.hasDiscount ? "bg-rose-500" : "bg-green-500"}`}>
+        {activity.hasDiscount ? `-${activity.priceDropPercent}%` : "NEW"}
+      </span>
+      <span className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm">♡</span>
+      <span className="flex aspect-[1.12/1] items-center justify-center rounded-md bg-gray-50">
+        <ProductImage product={product} alt={product.name} width={190} height={170} className="h-full w-full object-contain p-2" />
+      </span>
+      <span className="mt-2 block line-clamp-2 min-h-10 text-[13px] font-bold leading-5 text-gray-950">{product.name}</span>
+      <span className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
+        <span className="text-orange-500">★</span>
+        {activity.displayRating || "4.9"} · {activity.likesCount > 0 ? `${activity.likesCount}+` : "10K+"} Sold
+      </span>
+      <span className="mt-2 flex flex-wrap items-center gap-2">
+        <span className="text-sm font-extrabold text-gray-950">{formatCurrency(offerPrice)}</span>
+        {originalPrice > offerPrice ? <span className="text-[10px] text-rose-300 line-through">{formatCurrency(originalPrice)}</span> : null}
+      </span>
+    </button>
+  );
+};
+
+const MobileHome = ({
+  activeHero,
+  activePromo,
+  dealProducts,
+  recommendedProducts,
+  sortedProducts,
+  timeLeft,
+  navigate,
+  prefetchRoute,
+  formatCurrency,
+}) => {
+  const heroFallback = sortedProducts[0];
+  const dealOfDay = dealProducts[0] || sortedProducts[0];
+  const topStoreProducts = sortedProducts.slice(0, 4);
+  const promoProduct = sortedProducts[1] || heroFallback;
+  const secondPromoProduct = sortedProducts[2] || heroFallback;
+
+  return (
+    <main className="bg-white px-4 pb-8 pt-4 md:hidden">
+      <section className="relative overflow-hidden rounded-lg bg-[#fff0df] px-6 py-6 shadow-sm">
+        <div className="relative z-10 max-w-[58%]">
+          <span className="rounded-md bg-orange-600 px-2 py-1 text-[10px] font-extrabold text-white">SUPER DEAL</span>
+          <h1 className="mt-4 text-[24px] font-extrabold leading-[28px] text-gray-950">{activeHero.title || "New Trending Summer Fashion"}</h1>
+          <p className="mt-2 text-[12px] font-medium text-gray-800">Hot marketplace discounts ending soon</p>
+          <span className="mt-4 inline-flex rounded-md bg-rose-500 px-3 py-1.5 text-sm font-extrabold text-white">-70%</span>
+          <button type="button" onClick={() => navigate(getContentHref(activeHero, "/all-products?filter=flash"))} className="mt-4 block rounded-md bg-orange-600 px-4 py-2.5 text-[12px] font-bold text-white">
+            Get Deals Now -&gt;
+          </button>
+          <button type="button" onClick={() => navigate("/all-products?filter=flash")} className="mt-4 text-[12px] font-bold text-orange-600">
+            Explore Deals -&gt;
+          </button>
+        </div>
+        <div className="absolute bottom-4 right-0 top-8 flex w-[54%] items-end justify-center">
+          <ProductImage product={heroFallback} alt={activeHero.title} width={260} height={260} priority className="h-full w-full object-contain drop-shadow-xl" />
+        </div>
+        <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+          <span className="h-2 w-2 rounded-full bg-orange-600" />
+          <span className="h-2 w-2 rounded-full bg-orange-200" />
+          <span className="h-2 w-2 rounded-full bg-orange-200" />
+        </div>
+      </section>
+
+      <section className="mt-6 grid grid-cols-4 gap-x-3 gap-y-5">
+        {mobileFeaturedCategories.map(([label, category]) => (
+          <MobileRoundCategory key={label} label={label} category={category} products={sortedProducts} navigate={navigate} />
+        ))}
+        <button type="button" onClick={() => navigate("/all-products")} className="flex min-w-0 flex-col items-center gap-2 text-center">
+          <span className="flex h-[4.15rem] w-[4.15rem] items-center justify-center rounded-full border border-gray-200 bg-white text-2xl text-gray-400 shadow-sm">⌘</span>
+          <span className="line-clamp-2 min-h-8 text-[12px] font-bold leading-4 text-gray-950">All Categories</span>
+        </button>
+      </section>
+
+      <section className="mt-6 grid grid-cols-4 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <MobileServiceCard title="Free Delivery" text="On orders over UGX 100,000" icon="▣" />
+        <MobileServiceCard title="14 Days Returns" text="No questions asked" icon="↻" />
+        <MobileServiceCard title="Secure Payment" text="100% protected" icon="▱" />
+        <MobileServiceCard title="24/7 Support" text="We're here to help" icon="⌕" />
+      </section>
+
+      <section className="mt-8">
+        <SectionHeader title="Flash Sale" onViewAll={() => navigate("/all-products?filter=flash")} />
+        <div className="mb-4 flex items-center gap-2">
+          {[padTime(timeLeft.hours || 8), padTime(timeLeft.minutes || 17), padTime(timeLeft.seconds || 56), "23"].map((value, index) => (
+            <span key={`${value}-${index}`} className="rounded-md bg-rose-500 px-2 py-1 text-[12px] font-extrabold text-white">{value}</span>
+          ))}
+        </div>
+        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+          {(dealProducts.length ? dealProducts : sortedProducts).slice(0, 8).map((product) => (
+            <MobileFlashCard key={`${product._id}-mobile-flash`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <SectionHeader title="Today's For You!" onViewAll={() => navigate("/all-products")} />
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+          {["Best Seller", "New Arrivals", "Top Rated", "Special Discount"].map((item, index) => (
+            <button key={item} type="button" className={`shrink-0 rounded-md border px-4 py-2 text-[12px] font-bold ${index === 0 ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-950"}`}>
+              {item}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {recommendedProducts.slice(0, 6).map((product) => (
+            <MobileProductCard key={`${product._id}-mobile-reco`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <SectionHeader title="Top Categories" onViewAll={() => navigate("/all-products")} />
+        <div className="grid grid-cols-4 gap-3">
+          {mobileTopCategories.map(([label, category]) => (
+            <MobileTopCategory key={label} label={label} category={category} products={sortedProducts} navigate={navigate} />
+          ))}
+          <button type="button" onClick={() => navigate("/all-products")} className="flex h-[6.7rem] flex-col items-center justify-center rounded-xl border border-gray-200 bg-white text-center shadow-sm">
+            <span className="text-3xl text-gray-400">⌘</span>
+            <span className="mt-2 text-[12px] font-bold text-gray-950">All Categories</span>
+          </button>
+        </div>
+      </section>
+
+      <section className="relative mt-6 overflow-hidden rounded-lg bg-[#101923] px-6 py-7 text-white shadow-sm">
+        <div className="relative z-10 max-w-[56%]">
+          <h2 className="text-2xl font-extrabold leading-7">New Drops Every Week</h2>
+          <p className="mt-3 text-[13px] leading-5 text-white/85">Explore the latest arrivals before anyone else.</p>
+          <button type="button" onClick={() => navigate("/all-products?sort=newest")} className="mt-5 rounded-md bg-orange-600 px-4 py-2.5 text-[12px] font-bold text-white">
+            Shop New Arrivals
+          </button>
+        </div>
+        <div className="absolute bottom-0 right-0 top-3 w-[48%]">
+          <ProductImage product={promoProduct} alt="New arrivals" width={220} height={240} className="h-full w-full object-contain" />
+        </div>
+      </section>
+
+      <section className="mt-5 grid grid-cols-2 gap-3">
+        <div className="relative min-h-40 overflow-hidden rounded-lg bg-orange-50 p-4">
+          <h3 className="text-lg font-extrabold leading-6 text-gray-950">Bank Offers Up to 20% Off</h3>
+          <p className="mt-2 text-[12px] leading-5 text-gray-600">Exclusive discounts on select cards.</p>
+          <button type="button" onClick={() => navigate("/all-products?filter=flash")} className="mt-4 text-[12px] font-bold text-orange-600">Shop Now -&gt;</button>
+          <ProductImage product={secondPromoProduct} alt="Bank offer" width={120} height={100} className="absolute bottom-2 right-1 h-20 w-24 object-contain" />
+        </div>
+        <div className="relative min-h-40 overflow-hidden rounded-lg bg-orange-50 p-4">
+          <h3 className="text-lg font-extrabold leading-6 text-gray-950">Refer & Earn UGX 10,000</h3>
+          <p className="mt-2 text-[12px] leading-5 text-gray-600">Invite friends and get rewarded.</p>
+          <button type="button" onClick={() => navigate("/about")} className="mt-4 text-[12px] font-bold text-orange-600">Refer Now -&gt;</button>
+          <span className="absolute bottom-4 right-4 text-5xl">▣</span>
+        </div>
+      </section>
+
+      {dealOfDay ? (
+        <section className="relative mt-6 overflow-hidden rounded-lg bg-[#101923] px-6 py-7 text-white shadow-sm">
+          <div className="relative z-10 max-w-[58%]">
+            <h2 className="text-xl font-extrabold">Deal of the Day</h2>
+            <div className="mt-4 flex gap-2">
+              {[padTime(timeLeft.hours || 8), padTime(timeLeft.minutes || 17), padTime(timeLeft.seconds || 56)].map((value, index) => (
+                <span key={`${value}-dod-${index}`} className="rounded bg-orange-600 px-2 py-1 text-[12px] font-extrabold">{value}</span>
+              ))}
+            </div>
+            <p className="mt-4 line-clamp-2 text-sm font-bold">{dealOfDay.name}</p>
+            <p className="mt-3 text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
+            <p className="mt-3 text-sm font-extrabold text-orange-500">45% OFF</p>
+            <span className="mt-3 block h-1.5 w-40 rounded-full bg-white/30"><span className="block h-full w-3/5 rounded-full bg-orange-600" /></span>
+          </div>
+          <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="absolute bottom-5 right-2 h-40 w-40 object-contain" />
+        </section>
+      ) : null}
+
+      <section className="mt-8">
+        <SectionHeader title="Best Selling Stores" onViewAll={() => navigate("/all-products?sort=popular")} />
+        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+          {topStoreProducts.map((product) => (
+            <button key={`${product._id}-store`} type="button" onClick={() => navigate(`/all-products?seller=${product.userId}`)} className="flex w-40 shrink-0 items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-sm">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100">
+                <ProductImage product={product} alt={product.sellerLocation || product.name} width={56} height={56} className="h-full w-full object-cover" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-[12px] font-extrabold text-gray-950">{product.sellerLocation || "KawilMart Store"}</span>
+                <span className="mt-1 block text-[11px] text-orange-500">★ 4.9</span>
+                <span className="mt-1 block text-[11px] text-gray-500">1200+ Products</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-lg bg-orange-50 p-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-md border border-orange-200 text-2xl text-orange-600">✉</span>
+          <div>
+            <h2 className="text-sm font-extrabold text-gray-950">Subscribe to our newsletter</h2>
+            <p className="mt-1 text-[12px] leading-5 text-gray-600">Get updates on new arrivals and exclusive offers.</p>
+          </div>
+        </div>
+        <form className="mt-4 flex overflow-hidden rounded-md bg-white">
+          <input type="email" placeholder="Enter your email" className="min-w-0 flex-1 px-4 py-3 text-[12px] outline-none" />
+          <button type="submit" className="bg-orange-600 px-4 text-[12px] font-bold text-white">Subscribe</button>
+        </form>
+      </section>
+
+      <section className="mt-5 grid grid-cols-3 gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+        <MobileServiceCard title="Free Delivery" text="On orders over UGX 100,000" icon="▣" />
+        <MobileServiceCard title="Easy Returns" text="14 days return policy" icon="↻" />
+        <MobileServiceCard title="Secure Payment" text="100% secure checkout" icon="▱" />
+      </section>
+    </main>
+  );
 };
 
 const CompactProduct = ({ product, navigate, prefetchRoute }) => (
@@ -350,7 +688,19 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   }
 
   return (
-    <main className="bg-white px-4 pb-16 pt-4">
+    <>
+    <MobileHome
+      activeHero={activeHero}
+      activePromo={activePromo}
+      dealProducts={dealProducts}
+      recommendedProducts={recommendedProducts}
+      sortedProducts={sortedProducts}
+      timeLeft={timeLeft}
+      navigate={navigate}
+      prefetchRoute={prefetchRoute}
+      formatCurrency={formatCurrency}
+    />
+    <main className="hidden bg-white px-4 pb-16 pt-4 md:block">
       <div className="mx-auto max-w-[1420px]">
         <section className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)_245px]">
           <aside className="rounded-md border border-gray-200 bg-white p-2.5">
@@ -472,6 +822,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
         </section>
       </div>
     </main>
+    </>
   );
 };
 

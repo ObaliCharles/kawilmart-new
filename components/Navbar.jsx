@@ -341,10 +341,6 @@ const Navbar = () => {
         </div>
 
         <div className="mx-auto flex max-w-[1500px] items-center gap-3 px-5 py-2.5 lg:gap-5">
-          <button type="button" onClick={() => toggleDropdown('mobile-categories')} className="flex h-10 w-10 items-center justify-center rounded-md text-gray-900 md:hidden" aria-label="Open menu">
-            <MenuIcon />
-          </button>
-
           <Link href="/" prefetch className="shrink-0" onClick={() => beginLinkNavigation("/")}>
             <StoreLogo />
           </Link>
@@ -462,9 +458,26 @@ const Navbar = () => {
               })}
             </div>
           ) : null}
-          <div className="mt-3 inline-flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-900">
-            <UgandaFlag className="h-5 w-5" />
-            Uganda, UGX
+          <div className="mt-3 flex items-center justify-between gap-2 overflow-x-auto">
+            <div className="inline-flex shrink-0 items-center gap-2 rounded-md px-1 py-1 text-sm font-semibold text-gray-900">
+              <UgandaFlag className="h-5 w-5" />
+              <span>Uganda, UGX</span>
+              <ChevronDown />
+            </div>
+            {roleLinks.length ? (
+              <div className="flex shrink-0 items-center gap-1.5">
+                {roleLinks.map((link) => (
+                  <button
+                    key={link.href}
+                    type="button"
+                    onClick={() => navigate(link.href)}
+                    className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-bold text-orange-700"
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
 

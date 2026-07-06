@@ -4,9 +4,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { AllProductsPageSkeleton, ProductsGridSkeleton } from "@/components/PageSkeletons";
 import { useAppContext } from "@/context/AppContext";
-import { Suspense, useDeferredValue, useEffect, useState } from "react";
+import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { categoryMatchesSelection, getCategoryMeta, marketplaceFilterCategories } from "@/lib/marketplaceCategories";
+import { getProductActivitySnapshot } from "@/lib/liveCommerce";
 
 const categories = ["All", ...marketplaceFilterCategories];
 
@@ -26,7 +27,26 @@ const sortOptions = [
   { label: "Price: High to Low", value: "price_desc" },
   { label: "Newest First", value: "newest" },
   { label: "Best Discount", value: "discount" },
+  { label: "Top Rated", value: "rating" },
+  { label: "Most Popular", value: "popular" },
 ];
+
+const conditionOptions = [
+  { label: "Any condition", value: "all" },
+  { label: "New arrivals", value: "new" },
+  { label: "On sale", value: "sale" },
+  { label: "Flash deals", value: "flash" },
+  { label: "In stock", value: "stock" },
+];
+
+const ratingOptions = [
+  { label: "Any rating", value: 0 },
+  { label: "4.5 and up", value: 4.5 },
+  { label: "4.0 and up", value: 4 },
+  { label: "3.5 and up", value: 3.5 },
+];
+
+const filterCategoryHighlights = marketplaceFilterCategories.slice(0, 8);
 
 const normalizeSearchText = (value = "") => (
   value
@@ -55,6 +75,22 @@ const buildSearchTerms = (query) => {
   });
 
   return [...expandedTerms];
+};
+
+const getRatingValue = (product) => {
+  const rating = product.ratingSummary?.average || product.rating || product.averageRating || 0;
+  return Math.max(0, Math.min(5, Number(rating) || 0));
+};
+
+const getBrandLabel = (product) => {
+  const explicitBrand = product.brand || product.manufacturer || product.sellerProfile?.storeName;
+
+  if (explicitBrand && String(explicitBrand).trim()) {
+    return String(explicitBrand).trim();
+  }
+
+  const firstNameToken = normalizeSearchText(product.name).split(" ").find((word) => word.length > 2);
+  return firstNameToken ? firstNameToken[0].toUpperCase() + firstNameToken.slice(1) : "Other";
 };
 
 const scoreFieldMatch = (value, normalizedQuery, searchTerms, weights) => {
@@ -126,6 +162,22 @@ const getProductSearchScore = (product, query) => {
     coverageBonus: 70,
   });
 
+  score += scoreFieldMatch(product.sellerLocation || product.location, normalizedQuery, searchTerms, {
+    exact: 180,
+    startsWith: 130,
+    includes: 90,
+    term: 30,
+    coverageBonus: 50,
+  });
+
+  score += scoreFieldMatch(getBrandLabel(product), normalizedQuery, searchTerms, {
+    exact: 260,
+    startsWith: 190,
+    includes: 130,
+    term: 44,
+    coverageBonus: 80,
+  });
+
   if (searchTerms.length > 1 && searchTerms.every((term) => nameWords.some((word) => word.startsWith(term)))) {
     score += 260;
   }
@@ -146,6 +198,9 @@ function AllProductsInner() {
   const [sortBy, setSortBy] = useState("default");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSeller, setSelectedSeller] = useState("");
+  const [selectedCondition, setSelectedCondition] = useState("all");
+  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [selectedRating, setSelectedRating] = useState(0);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const hasActiveSearch = deferredSearchQuery.trim().length > 0;
@@ -158,12 +213,27 @@ function AllProductsInner() {
     const search = searchParams.get("search");
     const seller = searchParams.get("seller");
     const filter = searchParams.get("filter");
+    const sort = searchParams.get("sort");
 
     setSelectedCategory(cat || "All");
     setSearchQuery(search || "");
     setSelectedSeller(seller || "");
-    setSortBy(filter === "flash" ? "discount" : "default");
+    setSelectedCondition(filter === "flash" ? "flash" : "all");
+    setSortBy(filter === "flash" ? "discount" : sortOptions.some((option) => option.value === sort) ? sort : "default");
   }, [searchParams]);
+
+  const brandOptions = useMemo(() => {
+    const counts = products.reduce((acc, product) => {
+      const brand = getBrandLabel(product);
+      acc.set(brand, (acc.get(brand) || 0) + 1);
+      return acc;
+    }, new Map());
+
+    return [...counts.entries()]
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+      .slice(0, 10)
+      .map(([label, count]) => ({ label, value: label, count }));
+  }, [products]);
 
   const filterAndSort = () => {
     let filtered = products.map((product) => ({
@@ -186,6 +256,27 @@ function AllProductsInner() {
     const range = priceRanges[selectedPriceRange];
     filtered = filtered.filter(({ product }) => product.offerPrice >= range.min && product.offerPrice <= range.max);
 
+    if (selectedCondition !== "all") {
+      filtered = filtered.filter(({ product }) => {
+        const activity = getProductActivitySnapshot(product);
+        const stock = Number(product.stock);
+
+        if (selectedCondition === "new") return activity.isNewArrival;
+        if (selectedCondition === "sale") return activity.hasDiscount;
+        if (selectedCondition === "flash") return activity.flashDealActive;
+        if (selectedCondition === "stock") return !Number.isFinite(stock) || stock > 0;
+        return true;
+      });
+    }
+
+    if (selectedBrand !== "all") {
+      filtered = filtered.filter(({ product }) => getBrandLabel(product) === selectedBrand);
+    }
+
+    if (selectedRating > 0) {
+      filtered = filtered.filter(({ product }) => getRatingValue(product) >= selectedRating);
+    }
+
     if (effectiveSortBy === "relevance") {
       filtered.sort((a, b) => (
         b.searchScore - a.searchScore ||
@@ -204,6 +295,10 @@ function AllProductsInner() {
         const db = b.product.price > 0 ? (b.product.price - b.product.offerPrice) / b.product.price : 0;
         return db - da;
       });
+    } else if (effectiveSortBy === "rating") {
+      filtered.sort((a, b) => getRatingValue(b.product) - getRatingValue(a.product));
+    } else if (effectiveSortBy === "popular") {
+      filtered.sort((a, b) => (Number(b.product.likesCount) || 0) - (Number(a.product.likesCount) || 0));
     }
 
     return filtered.map(({ product }) => product);
@@ -213,6 +308,44 @@ function AllProductsInner() {
   const sellerReferenceProduct = selectedSeller ? products.find((product) => product.userId === selectedSeller) : null;
   const sellerFilterLabel = sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
+  const heroProduct = filteredProducts[0] || products[0];
+  const heroActivity = heroProduct ? getProductActivitySnapshot(heroProduct) : null;
+
+  const resetFilters = () => {
+    setSelectedCategory("All");
+    setSelectedPriceRange(0);
+    setSortBy("default");
+    setSearchQuery("");
+    setSelectedSeller("");
+    setSelectedCondition("all");
+    setSelectedBrand("all");
+    setSelectedRating(0);
+  };
+
+  const DropdownFilter = ({ label, valueLabel, children }) => (
+    <details className="group relative">
+      <summary className="flex h-10 cursor-pointer list-none items-center gap-2 rounded-full border border-gray-200 bg-white px-3.5 text-[13px] font-semibold text-gray-800 shadow-sm transition hover:border-orange-300 hover:text-orange-600 [&::-webkit-details-marker]:hidden">
+        <span>{label}</span>
+        {valueLabel ? <span className="max-w-24 truncate rounded-full bg-orange-50 px-2 py-0.5 text-[11px] text-orange-700">{valueLabel}</span> : null}
+        <span className="text-gray-400 transition group-open:rotate-180">⌄</span>
+      </summary>
+      <div className="absolute left-0 top-12 z-40 w-56 rounded-md border border-gray-200 bg-white p-2 shadow-xl">
+        {children}
+      </div>
+    </details>
+  );
+
+  const FilterOption = ({ active, children, onClick }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`block w-full rounded px-3 py-2 text-left text-[13px] transition ${
+        active ? "bg-orange-50 font-semibold text-orange-600" : "text-gray-700 hover:bg-gray-50"
+      }`}
+    >
+      {children}
+    </button>
+  );
 
   const FilterPanel = () => (
     <div className="space-y-5">
@@ -258,14 +391,65 @@ function AllProductsInner() {
           ))}
         </div>
       </div>
+      <div>
+        <p className="mb-3 border-t border-gray-200 pt-4 text-sm font-bold text-gray-950">Condition</p>
+        <div className="space-y-1.5">
+          {conditionOptions.map((condition) => (
+            <button
+              key={condition.value}
+              onClick={() => setSelectedCondition(condition.value)}
+              className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${
+                selectedCondition === condition.value ? "bg-orange-600 font-semibold text-white" : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {condition.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="mb-3 border-t border-gray-200 pt-4 text-sm font-bold text-gray-950">Brand</p>
+        <div className="max-h-56 space-y-1.5 overflow-y-auto pr-1">
+          <button
+            onClick={() => setSelectedBrand("all")}
+            className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${
+              selectedBrand === "all" ? "bg-orange-600 font-semibold text-white" : "text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            All brands
+          </button>
+          {brandOptions.map((brand) => (
+            <button
+              key={brand.value}
+              onClick={() => setSelectedBrand(brand.value)}
+              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition ${
+                selectedBrand === brand.value ? "bg-orange-600 font-semibold text-white" : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <span>{brand.label}</span>
+              <span className="text-xs opacity-70">{brand.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="mb-3 border-t border-gray-200 pt-4 text-sm font-bold text-gray-950">Rating</p>
+        <div className="space-y-1.5">
+          {ratingOptions.map((rating) => (
+            <button
+              key={rating.value}
+              onClick={() => setSelectedRating(rating.value)}
+              className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${
+                selectedRating === rating.value ? "bg-orange-600 font-semibold text-white" : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              {rating.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <button
-        onClick={() => {
-          setSelectedCategory("All");
-          setSelectedPriceRange(0);
-          setSortBy("default");
-          setSearchQuery("");
-          setSelectedSeller("");
-        }}
+        onClick={resetFilters}
         className="w-full rounded-md border border-orange-500 py-2.5 text-sm font-semibold text-orange-600 transition hover:bg-orange-50"
       >
         Clear All Filters
@@ -284,6 +468,80 @@ function AllProductsInner() {
             <span>Home <span className="mx-2 text-gray-400">&gt;</span> Electronics <span className="mx-2 text-gray-400">&gt;</span> <span className="font-semibold text-gray-950">{selectedCategoryMeta?.label || "All Products"}</span></span>
           )}
         </div>
+
+        {heroProduct ? (
+          <section className="mb-6 grid overflow-hidden rounded-md bg-gradient-to-r from-gray-950 via-gray-900 to-orange-800 text-white lg:grid-cols-[minmax(0,1.1fr)_320px]">
+            <div className="flex min-h-[210px] flex-col justify-center px-5 py-7 sm:px-7 lg:px-9">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-200">
+                {hasActiveSearch ? "Matched marketplace picks" : selectedCategoryMeta?.label || "Fresh marketplace finds"}
+              </p>
+              <h1 className="mt-2 max-w-2xl text-3xl font-extrabold leading-tight sm:text-4xl">
+                {hasActiveSearch ? `Best results for "${deferredSearchQuery.trim()}"` : "Shop fast deals, verified sellers, and fresh arrivals"}
+              </h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">
+                {filteredProducts.length} item{filteredProducts.length !== 1 ? "s" : ""} ready to browse with live price, category, brand, rating, and deal filters.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {conditionOptions.slice(1, 4).map((condition) => (
+                  <button
+                    key={condition.value}
+                    type="button"
+                    onClick={() => setSelectedCondition(condition.value)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                      selectedCondition === condition.value ? "bg-white text-gray-950" : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    {condition.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="relative hidden min-h-[210px] items-center justify-center bg-white/10 p-5 sm:flex">
+              <img
+                src={Array.isArray(heroProduct.image) ? heroProduct.image[0] : heroProduct.image}
+                alt={heroProduct.name}
+                className="h-48 w-full object-contain drop-shadow-2xl"
+              />
+              <div className="absolute bottom-4 left-4 right-4 rounded-md bg-white p-3 text-gray-950 shadow-xl">
+                <p className="line-clamp-1 text-sm font-bold">{heroProduct.name}</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {heroActivity?.hasDiscount ? `${heroActivity.priceDropPercent}% off` : heroActivity?.freshnessLabel || "Featured item"}
+                  {heroActivity?.displayRating ? ` · ${heroActivity.displayRating}/5` : ""}
+                </p>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        <section className="mb-6 overflow-x-auto">
+          <div className="flex min-w-max gap-2 pb-1">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("All")}
+              className={`rounded-md border px-3 py-2 text-xs font-semibold transition ${
+                selectedCategory === "All" ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
+              }`}
+            >
+              All categories
+            </button>
+            {filterCategoryHighlights.map((category) => {
+              const meta = getCategoryMeta(category);
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setSelectedCategory(category)}
+                  className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold transition ${
+                    selectedCategory === category ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
+                  }`}
+                >
+                  <span>{meta.icon}</span>
+                  <span>{meta.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         {hasActiveSearch ? (
           <div className="mb-5 flex flex-col gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 md:flex-row md:items-center md:justify-between">
@@ -334,17 +592,74 @@ function AllProductsInner() {
           </div>
         </div>
 
-        <div className="mb-5 flex flex-col gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mb-5 flex flex-col gap-3 border-y border-gray-200 bg-gray-50 px-3 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
-            {["Condition", "Price", "Brand", "Rating", ...(hasActiveSearch ? ["Relevance"] : [])].map((pill, index) => (
+            <DropdownFilter
+              label="Condition"
+              valueLabel={selectedCondition !== "all" ? conditionOptions.find((option) => option.value === selectedCondition)?.label : ""}
+            >
+              {conditionOptions.map((condition) => (
+                <FilterOption
+                  key={condition.value}
+                  active={selectedCondition === condition.value}
+                  onClick={() => setSelectedCondition(condition.value)}
+                >
+                  {condition.label}
+                </FilterOption>
+              ))}
+            </DropdownFilter>
+            <DropdownFilter
+              label="Price"
+              valueLabel={selectedPriceRange !== 0 ? priceRanges[selectedPriceRange].label.replace("UGX ", "") : ""}
+            >
+              {priceRanges.map((range, index) => (
+                <FilterOption
+                  key={range.label}
+                  active={selectedPriceRange === index}
+                  onClick={() => setSelectedPriceRange(index)}
+                >
+                  {range.label}
+                </FilterOption>
+              ))}
+            </DropdownFilter>
+            <DropdownFilter label="Brand" valueLabel={selectedBrand !== "all" ? selectedBrand : ""}>
+              <FilterOption active={selectedBrand === "all"} onClick={() => setSelectedBrand("all")}>
+                All brands
+              </FilterOption>
+              {brandOptions.map((brand) => (
+                <FilterOption key={brand.value} active={selectedBrand === brand.value} onClick={() => setSelectedBrand(brand.value)}>
+                  <span className="flex items-center justify-between gap-3">
+                    <span>{brand.label}</span>
+                    <span className="text-xs text-gray-400">{brand.count}</span>
+                  </span>
+                </FilterOption>
+              ))}
+            </DropdownFilter>
+            <DropdownFilter
+              label="Rating"
+              valueLabel={selectedRating ? `${selectedRating}+` : ""}
+            >
+              {ratingOptions.map((rating) => (
+                <FilterOption
+                  key={rating.value}
+                  active={selectedRating === rating.value}
+                  onClick={() => setSelectedRating(rating.value)}
+                >
+                  {rating.label}
+                </FilterOption>
+              ))}
+            </DropdownFilter>
+            {hasActiveSearch ? (
               <button
-                key={pill}
                 type="button"
-                className={`rounded-full border px-4 py-2 text-[13px] font-medium ${index === 0 && !hasActiveSearch ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700"}`}
+                onClick={() => setSortBy("relevance")}
+                className={`h-10 rounded-full border px-3.5 text-[13px] font-semibold shadow-sm transition ${
+                  effectiveSortBy === "relevance" ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
+                }`}
               >
-                {pill} {pill === "Relevance" ? "" : "v"}
+                Relevance
               </button>
-            ))}
+            ) : null}
           </div>
           <div className="hidden items-center gap-2 lg:flex">
             <span className="text-sm text-gray-600">Sort by:</span>
@@ -361,7 +676,7 @@ function AllProductsInner() {
         </div>
 
         {/* Active tags */}
-        {(selectedCategory !== "All" || selectedPriceRange !== 0 || searchQuery || selectedSeller) && (
+        {(selectedCategory !== "All" || selectedPriceRange !== 0 || searchQuery || selectedSeller || selectedCondition !== "all" || selectedBrand !== "all" || selectedRating > 0) && (
           <div className="mb-5 flex flex-wrap gap-2">
             {selectedCategory !== "All" && (
               <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
@@ -373,6 +688,24 @@ function AllProductsInner() {
               <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
                 {priceRanges[selectedPriceRange].label}
                 <button onClick={() => setSelectedPriceRange(0)} className="ml-1 font-bold hover:text-orange-900">x</button>
+              </span>
+            )}
+            {selectedCondition !== "all" && (
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+                {conditionOptions.find((option) => option.value === selectedCondition)?.label}
+                <button onClick={() => setSelectedCondition("all")} className="ml-1 font-bold hover:text-orange-900">x</button>
+              </span>
+            )}
+            {selectedBrand !== "all" && (
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+                {selectedBrand}
+                <button onClick={() => setSelectedBrand("all")} className="ml-1 font-bold hover:text-orange-900">x</button>
+              </span>
+            )}
+            {selectedRating > 0 && (
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+                {selectedRating}+ rating
+                <button onClick={() => setSelectedRating(0)} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
             {searchQuery && (
