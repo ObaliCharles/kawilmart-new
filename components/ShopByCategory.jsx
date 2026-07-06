@@ -2,6 +2,7 @@
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
 import { useAppContext } from "@/context/AppContext";
+import CategoryLineIcon from "@/components/CategoryLineIcon";
 import { buildCategoryHref, getCategoryMeta, homeCategoryValues } from "@/lib/marketplaceCategories";
 
 const ShopByCategory = () => {
@@ -38,7 +39,7 @@ const ShopByCategory = () => {
               className="inline-flex min-w-0 items-center justify-between gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 sm:justify-start"
             >
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm shadow-sm">
-                {cat.icon}
+                <CategoryLineIcon category={cat.value} className="h-4 w-4" />
               </span>
               <span className="truncate">{cat.label}</span>
             </Link>
@@ -67,7 +68,7 @@ const ShopByCategory = () => {
               >
                 <div className="flex items-start gap-3">
                   <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f5f2ed] text-lg">
-                    {cat.icon}
+                    <CategoryLineIcon category={cat.value} className="h-5 w-5" />
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-gray-900 transition group-hover:text-orange-700">

@@ -5,8 +5,9 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
+import CategoryLineIcon from "@/components/CategoryLineIcon";
 import { defaultSiteContent, resolveSiteContent } from "@/lib/defaultSiteContent";
-import { categoryMatchesSelection, getCategoryMeta } from "@/lib/marketplaceCategories";
+import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 
 const compactCategories = [
@@ -187,28 +188,10 @@ const SectionHeader = ({ title, onViewAll }) => (
 
 const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className = "", priority = false }) => {
   const safeSlides = slides.filter((slide) => slide?.imageUrl);
-  const palette = [
-    {
-      bg: "from-[#060b18] via-[#0d1422] to-[#05070d]",
-      glow: "bg-blue-500/25",
-      pill: "MEGA SALE",
-      title: ["New trending", "Electronic items"],
-      href: "/all-products?category=Computers%20%26%20Electronics",
-    },
-    {
-      bg: "from-[#170807] via-[#27100c] to-[#080605]",
-      glow: "bg-orange-500/25",
-      pill: "HOT DEAL",
-      title: ["Fresh fashion", "Daily picks"],
-      href: "/all-products?category=Fashion",
-    },
-    {
-      bg: "from-[#071612] via-[#0c241e] to-[#050806]",
-      glow: "bg-emerald-500/25",
-      pill: "FAST MOVING",
-      title: ["Audio gear", "Ready now"],
-      href: "/all-products?category=Audio",
-    },
+  const fallbackHrefs = [
+    "/all-products?category=Computers%20%26%20Electronics",
+    "/all-products?category=Fashion",
+    "/all-products?category=Audio",
   ];
 
   if (!safeSlides.length) {
@@ -222,45 +205,22 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {safeSlides.map((slide, index) => {
-          const theme = palette[index % palette.length];
-          const href = getContentHref(slide, theme.href);
-          const title = slide.title
-            ? slide.title.split(" ").reduce((lines, word) => {
-                const current = lines[lines.length - 1] || "";
-                if (`${current} ${word}`.trim().length > 18 && lines.length < 2) {
-                  return [...lines, word];
-                }
-                return [...lines.slice(0, -1), `${current} ${word}`.trim()];
-              }, [""]).slice(0, 2)
-            : theme.title;
+          const href = getContentHref(slide, fallbackHrefs[index % fallbackHrefs.length]);
 
           return (
             <button
               key={slide._id || index}
               type="button"
               onClick={() => navigate(href)}
-              className={`relative min-w-full overflow-hidden bg-gradient-to-br ${theme.bg} text-left`}
+              className="relative min-w-full overflow-hidden bg-gray-950 text-left"
             >
-              <span className={`absolute right-[10%] top-[8%] h-[75%] w-[48%] rounded-full ${theme.glow} blur-3xl`} />
-              <span className="absolute -right-[8%] bottom-[-24%] h-[72%] w-[50%] rounded-full bg-white/10 blur-2xl" />
-              <span className="absolute left-5 top-5 z-10 rounded-md bg-white/10 px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white sm:left-7 sm:top-7">
-                {slide.offer || theme.pill}
-              </span>
-              <span className="absolute left-5 top-[34%] z-10 max-w-[52%] text-[21px] font-extrabold leading-[1.08] text-white sm:left-7 sm:text-3xl lg:text-4xl">
-                <span className="block">{title[0] || theme.title[0]}</span>
-                <span className="block text-orange-500">{title[1] || theme.title[1]}</span>
-              </span>
-              <span className="absolute bottom-5 left-5 z-10 inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-[12px] font-extrabold text-white shadow-lg shadow-orange-950/20 sm:left-7 sm:px-5 sm:py-2.5">
-                {slide.primaryButtonText || "Shop now"}
-                <span aria-hidden="true">-&gt;</span>
-              </span>
               <ContentImage
                 src={slide.imageUrl}
                 alt={slide.title || `KawilMart offer ${index + 1}`}
                 width={1200}
                 height={520}
                 priority={priority && index === 0}
-                className="absolute bottom-0 right-0 h-[86%] w-[56%] object-contain object-right-bottom drop-shadow-2xl sm:h-[92%] sm:w-[58%]"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             </button>
           );
@@ -304,7 +264,7 @@ const MobileRoundCategory = ({ label, category, products, navigate }) => {
         {product ? (
           <ProductImage product={product} alt={label} width={76} height={76} className="h-full w-full object-contain p-1" />
         ) : (
-          <span className="text-xl">{getCategoryMeta(category).icon}</span>
+          <CategoryLineIcon category={category} className="h-5 w-5 text-gray-700" />
         )}
       </span>
       <span className="line-clamp-2 min-h-7 text-[10px] font-bold leading-[14px] text-gray-950">{label}</span>
@@ -325,7 +285,7 @@ const MobileTopCategory = ({ label, category, products, navigate }) => {
         {product ? (
           <ProductImage product={product} alt={label} width={86} height={62} className="h-full w-full object-contain" />
         ) : (
-          <span className="text-xl">{getCategoryMeta(category).icon}</span>
+          <CategoryLineIcon category={category} className="h-5 w-5 text-gray-700" />
         )}
       </span>
       <span className="mt-2 line-clamp-1 text-[12px] font-bold text-gray-950">{label}</span>
@@ -537,18 +497,13 @@ const MobileHome = ({
         </div>
       </section>
 
-      <section className="relative mt-6 overflow-hidden rounded-lg bg-[#101923] px-6 py-7 text-white shadow-sm">
-        <div className="relative z-10 max-w-[56%]">
-          <h2 className="text-2xl font-extrabold leading-7">{activePromo.title || "New Drops Every Week"}</h2>
-          <p className="mt-3 line-clamp-3 text-[13px] leading-5 text-white/85">{activePromo.description || "Explore the latest arrivals before anyone else."}</p>
-          <button type="button" onClick={() => navigate(promoHref)} className="mt-5 rounded-md bg-orange-600 px-4 py-2.5 text-[12px] font-bold text-white">
-            {activePromo.buttonText || "Shop New Arrivals"}
-          </button>
-        </div>
-        <div className="absolute bottom-0 right-0 top-3 w-[48%]">
-          <ContentImage src={activePromo.imageUrl || getImage(promoProduct)} alt={activePromo.title || "New arrivals"} width={220} height={240} className="h-full w-full object-contain transition-opacity duration-500" />
-        </div>
-      </section>
+      <button
+        type="button"
+        onClick={() => navigate(promoHref)}
+        className="relative mt-6 block aspect-[2.08/1] w-full overflow-hidden rounded-lg bg-gray-950 shadow-sm"
+      >
+        <ContentImage src={activePromo.imageUrl || getImage(promoProduct)} alt={activePromo.title || "New arrivals"} width={720} height={346} className="h-full w-full object-cover transition-opacity duration-500" />
+      </button>
 
       <section className="mt-5 grid grid-cols-2 gap-3">
         <div className="relative min-h-40 overflow-hidden rounded-lg bg-orange-50 p-4">
@@ -932,17 +887,16 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             onSelect={setActiveHeroIndex}
             navigate={navigate}
             priority
-            className="min-h-[270px] rounded-md bg-gray-950"
+            className="h-[238px] rounded-md bg-gray-950 xl:h-[252px]"
           />
 
-          <aside className="relative overflow-hidden rounded-md bg-gray-950 p-5 text-white">
-            <div className="relative z-10 max-w-[190px]">
-              <h2 className="text-lg font-bold leading-tight">{activePromo.title || "Promotional offers"}</h2>
-              {activePromo.description ? <p className="mt-2 line-clamp-3 text-xs leading-5 text-white/75">{activePromo.description}</p> : null}
-              <button type="button" onClick={() => navigate(getContentHref(activePromo, "/all-products?filter=flash"))} className="mt-5 rounded-md bg-orange-600 px-4 py-2 text-xs font-semibold text-white">{activePromo.buttonText || "Get offer"}</button>
-            </div>
-            <Image src={activePromo.imageUrl || getImage(heroProduct)} alt={activePromo.title || "Promotional offer"} width={220} height={240} className="absolute bottom-0 right-0 h-36 w-36 object-contain opacity-95" />
-          </aside>
+          <button
+            type="button"
+            onClick={() => navigate(getContentHref(activePromo, "/all-products?filter=flash"))}
+            className="relative block min-h-[238px] overflow-hidden rounded-md bg-gray-950 text-left xl:min-h-[252px]"
+          >
+            <Image src={activePromo.imageUrl || getImage(heroProduct)} alt={activePromo.title || "Promotional offer"} width={420} height={520} className="absolute inset-0 h-full w-full object-cover" />
+          </button>
         </section>
 
         {dealProducts.length ? (

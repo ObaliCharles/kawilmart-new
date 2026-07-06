@@ -5,6 +5,7 @@ import Image from "next/image";
 import ProductCard from "./ProductCard";
 import { useAppContext } from "@/context/AppContext";
 import { ProductsGridSkeleton } from "@/components/PageSkeletons";
+import CategoryLineIcon from "@/components/CategoryLineIcon";
 import {
   buildCategoryHref,
   categoryMatchesSelection,
@@ -29,7 +30,7 @@ const CategoryEditorialPanel = ({ section, quickCategories, reverse, navigate, p
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500 shadow-sm sm:gap-3 sm:py-2 sm:text-xs">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#f3eee6] text-sm sm:text-base">
-                {section.icon}
+                <CategoryLineIcon category={section.value} className="h-4 w-4 text-gray-800" />
               </span>
               Category focus
             </span>
@@ -74,7 +75,7 @@ const CategoryEditorialPanel = ({ section, quickCategories, reverse, navigate, p
                       onFocus={() => prefetchRoute(href)}
                       className="inline-flex w-full min-w-0 items-center justify-between gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-left text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 sm:w-auto sm:justify-start"
                     >
-                      <span>{category.icon}</span>
+                      <CategoryLineIcon category={category.value} className="h-4 w-4 shrink-0" />
                       <span className="min-w-0 truncate [overflow-wrap:anywhere]">{category.label}</span>
                     </button>
                   );
@@ -179,7 +180,6 @@ const HomeProducts = () => {
         value: categoryValue,
         label: meta.label,
         description: meta.description,
-        icon: meta.icon,
         leadProduct: categoryProducts[0],
         products: categoryProducts.slice(0, 4),
         lowestOffer: Math.min(...categoryProducts.map((product) => Number(product.offerPrice) || 0)),
@@ -215,7 +215,6 @@ const HomeProducts = () => {
             .map((categoryValue) => ({
               value: categoryValue,
               label: getCategoryMeta(categoryValue).label,
-              icon: getCategoryMeta(categoryValue).icon,
             }))
 
           return (

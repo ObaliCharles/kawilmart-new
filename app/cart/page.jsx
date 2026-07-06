@@ -43,7 +43,7 @@ const CartProductImage = ({ product }) => {
 };
 
 const CartItemSkeleton = () => (
-  <article className="grid gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-[80px_minmax(0,1fr)_10rem_9rem] sm:items-center">
+  <article className="grid grid-cols-[84px_minmax(0,1fr)] gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-[80px_minmax(0,1fr)_10rem_9rem] sm:items-center">
     <Skeleton className="h-20 w-20 rounded-lg" />
     <div className="space-y-3">
       <Skeleton className="h-5 w-4/5 rounded-full" />
@@ -69,18 +69,55 @@ const Cart = () => {
   } = useAppContext();
   const visibleCartItemIds = Object.keys(resolvedCartItems).filter((itemId) => resolvedCartItems[itemId] > 0);
   const isCartHydrating = loadingUser || (loadingProducts && visibleCartItemIds.length > 0);
+  const cartCount = getCartCount();
+  const subtotal = visibleCartItemIds.reduce((sum, itemId) => {
+    const product = products.find((entry) => entry._id === itemId);
+    return sum + (product ? Number(product.offerPrice || product.price || 0) * resolvedCartItems[itemId] : 0);
+  }, 0);
+  const freeShippingTarget = 50000;
+  const remainingForFreeShipping = Math.max(0, freeShippingTarget - subtotal);
+  const shippingProgress = Math.min(100, Math.max(16, (subtotal / freeShippingTarget) * 100));
 
   return (
     <>
-      <Navbar />
-      <main className="bg-white px-4 py-8 pb-24 sm:px-6 md:px-10 lg:px-12">
+      <Navbar hideMobileHeader />
+      <main className="bg-white px-4 pb-24 pt-4 sm:px-6 md:px-10 md:py-8 lg:px-12">
+        <div className="sticky top-0 z-30 -mx-4 mb-5 border-b border-gray-200 bg-white px-4 pb-4 pt-8 md:hidden">
+          <div className="flex items-center justify-between">
+            <button type="button" onClick={() => router.back()} aria-label="Go back" className="flex h-10 w-10 items-center justify-center rounded-full text-gray-950">
+              <svg className="h-6 w-6" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                <path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <h1 className="text-lg font-extrabold text-gray-950">Shopping Cart ({cartCount})</h1>
+            <button type="button" onClick={() => visibleCartItemIds.forEach((itemId) => updateCartQuantity(itemId, 0))} aria-label="Clear cart" className="flex h-10 w-10 items-center justify-center rounded-full text-gray-950">
+              <svg className="h-6 w-6" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                <path d="M6 7h12m-9 0V5h6v2m-7 3 .5 9m7-9-.5 9M8 7l1 14h6l1-14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
         <div className="mx-auto max-w-7xl">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-950">
-            Shopping Cart <span className="text-2xl">({getCartCount()} items)</span>
+          <h1 className="hidden text-3xl font-bold tracking-tight text-gray-950 md:block">
+            Shopping Cart <span className="text-2xl">({cartCount} items)</span>
           </h1>
 
+          <section className="mb-4 rounded-xl border border-green-100 bg-green-50 px-4 py-3 md:hidden">
+            <div className="flex items-start justify-between gap-3 text-sm">
+              <p className="font-semibold text-gray-950">You're eligible for <span className="text-green-600">FREE shipping!</span></p>
+              {remainingForFreeShipping > 0 ? (
+                <p className="shrink-0 text-right text-xs text-gray-500">
+                  Add <span className="block font-extrabold text-green-600">{formatCurrency(remainingForFreeShipping)}</span>
+                </p>
+              ) : null}
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-green-100">
+              <div className="h-full rounded-full bg-green-600" style={{ width: `${shippingProgress}%` }} />
+            </div>
+          </section>
+
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,65fr)_minmax(22rem,35fr)]">
-            <section className="space-y-4">
+            <section className="overflow-hidden rounded-xl border border-gray-200 bg-white md:space-y-4 md:overflow-visible md:border-0">
               {isCartHydrating && (
                 <>
                   {Array.from({ length: Math.max(1, Math.min(visibleCartItemIds.length || 2, 3)) }).map((_, index) => (
@@ -109,26 +146,28 @@ const Cart = () => {
                 }
 
                 return (
-                  <article key={itemId} className="relative grid gap-4 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-[80px_minmax(0,1fr)_10rem_9rem] sm:items-center">
-                    <button
-                      type="button"
-                      className="absolute right-4 top-4 text-xs font-bold text-gray-400 hover:text-red-500"
-                      onClick={() => updateCartQuantity(product._id, 0)}
-                      aria-label="Remove item"
-                    >
-                      x
-                    </button>
-                    <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-white">
+                    <article key={itemId} className="relative grid grid-cols-[96px_minmax(0,1fr)] gap-x-4 gap-y-3 border-b border-gray-200 bg-white p-4 last:border-b-0 md:rounded-xl md:border md:grid-cols-[80px_minmax(0,1fr)_10rem_9rem] md:items-center">
+                      <button
+                        type="button"
+                        className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center text-gray-500 hover:text-red-500"
+                        onClick={() => updateCartQuantity(product._id, 0)}
+                        aria-label="Remove item"
+                      >
+                        <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+                          <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                    <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-gray-100 bg-white md:h-20 md:w-20 md:border-0">
                       <CartProductImage product={product} />
                     </div>
 
-                    <div className="min-w-0">
-                      <h2 className="line-clamp-2 pr-6 text-[15px] font-semibold text-gray-950">{product.name}</h2>
+                    <div className="min-w-0 pr-7 md:pr-0">
+                      <h2 className="line-clamp-2 text-[15px] font-semibold leading-5 text-gray-950">{product.name}</h2>
                       <p className="mt-2 text-[13px] text-gray-500">Color: Standard <span className="mx-2">|</span> SKU: {product._id.slice(-6).toUpperCase()}</p>
-                      <p className="mt-2 text-sm text-gray-500">Unit price: {formatCurrency(product.offerPrice)}</p>
+                      <p className="mt-2 hidden text-sm text-gray-500 md:block">Unit price: {formatCurrency(product.offerPrice)}</p>
                     </div>
 
-                    <div className="flex h-11 w-36 items-center justify-between rounded-md border border-gray-200 bg-white px-3">
+                    <div className="col-start-2 flex h-11 w-36 items-center justify-between rounded-md border border-gray-200 bg-white px-3 md:col-start-auto">
                       <button type="button" onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-8 w-8 items-center justify-center text-orange-600" aria-label="Decrease quantity">
                         <Image src={assets.decrease_arrow} alt="" className="h-3 w-3" />
                       </button>
@@ -143,7 +182,7 @@ const Cart = () => {
                       </button>
                     </div>
 
-                    <p className="text-right text-base font-bold text-orange-600 sm:text-left">
+                    <p className="col-start-2 row-start-3 self-center text-right text-base font-bold text-orange-600 md:col-start-auto md:row-start-auto md:text-left">
                       {formatCurrency(product.offerPrice * quantity)}
                     </p>
                   </article>
