@@ -47,23 +47,6 @@ const emptyPromoForm = {
     productId: '',
     href: '/all-products?filter=flash',
     imageUrl: '',
-    bannerType: 'promo',
-    dealEndsAt: '',
-    imageFile: null,
-};
-
-const emptySidebarPromoForm = {
-    title: '',
-    description: '',
-    buttonText: 'View offer',
-    linkType: 'custom',
-    category: '',
-    storeId: '',
-    productId: '',
-    href: '/all-products?sort=newest',
-    imageUrl: '',
-    bannerType: 'promo',
-    dealEndsAt: '',
     imageFile: null,
 };
 
@@ -267,11 +250,8 @@ export default function AdminPromotions() {
     const [featuredForm, setFeaturedForm] = useState(emptyFeaturedForm);
     const [editingBannerId, setEditingBannerId] = useState(null);
     const [bannerForm, setBannerForm] = useState({
-        ...emptyPromoForm,
-    });
-    const [editingSidebarBannerId, setEditingSidebarBannerId] = useState(null);
-    const [sidebarBannerForm, setSidebarBannerForm] = useState({
-        ...emptySidebarPromoForm,
+        ...defaultSiteContent.promoBanner,
+        imageFile: null,
     });
     const [editingCategoryBannerId, setEditingCategoryBannerId] = useState(null);
     const [categoryBannerForm, setCategoryBannerForm] = useState({
@@ -306,10 +286,6 @@ export default function AdminPromotions() {
         setSiteContent(resolved);
         setBannerForm({
             ...emptyPromoForm,
-            imageFile: null,
-        });
-        setSidebarBannerForm({
-            ...emptySidebarPromoForm,
             imageFile: null,
         });
         setCategoryBannerForm({
@@ -577,11 +553,6 @@ export default function AdminPromotions() {
             return;
         }
 
-        if (bannerForm.bannerType === 'deal' && !bannerForm.dealEndsAt) {
-            toast.error('Please set a deal end time for deal banners');
-            return;
-        }
-
         try {
             setSavingContent(true);
             await postSiteContent('upsertPromoBanner', {
@@ -595,44 +566,10 @@ export default function AdminPromotions() {
                 productId: bannerForm.productId,
                 href: bannerForm.href,
                 imageUrl: bannerForm.imageUrl,
-                bannerType: bannerForm.bannerType,
-                dealEndsAt: bannerForm.bannerType === 'deal' ? bannerForm.dealEndsAt : '',
             }, bannerForm.imageFile);
             toast.success(editingBannerId ? 'Promo offer updated' : 'Promo offer added');
             setEditingBannerId(null);
             setBannerForm(emptyPromoForm);
-        } catch (error) {
-            toast.error(error.message);
-        } finally {
-            setSavingContent(false);
-        }
-    };
-
-    const saveSidebarBanner = async () => {
-        if (!sidebarBannerForm.title.trim()) {
-            toast.error('Please add a sidebar promo title');
-            return;
-        }
-
-        try {
-            setSavingContent(true);
-            await postSiteContent('upsertSidebarPromoBanner', {
-                itemId: editingSidebarBannerId || '',
-                title: sidebarBannerForm.title,
-                description: sidebarBannerForm.description,
-                buttonText: sidebarBannerForm.buttonText,
-                linkType: sidebarBannerForm.linkType,
-                category: sidebarBannerForm.category,
-                storeId: sidebarBannerForm.storeId,
-                productId: sidebarBannerForm.productId,
-                href: sidebarBannerForm.href,
-                imageUrl: sidebarBannerForm.imageUrl,
-                bannerType: sidebarBannerForm.bannerType,
-                dealEndsAt: sidebarBannerForm.bannerType === 'deal' ? sidebarBannerForm.dealEndsAt : '',
-            }, sidebarBannerForm.imageFile);
-            toast.success(editingSidebarBannerId ? 'Sidebar promo updated' : 'Sidebar promo added');
-            setEditingSidebarBannerId(null);
-            setSidebarBannerForm(emptySidebarPromoForm);
         } catch (error) {
             toast.error(error.message);
         } finally {
@@ -757,22 +694,6 @@ export default function AdminPromotions() {
         }
     };
 
-    const deleteSidebarBanner = async (itemId) => {
-        try {
-            setSavingContent(true);
-            await postSiteContent('deleteSidebarPromoBanner', { itemId });
-            toast.success('Sidebar promo deleted');
-            if (editingSidebarBannerId === itemId) {
-                setEditingSidebarBannerId(null);
-                setSidebarBannerForm(emptySidebarPromoForm);
-            }
-        } catch (error) {
-            toast.error(error.message);
-        } finally {
-            setSavingContent(false);
-        }
-    };
-
     const saveNewsletter = async () => {
         if (!newsletterForm.title.trim()) {
             toast.error('Please add a newsletter title');
@@ -836,26 +757,6 @@ export default function AdminPromotions() {
             productId: banner.productId || '',
             href: banner.href || '/all-products?filter=flash',
             imageUrl: banner.imageUrl || '',
-            bannerType: banner.bannerType || 'promo',
-            dealEndsAt: banner.dealEndsAt || '',
-            imageFile: null,
-        });
-    };
-
-    const startEditingSidebarBanner = (banner) => {
-        setEditingSidebarBannerId(banner._id);
-        setSidebarBannerForm({
-            title: banner.title || '',
-            description: banner.description || '',
-            buttonText: banner.buttonText || 'View offer',
-            linkType: banner.linkType || inferLinkType(banner, 'href'),
-            category: banner.category || decodeCategoryFromHref(banner.href),
-            storeId: banner.storeId || decodeStoreFromHref(banner.href),
-            productId: banner.productId || '',
-            href: banner.href || '/all-products?sort=newest',
-            imageUrl: banner.imageUrl || '',
-            bannerType: banner.bannerType || 'promo',
-            dealEndsAt: banner.dealEndsAt || '',
             imageFile: null,
         });
     };
@@ -1239,8 +1140,8 @@ export default function AdminPromotions() {
             <section className="grid xl:grid-cols-[1.2fr_0.8fr] gap-6">
                 <div className="space-y-5">
                     <div>
-                        <h2 className="text-lg font-semibold text-gray-900">Promotional Content</h2>
-                        <p className="text-sm text-gray-500">Upload image-first promo banners for flash sales, bank offers, referral content, and timed deal cards. Recommended PNG size: 1600x900.</p>
+                        <h2 className="text-lg font-semibold text-gray-900">Homepage Promo Offers</h2>
+                        <p className="text-sm text-gray-500">Add the right-side hero promotion images that rotate on the storefront.</p>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4">
@@ -1252,15 +1153,12 @@ export default function AdminPromotions() {
                                         alt={banner.title}
                                         width={480}
                                         height={480}
-                                        className="rounded-xl object-cover w-full aspect-[16/9]"
+                                        className="rounded-xl object-cover w-full h-44"
                                     />
                                 )}
                                 <div>
                                     <h3 className="font-semibold text-gray-900">{banner.title}</h3>
                                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">{banner.description}</p>
-                                    <p className="text-xs text-gray-500 mt-2">
-                                        {banner.bannerType === 'deal' && banner.dealEndsAt ? `Deal ends: ${new Date(banner.dealEndsAt).toLocaleString()}` : 'Standard promotional banner'}
-                                    </p>
                                     <p className="text-xs text-gray-500 mt-2">
                                         CTA: {banner.productId ? productName(banner.productId) : (banner.href || 'None')}
                                     </p>
@@ -1288,7 +1186,7 @@ export default function AdminPromotions() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-lg font-semibold text-gray-900">{editingBannerId ? 'Edit Promo Offer' : 'Add Promo Offer'}</h2>
-                            <p className="text-sm text-gray-500">Upload the image and CTA used by the promotional rail.</p>
+                            <p className="text-sm text-gray-500">Upload the image and CTA used by the right hero panel.</p>
                         </div>
                         {editingBannerId && (
                             <button
@@ -1324,25 +1222,6 @@ export default function AdminPromotions() {
                         className="w-full p-3 border border-gray-300 rounded-lg"
                     />
                     <select
-                        value={bannerForm.bannerType}
-                        onChange={(e) => setBannerForm((prev) => ({ ...prev, bannerType: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg bg-white"
-                    >
-                        <option value="promo">Standard promo banner</option>
-                        <option value="deal">Deal of the day banner</option>
-                    </select>
-                    {bannerForm.bannerType === 'deal' && (
-                        <div>
-                            <label className="mb-2 block text-sm font-medium text-gray-700">Deal end time</label>
-                            <input
-                                type="datetime-local"
-                                value={bannerForm.dealEndsAt}
-                                onChange={(e) => setBannerForm((prev) => ({ ...prev, dealEndsAt: e.target.value }))}
-                                className="w-full p-3 border border-gray-300 rounded-lg"
-                            />
-                        </div>
-                    )}
-                    <select
                         value={bannerForm.productId}
                         onChange={(e) => setBannerForm((prev) => ({ ...prev, productId: e.target.value }))}
                         className="w-full p-3 border border-gray-300 rounded-lg"
@@ -1373,7 +1252,6 @@ export default function AdminPromotions() {
                         onChange={(e) => setBannerForm((prev) => ({ ...prev, imageFile: e.target.files?.[0] || null }))}
                         className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50"
                     />
-                    <p className="text-xs text-gray-500">Use a clean landscape PNG so the banner fills the slot without cropping important text.</p>
                     <button
                         onClick={() => void saveBanner()}
                         disabled={savingContent}
@@ -1383,154 +1261,6 @@ export default function AdminPromotions() {
                     </button>
                 </div>
 
-            </section>
-
-            <section className="grid xl:grid-cols-[1.2fr_0.8fr] gap-6">
-                <div className="space-y-5">
-                    <div>
-                        <h2 className="text-lg font-semibold text-gray-900">Sidebar Promo Banner</h2>
-                        <p className="text-sm text-gray-500">Keep this separate from the promo rail. This slot is ideal for GIFs, short campaigns, and a different visual story.</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {siteContent.sidebarPromoBanners.map((banner) => (
-                            <div key={banner._id} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-3">
-                                {banner.imageUrl && (
-                                    <Image
-                                        src={banner.imageUrl}
-                                        alt={banner.title}
-                                        width={480}
-                                        height={480}
-                                        className="rounded-xl object-cover w-full aspect-[16/9]"
-                                    />
-                                )}
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">{banner.title}</h3>
-                                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{banner.description}</p>
-                                    <p className="text-xs text-gray-500 mt-2">
-                                        {banner.bannerType === 'deal' && banner.dealEndsAt ? `Deal ends: ${new Date(banner.dealEndsAt).toLocaleString()}` : 'Sidebar promotional banner'}
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-2">
-                                        CTA: {banner.productId ? productName(banner.productId) : (banner.href || 'None')}
-                                    </p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => startEditingSidebarBanner(banner)}
-                                        className="px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => void deleteSidebarBanner(banner._id)}
-                                        className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-lg font-semibold text-gray-900">{editingSidebarBannerId ? 'Edit Sidebar Promo' : 'Add Sidebar Promo'}</h2>
-                            <p className="text-sm text-gray-500">This separate banner can be a GIF or still image and should not mirror the rail content.</p>
-                        </div>
-                        {editingSidebarBannerId && (
-                            <button
-                                onClick={() => {
-                                    setEditingSidebarBannerId(null);
-                                    setSidebarBannerForm(emptySidebarPromoForm);
-                                }}
-                                className="text-sm text-gray-500 hover:text-gray-700"
-                            >
-                                Cancel
-                            </button>
-                        )}
-                    </div>
-
-                    <input
-                        type="text"
-                        placeholder="Sidebar promo title"
-                        value={sidebarBannerForm.title}
-                        onChange={(e) => setSidebarBannerForm((prev) => ({ ...prev, title: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg"
-                    />
-                    <textarea
-                        placeholder="Banner description"
-                        value={sidebarBannerForm.description}
-                        onChange={(e) => setSidebarBannerForm((prev) => ({ ...prev, description: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg min-h-24 resize-none"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Button text"
-                        value={sidebarBannerForm.buttonText}
-                        onChange={(e) => setSidebarBannerForm((prev) => ({ ...prev, buttonText: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg"
-                    />
-                    <select
-                        value={sidebarBannerForm.bannerType}
-                        onChange={(e) => setSidebarBannerForm((prev) => ({ ...prev, bannerType: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg bg-white"
-                    >
-                        <option value="promo">Standard sidebar promo</option>
-                        <option value="deal">Timed sidebar deal</option>
-                    </select>
-                    {sidebarBannerForm.bannerType === 'deal' && (
-                        <div>
-                            <label className="mb-2 block text-sm font-medium text-gray-700">Deal end time</label>
-                            <input
-                                type="datetime-local"
-                                value={sidebarBannerForm.dealEndsAt}
-                                onChange={(e) => setSidebarBannerForm((prev) => ({ ...prev, dealEndsAt: e.target.value }))}
-                                className="w-full p-3 border border-gray-300 rounded-lg"
-                            />
-                        </div>
-                    )}
-                    <select
-                        value={sidebarBannerForm.productId}
-                        onChange={(e) => setSidebarBannerForm((prev) => ({ ...prev, productId: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg"
-                    >
-                        <option value="">Link sidebar CTA to fallback URL</option>
-                        {products.map((product) => (
-                            <option key={product._id} value={product._id}>{product.name}</option>
-                        ))}
-                    </select>
-                    <TargetSelector
-                        label="Sidebar promo target"
-                        form={sidebarBannerForm}
-                        setForm={setSidebarBannerForm}
-                        hrefKey="href"
-                        products={products}
-                        stores={stores}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Image URL or upload below"
-                        value={sidebarBannerForm.imageUrl}
-                        onChange={(e) => setSidebarBannerForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg"
-                    />
-                    <input
-                        type="file"
-                        accept="image/*,image/gif"
-                        onChange={(e) => setSidebarBannerForm((prev) => ({ ...prev, imageFile: e.target.files?.[0] || null }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50"
-                    />
-                    <p className="text-xs text-gray-500">Use a separate image or GIF here so the sidebar promo stays visually different from the rail.</p>
-                    <button
-                        onClick={() => void saveSidebarBanner()}
-                        disabled={savingContent}
-                        className="w-full px-4 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 disabled:opacity-70"
-                    >
-                        {savingContent ? 'Saving...' : (editingSidebarBannerId ? 'Update Sidebar Promo' : 'Add Sidebar Promo')}
-                    </button>
-                </div>
             </section>
 
             <section className="space-y-5">
