@@ -1,6 +1,6 @@
 'use client'
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, createContext, startTransition, useCallback, useContext, useEffect, useState } from "react";
+import { Suspense, createContext, startTransition, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { toast } from 'react-hot-toast';
@@ -61,8 +61,10 @@ const defaultAppContextValue = {
     getCartCount: () => 0,
     getCartAmount: () => 0,
     unreadNotificationsCount: 0,
+    recentNotifications: [],
     setUnreadNotificationsCount: noop,
     refreshUnreadNotifications: async () => 0,
+    refreshNotifications: async () => [],
     markNotificationAsRead: async () => ({ success: false, message: 'App context is not ready' }),
     markAllNotificationsAsRead: async () => ({ success: false, message: 'App context is not ready' }),
     loadingProducts: true,
@@ -110,6 +112,8 @@ export const AppContextProvider = (props) => {
     const [loadingUser, setLoadingUser] = useState(false)
     const [isRouteLoading, setIsRouteLoading] = useState(false)
     const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0)
+    const [recentNotifications, setRecentNotifications] = useState([])
+    const notificationsRefreshInFlight = useRef(false)
     const normalizedCartItems = normalizeCartItems(cartItems)
     const visibleProductIds = products.map((product) => String(product?._id || "")).filter(Boolean)
     const resolvedCartItems = loadingProducts && !products.length
@@ -237,11 +241,18 @@ export const AppContextProvider = (props) => {
         }
     }
 
-    const refreshUnreadNotifications = useCallback(async ({ silent = true } = {}) => {
+    const refreshNotifications = useCallback(async ({ silent = true } = {}) => {
+        if (notificationsRefreshInFlight.current) {
+            return []
+        }
+
+        notificationsRefreshInFlight.current = true
+
         try {
             if (!authReady || !user) {
                 setUnreadNotificationsCount(0)
-                return 0
+                setRecentNotifications([])
+                return []
             }
 
             const token = await getToken()
@@ -249,22 +260,31 @@ export const AppContextProvider = (props) => {
             const { data } = await axios.get('/api/user/notifications', { headers })
 
             if (data.success) {
-                const unreadCount = (data.notifications || []).filter((notification) => !notification.read).length
+                const nextNotifications = data.notifications || []
+                const unreadCount = nextNotifications.filter((notification) => !notification.read).length
                 setUnreadNotificationsCount(unreadCount)
-                return unreadCount
+                setRecentNotifications(nextNotifications.slice(0, 4))
+                return nextNotifications
             }
 
             if (!silent) {
                 toast.error(sanitizeApiErrorMessage(data.message, "Unable to load notifications"))
             }
-            return 0
+            return []
         } catch (error) {
             if (!silent) {
                 toast.error(getApiErrorMessage(error, "Unable to load notifications"))
             }
-            return 0
+            return []
+        } finally {
+            notificationsRefreshInFlight.current = false
         }
     }, [authReady, getToken, user])
+
+    const refreshUnreadNotifications = useCallback(async ({ silent = true } = {}) => {
+        const notifications = await refreshNotifications({ silent })
+        return notifications.filter((notification) => !notification.read).length
+    }, [refreshNotifications])
 
     const markNotificationAsRead = useCallback(async (notificationId) => {
         try {
@@ -279,8 +299,13 @@ export const AppContextProvider = (props) => {
             if (data.success) {
                 if (typeof data.unreadCount === 'number') {
                     setUnreadNotificationsCount(data.unreadCount)
+                    setRecentNotifications((current) =>
+                        current.map((notification) =>
+                            notification._id === notificationId ? { ...notification, read: true } : notification
+                        )
+                    )
                 } else {
-                    await refreshUnreadNotifications({ silent: true })
+                    await refreshNotifications({ silent: true })
                 }
             }
 
@@ -305,6 +330,7 @@ export const AppContextProvider = (props) => {
 
             if (data.success) {
                 setUnreadNotificationsCount(0)
+                setRecentNotifications((current) => current.map((notification) => ({ ...notification, read: true })))
             }
 
             return data
@@ -627,6 +653,45 @@ export const AppContextProvider = (props) => {
     }, [authReady, user])
 
     useEffect(() => {
+        if (!authReady || !user) {
+            setUnreadNotificationsCount(0)
+            setRecentNotifications([])
+            return undefined
+        }
+
+        let intervalId
+        let focused = true
+
+        const syncNow = () => {
+            if (focused) {
+                void refreshNotifications({ silent: true })
+            }
+        }
+
+        syncNow()
+
+        intervalId = window.setInterval(syncNow, 8000)
+
+        const handleVisibilityChange = () => {
+            focused = typeof document !== 'undefined' ? document.visibilityState === 'visible' : true
+            if (focused) {
+                syncNow()
+            }
+        }
+
+        window.addEventListener('focus', syncNow)
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+
+        return () => {
+            if (intervalId) {
+                window.clearInterval(intervalId)
+            }
+            window.removeEventListener('focus', syncNow)
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
+        }
+    }, [authReady, refreshNotifications, user])
+
+    useEffect(() => {
         if (loadingProducts) {
             return
         }
@@ -683,8 +748,8 @@ export const AppContextProvider = (props) => {
         cartItems, resolvedCartItems, setCartItems,
         addToCart, updateCartQuantity,
         getCartCount, getCartAmount,
-        unreadNotificationsCount, setUnreadNotificationsCount,
-        refreshUnreadNotifications, markNotificationAsRead, markAllNotificationsAsRead,
+        unreadNotificationsCount, recentNotifications, setUnreadNotificationsCount,
+        refreshUnreadNotifications, refreshNotifications, markNotificationAsRead, markAllNotificationsAsRead,
         loadingProducts, loadingUser
     }
 

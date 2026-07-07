@@ -247,6 +247,63 @@ const NavAction = ({ children, label, onClick, badge }) => (
   </button>
 );
 
+const NotificationPopover = ({ unreadCount, notifications, onNavigate, onMarkAllRead }) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <NavAction label="Alerts" onClick={() => onNavigate('/inbox')} badge={unreadCount}>
+        <NotificationIcon />
+      </NavAction>
+
+      {open ? (
+        <div className="absolute right-0 top-[4.05rem] z-50 w-[21rem] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.15)]">
+          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+            <div>
+              <p className="text-[14px] font-semibold text-gray-950">Notifications</p>
+              <p className="text-[11px] text-gray-500">{unreadCount > 0 ? `${unreadCount} unread updates` : "You're all caught up"}</p>
+            </div>
+            <button type="button" onClick={() => onNavigate('/inbox')} className="text-[11px] font-semibold text-blue-600 hover:text-blue-700">
+              View all
+            </button>
+          </div>
+
+          <div className="max-h-[18rem] overflow-y-auto">
+            {notifications.length ? notifications.map((notification) => (
+              <button
+                key={notification._id}
+                type="button"
+                onClick={() => onNavigate('/inbox')}
+                className="flex w-full items-start gap-3 border-b border-gray-100 px-4 py-3 text-left transition hover:bg-gray-50"
+              >
+                <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${notification.read ? "bg-gray-300" : "bg-blue-500"}`} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-medium text-gray-950">{notification.title}</span>
+                  <span className="mt-0.5 line-clamp-1 block text-[11px] text-gray-500">{notification.message}</span>
+                </span>
+                <span className="shrink-0 text-[11px] text-gray-400">
+                  {notification.date ? new Date(notification.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}
+                </span>
+              </button>
+            )) : (
+              <div className="px-4 py-8 text-center text-[12px] text-gray-500">No notifications yet.</div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
+            <button type="button" onClick={onMarkAllRead} className="text-[11px] font-semibold text-gray-700 hover:text-gray-950">
+              Mark all as read
+            </button>
+            <button type="button" onClick={() => onNavigate('/inbox')} className="text-[11px] font-semibold text-blue-600 hover:text-blue-700">
+              Open inbox
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const AccountMenuSection = ({ title, items, onNavigate }) => (
   <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
     <h2 className="border-b border-gray-100 px-4 py-2.5 text-sm font-bold text-gray-600">{title}</h2>
@@ -288,7 +345,9 @@ const Navbar = ({ hideMobileHeader = false }) => {
     setIsRouteLoading,
     getCartCount,
     unreadNotificationsCount,
+    recentNotifications,
     refreshUnreadNotifications,
+    markAllNotificationsAsRead,
   } = appContext;
   const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded: isAuthLoaded } = useAuth();
@@ -304,6 +363,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
   const mobileSearchInputRef = useRef(null);
   const clerkReady = isUserLoaded && isAuthLoaded;
   const cartCount = getCartCount();
+  const isAuthenticated = Boolean(user);
   const userRole = resolvedRole || user?.publicMetadata?.role;
   const showAdmin = isAdmin || userRole === 'admin';
   const showRider = isRider || userRole === 'rider';
@@ -330,6 +390,15 @@ const Navbar = ({ hideMobileHeader = false }) => {
     setIsMobileSearchOpen(false);
     setIsMobileAccountOpen(false);
     navigate(href);
+  };
+
+  const requireAuthNavigation = (href) => {
+    if (!isAuthenticated) {
+      openSignIn();
+      return;
+    }
+
+    goTo(href);
   };
 
   const openMobileAccount = () => {
@@ -557,10 +626,10 @@ const Navbar = ({ hideMobileHeader = false }) => {
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
             <span className="font-medium text-gray-700">Uganda's marketplace for everyday essentials</span>
             <div className="flex items-center gap-10">
-              <button type="button" onClick={() => navigate('/seller')} className="transition hover:text-orange-600">Sell on KawilMart</button>
-              <button type="button" onClick={() => navigate('/my-orders')} className="transition hover:text-orange-600">Track Order</button>
+              <button type="button" onClick={() => requireAuthNavigation('/seller')} className="transition hover:text-orange-600">Sell on KawilMart</button>
+              <button type="button" onClick={() => requireAuthNavigation('/my-orders')} className="transition hover:text-orange-600">Track Order</button>
               <button type="button" onClick={() => navigate('/about')} className="transition hover:text-orange-600">Help Center</button>
-              <button type="button" onClick={() => navigate('/seller')} className="transition hover:text-orange-600">Become a Vendor</button>
+              <button type="button" onClick={() => requireAuthNavigation('/seller')} className="transition hover:text-orange-600">Become a Vendor</button>
             </div>
           </div>
         </div>
@@ -612,11 +681,18 @@ const Navbar = ({ hideMobileHeader = false }) => {
           </form>
 
           <div className="ml-auto hidden items-center gap-4 md:flex">
-            <NavAction label="Orders" onClick={() => navigate('/my-orders')}><BagIcon /></NavAction>
-            <NavAction label="Saved" onClick={() => navigate('/all-products')}><HeartIcon /></NavAction>
-            <NavAction label="Alerts" onClick={() => navigate('/inbox')} badge={unreadNotificationsCount}>
-              <NotificationIcon />
-            </NavAction>
+            {isAuthenticated ? (
+              <>
+                <NavAction label="Orders" onClick={() => navigate('/my-orders')}><BagIcon /></NavAction>
+                <NavAction label="Saved" onClick={() => navigate('/all-products')}><HeartIcon /></NavAction>
+                <NotificationPopover
+                  unreadCount={unreadNotificationsCount}
+                  notifications={recentNotifications}
+                  onNavigate={navigate}
+                  onMarkAllRead={() => void markAllNotificationsAsRead()}
+                />
+              </>
+            ) : null}
             <NavAction label="My Cart" onClick={() => navigate('/cart')} badge={cartCount}><CartIcon /></NavAction>
             {!clerkReady || isDesktopViewport === null ? (
               <NavbarUserSkeleton showName />
@@ -642,14 +718,16 @@ const Navbar = ({ hideMobileHeader = false }) => {
           </form>
 
           <div className="ml-auto flex items-center gap-2 md:hidden">
-            <button type="button" onClick={() => navigate('/inbox')} aria-label="Open notifications" className="relative flex h-10 w-10 items-center justify-center text-gray-900">
-              <NotificationIcon />
-              {unreadNotificationsCount > 0 && (
-                <span className="absolute right-0 top-0 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                  {formatBadgeCount(unreadNotificationsCount)}
-                </span>
-              )}
-            </button>
+            {isAuthenticated ? (
+              <button type="button" onClick={() => navigate('/inbox')} aria-label="Open notifications" className="relative flex h-10 w-10 items-center justify-center text-gray-900">
+                <NotificationIcon />
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute right-0 top-0 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                    {formatBadgeCount(unreadNotificationsCount)}
+                  </span>
+                )}
+              </button>
+            ) : null}
             <button type="button" onClick={() => navigate('/cart')} aria-label="Open cart" className="relative flex h-10 w-10 items-center justify-center text-gray-900">
               <AccountMenuIcon type="cart" className="h-6 w-6" />
               {cartCount > 0 && (

@@ -163,15 +163,15 @@ const StoreProductCard = ({ product, layout = "grid" }) => {
       onClick={() => navigate(productHref)}
       onMouseEnter={() => prefetchRoute(productHref)}
       onFocus={() => prefetchRoute(productHref)}
-      className={`group min-w-0 cursor-pointer overflow-hidden rounded-[1rem] border border-gray-200 bg-white transition hover:border-orange-300 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)] ${
-        layout === "list" ? "flex items-center gap-3 p-2.5" : "flex h-full flex-col p-2.5"
+      className={`group min-w-0 cursor-pointer overflow-hidden rounded-[0.9rem] border border-gray-200 bg-white transition hover:border-orange-300 hover:shadow-[0_12px_26px_rgba(15,23,42,0.08)] ${
+        layout === "list" ? "flex items-center gap-2.5 p-2" : "flex h-full flex-col p-2"
       }`}
     >
-      <div className={`relative flex items-center justify-center overflow-hidden rounded-[0.85rem] bg-white ${layout === "list" ? "h-24 w-24 shrink-0" : "aspect-[1.08/1]"}`}>
+      <div className={`relative flex items-center justify-center overflow-hidden rounded-[0.8rem] bg-white ${layout === "list" ? "h-20 w-20 shrink-0" : "aspect-[1.04/1]"}`}>
         <Image
           src={getImage(product)}
           alt={product.name}
-          className="h-full w-full object-contain p-2.5 transition duration-300 group-hover:scale-105"
+          className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-105"
           width={340}
           height={300}
           sizes="(max-width: 639px) 44vw, (max-width: 1023px) 30vw, (max-width: 1535px) 22vw, 18vw"
@@ -180,14 +180,14 @@ const StoreProductCard = ({ product, layout = "grid" }) => {
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+IRjWjBqO6O2mhP//Z"
         />
         {discountPercent ? (
-          <span className="absolute left-0 top-0 rounded-br-md rounded-tl-md bg-orange-600 px-2.5 py-1 text-xs font-bold text-white">
+          <span className="absolute left-0 top-0 rounded-br-md rounded-tl-md bg-orange-600 px-2 py-0.5 text-[10px] font-bold text-white">
             -{discountPercent}%
           </span>
         ) : null}
         <button
           type="button"
           onClick={handleLikeClick}
-          className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border transition ${
+          className={`absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border transition ${
             liked ? "border-red-100 bg-red-50 text-red-600" : "border-gray-200 bg-white hover:border-orange-200"
           } ${liking ? "opacity-60" : ""}`}
           aria-label={liked ? "Unlike product" : "Like product"}
@@ -198,34 +198,34 @@ const StoreProductCard = ({ product, layout = "grid" }) => {
         </button>
       </div>
 
-      <div className={`${layout === "list" ? "min-w-0 flex-1" : "mt-3 min-h-[2.55rem]"}`}>
-        <h3 className="line-clamp-2 text-[13px] font-semibold leading-[18px] text-gray-950">
+      <div className={`${layout === "list" ? "min-w-0 flex-1" : "mt-2.5 min-h-[2.2rem]"}`}>
+        <h3 className="line-clamp-2 text-[12.5px] font-semibold leading-[16px] text-gray-950">
           {product.name}
         </h3>
-        <div className="mt-1.5">
+        <div className="mt-1">
           <StarRow rating={ratingSnapshot.rating || product.displayRating || 0} reviewCount={ratingSnapshot.reviewCount || product.reviews?.length || 0} />
-          <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-500">
+          <div className="mt-0.5 flex items-center gap-2 text-[10.5px] text-gray-500">
             <span className={`h-2 w-2 rounded-full ${stockSnapshot.status === "out" ? "bg-gray-300" : "bg-emerald-500"}`} />
             <span>{stockSnapshot.label}</span>
           </div>
           {Number(product.soldCount) > 0 ? (
-            <p className="mt-1 text-[11px] text-gray-500">{formatCount(product.soldCount)} sold</p>
+            <p className="mt-0.5 text-[10.5px] text-gray-500">{formatCount(product.soldCount)} sold</p>
           ) : null}
         </div>
       </div>
 
-      <div className={`flex items-end justify-between gap-3 ${layout === "list" ? "mt-0 min-w-[7.5rem]" : "mt-3"}`}>
+      <div className={`flex items-end justify-between gap-2.5 ${layout === "list" ? "mt-0 min-w-[6.8rem]" : "mt-2.5"}`}>
         <div className="min-w-0">
-          <p className="text-[14px] font-bold text-orange-600">{formatCurrency(product.offerPrice)}</p>
+          <p className="text-[13px] font-bold text-orange-600">{formatCurrency(product.offerPrice)}</p>
           {product.price > product.offerPrice ? (
-            <p className="text-[10px] text-gray-400 line-through">{formatCurrency(product.price)}</p>
+            <p className="text-[9.5px] text-gray-400 line-through">{formatCurrency(product.price)}</p>
           ) : null}
         </div>
         <button
           type="button"
           onClick={handleAddToCart}
           disabled={isAdding || stockSnapshot.status === "out"}
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition ${
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition ${
             stockSnapshot.status === "out"
               ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
               : "border-orange-300 bg-white text-orange-600 hover:bg-orange-50"
@@ -247,11 +247,11 @@ const StoreSidebar = ({
   children,
   onClear,
 }) => (
-  <div className="rounded-[1rem] border border-gray-200 bg-white p-3.5 shadow-sm">
-    <div className="mb-4 flex items-center justify-between gap-3">
-      <p className="text-[13px] font-semibold text-gray-950">{title}</p>
+  <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+    <div className="mb-3.5 flex items-center justify-between gap-3">
+      <p className="text-[12.5px] font-semibold text-gray-950">{title}</p>
       {onClear ? (
-        <button type="button" onClick={onClear} className="text-xs font-semibold text-gray-500 hover:text-orange-600">
+        <button type="button" onClick={onClear} className="text-[11px] font-semibold text-gray-500 hover:text-orange-600">
           Clear all
         </button>
       ) : null}
@@ -388,50 +388,44 @@ const StorePage = () => {
   };
 
   const FilterContent = () => (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       <div>
-        <div className="mb-2.5 flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-gray-950">Browse by Category</p>
-          <button type="button" onClick={clearAllFilters} className="text-xs font-semibold text-gray-500 hover:text-orange-600">
-            Clear all
-          </button>
-        </div>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <button
             type="button"
             onClick={() => setSelectedCategory("All")}
-              className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-[12.5px] transition ${
-                selectedCategory === "All" ? "bg-orange-50 font-semibold text-orange-600" : "text-gray-700 hover:bg-gray-50"
-              }`}
+            className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
+              selectedCategory === "All" ? "bg-orange-50 font-semibold text-orange-600" : "text-gray-700 hover:bg-gray-50"
+            }`}
           >
             <span>All Products</span>
-            <span className="text-xs opacity-70">{formatCount(sellerProducts.length)}</span>
+            <span className="text-[10px] opacity-70">{formatCount(sellerProducts.length)}</span>
           </button>
           {categories.map((category) => (
             <button
               key={category.value}
               type="button"
               onClick={() => setSelectedCategory(category.value)}
-              className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-[12.5px] transition ${
+              className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
                 selectedCategory === category.value ? "bg-orange-50 font-semibold text-orange-600" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
               <span>{getCategoryMeta(category.value).label}</span>
-              <span className="text-xs opacity-70">{formatCount(category.count)}</span>
+              <span className="text-[10px] opacity-70">{formatCount(category.count)}</span>
             </button>
           ))}
         </div>
       </div>
 
       <div>
-        <p className="mb-2.5 border-t border-gray-200 pt-3.5 text-[13px] font-semibold text-gray-950">Price Range</p>
-        <div className="space-y-1">
+        <p className="mb-2 border-t border-gray-200 pt-3 text-[12.5px] font-semibold text-gray-950">Price Range</p>
+        <div className="space-y-0.5">
           {priceRanges.map((range, index) => (
             <button
               key={range.label}
               type="button"
               onClick={() => setSelectedPriceRange(index)}
-              className={`w-full rounded-xl px-2.5 py-2 text-left text-[12.5px] transition ${
+              className={`w-full rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
                 selectedPriceRange === index ? "bg-orange-600 font-semibold text-white" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -442,43 +436,43 @@ const StorePage = () => {
       </div>
 
       <div>
-        <p className="mb-2.5 border-t border-gray-200 pt-3.5 text-[13px] font-semibold text-gray-950">Brands</p>
-        <div className="max-h-52 space-y-1 overflow-y-auto pr-1">
+        <p className="mb-2 border-t border-gray-200 pt-3 text-[12.5px] font-semibold text-gray-950">Brands</p>
+        <div className="max-h-48 space-y-0.5 overflow-y-auto pr-1">
           <button
             type="button"
             onClick={() => setSelectedBrand("all")}
-            className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-[12.5px] transition ${
+            className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
               selectedBrand === "all" ? "bg-orange-600 font-semibold text-white" : "text-gray-700 hover:bg-gray-50"
             }`}
           >
             <span>All brands</span>
-            <span className="text-xs opacity-70">{formatCount(brands.length)}</span>
+            <span className="text-[10px] opacity-70">{formatCount(brands.length)}</span>
           </button>
           {brands.map((brand) => (
             <button
               key={brand.value}
               type="button"
               onClick={() => setSelectedBrand(brand.value)}
-              className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-[12.5px] transition ${
+              className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
                 selectedBrand === brand.value ? "bg-orange-600 font-semibold text-white" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
               <span>{brand.label}</span>
-              <span className="text-xs opacity-70">{brand.count}</span>
+              <span className="text-[10px] opacity-70">{brand.count}</span>
             </button>
           ))}
         </div>
       </div>
 
       <div>
-        <p className="mb-2.5 border-t border-gray-200 pt-3.5 text-[13px] font-semibold text-gray-950">Rating</p>
-        <div className="space-y-1">
+        <p className="mb-2 border-t border-gray-200 pt-3 text-[12.5px] font-semibold text-gray-950">Rating</p>
+        <div className="space-y-0.5">
           {ratingOptions.map((ratingOption) => (
             <button
               key={ratingOption.value}
               type="button"
               onClick={() => setSelectedRating(ratingOption.value)}
-              className={`w-full rounded-xl px-2.5 py-2 text-left text-[12.5px] transition ${
+              className={`w-full rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
                 selectedRating === ratingOption.value ? "bg-orange-600 font-semibold text-white" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -497,13 +491,13 @@ const StorePage = () => {
     const dealImage = selectedDealProduct ? getImage(selectedDealProduct) : assets.jbl_soundbox_image.src;
 
     return (
-      <div className="rounded-[1rem] border border-gray-200 bg-white p-3.5 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
+      <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+        <div className="mb-2.5 flex items-center justify-between">
           <div>
-            <p className="text-[13px] font-semibold text-gray-950">Deals of the Day</p>
-            <p className="text-[11px] text-gray-500">Featured products from this store</p>
+            <p className="text-[12.5px] font-semibold text-gray-950">Deals of the Day</p>
+            <p className="text-[10.5px] text-gray-500">Featured products from this store</p>
           </div>
-          <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
+          <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
             {countdown}
           </span>
         </div>
@@ -511,40 +505,40 @@ const StorePage = () => {
           <button
             type="button"
             onClick={() => navigate(`/product/${selectedDealProduct._id}`)}
-            className="group w-full overflow-hidden rounded-[1rem] border border-gray-200 bg-white text-left transition hover:border-orange-300"
+            className="group w-full overflow-hidden rounded-[0.9rem] border border-gray-200 bg-white text-left transition hover:border-orange-300"
           >
-            <div className="relative aspect-[1.15/1] bg-gray-50">
+            <div className="relative aspect-[1.05/1] bg-gray-50">
               <Image
                 src={dealImage}
                 alt={selectedDealProduct.name}
                 fill
-                className="object-contain p-3 transition duration-300 group-hover:scale-105"
+                className="object-contain p-2.5 transition duration-300 group-hover:scale-105"
                 sizes="280px"
               />
               {activity?.priceDropPercent ? (
-                <span className="absolute left-2 top-2 rounded-md bg-orange-600 px-2 py-1 text-[11px] font-bold text-white">
+                <span className="absolute left-2 top-2 rounded-md bg-orange-600 px-2 py-0.5 text-[10px] font-bold text-white">
                   -{activity.priceDropPercent}%
                 </span>
               ) : null}
             </div>
             <div className="p-2.5">
-              <p className="line-clamp-2 text-[13px] font-semibold text-gray-950">{selectedDealProduct.name}</p>
-              <p className="mt-1.5 text-[15px] font-bold text-orange-600">{formatCurrency(selectedDealProduct.offerPrice)}</p>
+              <p className="line-clamp-2 text-[12.5px] font-semibold text-gray-950">{selectedDealProduct.name}</p>
+              <p className="mt-1 text-[13px] font-bold text-orange-600">{formatCurrency(selectedDealProduct.offerPrice)}</p>
               {selectedDealProduct.price > selectedDealProduct.offerPrice ? (
-                <p className="text-[11px] text-gray-400 line-through">{formatCurrency(selectedDealProduct.price)}</p>
+                <p className="text-[10px] text-gray-400 line-through">{formatCurrency(selectedDealProduct.price)}</p>
               ) : null}
-              <p className="mt-1.5 text-[11px] text-emerald-600">{getProductStockSnapshot(selectedDealProduct).label}</p>
+              <p className="mt-1 text-[10px] text-emerald-600">{getProductStockSnapshot(selectedDealProduct).label}</p>
             </div>
           </button>
         ) : (
-          <div className="rounded-[1rem] border border-dashed border-gray-200 p-6 text-sm text-gray-500">
+          <div className="rounded-[0.9rem] border border-dashed border-gray-200 p-5 text-sm text-gray-500">
             No deal available yet.
           </div>
         )}
         <button
           type="button"
           onClick={() => navigate(`/all-products?seller=${encodeURIComponent(String(sellerId))}`)}
-          className="mt-2.5 text-[13px] font-semibold text-orange-600"
+          className="mt-2.5 text-[12px] font-semibold text-orange-600"
         >
           View all deals →
         </button>
@@ -553,14 +547,14 @@ const StorePage = () => {
   };
 
   const TopCategoriesRail = () => (
-    <div className="rounded-[1rem] border border-gray-200 bg-white p-3.5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-[13px] font-semibold text-gray-950">Top Categories</p>
-        <button type="button" onClick={() => setSelectedTab("categories")} className="text-xs font-semibold text-orange-600">
+    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-[12.5px] font-semibold text-gray-950">Top Categories</p>
+        <button type="button" onClick={() => setSelectedTab("categories")} className="text-[11px] font-semibold text-orange-600">
           View all
         </button>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {storeCategories.slice(0, 5).map((category) => (
           <button
             key={category.value}
@@ -569,15 +563,15 @@ const StorePage = () => {
               setSelectedCategory(category.value);
               setSelectedTab("products");
             }}
-            className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-[12.5px] transition hover:bg-gray-50"
+            className="flex w-full items-center justify-between rounded-lg px-2.5 py-1 text-left text-[11.5px] transition hover:bg-gray-50"
           >
             <span className="flex min-w-0 items-center gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700">
-                <span className="text-xs">⌂</span>
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700">
+                <span className="text-[10px]">⌂</span>
               </span>
               <span className="min-w-0 truncate text-gray-700">{getCategoryMeta(category.value).label}</span>
             </span>
-            <span className="text-xs text-gray-400">{category.count}</span>
+            <span className="text-[10px] text-gray-400">{category.count}</span>
           </button>
         ))}
       </div>
@@ -585,26 +579,26 @@ const StorePage = () => {
   );
 
   const WhyShopCard = () => (
-    <div className="rounded-[1rem] border border-gray-200 bg-white p-3.5 shadow-sm">
-      <p className="text-[13px] font-semibold text-gray-950">Why shop from this store?</p>
-      <div className="mt-3.5 space-y-2.5 text-[12.5px] text-gray-600">
+    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+      <p className="text-[12.5px] font-semibold text-gray-950">Why shop from this store?</p>
+      <div className="mt-3 space-y-2 text-[11.5px] text-gray-600">
         <div className="flex items-center gap-3">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">✓</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">✓</span>
           <span>{seller?.isVerified ? "Verified seller profile" : "Trusted marketplace seller"}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">★</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">★</span>
           <span>{rating ? `${rating.toFixed(1)} rating from ${reviews} reviews` : "New store on KawilMart"}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">⤴</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">⤴</span>
           <span>{formatCount(seller?.followersCount || 0)} followers</span>
         </div>
       </div>
       <button
         type="button"
         onClick={() => navigate(`/all-products?seller=${encodeURIComponent(String(sellerId))}`)}
-        className="mt-3 text-[13px] font-semibold text-orange-600"
+        className="mt-2.5 text-[12px] font-semibold text-orange-600"
       >
         Learn more →
       </button>
@@ -612,29 +606,29 @@ const StorePage = () => {
   );
 
   const StoreAboutCard = () => (
-    <div className="rounded-[1rem] border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center gap-3">
-        <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gray-100 text-base font-semibold text-gray-700">
+    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3.5 shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-gray-100 text-sm font-semibold text-gray-700">
           {seller?.avatarUrl ? (
-            <Image src={seller.avatarUrl} alt={seller?.name || "Store"} width={64} height={64} className="h-full w-full object-cover" />
+            <Image src={seller.avatarUrl} alt={seller?.name || "Store"} width={56} height={56} className="h-full w-full object-cover" />
           ) : (
             <span>{(seller?.name || "S").slice(0, 1)}</span>
           )}
         </span>
         <div>
-          <p className="text-[13px] font-semibold text-gray-950">{seller?.name || "KawilMart Store"}</p>
+          <p className="text-[12.5px] font-semibold text-gray-950">{seller?.name || "KawilMart Store"}</p>
           <p className="text-xs text-gray-500">{seller?.location || leadProduct?.sellerLocation || "Location pending"}</p>
-          <SellerTrustBadge sellerProfile={seller} className="mt-2" />
+          <SellerTrustBadge sellerProfile={seller} className="mt-1.5" />
         </div>
       </div>
-      <p className="mt-3 text-[12.5px] leading-6 text-gray-600">
+      <p className="mt-2.5 text-[11.5px] leading-5 text-gray-600">
         {seller?.description || "Browse this seller's active marketplace listings, categories, and store details."}
       </p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={() => navigate(`/all-products?seller=${encodeURIComponent(String(sellerId))}`)} className="rounded-full border border-orange-200 px-3 py-1.5 text-[12.5px] font-semibold text-orange-600">
+      <div className="mt-3.5 flex flex-wrap gap-2">
+        <button type="button" onClick={() => navigate(`/all-products?seller=${encodeURIComponent(String(sellerId))}`)} className="rounded-full border border-orange-200 px-2.5 py-1 text-[11.5px] font-semibold text-orange-600">
           View offers
         </button>
-        <button type="button" onClick={() => navigate("/inbox?tab=support")} className="rounded-full border border-gray-200 px-3 py-1.5 text-[12.5px] font-semibold text-gray-700">
+        <button type="button" onClick={() => navigate("/inbox?tab=support")} className="rounded-full border border-gray-200 px-2.5 py-1 text-[11.5px] font-semibold text-gray-700">
           Chat support
         </button>
       </div>
@@ -673,24 +667,24 @@ const StorePage = () => {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white px-4 py-3 pb-20 sm:px-6 md:px-10 lg:px-12">
-        <div className="mx-auto max-w-[1600px]">
-          <div className="mb-3 text-[11px] text-gray-500">
+      <main className="min-h-screen bg-white px-4 py-3 pb-20 sm:px-6 md:px-8 lg:px-10">
+        <div className="mx-auto max-w-[1480px]">
+          <div className="mb-2 text-[10.5px] text-gray-500">
             <span>Home <span className="mx-2 text-gray-400">&gt;</span> Stores <span className="mx-2 text-gray-400">&gt;</span> <span className="font-semibold text-gray-950">{seller?.name || "Store"}</span> <span className="mx-2 text-gray-400">&gt;</span> Products</span>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)_280px]">
+          <div className="grid gap-3 lg:grid-cols-[230px_minmax(0,1fr)_244px]">
             <aside className="hidden lg:block">
-              <div className="sticky top-24 space-y-3.5">
-                <StoreSidebar title="Browse by Category" onClear={clearAllFilters}>
+              <div className="sticky top-20 space-y-3">
+                <StoreSidebar title="Filters" onClear={clearAllFilters}>
                   <FilterContent />
                 </StoreSidebar>
               </div>
             </aside>
 
             <section className="min-w-0">
-              <section className="overflow-hidden rounded-[1.4rem] border border-gray-200 bg-white shadow-sm">
-                <div className="relative min-h-[250px] overflow-hidden bg-[#101923] px-4 py-5 text-white sm:px-6 lg:px-7">
+              <section className="overflow-hidden rounded-[1.15rem] border border-gray-200 bg-white shadow-sm">
+                <div className="relative min-h-[220px] overflow-hidden bg-[#101923] px-4 py-4 text-white sm:px-5 lg:px-6">
                   <div className="absolute inset-0 opacity-60">
                     <Image
                       src={heroImage}
@@ -701,43 +695,43 @@ const StorePage = () => {
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
-                  <div className="relative flex min-h-[210px] flex-col justify-between gap-5 lg:flex-row lg:items-end">
-                    <div className="flex min-w-0 items-start gap-3.5">
-                      <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white/20 bg-white">
+                  <div className="relative flex min-h-[176px] flex-col justify-between gap-4 lg:flex-row lg:items-end">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white/20 bg-white">
                         {seller?.avatarUrl ? (
-                          <Image src={seller.avatarUrl} alt={seller?.name || "Store avatar"} width={88} height={88} className="h-full w-full object-cover" />
+                          <Image src={seller.avatarUrl} alt={seller?.name || "Store avatar"} width={72} height={72} className="h-full w-full object-cover" />
                         ) : (
-                          <span className="text-2xl font-black text-gray-900">{(seller?.name || "S").slice(0, 1)}</span>
+                          <span className="text-xl font-black text-gray-900">{(seller?.name || "S").slice(0, 1)}</span>
                         )}
                       </span>
                       <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h1 className="text-[1.3rem] font-extrabold leading-tight sm:text-[1.65rem]">{seller?.name || "KawilMart Store"}</h1>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <h1 className="text-[1.05rem] font-extrabold leading-tight sm:text-[1.3rem]">{seller?.name || "KawilMart Store"}</h1>
                           <SellerTrustBadge sellerProfile={seller} />
                         </div>
-                        <div className="mt-2 flex items-center gap-2 text-[12.5px] text-white/90">
+                        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-white/90">
                           <span className="text-amber-400">★</span>
                           <span className="font-semibold">{rating ? rating.toFixed(1) : "0.0"}</span>
                           <span className="text-white/65">({formatCount(reviews)} reviews)</span>
                         </div>
-                        <p className="mt-1.5 text-[12.5px] text-white/75">
+                        <p className="mt-1 text-[10.5px] text-white/75">
                           {heroTags.length ? heroTags.join(" · ") : (seller?.location || "Local marketplace seller")}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2.5">
                       <button
                         type="button"
                         onClick={() => navigate("/inbox?tab=support")}
-                        className="rounded-md border border-white/25 bg-black/20 px-3.5 py-2 text-[12.5px] font-semibold text-white backdrop-blur hover:bg-white/10"
+                        className="rounded-md border border-white/25 bg-black/20 px-3 py-1 text-[11.5px] font-semibold text-white backdrop-blur hover:bg-white/10"
                       >
                         Chat
                       </button>
                       <button
                         type="button"
                         onClick={() => navigate(`/all-products?seller=${encodeURIComponent(String(sellerId))}`)}
-                        className="rounded-md bg-orange-600 px-3.5 py-2 text-[12.5px] font-semibold text-white hover:bg-orange-700"
+                        className="rounded-md bg-orange-600 px-3 py-1 text-[11.5px] font-semibold text-white hover:bg-orange-700"
                       >
                         Follow
                       </button>
@@ -745,13 +739,13 @@ const StorePage = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 border-t border-gray-200 bg-white px-4 py-2.5 sm:px-6">
+                <div className="flex flex-wrap items-center gap-1.5 border-t border-gray-200 bg-white px-4 py-2 sm:px-5">
                   {storeTabs.map((tab) => (
                     <button
                       key={tab.key}
                       type="button"
                       onClick={() => setSelectedTab(tab.key)}
-                      className={`rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition ${
+                      className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold transition ${
                         selectedTab === tab.key ? "bg-orange-50 text-orange-600" : "text-gray-700 hover:bg-gray-50"
                       }`}
                     >
@@ -761,39 +755,39 @@ const StorePage = () => {
                 </div>
               </section>
 
-              <div className="mt-4 flex items-center gap-2.5 lg:hidden">
-                <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-gray-200 bg-white px-3.5 py-2.5 shadow-sm">
+              <div className="mt-3.5 flex items-center gap-2 lg:hidden">
+                <div className="flex flex-1 items-center gap-2 rounded-2xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
                   <span className="text-gray-500">⌕</span>
                   <input
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Search in store"
-                    className="min-w-0 flex-1 text-sm outline-none placeholder:text-gray-400"
+                    className="min-w-0 flex-1 text-[12px] outline-none placeholder:text-gray-400"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowMobileFilters(true)}
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-sm"
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-700 shadow-sm"
                 >
                   ⌄
                 </button>
               </div>
 
-              <div className="mt-4 hidden items-center gap-3 lg:flex">
-                <div className="flex flex-1 items-center gap-3 rounded-2xl border border-gray-200 bg-white px-3.5 py-2.5 shadow-sm">
+              <div className="mt-3.5 hidden items-center gap-2.5 lg:flex">
+                <div className="flex flex-1 items-center gap-2.5 rounded-2xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
                   <span className="text-gray-500">⌕</span>
                   <input
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Search in store"
-                    className="min-w-0 flex-1 text-sm outline-none placeholder:text-gray-400"
+                    className="min-w-0 flex-1 text-[12px] outline-none placeholder:text-gray-400"
                   />
                 </div>
                 <select
                   value={sortBy}
                   onChange={(event) => setSortBy(event.target.value)}
-                  className="rounded-2xl border border-gray-200 bg-white px-3.5 py-2.5 text-[12.5px] outline-none"
+                  className="rounded-2xl border border-gray-200 bg-white px-3 py-2 text-[11.5px] outline-none"
                 >
                   <option value="popular">Popular</option>
                   <option value="price_asc">Price: Low to High</option>
@@ -801,48 +795,49 @@ const StorePage = () => {
                   <option value="newest">Newest</option>
                   <option value="rating">Top Rated</option>
                 </select>
-                <div className="flex items-center rounded-2xl border border-gray-200 bg-white p-1 shadow-sm">
+                <div className="flex items-center rounded-2xl border border-gray-200 bg-white p-0.5 shadow-sm">
                   {["grid", "list"].map((mode) => (
                     <button
                       key={mode}
                       type="button"
                       onClick={() => setViewMode(mode)}
-                      className={`rounded-xl px-3 py-2 text-[12px] font-semibold transition ${
+                      className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11.5px] font-semibold transition ${
                         viewMode === mode ? "bg-orange-600 text-white" : "text-gray-600 hover:bg-gray-50"
                       }`}
                     >
+                      <span className="text-[10px]">{mode === "grid" ? "▦" : "☰"}</span>
                       {mode === "grid" ? "Grid" : "List"}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[1rem] border border-gray-200 bg-gray-50 px-3.5 py-3">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-[0.95rem] bg-white p-3.5 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-400">Products</p>
-                    <p className="mt-1.5 text-[1.35rem] font-extrabold text-gray-950">{formatCount(filteredProducts.length)}</p>
-                    <p className="text-[12px] text-gray-500">Showing products now</p>
+              <div className="mt-3.5 rounded-[0.9rem] border border-gray-200 bg-gray-50 px-3 py-2.5">
+                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-[0.85rem] bg-white p-3 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Products</p>
+                    <p className="mt-1 text-[1.1rem] font-extrabold text-gray-950">{formatCount(filteredProducts.length)}</p>
+                    <p className="text-[11px] text-gray-500">Showing now</p>
                   </div>
-                  <div className="rounded-[0.95rem] bg-white p-3.5 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-400">Rating</p>
-                    <p className="mt-1.5 text-[1.35rem] font-extrabold text-gray-950">{rating ? rating.toFixed(1) : "New"}</p>
-                    <p className="text-[12px] text-gray-500">{formatCount(reviews)} reviews</p>
+                  <div className="rounded-[0.85rem] bg-white p-3 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Rating</p>
+                    <p className="mt-1 text-[1.1rem] font-extrabold text-gray-950">{rating ? rating.toFixed(1) : "New"}</p>
+                    <p className="text-[11px] text-gray-500">{formatCount(reviews)} reviews</p>
                   </div>
-                  <div className="rounded-[0.95rem] bg-white p-3.5 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-400">Categories</p>
-                    <p className="mt-1.5 text-[1.35rem] font-extrabold text-gray-950">{formatCount(categories.length)}</p>
-                    <p className="text-[12px] text-gray-500">Unique store categories</p>
+                  <div className="rounded-[0.85rem] bg-white p-3 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Categories</p>
+                    <p className="mt-1 text-[1.1rem] font-extrabold text-gray-950">{formatCount(categories.length)}</p>
+                    <p className="text-[11px] text-gray-500">Unique categories</p>
                   </div>
-                  <div className="rounded-[0.95rem] bg-white p-3.5 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-400">Followers</p>
-                    <p className="mt-1.5 text-[1.35rem] font-extrabold text-gray-950">{formatCount(seller?.followersCount || 0)}</p>
-                    <p className="text-[12px] text-gray-500">Store followers</p>
+                  <div className="rounded-[0.85rem] bg-white p-3 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Followers</p>
+                    <p className="mt-1 text-[1.1rem] font-extrabold text-gray-950">{formatCount(seller?.followersCount || 0)}</p>
+                    <p className="text-[11px] text-gray-500">Store followers</p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-1.5">
                 {[...new Set(categories.map((category) => category.label))].slice(0, 6).map((category) => (
                   <button
                     key={category}
@@ -851,7 +846,7 @@ const StorePage = () => {
                       setSelectedCategory(category);
                       setSelectedTab("products");
                     }}
-                    className={`rounded-full border px-3 py-1.5 text-[12.5px] font-semibold transition ${
+                    className={`rounded-full border px-2.5 py-1 text-[11.5px] font-semibold transition ${
                       selectedCategory === category ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
                     }`}
                   >
@@ -861,37 +856,37 @@ const StorePage = () => {
               </div>
 
               {selectedTab === "home" ? (
-                <section className="mt-5 space-y-5">
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-[0.95rem] border border-gray-200 bg-white p-3.5 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Store Overview</p>
-                      <p className="mt-1.5 text-[13px] font-bold text-gray-950">Curated marketplace storefront</p>
-                      <p className="mt-1.5 text-[12px] text-gray-500">Shop products, categories, and store details from this seller.</p>
+                <section className="mt-4 space-y-4">
+                  <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Store Overview</p>
+                      <p className="mt-1 text-[11.5px] font-bold text-gray-950">Curated storefront</p>
+                      <p className="mt-1 text-[10.5px] text-gray-500">Products, categories, and details.</p>
                     </div>
-                    <div className="rounded-[0.95rem] border border-gray-200 bg-white p-3.5 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Support</p>
-                      <p className="mt-1.5 text-[13px] font-bold text-gray-950">{seller?.supportEmail || seller?.email || "Via KawilMart"}</p>
-                      <p className="mt-1.5 text-[12px] text-gray-500">Contact after checkout or via inbox.</p>
+                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Support</p>
+                      <p className="mt-1 text-[11.5px] font-bold text-gray-950">{seller?.supportEmail || seller?.email || "Via KawilMart"}</p>
+                      <p className="mt-1 text-[10.5px] text-gray-500">Contact after checkout or inbox.</p>
                     </div>
-                    <div className="rounded-[0.95rem] border border-gray-200 bg-white p-3.5 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Location</p>
-                      <p className="mt-1.5 text-[13px] font-bold text-gray-950">{seller?.location || "Location pending"}</p>
-                      <p className="mt-1.5 text-[12px] text-gray-500">Seller location and delivery details.</p>
+                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Location</p>
+                      <p className="mt-1 text-[11.5px] font-bold text-gray-950">{seller?.location || "Location pending"}</p>
+                      <p className="mt-1 text-[10.5px] text-gray-500">Location and delivery details.</p>
                     </div>
-                    <div className="rounded-[0.95rem] border border-gray-200 bg-white p-3.5 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Trust</p>
-                      <p className="mt-1.5 text-[13px] font-bold text-gray-950">{seller?.isVerified ? "Verified" : "Marketplace seller"}</p>
-                      <p className="mt-1.5 text-[12px] text-gray-500">Store badge and buyer protection notes.</p>
+                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Trust</p>
+                      <p className="mt-1 text-[11.5px] font-bold text-gray-950">{seller?.isVerified ? "Verified" : "Marketplace seller"}</p>
+                      <p className="mt-1 text-[10.5px] text-gray-500">Badge and protection notes.</p>
                     </div>
                   </div>
                   <div>
-                    <div className="mb-4 flex items-center justify-between">
-                      <h2 className="text-[1rem] font-extrabold text-gray-950">Featured products</h2>
-                      <button type="button" onClick={() => setSelectedTab("products")} className="text-[12.5px] font-semibold text-orange-600">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h2 className="text-[0.95rem] font-extrabold text-gray-950">Featured products</h2>
+                      <button type="button" onClick={() => setSelectedTab("products")} className="text-[11.5px] font-semibold text-orange-600">
                         View all →
                       </button>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 min-[340px]:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-2.5 min-[340px]:grid-cols-2 xl:grid-cols-4">
                       {sellerProducts.slice(0, 4).map((product) => (
                         <StoreProductCard key={product._id} product={product} />
                       ))}
@@ -899,12 +894,12 @@ const StorePage = () => {
                   </div>
                 </section>
               ) : selectedTab === "categories" ? (
-                <section className="mt-5 space-y-5">
+                <section className="mt-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-[1rem] font-extrabold text-gray-950">Store Categories</h2>
-                    <p className="text-[12px] text-gray-500">{formatCount(categories.length)} categories</p>
+                    <h2 className="text-[0.95rem] font-extrabold text-gray-950">Store Categories</h2>
+                    <p className="text-[11px] text-gray-500">{formatCount(categories.length)} categories</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-4">
                     {categories.map((category) => (
                       <button
                         key={category.value}
@@ -913,58 +908,58 @@ const StorePage = () => {
                           setSelectedCategory(category.value);
                           setSelectedTab("products");
                         }}
-                        className="rounded-[0.95rem] border border-gray-200 bg-white p-3.5 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md"
+                        className="rounded-[0.9rem] border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md"
                       >
-                        <p className="text-[12.5px] font-semibold text-gray-950">{getCategoryMeta(category.value).label}</p>
-                        <p className="mt-1 text-[11px] text-gray-500">{formatCount(category.count)} products</p>
+                        <p className="text-[11.5px] font-semibold text-gray-950">{getCategoryMeta(category.value).label}</p>
+                        <p className="mt-1 text-[10px] text-gray-500">{formatCount(category.count)} products</p>
                       </button>
                     ))}
                   </div>
                 </section>
               ) : selectedTab === "reviews" ? (
-                <section className="mt-5 space-y-5">
+                <section className="mt-4 space-y-4">
                   <div className="grid gap-4 md:grid-cols-3">
-                    <div className="rounded-[0.95rem] border border-gray-200 bg-white p-4 shadow-sm md:col-span-1">
-                      <p className="text-[13px] font-semibold text-gray-950">Store rating</p>
-                      <p className="mt-1.5 text-[2rem] font-black text-gray-950">{rating ? rating.toFixed(1) : "New"}</p>
-                      <p className="mt-1 text-[12px] text-gray-500">{formatCount(reviews)} reviews</p>
+                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm md:col-span-1">
+                      <p className="text-[11.5px] font-semibold text-gray-950">Store rating</p>
+                      <p className="mt-1 text-[1.5rem] font-black text-gray-950">{rating ? rating.toFixed(1) : "New"}</p>
+                      <p className="mt-1 text-[11px] text-gray-500">{formatCount(reviews)} reviews</p>
                     </div>
-                    <div className="rounded-[0.95rem] border border-gray-200 bg-white p-4 shadow-sm md:col-span-2">
-                      <p className="text-[13px] font-semibold text-gray-950">Customer trust</p>
-                      <div className="mt-3.5 grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-[0.9rem] bg-gray-50 p-3.5">
+                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm md:col-span-2">
+                      <p className="text-[11.5px] font-semibold text-gray-950">Customer trust</p>
+                      <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+                        <div className="rounded-[0.85rem] bg-gray-50 p-3">
                           <p className="text-xs text-gray-400">Verified</p>
-                          <p className="mt-1 text-[13px] font-bold text-gray-950">{seller?.isVerified ? "Yes" : "No"}</p>
+                          <p className="mt-1 text-[12px] font-bold text-gray-950">{seller?.isVerified ? "Yes" : "No"}</p>
                         </div>
-                        <div className="rounded-[0.9rem] bg-gray-50 p-3.5">
+                        <div className="rounded-[0.85rem] bg-gray-50 p-3">
                           <p className="text-xs text-gray-400">Followers</p>
-                          <p className="mt-1 text-[13px] font-bold text-gray-950">{formatCount(seller?.followersCount || 0)}</p>
+                          <p className="mt-1 text-[12px] font-bold text-gray-950">{formatCount(seller?.followersCount || 0)}</p>
                         </div>
-                        <div className="rounded-[0.9rem] bg-gray-50 p-3.5">
+                        <div className="rounded-[0.85rem] bg-gray-50 p-3">
                           <p className="text-xs text-gray-400">Products</p>
-                          <p className="mt-1 text-[13px] font-bold text-gray-950">{formatCount(sellerProducts.length)}</p>
+                          <p className="mt-1 text-[12px] font-bold text-gray-950">{formatCount(sellerProducts.length)}</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </section>
               ) : selectedTab === "about" ? (
-                <section className="mt-5 space-y-5">
+                <section className="mt-4 space-y-4">
                   <StoreAboutCard />
                 </section>
               ) : (
-                <section className="mt-5 space-y-5">
+                <section className="mt-4 space-y-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <h2 className="text-[1rem] font-extrabold text-gray-950">All Products ({formatCount(filteredProducts.length)})</h2>
-                      <p className="mt-1 text-[12px] text-gray-500">Showing {formatCount(filteredProducts.length)} of {formatCount(sellerProducts.length)} products</p>
+                    <h2 className="text-[0.95rem] font-extrabold text-gray-950">All Products ({formatCount(filteredProducts.length)})</h2>
+                      <p className="mt-1 text-[11px] text-gray-500">Showing {formatCount(filteredProducts.length)} of {formatCount(sellerProducts.length)} products</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <label className="text-[12.5px] font-medium text-gray-700">Sort by:</label>
+                      <label className="text-[11.5px] font-medium text-gray-700">Sort by:</label>
                       <select
                         value={sortBy}
                         onChange={(event) => setSortBy(event.target.value)}
-                        className="rounded-2xl border border-gray-200 bg-white px-3.5 py-2.5 text-[12.5px] outline-none"
+                        className="rounded-2xl border border-gray-200 bg-white px-3 py-2 text-[11.5px] outline-none"
                       >
                         <option value="popular">Popular</option>
                         <option value="price_asc">Price: Low to High</option>
@@ -975,26 +970,26 @@ const StorePage = () => {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 rounded-[0.95rem] border border-gray-200 bg-white p-3.5 sm:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-[0.85rem] border border-gray-100 bg-gray-50 p-3.5">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Original</p>
-                      <p className="mt-1 text-[12px] text-gray-500">Genuine products</p>
+                  <div className="grid gap-2.5 rounded-[0.9rem] border border-gray-200 bg-white p-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-[0.85rem] border border-gray-100 bg-gray-50 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Original</p>
+                      <p className="mt-1 text-[11px] text-gray-500">Genuine products</p>
                     </div>
-                    <div className="rounded-[0.85rem] border border-gray-100 bg-gray-50 p-3.5">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Fast Delivery</p>
-                      <p className="mt-1 text-[12px] text-gray-500">Get it in 24 - 48hrs</p>
+                    <div className="rounded-[0.85rem] border border-gray-100 bg-gray-50 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Fast Delivery</p>
+                      <p className="mt-1 text-[11px] text-gray-500">Get it in 24 - 48hrs</p>
                     </div>
-                    <div className="rounded-[0.85rem] border border-gray-100 bg-gray-50 p-3.5">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Easy Returns</p>
-                      <p className="mt-1 text-[12px] text-gray-500">Return policy applies</p>
+                    <div className="rounded-[0.85rem] border border-gray-100 bg-gray-50 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Easy Returns</p>
+                      <p className="mt-1 text-[11px] text-gray-500">Return policy applies</p>
                     </div>
-                    <div className="rounded-[0.85rem] border border-gray-100 bg-gray-50 p-3.5">
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Secure Payment</p>
-                      <p className="mt-1 text-[12px] text-gray-500">Pay safely</p>
+                    <div className="rounded-[0.85rem] border border-gray-100 bg-gray-50 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Secure Payment</p>
+                      <p className="mt-1 text-[11px] text-gray-500">Pay safely</p>
                     </div>
                   </div>
 
-                  <div className={viewMode === "list" ? "space-y-3 pb-6" : "grid grid-cols-1 gap-3 pb-6 min-[340px]:grid-cols-2 xl:grid-cols-4"}>
+                  <div className={viewMode === "list" ? "space-y-2.5 pb-5" : "grid grid-cols-1 gap-2.5 pb-5 min-[340px]:grid-cols-2 xl:grid-cols-4"}>
                     {filteredProducts.map((product) => (
                       <StoreProductCard key={product._id} product={product} layout={viewMode} />
                     ))}
@@ -1004,26 +999,26 @@ const StorePage = () => {
             </section>
 
             <aside className="hidden lg:block">
-              <div className="sticky top-24 space-y-4">
+              <div className="sticky top-20 space-y-3">
                 <DealCard />
                 <TopCategoriesRail />
                 <WhyShopCard />
-                <div className="rounded-[1rem] border border-gray-200 bg-white p-3.5 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-[13px] font-semibold text-gray-950">Stores list</p>
-                    <button type="button" onClick={() => navigate("/categories")} className="text-xs font-semibold text-orange-600">
+                <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-[12px] font-semibold text-gray-950">Stores list</p>
+                    <button type="button" onClick={() => navigate("/categories")} className="text-[11px] font-semibold text-orange-600">
                       Browse
                     </button>
                   </div>
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     {otherStores.map((store) => (
                       <button
                         key={store.id}
                         type="button"
                         onClick={() => navigate(`/store/${store.id}`)}
-                        className="flex w-full items-center gap-2.5 rounded-xl border border-gray-100 bg-gray-50 px-2.5 py-2 text-left transition hover:border-orange-200 hover:bg-orange-50"
+                        className="flex w-full items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-2.5 py-1.5 text-left transition hover:border-orange-200 hover:bg-orange-50"
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white text-xs font-semibold text-gray-700">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-xs font-semibold text-gray-700">
                           {store.avatarUrl ? (
                             <Image src={store.avatarUrl} alt={store.name} width={40} height={40} className="h-full w-full object-cover" />
                           ) : (
@@ -1031,8 +1026,8 @@ const StorePage = () => {
                           )}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[12.5px] font-semibold text-gray-950">{store.name}</span>
-                          <span className="block text-[10px] text-gray-500">{formatCount(store.count)} products</span>
+                          <span className="block truncate text-[11.5px] font-semibold text-gray-950">{store.name}</span>
+                          <span className="block text-[9.5px] text-gray-500">{formatCount(store.count)} products</span>
                         </span>
                       </button>
                     ))}
@@ -1045,12 +1040,12 @@ const StorePage = () => {
 
         {showMobileFilters ? (
           <div className="fixed inset-0 z-50 bg-black/50 lg:hidden" onClick={() => setShowMobileFilters(false)}>
-            <div className="absolute bottom-0 right-0 top-0 w-full max-w-[20rem] overflow-y-auto bg-white p-5" onClick={(event) => event.stopPropagation()}>
-              <div className="mb-6 flex items-center justify-between">
-                <p className="text-lg font-bold text-gray-950">Filters</p>
-                <button type="button" onClick={() => setShowMobileFilters(false)} className="text-2xl text-gray-400">×</button>
+            <div className="absolute bottom-0 right-0 top-0 w-full max-w-[18.5rem] overflow-y-auto bg-white p-4" onClick={(event) => event.stopPropagation()}>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-[15px] font-bold text-gray-950">Filters</p>
+                <button type="button" onClick={() => setShowMobileFilters(false)} className="text-xl text-gray-400">×</button>
               </div>
-              <StoreSidebar title="Browse by Category" onClear={clearAllFilters}>
+              <StoreSidebar title="Filters" onClear={clearAllFilters}>
                 <FilterContent />
               </StoreSidebar>
             </div>

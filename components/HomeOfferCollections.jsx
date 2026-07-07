@@ -69,6 +69,7 @@ const HomeOfferCollections = () => {
       const sortedSellerProducts = sortProductsForCollections(sellerProducts);
       const primaryProduct = sortedSellerProducts[0];
       const sellerName = primaryProduct?.sellerProfile?.name || "Marketplace seller";
+      const sellerAvatarUrl = primaryProduct?.sellerProfile?.avatarUrl || "";
       const sellerLocation = primaryProduct?.sellerProfile?.location || primaryProduct?.sellerLocation || primaryProduct?.location || "Location pending";
       const sellerCategories = formatCategoryHighlights(sortedSellerProducts);
       const bestOffer = Math.min(...sortedSellerProducts.map((product) => Number(product.offerPrice) || 0));
@@ -76,6 +77,7 @@ const HomeOfferCollections = () => {
       return {
         key: sellerId,
         title: sellerName,
+        avatarUrl: sellerAvatarUrl,
         location: sellerLocation,
         productCount: sortedSellerProducts.length,
         heroProduct: sortedSellerProducts[0],
@@ -131,11 +133,18 @@ const HomeOfferCollections = () => {
               <div className="min-w-0 p-5 sm:p-6">
                 <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <span className="inline-flex w-fit rounded-full border border-orange-100 bg-orange-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700 shadow-sm">
-                      {card.badge}
-                    </span>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-orange-50 px-3 py-1 shadow-sm">
+                      <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-white text-[10px] font-bold text-orange-600">
+                        {card.avatarUrl ? (
+                          <Image src={card.avatarUrl} alt={card.title} width={24} height={24} className="h-full w-full object-cover" />
+                        ) : (
+                          card.title.slice(0, 1)
+                        )}
+                      </span>
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700">{card.badge}</span>
+                    </div>
                     <div className="mt-4 flex min-w-0 flex-col gap-2 min-[420px]:flex-row min-[420px]:flex-wrap min-[420px]:items-center">
-                      <p className="min-w-0 text-2xl font-semibold text-gray-900 [overflow-wrap:anywhere]">{card.title}</p>
+                      <p className="min-w-0 text-xl font-semibold text-gray-900 [overflow-wrap:anywhere]">{card.title}</p>
                       <SellerTrustBadge
                         sellerProfile={card.heroProduct?.sellerProfile}
                         className="w-fit max-w-full"

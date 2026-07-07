@@ -324,6 +324,7 @@ const MobileRoundCategory = ({ label, category, products, navigate }) => {
 
 const MobileTopCategory = ({ label, category, products, navigate }) => {
   const product = productForCategory(products, category);
+  const brandLogo = product?.sellerProfile?.avatarUrl;
 
   return (
     <button
@@ -331,12 +332,17 @@ const MobileTopCategory = ({ label, category, products, navigate }) => {
       onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
       className="flex h-[6.7rem] min-w-0 flex-col items-center justify-center rounded-xl border border-gray-200 bg-white px-2 py-3 text-center shadow-sm"
     >
-      <span className="flex h-12 w-full items-center justify-center">
+      <span className="relative flex h-12 w-full items-center justify-center">
         {product ? (
           <ProductImage product={product} alt={label} width={86} height={62} className="h-full w-full object-contain" />
         ) : (
           <CategoryLineIcon category={category} className="h-5 w-5 text-gray-700" />
         )}
+        {brandLogo ? (
+          <span className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-white shadow-sm">
+            <Image src={brandLogo} alt={`${label} brand`} width={24} height={24} className="h-full w-full object-cover" />
+          </span>
+        ) : null}
       </span>
       <span className="mt-2 line-clamp-1 text-[12px] font-bold text-gray-950">{label}</span>
     </button>
@@ -981,6 +987,35 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const heroSlides = resolvedContent.heroSlides.filter((slide) => slide.imageUrl);
   const promoSlides = resolvedContent.promoBanners.filter((banner) => banner.imageUrl);
   const featuredCards = resolvedContent.featuredCards.filter((card) => card.imageUrl);
+  const storeCards = Object.entries(
+    sortedProducts.reduce((acc, product) => {
+      const storeId = product.userId || product.sellerProfile?.id || product.sellerProfile?._id;
+      if (!storeId) {
+        return acc;
+      }
+
+      if (!acc[storeId]) {
+        acc[storeId] = [];
+      }
+
+      acc[storeId].push(product);
+      return acc;
+    }, {})
+  )
+    .map(([storeId, storeProducts]) => {
+      const sortedStoreProducts = sortProductsForLiveShowcase(storeProducts);
+      const primaryProduct = sortedStoreProducts[0];
+      return {
+        id: storeId,
+        name: primaryProduct?.sellerProfile?.name || "Marketplace store",
+        avatarUrl: primaryProduct?.sellerProfile?.avatarUrl || "",
+        location: primaryProduct?.sellerProfile?.location || primaryProduct?.sellerLocation || "Location pending",
+        productCount: sortedStoreProducts.length,
+        href: `/store/${encodeURIComponent(storeId)}`,
+      };
+    })
+    .sort((left, right) => right.productCount - left.productCount)
+    .slice(0, 8);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [activePromoIndex, setActivePromoIndex] = useState(0);
   const [activeDealIndex, setActiveDealIndex] = useState(0);
@@ -1219,6 +1254,45 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             ))}
           </div>
         </section>
+
+        {storeCards.length ? (
+          <section className="mt-8">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-950">Best Selling Stores</h2>
+                <p className="text-xs text-gray-500">Quick access to active stores with current listings.</p>
+              </div>
+              <button type="button" onClick={() => navigate("/all-products?sort=popular")} className="text-xs font-semibold text-orange-600">
+                View all stores →
+              </button>
+            </div>
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+              {storeCards.map((store) => (
+                <button
+                  key={store.id}
+                  type="button"
+                  onClick={() => navigate(store.href)}
+                  onMouseEnter={() => prefetchRoute(store.href)}
+                  onFocus={() => prefetchRoute(store.href)}
+                  className="flex w-[18rem] shrink-0 items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md"
+                >
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gray-100">
+                    {store.avatarUrl ? (
+                      <Image src={store.avatarUrl} alt={store.name} width={56} height={56} className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-lg font-black text-gray-700">{store.name.slice(0, 1)}</span>
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-semibold text-gray-950">{store.name}</span>
+                    <span className="block text-[11px] text-gray-500">{store.location}</span>
+                    <span className="mt-1 block text-[11px] font-semibold text-orange-600">{store.productCount} products</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
     </>

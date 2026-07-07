@@ -1,6 +1,5 @@
 'use client'
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
@@ -46,16 +45,16 @@ const InboxPage = () => {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") === "support" ? "support" : "inbox";
   const {
-    getToken,
     user,
     authReady,
     isAdmin,
+    recentNotifications,
     markNotificationAsRead,
     markAllNotificationsAsRead,
     setUnreadNotificationsCount,
+    refreshNotifications,
   } = useAppContext();
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [notifications, setNotifications] = useState([]);
   const [supportMessages, setSupportMessages] = useState([]);
   const [supportParticipant, setSupportParticipant] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,33 +62,14 @@ const InboxPage = () => {
   const [markingAll, setMarkingAll] = useState(false);
   const [supportDraft, setSupportDraft] = useState({ subject: "", content: "" });
   const [sendingSupport, setSendingSupport] = useState(false);
+  const [selectedNotificationId, setSelectedNotificationId] = useState(null);
   const usesAdminSupportQueue = Boolean(isAdmin);
 
+  const notifications = recentNotifications;
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read).length,
     [notifications]
   );
-
-  const fetchNotifications = async () => {
-    try {
-      const token = await getToken();
-      const { data } = await axios.get('/api/user/notifications', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (data.success) {
-        const nextNotifications = data.notifications || [];
-        setNotifications(nextNotifications);
-        setUnreadNotificationsCount(nextNotifications.filter((notification) => !notification.read).length);
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Failed to load notifications'));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchSupportThread = async () => {
     if (usesAdminSupportQueue) {
@@ -128,9 +108,7 @@ const InboxPage = () => {
         return;
       }
 
-      setNotifications(prev => prev.map((notification) =>
-        notification._id === notificationId ? { ...notification, read: true } : notification
-      ));
+      setUnreadNotificationsCount(typeof data.unreadCount === "number" ? data.unreadCount : unreadCount);
     } catch {
       toast.error('Failed to mark as read');
     }
@@ -151,10 +129,7 @@ const InboxPage = () => {
         return;
       }
 
-      setNotifications((current) => current.map((notification) => ({
-        ...notification,
-        read: true,
-      })));
+      setUnreadNotificationsCount(0);
       toast.success(data.message || 'All inbox messages marked as read');
     } catch {
       toast.error('Failed to mark all as read');
@@ -204,7 +179,7 @@ const InboxPage = () => {
 
   useEffect(() => {
     if (authReady && user) {
-      const pendingRequests = [fetchNotifications()];
+      const pendingRequests = [refreshNotifications({ silent: true })];
 
       if (usesAdminSupportQueue) {
         setSupportMessages([]);
@@ -214,10 +189,18 @@ const InboxPage = () => {
         pendingRequests.push(fetchSupportThread());
       }
 
-      void Promise.all(pendingRequests);
+      void Promise.all(pendingRequests).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authReady, user, usesAdminSupportQueue]);
+  }, [authReady, user, usesAdminSupportQueue, refreshNotifications]);
+
+  useEffect(() => {
+    if (notifications.length && !selectedNotificationId) {
+      setSelectedNotificationId(notifications[0]._id);
+    }
+  }, [notifications, selectedNotificationId]);
 
   if (loading && supportLoading) {
     return (
@@ -252,59 +235,130 @@ const InboxPage = () => {
         </div>
 
         {activeTab === "inbox" ? (
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-3xl border border-gray-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Unread inbox updates</p>
-                <p className="mt-1 text-2xl font-semibold text-gray-900">{unreadCount}</p>
-              </div>
-              <button
-                onClick={markAllAsRead}
-                disabled={markingAll || unreadCount === 0}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  markingAll || unreadCount === 0
-                    ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                    : 'bg-gray-900 text-white hover:bg-black'
-                }`}
-              >
-                {markingAll ? 'Marking...' : 'Mark all as read'}
-              </button>
-            </div>
-
-            {notifications.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-gray-200 bg-white py-16 text-center text-gray-500 shadow-sm">
-                Your inbox is empty
-              </div>
-            ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification._id}
-                  className={`rounded-3xl border p-5 shadow-sm transition ${
-                    !notification.read ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-white'
+          <div className="overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
+              <div className="flex items-center gap-2.5">
+                <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600">
+                  <span className="h-3.5 w-3.5 rounded-[3px] border border-gray-400" />
+                </button>
+                <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600">
+                  ↻
+                </button>
+                <button
+                  onClick={markAllAsRead}
+                  disabled={markingAll || unreadCount === 0}
+                  className={`rounded-xl border px-3.5 py-2 text-[12px] font-semibold transition ${
+                    markingAll || unreadCount === 0
+                      ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+                      : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'
                   }`}
                 >
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-gray-900">{notification.title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-gray-600">{notification.message}</p>
-                      <p className="mt-3 text-xs text-gray-400">{formatDateTime(notification.date)}</p>
-                    </div>
-                    {!notification.read ? (
-                      <button
-                        onClick={() => markAsRead(notification._id)}
-                        className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-                      >
-                        Mark read
-                      </button>
-                    ) : (
-                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">
-                        Read
-                      </span>
-                    )}
-                  </div>
+                  {markingAll ? 'Marking...' : 'Mark all as read'}
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <select className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[12px] text-gray-700 outline-none">
+                  <option>Filter</option>
+                  <option>Unread</option>
+                  <option>Read</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid min-h-[38rem] xl:grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)]">
+              <div className="border-b border-gray-200 xl:border-b-0 xl:border-r">
+                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                  <p className="text-[12px] font-semibold text-gray-500">Inbox updates</p>
+                  <p className="text-[12px] text-gray-400">{notifications.length} total</p>
                 </div>
-              ))
-            )}
+                <div className="max-h-[34.5rem] overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="flex min-h-[22rem] items-center justify-center px-4 text-center text-sm text-gray-500">
+                      Your inbox is empty
+                    </div>
+                  ) : (
+                    notifications.map((notification) => {
+                      const isSelected = selectedNotificationId === notification._id;
+                      return (
+                        <button
+                          key={notification._id}
+                          type="button"
+                          onClick={() => setSelectedNotificationId(notification._id)}
+                          className={`flex w-full items-start gap-3 border-b border-gray-100 px-4 py-3.5 text-left transition ${
+                            isSelected ? 'bg-blue-50/70' : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            readOnly
+                            className="mt-1 h-4 w-4 rounded border-gray-300"
+                          />
+                          <span className={`mt-1.5 h-2.5 w-2.5 rounded-full ${notification.read ? 'bg-gray-300' : 'bg-blue-500'}`} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-3">
+                              <h3 className="truncate text-[13px] font-semibold text-gray-950">{notification.title}</h3>
+                              <span className="shrink-0 text-[11px] text-gray-500">{formatDateTime(notification.date)}</span>
+                            </div>
+                            <p className="mt-1 line-clamp-1 text-[12px] text-gray-500">{notification.message}</p>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-[#fbfbfc] px-5 py-5">
+                {notifications.length === 0 ? (
+                  <div className="flex h-full min-h-[22rem] items-center justify-center rounded-[1.25rem] border border-dashed border-gray-200 bg-white text-sm text-gray-500">
+                    Select a notification to preview it here.
+                  </div>
+                ) : (
+                  (() => {
+                    const selectedNotification = notifications.find((notification) => notification._id === selectedNotificationId) || notifications[0];
+                    return (
+                      <div className="rounded-[1.25rem] border border-gray-200 bg-white p-5 shadow-sm">
+                        <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">Notification</p>
+                            <h3 className="mt-2 text-[20px] font-semibold text-gray-950">{selectedNotification.title}</h3>
+                            <p className="mt-1 text-[12px] text-gray-500">{formatDateTime(selectedNotification.date)}</p>
+                          </div>
+                          {!selectedNotification.read ? (
+                            <button
+                              onClick={() => markAsRead(selectedNotification._id)}
+                              className="rounded-full bg-blue-600 px-4 py-2 text-[12px] font-semibold text-white transition hover:bg-blue-700"
+                            >
+                              Mark as read
+                            </button>
+                          ) : (
+                            <span className="rounded-full bg-gray-100 px-3 py-1.5 text-[11px] font-semibold text-gray-500">
+                              Read
+                            </span>
+                          )}
+                        </div>
+                        <div className="space-y-4 py-5">
+                          <p className="text-[14px] leading-7 text-gray-700">{selectedNotification.message}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => markAsRead(selectedNotification._id)}
+                            className="rounded-full border border-gray-200 bg-white px-4 py-2 text-[12px] font-semibold text-gray-800 hover:border-gray-300"
+                          >
+                            Mark as read
+                          </button>
+                          <Link href="/inbox?tab=support" className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-[12px] font-semibold text-blue-700">
+                            Open support
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
+            </div>
           </div>
         ) : usesAdminSupportQueue ? (
           <div className="rounded-3xl border border-orange-200 bg-orange-50 p-6 shadow-sm">
