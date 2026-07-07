@@ -473,30 +473,30 @@ const SidebarLink = ({ active, href, children, onClick }) => (
 );
 
 const SectionTable = ({ rows }) => (
-  <div className="border border-slate-200">
-    <div className="grid grid-cols-1 border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 md:grid-cols-[220px_minmax(0,1fr)]">
-      <div className="border-b border-slate-200 px-4 py-3 md:border-b-0 md:border-r">Topic</div>
-      <div className="px-4 py-3">Details</div>
+  <div className="overflow-hidden border border-slate-200 rounded-2xl">
+    <div className="grid grid-cols-1 border-b border-slate-200 bg-slate-50 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 sm:text-[11px] sm:tracking-[0.2em] md:grid-cols-[220px_minmax(0,1fr)]">
+      <div className="border-b border-slate-200 px-3 py-3 md:border-b-0 md:border-r sm:px-4">Topic</div>
+      <div className="px-3 py-3 sm:px-4">Details</div>
     </div>
     {rows.map(([label, value], index) => (
       <div
         key={label}
         className={`grid grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)] ${index !== rows.length - 1 ? "border-b border-slate-200" : ""}`}
       >
-        <div className="border-b border-slate-200 px-4 py-4 text-sm font-semibold text-slate-900 md:border-b-0 md:border-r">
+        <div className="border-b border-slate-200 px-3 py-3 text-[13px] font-semibold text-slate-900 md:border-b-0 md:border-r sm:px-4 sm:py-4 sm:text-sm">
           {label}
         </div>
-        <div className="px-4 py-4 text-sm leading-7 text-slate-600">{value}</div>
+        <div className="px-3 py-3 text-[13px] leading-6 text-slate-600 sm:px-4 sm:py-4 sm:text-sm sm:leading-7">{value}</div>
       </div>
     ))}
   </div>
 );
 
 const BulletList = ({ items }) => (
-  <ul className="space-y-4">
+  <ul className="space-y-3 sm:space-y-4">
     {items.map((item) => (
-      <li key={item} className="flex gap-4 text-sm leading-7 text-slate-600">
-        <span className="mt-3 h-1.5 w-1.5 shrink-0 bg-orange-500" />
+      <li key={item} className="flex gap-3 text-[13px] leading-6 text-slate-600 sm:gap-4 sm:text-sm sm:leading-7">
+        <span className="mt-2.5 h-1.5 w-1.5 shrink-0 bg-orange-500" />
         <span>{item}</span>
       </li>
     ))}
@@ -504,11 +504,11 @@ const BulletList = ({ items }) => (
 );
 
 const QaList = ({ items }) => (
-  <div className="space-y-6">
+  <div className="space-y-5 sm:space-y-6">
     {items.map((item, index) => (
       <div key={item.question} className={index !== items.length - 1 ? "border-b border-slate-200 pb-6" : ""}>
-        <h4 className="text-base font-semibold text-slate-900">{item.question}</h4>
-        <p className="mt-3 text-sm leading-7 text-slate-600">{item.answer}</p>
+        <h4 className="text-[15px] font-semibold leading-6 text-slate-900 sm:text-base">{item.question}</h4>
+        <p className="mt-2.5 text-[13px] leading-6 text-slate-600 sm:mt-3 sm:text-sm sm:leading-7">{item.answer}</p>
       </div>
     ))}
   </div>
@@ -620,21 +620,21 @@ const LegalCenterPage = () => {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <div className="border-b border-slate-200" style={titleBarStyle}>
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:px-10 lg:px-16">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-600">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 md:px-10 lg:px-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-orange-600 sm:text-xs sm:tracking-[0.28em]">
             KawilMart Privacy & Terms
           </p>
-          <h1 className="mt-3 text-3xl font-semibold text-slate-900 md:text-4xl">
+          <h1 className="mt-3 max-w-4xl text-2xl font-semibold leading-tight text-slate-900 sm:text-3xl md:text-4xl">
             Policy pages arranged like a help document, but written for KawilMart's real marketplace logic.
           </h1>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+          <p className="mt-4 max-w-3xl text-[13px] leading-6 text-slate-600 sm:text-sm sm:leading-7 md:text-base">
             Browse by topic, jump through the left document rail, and read each policy section in a cleaner, more focused layout.
           </p>
         </div>
       </div>
 
-      <div className="sticky top-[72px] z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl gap-8 overflow-x-auto px-4 sm:px-6 md:px-10 lg:px-16">
+      <div className="sticky top-[64px] z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl gap-4 overflow-x-auto px-4 sm:gap-8 sm:px-6 md:px-10 lg:px-16">
           {legalTabs.map((tab) => (
             <TabLink
               key={tab.key}
@@ -649,8 +649,8 @@ const LegalCenterPage = () => {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
         <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12">
-          <aside className="border-b border-slate-200 py-6 lg:sticky lg:top-[133px] lg:h-[calc(100vh-133px)] lg:overflow-auto lg:border-b-0 lg:border-r lg:pr-8">
-            <div className="flex gap-2 overflow-x-auto lg:block lg:space-y-1">
+          <aside className="hidden border-b border-slate-200 py-6 lg:sticky lg:top-[133px] lg:block lg:h-[calc(100vh-133px)] lg:overflow-auto lg:border-b-0 lg:border-r lg:pr-8">
+            <div className="space-y-1">
               {currentTab.sections.map((section) => (
                 <SidebarLink
                   key={section.id}
@@ -664,31 +664,47 @@ const LegalCenterPage = () => {
             </div>
           </aside>
 
-          <main className="min-w-0 py-8 lg:py-12">
+          <main className="min-w-0 py-6 sm:py-8 lg:py-12">
+            <div className="mb-6 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+              {currentTab.sections.map((section) => (
+                <a
+                  key={section.id}
+                  href={`#${section.id}`}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`shrink-0 rounded-full border px-3 py-2 text-[11px] font-semibold transition ${
+                    activeSection === section.id
+                      ? "border-orange-500 bg-orange-50 text-orange-600"
+                      : "border-slate-200 bg-white text-slate-600"
+                  }`}
+                >
+                  {section.label}
+                </a>
+              ))}
+            </div>
             <article id={currentTab.key} className="scroll-mt-44">
-              <div className="border-b border-slate-200 pb-10 text-center">
+              <div className="border-b border-slate-200 pb-8 text-center sm:pb-10">
                 <DocumentIllustration accent={currentTab.label} />
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-600">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-orange-600 sm:text-xs sm:tracking-[0.28em]">
                   {currentTab.eyebrow}
                 </p>
-                <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-semibold leading-tight text-slate-900 md:text-5xl">
+                <h2 className="mx-auto mt-4 max-w-3xl text-2xl font-semibold leading-tight text-slate-900 sm:text-3xl md:text-5xl">
                   {currentTab.title}
                 </h2>
-                <p className="mx-auto mt-5 max-w-3xl text-sm leading-8 text-slate-600 md:text-base">
+                <p className="mx-auto mt-4 max-w-3xl text-[13px] leading-6 text-slate-600 sm:mt-5 sm:text-sm sm:leading-7 md:text-base">
                   {currentTab.intro}
                 </p>
 
                 {currentTab.cta ? (
-                  <div className="mx-auto mt-8 max-w-xl border border-orange-200 bg-orange-50/60 px-5 py-5 text-left">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-600">
+                  <div className="mx-auto mt-6 max-w-xl border border-orange-200 bg-orange-50/60 px-4 py-4 text-left sm:mt-8 sm:px-5 sm:py-5">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-600 sm:text-xs sm:tracking-[0.24em]">
                       KawilMart shortcut
                     </p>
-                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                    <p className="mt-2 text-[13px] leading-6 text-slate-600 sm:text-sm sm:leading-7">
                       {currentTab.cta.description}
                     </p>
                     <a
                       href={currentTab.cta.href}
-                      className="mt-4 inline-flex items-center gap-2 border-b border-orange-500 pb-1 text-sm font-medium text-orange-600"
+                      className="mt-4 inline-flex items-center gap-2 border-b border-orange-500 pb-1 text-[13px] font-medium text-orange-600 sm:text-sm"
                     >
                       {currentTab.cta.label}
                       <span aria-hidden="true">+</span>
@@ -702,13 +718,13 @@ const LegalCenterPage = () => {
                   <section
                     key={section.id}
                     id={section.id}
-                    className={`scroll-mt-44 ${index === 0 ? "pt-10" : "border-t border-slate-200 pt-10"} pb-10`}
+                    className={`scroll-mt-44 ${index === 0 ? "pt-8 sm:pt-10" : "border-t border-slate-200 pt-8 sm:pt-10"} pb-8 sm:pb-10`}
                   >
                     <div className="max-w-3xl">
-                      <h3 className="text-2xl font-semibold text-slate-900">{section.title}</h3>
+                      <h3 className="text-xl font-semibold text-slate-900 sm:text-2xl">{section.title}</h3>
 
                       {section.paragraphs?.map((paragraph) => (
-                        <p key={paragraph} className="mt-5 text-sm leading-8 text-slate-600 md:text-base">
+                        <p key={paragraph} className="mt-4 text-[13px] leading-6 text-slate-600 sm:mt-5 sm:text-sm sm:leading-7 md:text-base">
                           {paragraph}
                         </p>
                       ))}
