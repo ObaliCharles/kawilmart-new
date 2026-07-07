@@ -6,6 +6,7 @@ import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import Skeleton from "@/components/Skeleton";
 import { buildCategoryHref, categoryMatchesSelection, getCategoryMeta } from "@/lib/marketplaceCategories";
+import { useSearchParams } from "next/navigation";
 
 const normalizeText = (value = "") => (
   String(value || "")
@@ -397,6 +398,17 @@ const electronicsTiles = [
 
 const brandFallbacks = ["Samsung", "Apple", "HP", "Dell", "Sony", "JBL", "Canon", "Lenovo"];
 
+const brandLogoSources = {
+  Samsung: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/samsung.svg",
+  Apple: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/apple.svg",
+  HP: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/hp.svg",
+  Dell: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/dell.svg",
+  Sony: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/sony.svg",
+  JBL: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/jbl.svg",
+  Canon: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/canon.svg",
+  Lenovo: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/lenovo.svg",
+};
+
 const formatCount = (count) => new Intl.NumberFormat("en-US").format(Math.max(0, Number(count) || 0));
 
 const getImage = (product) => {
@@ -421,6 +433,32 @@ const getBrandLabel = (product) => {
 
   const firstToken = normalizeText(product?.name).split(" ").find((token) => token.length > 2);
   return firstToken ? firstToken[0].toUpperCase() + firstToken.slice(1) : "Store";
+};
+
+const getContentTargetHref = (item) => {
+  if (item?.linkType === "category" && item.category) {
+    return `/all-products?category=${encodeURIComponent(item.category)}`;
+  }
+
+  if (item?.linkType === "store" && item.storeId) {
+    return `/store/${encodeURIComponent(item.storeId)}`;
+  }
+
+  if (item?.productId) {
+    return `/product/${item.productId}`;
+  }
+
+  return item?.href || "/all-products";
+};
+
+const findPlacementBanner = (banners, selectedDepartment) => {
+  const departmentCategories = selectedDepartment?.matchCategories || [];
+  const normalizedDepartmentLabel = normalizeText(selectedDepartment?.label);
+
+  return banners.find((banner) => (
+    departmentCategories.some((category) => categoryMatchesSelection(banner.placementCategory || banner.category, category))
+    || normalizeText(banner.placementCategory || banner.category).includes(normalizedDepartmentLabel)
+  )) || banners[0] || null;
 };
 
 const getDepartmentProducts = (products, department) => (
@@ -453,95 +491,64 @@ const buildGenericTiles = (products) => {
   }));
 };
 
-const HeroCard = ({ department, heroProducts, navigate, prefetchRoute }) => {
-  const [primary, secondary, tertiary, quaternary] = heroProducts;
+const CategoryBanner = ({ banner, navigate, prefetchRoute, fallbackTitle }) => {
+  const href = getContentTargetHref(banner);
 
   return (
-    <section className={`relative overflow-hidden rounded-[1.5rem] bg-gradient-to-r ${department.heroTone} px-5 py-5 text-white shadow-sm sm:px-6 sm:py-6`}>
-      <div className="grid items-center gap-6 lg:grid-cols-[1fr_1.12fr]">
-        <div className="relative z-10">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">Top picks</p>
-          <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl lg:text-[2rem]">
-            {department.heroTitle}
-          </h1>
-          <p className="mt-3 max-w-md text-sm leading-6 text-white/75 sm:text-base">
-            {department.heroSubtitle}
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate(buildCategoryHref(department.matchCategories[0]))}
-            onMouseEnter={() => prefetchRoute(buildCategoryHref(department.matchCategories[0]))}
-            onFocus={() => prefetchRoute(buildCategoryHref(department.matchCategories[0]))}
-            className="mt-5 inline-flex items-center justify-center rounded-full bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700"
-          >
-            {department.heroCta}
-          </button>
+    <button
+      type="button"
+      onClick={() => navigate(href)}
+      onMouseEnter={() => prefetchRoute(href)}
+      onFocus={() => prefetchRoute(href)}
+      className="group relative block w-full overflow-hidden rounded-[1.35rem] border border-gray-200 bg-gray-950 text-left shadow-sm transition hover:shadow-md min-h-[185px] sm:min-h-[220px]"
+    >
+      {banner?.imageUrl ? (
+        <span className="absolute inset-0">
+          <Image
+            src={banner.imageUrl}
+            alt={banner?.title || fallbackTitle || "Category banner"}
+            fill
+            className="object-cover transition duration-500 group-hover:scale-[1.02]"
+            sizes="(max-width: 1024px) 100vw, 72vw"
+            priority={false}
+          />
+          <span className="sr-only">{banner?.title || fallbackTitle || "Category banner"}</span>
+        </span>
+      ) : (
+        <div className="flex min-h-[185px] items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 px-6 py-8 sm:min-h-[220px]">
+          <div className="h-full w-full rounded-[1.15rem] border border-white/10 bg-white/5" />
         </div>
-
-        <div className="relative min-h-[210px] overflow-hidden sm:min-h-[250px]">
-          <div className="absolute inset-x-[14%] bottom-[10%] top-[12%] rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute right-4 top-4 flex items-center gap-3 sm:right-0 sm:top-2">
-            {[secondary, tertiary, quaternary].filter(Boolean).map((product, index) => (
-              <div
-                key={product._id || index}
-                className={`relative overflow-hidden rounded-[1.1rem] border border-white/10 bg-black/20 shadow-[0_10px_30px_rgba(0,0,0,0.25)] ${
-                  index === 0 ? "h-32 w-24 sm:h-36 sm:w-28" : "h-28 w-20 sm:h-32 sm:w-24"
-                }`}
-              >
-                <Image
-                  src={getImage(product)}
-                  alt={product.name}
-                  width={180}
-                  height={180}
-                  className="h-full w-full object-contain p-2"
-                />
-              </div>
-            ))}
-          </div>
-          {primary ? (
-            <div className="absolute left-0 bottom-0 h-[160px] w-[160px] overflow-hidden rounded-[1.3rem] border border-white/10 bg-black/15 shadow-[0_18px_40px_rgba(0,0,0,0.28)] sm:h-[190px] sm:w-[190px]">
-              <Image
-                src={getImage(primary)}
-                alt={primary.name}
-                width={280}
-                height={280}
-                className="h-full w-full object-contain p-3"
-              />
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </section>
+      )}
+    </button>
   );
 };
 
-const CategoryTile = ({ tile, product, onClick, formatCurrency, count }) => (
+const CategoryBubble = ({ tile, product, onClick, count }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-sm transition hover:border-orange-300 hover:shadow-md`}
+    className="group flex min-w-0 flex-col items-center gap-3 rounded-[1.15rem] border border-gray-100 bg-white p-3 text-center shadow-sm transition hover:border-gray-200 hover:shadow-md"
   >
-    <div className={`flex aspect-[1.12/1] items-center justify-center bg-gradient-to-br ${tile.tone} p-3`}>
+    <div className={`flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br ${tile.tone} p-2.5 sm:h-28 sm:w-28`}>
       {product ? (
-        <Image
-          src={getImage(product)}
-          alt={tile.label}
-          width={180}
-          height={160}
-          className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
-        />
+        <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
+          <Image
+            src={getImage(product)}
+            alt={tile.label}
+            width={128}
+            height={128}
+            className="h-full w-full object-cover p-2.5 transition duration-300 group-hover:scale-105"
+          />
+        </span>
       ) : (
-        <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-gray-700 shadow-sm">
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-700 shadow-sm">
           <DepartmentGlyph type={tile.icon} className="h-6 w-6" />
         </span>
       )}
     </div>
-    <div className="p-3">
-      <p className="text-sm font-semibold text-gray-900">{tile.label}</p>
-      <p className="mt-1 text-xs text-gray-500">{formatCount(count)} items</p>
-      {product ? (
-        <p className="mt-2 text-xs font-medium text-orange-600">{formatCurrency(product.offerPrice)}</p>
-      ) : null}
+    <div className="space-y-0.5">
+      <p className="truncate text-[12.5px] font-semibold text-gray-900">{tile.label}</p>
+      <p className="text-[11px] text-gray-500">{formatCount(count)} items</p>
     </div>
   </button>
 );
@@ -550,64 +557,131 @@ const TopCategoryCard = ({ tile, product, onClick, count }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`group relative overflow-hidden rounded-[1.25rem] border border-gray-100 bg-gradient-to-br ${tile.tone} p-4 text-left shadow-sm transition hover:shadow-md`}
+    className={`group relative overflow-hidden rounded-[1.15rem] border border-gray-100 bg-gradient-to-br ${tile.tone} p-3 text-left shadow-sm transition hover:shadow-md`}
   >
-    <div className="flex min-h-[130px] items-start justify-between gap-3">
+    <div className="flex min-h-[108px] items-start justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-base font-semibold text-gray-900">{tile.label}</p>
-        <p className="mt-1 text-xs text-gray-500">Up to 35% off</p>
-        <p className="mt-6 text-xs font-semibold text-orange-600">Explore →</p>
+        <p className="truncate text-[15px] font-semibold text-gray-900">{tile.label}</p>
+        <p className="mt-1 text-[11px] text-gray-500">Up to 35% off</p>
+        <p className="mt-5 text-[11px] font-semibold text-orange-600">Explore →</p>
       </div>
-      <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
+      <div className="relative flex h-20 w-20 shrink-0 items-center justify-center sm:h-24 sm:w-24">
         {product ? (
-          <Image src={getImage(product)} alt={tile.label} width={120} height={120} className="h-full w-full object-contain transition duration-300 group-hover:scale-105" />
+          <Image src={getImage(product)} alt={tile.label} width={104} height={104} className="h-full w-full object-contain transition duration-300 group-hover:scale-105" />
         ) : (
-          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-gray-700 shadow-sm">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-gray-700 shadow-sm">
             <DepartmentGlyph type={tile.icon} className="h-7 w-7" />
           </span>
         )}
       </div>
     </div>
-    <p className="mt-3 text-xs text-gray-500">{formatCount(count)} items</p>
+    <p className="mt-2 text-[11px] text-gray-500">{formatCount(count)} items</p>
   </button>
 );
 
-const BrandPill = ({ label }) => (
-  <div className="flex h-16 items-center justify-center rounded-2xl border border-gray-100 bg-white px-4 shadow-sm">
-    <span className="text-sm font-extrabold tracking-[0.16em] text-gray-900">{label}</span>
-  </div>
+const BrandLogoCard = ({ label, count, onClick, imageUrl, href, description }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group flex min-w-0 flex-col items-center gap-3 rounded-[1.15rem] border border-gray-100 bg-white p-3.5 text-center shadow-sm transition hover:border-orange-300 hover:shadow-md sm:p-4"
+  >
+    <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white transition group-hover:scale-105 sm:h-20 sm:w-20">
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={label}
+          width={88}
+          height={88}
+          className="h-full w-full object-contain p-2.5"
+        />
+      ) : brandLogoSources[label] ? (
+        <Image
+          src={brandLogoSources[label]}
+          alt={label}
+          width={88}
+          height={88}
+          className="h-full w-full object-contain p-2.5"
+          unoptimized
+        />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-100 text-base font-black tracking-[0.16em] text-orange-600">
+          {label.slice(0, 1)}
+        </span>
+      )}
+    </span>
+    <span className="text-[12px] font-semibold text-gray-900">{label}</span>
+    {description ? <span className="max-h-10 overflow-hidden text-[11px] leading-5 text-gray-500">{description}</span> : null}
+    <span className="text-[11px] text-gray-500">{formatCount(count)} items</span>
+  </button>
+);
+
+const StoreCard = ({ store, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group flex min-w-0 items-center gap-3 rounded-[1.15rem] border border-gray-100 bg-white p-4 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md"
+  >
+    <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 text-lg font-semibold text-gray-700">
+      {store.avatarUrl ? (
+        <Image
+          src={store.avatarUrl}
+          alt={store.name}
+          width={64}
+          height={64}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <span>{store.name.slice(0, 1)}</span>
+      )}
+    </span>
+    <span className="min-w-0 flex-1">
+      <span className="block truncate text-sm font-semibold text-gray-950">{store.name}</span>
+      <span className="block truncate text-[11px] text-gray-500">{store.location || "Storefront"}</span>
+      <span className="mt-1 block text-[11px] text-orange-600">{formatCount(store.count)} items</span>
+    </span>
+  </button>
 );
 
 const SidebarItem = ({ item, active, onClick, count }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition ${
       active ? "bg-orange-50 text-orange-600 ring-1 ring-orange-100" : "text-gray-700 hover:bg-gray-50"
     }`}
   >
-    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border ${
+    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border ${
       active ? "border-orange-200 bg-white text-orange-600" : "border-gray-200 bg-white text-gray-700"
     }`}>
       <DepartmentGlyph type={item.sidebarIcon} className="h-4 w-4" />
     </span>
     <span className="min-w-0 flex-1">
-      <span className="block truncate text-[13px] font-semibold">{item.label}</span>
-      <span className="block text-[11px] text-gray-400">{formatCount(count)} items</span>
+      <span className="block truncate text-[12.5px] font-semibold">{item.label}</span>
+      <span className="block text-[10px] text-gray-400">{formatCount(count)} items</span>
     </span>
     <span className="text-gray-300">›</span>
   </button>
 );
 
-const CategoryLandingPage = ({ initialProducts = [] }) => {
-  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency } = useAppContext();
+const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }) => {
+  const { products, loadingProducts, navigate, prefetchRoute } = useAppContext();
+  const searchParams = useSearchParams();
   const storefrontProducts = products.length ? products : initialProducts;
-  const [selectedSlug, setSelectedSlug] = useState("electronics");
+  const resolvedContent = initialSiteContent || { categoryBanners: [] };
   const [categorySearch, setCategorySearch] = useState("");
 
-  const selectedDepartment = useMemo(() => (
-    departmentConfigs.find((item) => item.slug === selectedSlug) || departmentConfigs[0]
-  ), [selectedSlug]);
+  const categoryParam = searchParams.get("category") || "";
+  const selectedDepartment = useMemo(() => {
+    const normalizedCategory = normalizeText(categoryParam);
+    const matchedDepartment = departmentConfigs.find((department) => (
+      department.slug === categoryParam
+      || department.matchCategories.some((category) => categoryMatchesSelection(category, categoryParam))
+      || normalizeText(department.label).includes(normalizedCategory)
+      || normalizedCategory.includes(normalizeText(department.label))
+    ));
+
+    return matchedDepartment || departmentConfigs[0];
+  }, [categoryParam]);
 
   const selectedProducts = useMemo(() => (
     getDepartmentProducts(storefrontProducts, selectedDepartment)
@@ -631,13 +705,32 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
     ));
   }, [categorySearch, sidebarProducts]);
 
-  const heroProducts = selectedProducts.slice(0, 4);
-
   const categoryTiles = useMemo(() => (
     selectedDepartment.slug === "electronics"
       ? electronicsTiles
       : buildGenericTiles(selectedProducts)
   ), [selectedDepartment.slug, selectedProducts]);
+
+  const selectDepartment = (department) => {
+    navigate(`/categories?category=${encodeURIComponent(department.slug)}`);
+  };
+
+  const selectedBanner = useMemo(() => (
+    findPlacementBanner(resolvedContent.categoryBanners || [], selectedDepartment)
+  ), [resolvedContent.categoryBanners, selectedDepartment]);
+
+  const showcaseBrandCards = useMemo(() => {
+    const cards = Array.isArray(resolvedContent.brandShowcases) ? resolvedContent.brandShowcases : [];
+    const departmentLabel = normalizeText(selectedDepartment.label);
+    const departmentCategories = selectedDepartment.matchCategories || [];
+
+    return cards.filter((item) => (
+      !item.placementCategory
+      || categoryMatchesSelection(item.placementCategory, selectedDepartment.label)
+      || normalizeText(item.placementCategory).includes(departmentLabel)
+      || departmentCategories.some((category) => categoryMatchesSelection(item.placementCategory, category))
+    ));
+  }, [resolvedContent.brandShowcases, selectedDepartment]);
 
   const tileCounts = useMemo(() => (
     categoryTiles.map((tile) => ({
@@ -654,24 +747,49 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
   ), [categoryTiles, selectedProducts]);
 
   const topCategoryCards = useMemo(() => tileCounts.slice(0, 8), [tileCounts]);
-  const brands = useMemo(() => {
+  const brandCards = useMemo(() => {
     const counts = selectedProducts.reduce((acc, product) => {
       const label = getBrandLabel(product);
-      acc.set(label, (acc.get(label) || 0) + 1);
+      const entry = acc.get(label) || { label, count: 0 };
+      entry.count += 1;
+      acc.set(label, entry);
       return acc;
     }, new Map());
 
-    return [...counts.entries()]
-      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
-      .map(([label]) => label)
-      .filter((label, index, array) => array.indexOf(label) === index)
+    return [...counts.values()]
+      .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label))
       .slice(0, 8);
+  }, [selectedProducts]);
+
+  const storeCards = useMemo(() => {
+    const stores = selectedProducts.reduce((acc, product) => {
+      const storeId = product.userId || product.sellerProfile?.id || product.sellerProfile?._id;
+      if (!storeId) {
+        return acc;
+      }
+
+      const existing = acc.get(storeId) || {
+        id: storeId,
+        name: product.sellerProfile?.name || product.sellerProfile?.storeName || `Store ${String(storeId).slice(-6)}`,
+        avatarUrl: product.sellerProfile?.avatarUrl || product.sellerProfile?.image || "",
+        location: product.sellerProfile?.location || product.sellerLocation || product.location || "",
+        count: 0,
+      };
+
+      existing.count += 1;
+      acc.set(storeId, existing);
+      return acc;
+    }, new Map());
+
+    return [...stores.values()]
+      .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+      .slice(0, 6);
   }, [selectedProducts]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [selectedSlug]);
+  }, [selectedDepartment.slug]);
 
   const isHydrating = loadingProducts && !storefrontProducts.length;
 
@@ -680,26 +798,26 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#faf8f5]">
+    <main className="min-h-screen overflow-x-hidden bg-white">
       <div className="mx-auto max-w-[1600px] px-4 pb-16 pt-4 lg:flex lg:gap-6 lg:px-6 xl:px-8">
         <aside className="hidden w-[280px] shrink-0 lg:block">
           <div className="sticky top-24 space-y-4">
-            <div className="rounded-[1.6rem] border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-gray-950">All Categories</p>
-              <div className="mt-4 space-y-1">
+            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+              <p className="text-sm font-bold text-gray-950">All Categories</p>
+              <div className="mt-2 space-y-1">
                 {visibleSidebarProducts.map((item) => (
                   <SidebarItem
                     key={item.slug}
                     item={item}
-                    active={selectedSlug === item.slug}
+                    active={selectedDepartment.slug === item.slug}
                     count={item.count}
-                    onClick={() => setSelectedSlug(item.slug)}
+                    onClick={() => selectDepartment(item)}
                   />
                 ))}
               </div>
             </div>
 
-            <button type="button" onClick={() => navigate("/seller")} className="rounded-[1.6rem] border border-orange-200 bg-white p-4 text-left shadow-sm transition hover:border-orange-300">
+            <button type="button" onClick={() => navigate("/seller")} className="rounded-lg border border-orange-200 bg-white p-4 text-left shadow-sm transition hover:border-orange-300">
               <p className="text-base font-semibold text-orange-600">Become a Vendor</p>
               <p className="mt-2 text-sm leading-6 text-gray-600">Sell your products with us and grow your business.</p>
               <span className="mt-4 inline-flex rounded-lg border border-orange-300 px-4 py-2 text-sm font-semibold text-orange-600">Get Started</span>
@@ -714,23 +832,22 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
               <p className="mt-1 text-sm text-gray-500">{selectedDepartment.description}</p>
             </div>
 
-            <HeroCard
-              department={selectedDepartment}
-              heroProducts={heroProducts}
+            <CategoryBanner
+              banner={selectedBanner}
+              fallbackTitle={selectedDepartment.heroTitle}
               navigate={navigate}
               prefetchRoute={prefetchRoute}
             />
 
             <section className="mt-8">
               <h2 className="text-xl font-semibold text-gray-950">Shop by category</h2>
-              <div className="mt-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
                 {tileCounts.map((tile) => (
-                  <CategoryTile
+                  <CategoryBubble
                     key={tile.label}
                     tile={tile}
                     product={tile.product}
                     count={tile.count}
-                    formatCurrency={formatCurrency}
                     onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
                   />
                 ))}
@@ -742,7 +859,7 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
                 <h2 className="text-xl font-semibold text-gray-950">Top categories</h2>
                 <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
               </div>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {topCategoryCards.map((tile) => (
                   <TopCategoryCard
                     key={tile.label}
@@ -761,9 +878,40 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
                 <button type="button" onClick={() => navigate("/all-products?sort=popular")} className="text-sm font-semibold text-orange-600">View all brands →</button>
               </div>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
-                {(brands.length ? brands : brandFallbacks).map((brand) => (
-                  <BrandPill key={brand} label={brand} />
+                {(showcaseBrandCards.length
+                  ? showcaseBrandCards
+                  : (brandCards.length ? brandCards : brandFallbacks.map((label) => ({ label, count: 0 })))
+                ).map((brand) => (
+                  <BrandLogoCard
+                    key={brand._id || brand.label}
+                    label={brand.brand || brand.label}
+                    count={brand.count || 0}
+                    imageUrl={brand.imageUrl || ""}
+                    description={brand.description || ""}
+                    href={brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`}
+                    onClick={() => navigate(brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`)}
+                  />
                 ))}
+              </div>
+            </section>
+
+            <section className="mt-8">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-950">Shops</h2>
+                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all stores →</button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {storeCards.length ? storeCards.map((store) => (
+                  <StoreCard
+                    key={store.id}
+                    store={store}
+                    onClick={() => navigate(`/store/${encodeURIComponent(store.id)}`)}
+                  />
+                )) : (
+                  <div className="rounded-[1.15rem] border border-dashed border-gray-200 bg-white p-6 text-sm text-gray-500">
+                    No stores found for this category yet.
+                  </div>
+                )}
               </div>
             </section>
           </div>
@@ -781,9 +929,9 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
                   />
                 </div>
 
-                <HeroCard
-                  department={selectedDepartment}
-                  heroProducts={heroProducts}
+                <CategoryBanner
+                  banner={selectedBanner}
+                  fallbackTitle={selectedDepartment.heroTitle}
                   navigate={navigate}
                   prefetchRoute={prefetchRoute}
                 />
@@ -800,14 +948,14 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
                   <button
                     key={item.slug}
                     type="button"
-                    onClick={() => setSelectedSlug(item.slug)}
+                    onClick={() => selectDepartment(item)}
                     className={`flex w-full items-center justify-between rounded-2xl border bg-white px-4 py-3 text-left shadow-sm ${
-                      selectedSlug === item.slug ? "border-orange-300 ring-1 ring-orange-100" : "border-gray-200"
+                      selectedDepartment.slug === item.slug ? "border-orange-300 ring-1 ring-orange-100" : "border-gray-200"
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${
-                        selectedSlug === item.slug ? "border-orange-200 text-orange-600" : "border-gray-200 text-gray-700"
+                        selectedDepartment.slug === item.slug ? "border-orange-200 text-orange-600" : "border-gray-200 text-gray-700"
                       }`}>
                         <DepartmentGlyph type={item.sidebarIcon} className="h-5 w-5" />
                       </span>
@@ -829,11 +977,10 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {tileCounts.map((tile) => (
                   <div key={tile.label} className="w-[9rem] shrink-0">
-                    <CategoryTile
+                    <CategoryBubble
                       tile={tile}
                       product={tile.product}
                       count={tile.count}
-                      formatCurrency={formatCurrency}
                       onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
                     />
                   </div>
@@ -857,6 +1004,50 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
                     />
                   </div>
                 ))}
+              </div>
+            </section>
+
+            <section className="mt-6 px-1">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-950">Brands</h2>
+                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {(showcaseBrandCards.length
+                  ? showcaseBrandCards
+                  : (brandCards.length ? brandCards : brandFallbacks.map((label) => ({ label, count: 0 })))
+                ).map((brand) => (
+                  <div key={brand._id || brand.brand || brand.label} className="w-[8.75rem] shrink-0">
+                    <BrandLogoCard
+                      label={brand.brand || brand.label}
+                      count={brand.count || 0}
+                      imageUrl={brand.imageUrl || ""}
+                      description={brand.description || ""}
+                      href={brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`}
+                      onClick={() => navigate(brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="mt-6 px-1">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-950">Shops</h2>
+                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
+              </div>
+              <div className="space-y-3">
+                {storeCards.length ? storeCards.map((store) => (
+                  <StoreCard
+                    key={store.id}
+                    store={store}
+                    onClick={() => navigate(`/store/${encodeURIComponent(store.id)}`)}
+                  />
+                )) : (
+                  <div className="rounded-[1.15rem] border border-dashed border-gray-200 bg-white p-6 text-sm text-gray-500">
+                    No stores found for this category yet.
+                  </div>
+                )}
               </div>
             </section>
           </div>

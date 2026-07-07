@@ -38,6 +38,32 @@ const promoBannerSchema = new mongoose.Schema({
     href: { type: String, default: "" },
 }, { minimize: false });
 
+const categoryBannerSchema = new mongoose.Schema({
+    title: { type: String, default: "" },
+    description: { type: String, default: "" },
+    imageUrl: { type: String, default: "" },
+    buttonText: { type: String, default: "Shop now" },
+    linkType: { type: String, default: "custom" },
+    category: { type: String, default: "" },
+    storeId: { type: String, default: "" },
+    productId: { type: String, default: "" },
+    href: { type: String, default: "" },
+    placementCategory: { type: String, default: "" },
+}, { minimize: false });
+
+const brandShowcaseSchema = new mongoose.Schema({
+    title: { type: String, default: "" },
+    brand: { type: String, default: "" },
+    description: { type: String, default: "" },
+    imageUrl: { type: String, default: "" },
+    linkType: { type: String, default: "brand" },
+    category: { type: String, default: "" },
+    storeId: { type: String, default: "" },
+    productId: { type: String, default: "" },
+    href: { type: String, default: "" },
+    placementCategory: { type: String, default: "" },
+}, { minimize: false });
+
 const newsletterSchema = new mongoose.Schema({
     title: { type: String, default: "" },
     description: { type: String, default: "" },
@@ -50,6 +76,8 @@ const siteContentSchema = new mongoose.Schema({
     featuredCards: { type: [featuredCardSchema], default: [] },
     promoBanners: { type: [promoBannerSchema], default: [] },
     promoBanner: { type: promoBannerSchema, default: () => ({}) },
+    categoryBanners: { type: [categoryBannerSchema], default: [] },
+    brandShowcases: { type: [brandShowcaseSchema], default: [] },
     newsletter: { type: newsletterSchema, default: () => ({}) },
 }, {
     timestamps: true,

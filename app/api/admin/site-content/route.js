@@ -96,6 +96,11 @@ export async function POST(request) {
         const formData = await request.formData();
         const action = formData.get("action");
         const siteContent = await getOrCreateSiteContent();
+        siteContent.heroSlides = Array.isArray(siteContent.heroSlides) ? siteContent.heroSlides : [];
+        siteContent.featuredCards = Array.isArray(siteContent.featuredCards) ? siteContent.featuredCards : [];
+        siteContent.promoBanners = Array.isArray(siteContent.promoBanners) ? siteContent.promoBanners : [];
+        siteContent.categoryBanners = Array.isArray(siteContent.categoryBanners) ? siteContent.categoryBanners : [];
+        siteContent.brandShowcases = Array.isArray(siteContent.brandShowcases) ? siteContent.brandShowcases : [];
 
         if (action === "upsertHeroSlide") {
             const slideId = formData.get("itemId");
@@ -221,6 +226,80 @@ export async function POST(request) {
             siteContent.promoBanner = siteContent.promoBanners[0] || siteContent.promoBanner;
             await siteContent.save();
             return respondWithContent(siteContent, "Promo offer deleted");
+        }
+
+        if (action === "upsertCategoryBanner") {
+            const itemId = formData.get("itemId");
+            const existingBanner = itemId
+                ? siteContent.categoryBanners.find((banner) => String(banner._id) === String(itemId))
+                : null;
+
+            const nextBanner = {
+                title: formData.get("title")?.toString() || "",
+                description: formData.get("description")?.toString() || "",
+                imageUrl: await readImageUrl(formData, existingBanner?.imageUrl || ""),
+                buttonText: formData.get("buttonText")?.toString() || "Shop now",
+                linkType: formData.get("linkType")?.toString() || "",
+                category: formData.get("category")?.toString() || "",
+                storeId: formData.get("storeId")?.toString() || "",
+                productId: formData.get("productId")?.toString() || "",
+                href: formData.get("href")?.toString() || "",
+                placementCategory: formData.get("placementCategory")?.toString() || "",
+            };
+
+            if (existingBanner) {
+                Object.assign(existingBanner, nextBanner);
+            } else {
+                siteContent.categoryBanners.push(nextBanner);
+            }
+
+            await siteContent.save();
+            return respondWithContent(siteContent, "Category banner saved successfully");
+        }
+
+        if (action === "deleteCategoryBanner") {
+            const itemId = formData.get("itemId")?.toString();
+            siteContent.categoryBanners = siteContent.categoryBanners.filter((banner) => String(banner._id) !== itemId);
+            await siteContent.save();
+            return respondWithContent(siteContent, "Category banner deleted");
+        }
+
+        if (action === "upsertBrandShowcase") {
+            const itemId = formData.get("itemId");
+            const existingItem = itemId
+                ? siteContent.brandShowcases.find((item) => String(item._id) === String(itemId))
+                : null;
+
+            const nextItem = {
+                title: formData.get("title")?.toString() || "",
+                brand: formData.get("brand")?.toString() || "",
+                description: formData.get("description")?.toString() || "",
+                imageUrl: await readImageUrl(formData, existingItem?.imageUrl || ""),
+                linkType: "brand",
+                category: formData.get("category")?.toString() || "",
+                storeId: "",
+                productId: "",
+                href: formData.get("brand")?.toString()
+                    ? `/all-products?brand=${encodeURIComponent(formData.get("brand").toString())}`
+                    : "",
+                placementCategory: formData.get("placementCategory")?.toString() || "",
+            };
+
+            if (existingItem) {
+                Object.assign(existingItem, nextItem);
+            } else {
+                siteContent.brandShowcases.push(nextItem);
+            }
+
+            await siteContent.save();
+            return respondWithContent(siteContent, "Brand showcase saved successfully");
+        }
+
+        if (action === "deleteBrandShowcase") {
+            const itemId = formData.get("itemId")?.toString();
+            siteContent.brandShowcases = siteContent.brandShowcases.filter((item) => String(item._id) !== itemId);
+            await siteContent.save();
+            return respondWithContent(siteContent, "Brand showcase deleted");
         }
 
         if (action === "saveNewsletter") {

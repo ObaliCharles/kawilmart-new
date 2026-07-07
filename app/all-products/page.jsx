@@ -244,12 +244,14 @@ function AllProductsInner() {
     const cat = searchParams.get("category");
     const search = searchParams.get("search");
     const seller = searchParams.get("seller");
+    const brand = searchParams.get("brand");
     const filter = searchParams.get("filter");
     const sort = searchParams.get("sort");
 
     setSelectedCategory(cat || "All");
     setSearchQuery(search || "");
     setSelectedSeller(seller || "");
+    setSelectedBrand(brand || "all");
     setSelectedCondition(filter === "flash" ? "flash" : "all");
     setSortBy(filter === "flash" ? "discount" : sortOptions.some((option) => option.value === sort) ? sort : "default");
   }, [searchParams]);
@@ -341,6 +343,7 @@ function AllProductsInner() {
   const sellerFilterLabel = sellerReferenceProduct?.sellerProfile?.name || sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
   const resultsLabel = `${filteredProducts.length} result${filteredProducts.length === 1 ? "" : "s"}`;
+  const compactHeading = hasActiveSearch || selectedBrand !== "all" || selectedSeller || selectedCondition !== "all" || selectedPriceRange !== 0 || selectedRating > 0;
   const resetFilters = () => {
     setSelectedCategory("All");
     setSelectedPriceRange(0);
@@ -531,8 +534,8 @@ function AllProductsInner() {
 
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[26px] font-bold text-gray-950">{hasActiveSearch ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
-            {!hasActiveSearch ? (
+            <p className="text-[26px] font-bold text-gray-950">{compactHeading ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
+            {!compactHeading ? (
               <p className="mt-1 text-sm text-gray-500">
                 {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''} found
                 {selectedSeller ? ` from ${sellerFilterLabel}` : ""}
