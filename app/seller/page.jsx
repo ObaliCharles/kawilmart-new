@@ -91,6 +91,23 @@ const ApplicationCard = ({ title, value, description, icon }) => (
   </div>
 );
 
+const buildVendorSupportHref = () => {
+  const params = new URLSearchParams({
+    tab: "support",
+    subject: "Vendor application",
+    content: [
+      "Hello KawilMart Support,",
+      "",
+      "I would like to apply to become a vendor on KawilMart.",
+      "Please review my account and guide me through the registration steps.",
+      "",
+      "Thank you.",
+    ].join("\n"),
+  });
+
+  return `/inbox?${params.toString()}`;
+};
+
 const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) => (
   <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.18),transparent_30%),linear-gradient(180deg,#fffaf6_0%,#fffefc_48%,#f8fafc_100%)]">
     <Navbar />
@@ -108,11 +125,14 @@ const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) =>
               </p>
 
               <div className="flex flex-wrap gap-3">
-                <Link href="/inbox?tab=support" className="rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-700">
+                <Link href={buildVendorSupportHref()} className="rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-700">
                   Apply now
                 </Link>
                 <Link href="/legal#seller-obligations" className="rounded-full border border-orange-200 bg-white px-5 py-3 text-sm font-semibold text-orange-700 transition hover:border-orange-300 hover:bg-orange-50">
                   View procedures
+                </Link>
+                <Link href={buildVendorSupportHref()} className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50">
+                  Open support draft
                 </Link>
                 {refreshAccessState ? (
                   <button

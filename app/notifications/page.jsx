@@ -44,6 +44,10 @@ const TabButton = ({ active, onClick, children, badge }) => (
 const InboxPage = () => {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") === "support" ? "support" : "inbox";
+  const initialSupportDraft = {
+    subject: searchParams.get("subject") || "",
+    content: searchParams.get("content") || "",
+  };
   const {
     user,
     authReady,
@@ -60,7 +64,7 @@ const InboxPage = () => {
   const [loading, setLoading] = useState(true);
   const [supportLoading, setSupportLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
-  const [supportDraft, setSupportDraft] = useState({ subject: "", content: "" });
+  const [supportDraft, setSupportDraft] = useState(initialSupportDraft);
   const [sendingSupport, setSendingSupport] = useState(false);
   const [selectedNotificationId, setSelectedNotificationId] = useState(null);
   const usesAdminSupportQueue = Boolean(isAdmin);
@@ -176,6 +180,10 @@ const InboxPage = () => {
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+
+  useEffect(() => {
+    setSupportDraft(initialSupportDraft);
+  }, [initialSupportDraft.content, initialSupportDraft.subject]);
 
   useEffect(() => {
     if (authReady && user) {
