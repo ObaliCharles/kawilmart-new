@@ -91,16 +91,18 @@ const Footer = () => {
               key={column.title}
               href={column.links[0][1]}
               onClick={onNavigate}
-              className="flex items-center justify-between py-4 text-sm font-bold text-white"
+              className="flex items-center justify-between py-3 text-[13px] font-bold text-white"
             >
               {column.title}
               <span className="text-xl text-white/75">&rsaquo;</span>
             </Link>
           ))}
-          <Link href="/legal#terms" onClick={onNavigate} className="flex items-center justify-between py-4 text-sm font-bold text-white">
-            Payment
-            <span className="text-xl text-white/75">&rsaquo;</span>
-          </Link>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2 text-[11px]">
+          <Link href="/legal#privacy" onClick={onNavigate} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center text-white/90">Privacy</Link>
+          <Link href="/legal#terms" onClick={onNavigate} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center text-white/90">Terms</Link>
+          <Link href="/legal#terms" onClick={onNavigate} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center text-white/90">Shipping</Link>
+          <Link href="/legal#terms" onClick={onNavigate} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center text-white/90">Refunds</Link>
         </div>
         <p className="pt-6 text-center text-xs text-slate-400">(c) {currentYear} KawilMart. All rights reserved.</p>
       </div>

@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState, useDeferredValue } from "react";
+import { useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
+import toast from "react-hot-toast";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import SellerTrustBadge from "@/components/SellerTrustBadge";
@@ -119,6 +120,8 @@ const StoreProductCard = ({ product, layout = "grid" }) => {
   const [liking, setLiking] = useState(false);
   const [liked, setLiked] = useState(Boolean(product.likedByCurrentUser));
   const [isAdding, setIsAdding] = useState(false);
+  const [cartPulse, setCartPulse] = useState(false);
+  const cartPulseTimerRef = useRef(null);
   const productHref = `/product/${product._id}`;
   const ratingSnapshot = getProductRatingSnapshot(product);
   const stockSnapshot = getProductStockSnapshot(product);
@@ -132,6 +135,12 @@ const StoreProductCard = ({ product, layout = "grid" }) => {
   useEffect(() => {
     setLiked(Boolean(product.likedByCurrentUser));
   }, [product.likedByCurrentUser]);
+
+  useEffect(() => () => {
+    if (cartPulseTimerRef.current) {
+      window.clearTimeout(cartPulseTimerRef.current);
+    }
+  }, []);
 
   const handleLikeClick = async (event) => {
     event.stopPropagation();
@@ -154,7 +163,14 @@ const StoreProductCard = ({ product, layout = "grid" }) => {
     if (isAdding || stockSnapshot.status === "out") return;
 
     setIsAdding(true);
-    await addToCart(product._id);
+    const result = await addToCart(product._id);
+    if (result?.success) {
+      setCartPulse(true);
+      if (cartPulseTimerRef.current) {
+        window.clearTimeout(cartPulseTimerRef.current);
+      }
+      cartPulseTimerRef.current = window.setTimeout(() => setCartPulse(false), 900);
+    }
     setIsAdding(false);
   };
 
@@ -228,14 +244,22 @@ const StoreProductCard = ({ product, layout = "grid" }) => {
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition ${
             stockSnapshot.status === "out"
               ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-              : "border-orange-300 bg-white text-orange-600 hover:bg-orange-50"
-          }`}
+              : cartPulse
+                ? "border-orange-300 bg-orange-50 text-orange-700 ring-2 ring-orange-200"
+                : "border-orange-300 bg-white text-orange-600 hover:bg-orange-50"
+          } ${cartPulse ? "animate-pulse" : ""}`}
           aria-label="Add to cart"
         >
-          <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24" fill="none">
-            <path d="M3 4h2.4l2 10.1a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 1.9-1.5L20 8H6.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
-            <path d="M10 20h.01M17 20h.01" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4" />
-          </svg>
+          {cartPulse ? (
+            <svg className="h-4.5 w-4.5" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12.5 9.5 17 19 7.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" />
+            </svg>
+          ) : (
+            <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path d="M3 4h2.4l2 10.1a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 1.9-1.5L20 8H6.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+              <path d="M10 20h.01M17 20h.01" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4" />
+            </svg>
+          )}
         </button>
       </div>
     </article>
@@ -262,7 +286,7 @@ const StoreSidebar = ({
 
 const StorePage = () => {
   const { sellerId } = useParams();
-  const { products, loadingProducts, navigate } = useAppContext();
+  const { products, loadingProducts, navigate, userData, fetchUserData } = useAppContext();
   const [selectedTab, setSelectedTab] = useState("products");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedBrand, setSelectedBrand] = useState("all");
@@ -279,6 +303,9 @@ const StorePage = () => {
   );
   const leadProduct = sellerProducts[0];
   const seller = leadProduct?.sellerProfile;
+  const [following, setFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followersCount, setFollowersCount] = useState(Number(seller?.followersCount) || 0);
   const categories = useMemo(() => {
     const counts = sellerProducts.reduce((acc, product) => {
       const category = product.category || "Uncategorized";
@@ -371,12 +398,20 @@ const StorePage = () => {
 
     return [...storeMap.values()]
       .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
-      .slice(0, 5);
+      .slice(0, 8);
   }, [products, sellerId, sellerProducts]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [sellerId]);
+
+  useEffect(() => {
+    setFollowersCount(Number(seller?.followersCount) || 0);
+  }, [seller?.followersCount]);
+
+  useEffect(() => {
+    setFollowing(Boolean(userData?.followedStores?.includes(String(sellerId))));
+  }, [sellerId, userData?.followedStores]);
 
   const clearAllFilters = () => {
     setSelectedCategory("All");
@@ -387,6 +422,39 @@ const StorePage = () => {
     setSortBy("popular");
   };
 
+  const toggleStoreFollow = async () => {
+    if (followLoading) {
+      return;
+    }
+
+    setFollowLoading(true);
+    try {
+      const response = await fetch("/api/store/follow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sellerId }),
+      });
+      const data = await response.json();
+
+      if (!data?.success) {
+        throw new Error(data?.message || "Unable to update follow status");
+      }
+
+      setFollowing(Boolean(data.isFollowing));
+      if (Number.isFinite(Number(data.followersCount))) {
+        setFollowersCount(Number(data.followersCount));
+      }
+
+      if (typeof fetchUserData === "function") {
+        void fetchUserData();
+      }
+    } catch (error) {
+      toast.error(error?.message || "Unable to update follow status");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
   const FilterContent = () => (
     <div className="space-y-3.5">
       <div>
@@ -394,7 +462,7 @@ const StorePage = () => {
           <button
             type="button"
             onClick={() => setSelectedCategory("All")}
-            className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
+            className={`flex w-full items-center justify-between rounded-full px-2.5 py-1.5 text-left text-[11px] transition ${
               selectedCategory === "All" ? "bg-orange-50 font-semibold text-orange-600" : "text-gray-700 hover:bg-gray-50"
             }`}
           >
@@ -406,7 +474,7 @@ const StorePage = () => {
               key={category.value}
               type="button"
               onClick={() => setSelectedCategory(category.value)}
-              className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
+              className={`flex w-full items-center justify-between rounded-full px-2.5 py-1.5 text-left text-[11px] transition ${
                 selectedCategory === category.value ? "bg-orange-50 font-semibold text-orange-600" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -425,7 +493,7 @@ const StorePage = () => {
               key={range.label}
               type="button"
               onClick={() => setSelectedPriceRange(index)}
-              className={`w-full rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
+              className={`w-full rounded-full px-2.5 py-1.5 text-left text-[11px] transition ${
                 selectedPriceRange === index ? "bg-orange-600 font-semibold text-white" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -441,7 +509,7 @@ const StorePage = () => {
           <button
             type="button"
             onClick={() => setSelectedBrand("all")}
-            className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
+            className={`flex w-full items-center justify-between rounded-full px-2.5 py-1.5 text-left text-[11px] transition ${
               selectedBrand === "all" ? "bg-orange-600 font-semibold text-white" : "text-gray-700 hover:bg-gray-50"
             }`}
           >
@@ -453,7 +521,7 @@ const StorePage = () => {
               key={brand.value}
               type="button"
               onClick={() => setSelectedBrand(brand.value)}
-              className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
+              className={`flex w-full items-center justify-between rounded-full px-2.5 py-1.5 text-left text-[11px] transition ${
                 selectedBrand === brand.value ? "bg-orange-600 font-semibold text-white" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -472,7 +540,7 @@ const StorePage = () => {
               key={ratingOption.value}
               type="button"
               onClick={() => setSelectedRating(ratingOption.value)}
-              className={`w-full rounded-lg px-2.5 py-1 text-left text-[11.5px] transition ${
+              className={`w-full rounded-full px-2.5 py-1.5 text-left text-[11px] transition ${
                 selectedRating === ratingOption.value ? "bg-orange-600 font-semibold text-white" : "text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -592,7 +660,7 @@ const StorePage = () => {
         </div>
         <div className="flex items-center gap-3">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">⤴</span>
-          <span>{formatCount(seller?.followersCount || 0)} followers</span>
+          <span>{formatCount(followersCount)} followers</span>
         </div>
       </div>
       <button
@@ -730,10 +798,11 @@ const StorePage = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => navigate(`/all-products?seller=${encodeURIComponent(String(sellerId))}`)}
-                        className="rounded-md bg-orange-600 px-3 py-1 text-[11.5px] font-semibold text-white hover:bg-orange-700"
+                        onClick={() => void toggleStoreFollow()}
+                        disabled={followLoading}
+                        className="rounded-md bg-orange-600 px-3 py-1 text-[11.5px] font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-70"
                       >
-                        Follow
+                        {followLoading ? "Saving..." : (following ? "Following" : "Follow")}
                       </button>
                     </div>
                   </div>
@@ -812,27 +881,27 @@ const StorePage = () => {
                 </div>
               </div>
 
-              <div className="mt-3.5 rounded-[0.9rem] border border-gray-200 bg-gray-50 px-3 py-2.5">
-                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-[0.85rem] bg-white p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Products</p>
-                    <p className="mt-1 text-[1.1rem] font-extrabold text-gray-950">{formatCount(filteredProducts.length)}</p>
-                    <p className="text-[11px] text-gray-500">Showing now</p>
+              <div className="mt-3.5 rounded-[0.9rem] border border-gray-200 bg-gray-50 px-2 py-2 sm:px-3">
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-[0.75rem] bg-white px-2 py-2 shadow-sm">
+                    <p className="text-[8.5px] font-bold uppercase tracking-[0.12em] text-gray-400">Products</p>
+                    <p className="mt-0.5 text-[0.95rem] font-extrabold leading-none text-gray-950">{formatCount(filteredProducts.length)}</p>
+                    <p className="mt-0.5 truncate text-[9px] text-gray-500">Showing now</p>
                   </div>
-                  <div className="rounded-[0.85rem] bg-white p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Rating</p>
-                    <p className="mt-1 text-[1.1rem] font-extrabold text-gray-950">{rating ? rating.toFixed(1) : "New"}</p>
-                    <p className="text-[11px] text-gray-500">{formatCount(reviews)} reviews</p>
+                  <div className="rounded-[0.75rem] bg-white px-2 py-2 shadow-sm">
+                    <p className="text-[8.5px] font-bold uppercase tracking-[0.12em] text-gray-400">Rating</p>
+                    <p className="mt-0.5 text-[0.95rem] font-extrabold leading-none text-gray-950">{rating ? rating.toFixed(1) : "New"}</p>
+                    <p className="mt-0.5 truncate text-[9px] text-gray-500">{formatCount(reviews)} reviews</p>
                   </div>
-                  <div className="rounded-[0.85rem] bg-white p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Categories</p>
-                    <p className="mt-1 text-[1.1rem] font-extrabold text-gray-950">{formatCount(categories.length)}</p>
-                    <p className="text-[11px] text-gray-500">Unique categories</p>
+                  <div className="rounded-[0.75rem] bg-white px-2 py-2 shadow-sm">
+                    <p className="text-[8.5px] font-bold uppercase tracking-[0.12em] text-gray-400">Categories</p>
+                    <p className="mt-0.5 text-[0.95rem] font-extrabold leading-none text-gray-950">{formatCount(categories.length)}</p>
+                    <p className="mt-0.5 truncate text-[9px] text-gray-500">Unique categories</p>
                   </div>
-                  <div className="rounded-[0.85rem] bg-white p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">Followers</p>
-                    <p className="mt-1 text-[1.1rem] font-extrabold text-gray-950">{formatCount(seller?.followersCount || 0)}</p>
-                    <p className="text-[11px] text-gray-500">Store followers</p>
+                  <div className="rounded-[0.75rem] bg-white px-2 py-2 shadow-sm">
+                    <p className="text-[8.5px] font-bold uppercase tracking-[0.12em] text-gray-400">Followers</p>
+                    <p className="mt-0.5 text-[0.95rem] font-extrabold leading-none text-gray-950">{formatCount(followersCount)}</p>
+                    <p className="mt-0.5 truncate text-[9px] text-gray-500">Store followers</p>
                   </div>
                 </div>
               </div>
@@ -846,7 +915,7 @@ const StorePage = () => {
                       setSelectedCategory(category);
                       setSelectedTab("products");
                     }}
-                    className={`rounded-full border px-2.5 py-1 text-[11.5px] font-semibold transition ${
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
                       selectedCategory === category ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
                     }`}
                   >
@@ -857,26 +926,26 @@ const StorePage = () => {
 
               {selectedTab === "home" ? (
                 <section className="mt-4 space-y-4">
-                  <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Store Overview</p>
-                      <p className="mt-1 text-[11.5px] font-bold text-gray-950">Curated storefront</p>
-                      <p className="mt-1 text-[10.5px] text-gray-500">Products, categories, and details.</p>
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-2xl border border-gray-100 bg-white px-3 py-2.5 shadow-sm">
+                      <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-gray-400">Store Overview</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-gray-900">Curated storefront</p>
+                      <p className="mt-0.5 text-[10px] text-gray-500">Products, categories, and details.</p>
                     </div>
-                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Support</p>
-                      <p className="mt-1 text-[11.5px] font-bold text-gray-950">{seller?.supportEmail || seller?.email || "Via KawilMart"}</p>
-                      <p className="mt-1 text-[10.5px] text-gray-500">Contact after checkout or inbox.</p>
+                    <div className="rounded-2xl border border-gray-100 bg-white px-3 py-2.5 shadow-sm">
+                      <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-gray-400">Support</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-gray-900">{seller?.supportEmail || seller?.email || "Via KawilMart"}</p>
+                      <p className="mt-0.5 text-[10px] text-gray-500">Contact after checkout or inbox.</p>
                     </div>
-                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Location</p>
-                      <p className="mt-1 text-[11.5px] font-bold text-gray-950">{seller?.location || "Location pending"}</p>
-                      <p className="mt-1 text-[10.5px] text-gray-500">Location and delivery details.</p>
+                    <div className="rounded-2xl border border-gray-100 bg-white px-3 py-2.5 shadow-sm">
+                      <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-gray-400">Location</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-gray-900">{seller?.location || "Location pending"}</p>
+                      <p className="mt-0.5 text-[10px] text-gray-500">Location and delivery details.</p>
                     </div>
-                    <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400">Trust</p>
-                      <p className="mt-1 text-[11.5px] font-bold text-gray-950">{seller?.isVerified ? "Verified" : "Marketplace seller"}</p>
-                      <p className="mt-1 text-[10.5px] text-gray-500">Badge and protection notes.</p>
+                    <div className="rounded-2xl border border-gray-100 bg-white px-3 py-2.5 shadow-sm">
+                      <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-gray-400">Trust</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-gray-900">{seller?.isVerified ? "Verified" : "Marketplace seller"}</p>
+                      <p className="mt-0.5 text-[10px] text-gray-500">Badge and protection notes.</p>
                     </div>
                   </div>
                   <div>
@@ -926,21 +995,25 @@ const StorePage = () => {
                     </div>
                     <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm md:col-span-2">
                       <p className="text-[11.5px] font-semibold text-gray-950">Customer trust</p>
-                      <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
-                        <div className="rounded-[0.85rem] bg-gray-50 p-3">
-                          <p className="text-xs text-gray-400">Verified</p>
-                          <p className="mt-1 text-[12px] font-bold text-gray-950">{seller?.isVerified ? "Yes" : "No"}</p>
+                    <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                        <div className="rounded-[0.75rem] bg-gray-50 px-2 py-2">
+                          <p className="text-[9px] text-gray-400">Verified</p>
+                          <p className="mt-0.5 text-[11px] font-bold text-gray-950">{seller?.isVerified ? "Yes" : "No"}</p>
                         </div>
-                        <div className="rounded-[0.85rem] bg-gray-50 p-3">
-                          <p className="text-xs text-gray-400">Followers</p>
-                          <p className="mt-1 text-[12px] font-bold text-gray-950">{formatCount(seller?.followersCount || 0)}</p>
+                        <div className="rounded-[0.75rem] bg-gray-50 px-2 py-2">
+                          <p className="text-[9px] text-gray-400">Followers</p>
+                          <p className="mt-0.5 text-[11px] font-bold text-gray-950">{formatCount(followersCount)}</p>
                         </div>
-                        <div className="rounded-[0.85rem] bg-gray-50 p-3">
-                          <p className="text-xs text-gray-400">Products</p>
-                          <p className="mt-1 text-[12px] font-bold text-gray-950">{formatCount(sellerProducts.length)}</p>
+                        <div className="rounded-[0.75rem] bg-gray-50 px-2 py-2">
+                          <p className="text-[9px] text-gray-400">Products</p>
+                          <p className="mt-0.5 text-[11px] font-bold text-gray-950">{formatCount(sellerProducts.length)}</p>
                         </div>
-                      </div>
+                        <div className="rounded-[0.75rem] bg-gray-50 px-2 py-2">
+                          <p className="text-[9px] text-gray-400">Rating</p>
+                          <p className="mt-0.5 text-[11px] font-bold text-gray-950">{rating ? rating.toFixed(1) : "New"}</p>
+                        </div>
                     </div>
+                  </div>
                   </div>
                 </section>
               ) : selectedTab === "about" ? (

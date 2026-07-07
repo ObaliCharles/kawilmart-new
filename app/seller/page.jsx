@@ -314,6 +314,12 @@ const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) =>
 
             <div className="grid gap-3 pt-2">
               <ApplicationCard
+                title="Store identity"
+                value="Use your account avatar"
+                description="Your public store image is taken from the profile photo on your account, so keep it updated in your account settings."
+                icon={<InlineSellerIcon type="shop" className="h-5 w-5" />}
+              />
+              <ApplicationCard
                 title="Best practice"
                 value="Use clean product photos"
                 description="Bright, cropped images help your listings look polished and easier to trust."

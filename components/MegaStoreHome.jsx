@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
@@ -243,13 +243,56 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
     "/all-products?category=Fashion",
     "/all-products?category=Audio",
   ];
+  const pointerStateRef = useRef({ active: false, startX: 0, deltaX: 0 });
 
   if (!safeSlides.length) {
     return null;
   }
 
+  const handlePointerDown = (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+      return;
+    }
+
+    pointerStateRef.current = {
+      active: true,
+      startX: event.clientX,
+      deltaX: 0,
+    };
+  };
+
+  const handlePointerMove = (event) => {
+    if (!pointerStateRef.current.active) {
+      return;
+    }
+
+    pointerStateRef.current.deltaX = event.clientX - pointerStateRef.current.startX;
+  };
+
+  const handlePointerUp = () => {
+    const { active, deltaX } = pointerStateRef.current;
+    pointerStateRef.current = { active: false, startX: 0, deltaX: 0 };
+
+    if (!active || safeSlides.length < 2 || Math.abs(deltaX) < 48) {
+      return;
+    }
+
+    const nextIndex = deltaX < 0
+      ? (currentIndex + 1) % safeSlides.length
+      : (currentIndex - 1 + safeSlides.length) % safeSlides.length;
+
+    onSelect(nextIndex);
+  };
+
   return (
-    <section className={`relative overflow-hidden ${className}`}>
+    <section
+      className={`relative overflow-hidden touch-pan-y select-none ${className}`}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+    >
       <div
         className="flex h-full transition-transform duration-700 ease-in-out"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -278,7 +321,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
       </div>
 
       {safeSlides.length > 1 ? (
-        <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/25 px-2.5 py-1.5 backdrop-blur-sm">
+        <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/25 px-1.5 py-1 backdrop-blur-sm sm:gap-1.5 sm:px-2 sm:py-1.5">
           {safeSlides.map((slide, index) => (
             <button
               key={slide._id || index}
@@ -287,7 +330,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
                 event.stopPropagation();
                 onSelect(index);
               }}
-              className={`h-2 rounded-full transition-all ${currentIndex === index ? "w-5 bg-white" : "w-2 bg-white/55"}`}
+              className={`h-1.5 rounded-full transition-all sm:h-2 ${currentIndex === index ? "w-4 bg-white sm:w-5" : "w-1.5 bg-white/55 sm:w-2"}`}
               aria-label={`Show offer ${index + 1}`}
             />
           ))}
@@ -486,6 +529,8 @@ const MobileHome = ({
   dealProducts,
   recommendedProducts,
   sortedProducts,
+  storeCards,
+  storeLoadMoreRef,
   timeLeft,
   navigate,
   prefetchRoute,
@@ -494,7 +539,7 @@ const MobileHome = ({
 }) => {
   const heroFallback = sortedProducts[0];
   const dealOfDay = dealProducts[activePromo?._activeDealIndex || 0] || dealProducts[0] || sortedProducts[0];
-  const topStoreProducts = uniqueById(sortedProducts).filter((product) => product.userId).slice(0, 8);
+  const topStoreCards = storeCards;
   const promoProduct = sortedProducts[1] || heroFallback;
   const secondPromoProduct = sortedProducts[2] || heroFallback;
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
@@ -639,24 +684,30 @@ const MobileHome = ({
 
       <section className="mt-8">
         <SectionHeader title="Best Selling Stores" onViewAll={() => navigate("/all-products?sort=popular")} />
-        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
-          {topStoreProducts.map((product) => (
-            <button key={`${product._id}-store`} type="button" onClick={() => navigate(`/store/${encodeURIComponent(product.sellerProfile?.id || product.userId)}`)} className="flex w-40 shrink-0 items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-sm">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100">
-                {product.sellerProfile?.avatarUrl ? (
-                  <img src={product.sellerProfile.avatarUrl} alt={product.sellerProfile?.name || product.name} className="h-full w-full object-cover" />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:gap-3">
+          {topStoreCards.map((store) => (
+            <button
+              key={store.id}
+              type="button"
+              onClick={() => navigate(store.href)}
+              className="flex min-h-[4.25rem] min-w-0 items-center gap-2 rounded-lg border border-gray-200 bg-white p-2.5 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md lg:w-[13rem] lg:flex-none"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100">
+                {store.avatarUrl ? (
+                  <img src={store.avatarUrl} alt={store.name} className="h-full w-full object-cover" />
                 ) : (
-                  <ContentImage src={getImage(product)} alt={product.sellerProfile?.name || product.name} width={56} height={56} className="h-full w-full object-cover" />
+                  <span className="text-sm font-black text-gray-700">{store.name.slice(0, 1)}</span>
                 )}
               </span>
               <span className="min-w-0">
-                <span className="block truncate text-[12px] font-extrabold text-gray-950">{product.sellerProfile?.name || "KawilMart Store"}</span>
-                <span className="mt-1 block text-[11px] text-orange-500">★ {(product.sellerProfile?.ratingSummary?.overall || 0).toFixed(1)}</span>
-                <span className="mt-1 block text-[11px] text-gray-500">{Math.max(0, Number(product.soldCount) || 0)} sold</span>
+                <span className="block truncate text-[11px] font-extrabold text-gray-950 lg:text-[12px]">{store.name}</span>
+                <span className="mt-0.5 block truncate text-[10px] text-gray-500 lg:text-[11px]">{store.location}</span>
+                <span className="mt-0.5 block text-[10px] font-semibold text-orange-600 lg:text-[11px]">{store.productCount} products</span>
               </span>
             </button>
           ))}
         </div>
+        <div ref={storeLoadMoreRef} className="h-1 w-full" aria-hidden="true" />
       </section>
 
       <section className="mt-6 rounded-lg bg-orange-50 p-4">
@@ -1015,11 +1066,15 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       };
     })
     .sort((left, right) => right.productCount - left.productCount)
-    .slice(0, 8);
+    ;
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [activePromoIndex, setActivePromoIndex] = useState(0);
   const [activeDealIndex, setActiveDealIndex] = useState(0);
   const [now, setNow] = useState(Date.now());
+  const [visibleStoreCount, setVisibleStoreCount] = useState(8);
+  const storeLoadMoreRef = useRef(null);
+
+  const visibleStoreCards = storeCards.slice(0, visibleStoreCount);
 
   useEffect(() => {
     if (heroSlides.length < 2) {
@@ -1085,6 +1140,32 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const marketingBanners = [...promoSlides, ...featuredCards];
   const timeLeft = getTimeParts(earliestDealDeadline ? earliestDealDeadline - now : 0);
 
+  useEffect(() => {
+    setVisibleStoreCount(Math.min(8, storeCards.length || 8));
+  }, [storeCards.length]);
+
+  useEffect(() => {
+    if (!storeLoadMoreRef.current || visibleStoreCount >= storeCards.length) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        setVisibleStoreCount((current) => Math.min(current + 4, storeCards.length));
+      },
+      { rootMargin: "180px 0px" }
+    );
+
+    observer.observe(storeLoadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [storeCards.length, visibleStoreCount]);
+
   if (!heroProduct && loadingProducts) {
     return <HomeStorefrontSkeleton />;
   }
@@ -1115,6 +1196,8 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       dealProducts={dealProducts}
       recommendedProducts={recommendedProducts}
       sortedProducts={sortedProducts}
+      storeCards={visibleStoreCards}
+      storeLoadMoreRef={storeLoadMoreRef}
       timeLeft={timeLeft}
       navigate={navigate}
       prefetchRoute={prefetchRoute}
@@ -1255,7 +1338,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
           </div>
         </section>
 
-        {storeCards.length ? (
+        {visibleStoreCards.length ? (
           <section className="mt-8">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -1266,15 +1349,15 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
                 View all stores →
               </button>
             </div>
-            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
-              {storeCards.map((store) => (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {visibleStoreCards.map((store) => (
                 <button
                   key={store.id}
                   type="button"
                   onClick={() => navigate(store.href)}
                   onMouseEnter={() => prefetchRoute(store.href)}
                   onFocus={() => prefetchRoute(store.href)}
-                  className="flex w-[18rem] shrink-0 items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md"
+                  className="flex min-h-[4.75rem] w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md"
                 >
                   <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gray-100">
                     {store.avatarUrl ? (
@@ -1291,6 +1374,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
                 </button>
               ))}
             </div>
+            <div ref={storeLoadMoreRef} className="h-1 w-full" aria-hidden="true" />
           </section>
         ) : null}
       </div>

@@ -523,13 +523,15 @@ const CategoryBanner = ({ banner, navigate, prefetchRoute, fallbackTitle }) => {
   );
 };
 
-const CategoryBubble = ({ tile, product, onClick, count }) => (
+const CategoryBubble = ({ tile, product, onClick, count, bare = false, compact = false }) => (
   <button
     type="button"
     onClick={onClick}
-    className="group flex min-w-0 flex-col items-center gap-3 rounded-[1.15rem] border border-gray-100 bg-white p-3 text-center shadow-sm transition hover:border-gray-200 hover:shadow-md"
+    className={`group flex min-w-0 flex-col items-center gap-3 rounded-[1.15rem] p-3 text-center transition ${
+      bare ? "border border-transparent bg-transparent shadow-none hover:border-transparent hover:shadow-none" : "border border-gray-100 bg-white shadow-sm hover:border-gray-200 hover:shadow-md"
+    }`}
   >
-    <div className={`flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br ${tile.tone} p-2.5 sm:h-28 sm:w-28`}>
+    <div className={`flex ${compact ? "h-16 w-16" : "h-24 w-24"} items-center justify-center rounded-full bg-gradient-to-br ${tile.tone} p-2.5 sm:h-28 sm:w-28`}>
       {product ? (
         <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
           <Image
@@ -553,11 +555,13 @@ const CategoryBubble = ({ tile, product, onClick, count }) => (
   </button>
 );
 
-const TopCategoryCard = ({ tile, product, onClick, count }) => (
+const TopCategoryCard = ({ tile, product, onClick, count, bare = false }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`group relative overflow-hidden rounded-[1.15rem] border border-gray-100 bg-gradient-to-br ${tile.tone} p-3 text-left shadow-sm transition hover:shadow-md`}
+    className={`group relative overflow-hidden rounded-[1.15rem] p-3 text-left transition ${
+      bare ? "border border-transparent bg-transparent shadow-none hover:border-transparent hover:shadow-none" : `border border-gray-100 bg-gradient-to-br ${tile.tone} shadow-sm hover:shadow-md`
+    }`}
   >
     <div className="flex min-h-[108px] items-start justify-between gap-3">
       <div className="min-w-0">
@@ -669,6 +673,7 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
   const storefrontProducts = products.length ? products : initialProducts;
   const resolvedContent = initialSiteContent || { categoryBanners: [] };
   const [categorySearch, setCategorySearch] = useState("");
+  const [showMobileCategoryMenu, setShowMobileCategoryMenu] = useState(false);
 
   const categoryParam = searchParams.get("category") || "";
   const selectedDepartment = useMemo(() => {
@@ -918,8 +923,23 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
 
           <div className="lg:hidden">
             <div className="px-1 pb-4">
-              <div className="rounded-[1.5rem] border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="mb-4 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+              <div className="rounded-[1.35rem] border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileCategoryMenu(true)}
+                    className="flex h-11 shrink-0 items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-900 shadow-sm"
+                  >
+                    <span className="text-base">☰</span>
+                    Menu
+                  </button>
+                  <div className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                    <p className="truncate text-sm font-semibold text-gray-950">{selectedDepartment.label}</p>
+                    <p className="truncate text-[11px] text-gray-500">{selectedDepartment.description}</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
                   <DepartmentGlyph type="search" className="h-5 w-5 text-gray-500" />
                   <input
                     value={categorySearch}
@@ -928,59 +948,22 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
                     className="min-w-0 flex-1 text-sm outline-none placeholder:text-gray-400"
                   />
                 </div>
-
-                <CategoryBanner
-                  banner={selectedBanner}
-                  fallbackTitle={selectedDepartment.heroTitle}
-                  navigate={navigate}
-                  prefetchRoute={prefetchRoute}
-                />
               </div>
             </div>
-
-            <section className="px-1">
-              <div className="mb-3 flex items-center justify-between px-1">
-                <h2 className="text-lg font-semibold text-gray-950">All Categories</h2>
-                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View All Categories</button>
-              </div>
-              <div className="space-y-2">
-                {visibleSidebarProducts.map((item) => (
-                  <button
-                    key={item.slug}
-                    type="button"
-                    onClick={() => selectDepartment(item)}
-                    className={`flex w-full items-center justify-between rounded-2xl border bg-white px-4 py-3 text-left shadow-sm ${
-                      selectedDepartment.slug === item.slug ? "border-orange-300 ring-1 ring-orange-100" : "border-gray-200"
-                    }`}
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${
-                        selectedDepartment.slug === item.slug ? "border-orange-200 text-orange-600" : "border-gray-200 text-gray-700"
-                      }`}>
-                        <DepartmentGlyph type={item.sidebarIcon} className="h-5 w-5" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold text-gray-950">{item.label}</span>
-                        <span className="block text-xs text-gray-500">{formatCount(item.count)} items</span>
-                      </span>
-                    </div>
-                    <span className="text-gray-300">›</span>
-                  </button>
-                ))}
-              </div>
-            </section>
 
             <section className="mt-6 px-1">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-950">Shop by category</h2>
               </div>
-              <div className="flex gap-3 overflow-x-auto pb-2">
+              <div className="grid grid-cols-3 gap-2">
                 {tileCounts.map((tile) => (
-                  <div key={tile.label} className="w-[9rem] shrink-0">
+                  <div key={tile.label} className="min-w-0">
                     <CategoryBubble
                       tile={tile}
                       product={tile.product}
                       count={tile.count}
+                      bare
+                      compact
                       onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
                     />
                   </div>
@@ -993,9 +976,9 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
                 <h2 className="text-lg font-semibold text-gray-950">Top categories</h2>
                 <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
               </div>
-              <div className="flex gap-3 overflow-x-auto pb-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 {topCategoryCards.map((tile) => (
-                  <div key={tile.label} className="w-[13.5rem] shrink-0">
+                  <div key={tile.label} className="min-w-0">
                     <TopCategoryCard
                       tile={tile}
                       product={tile.product}
@@ -1051,6 +1034,51 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
               </div>
             </section>
           </div>
+
+          {showMobileCategoryMenu ? (
+            <div className="fixed inset-0 z-50 bg-black/40 p-4 lg:hidden" onClick={() => setShowMobileCategoryMenu(false)}>
+              <div
+                className="mx-auto mt-16 max-h-[80vh] w-full max-w-md overflow-y-auto rounded-[1.35rem] bg-white p-4 shadow-2xl"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-950">Categories</p>
+                    <p className="text-[11px] text-gray-500">Pick a department to browse.</p>
+                  </div>
+                  <button type="button" onClick={() => setShowMobileCategoryMenu(false)} className="text-xl text-gray-400">×</button>
+                </div>
+                <div className="space-y-2">
+                  {visibleSidebarProducts.map((item) => (
+                    <button
+                      key={item.slug}
+                      type="button"
+                      onClick={() => {
+                        selectDepartment(item);
+                        setShowMobileCategoryMenu(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left ${
+                        selectedDepartment.slug === item.slug ? "border-orange-300 bg-orange-50" : "border-gray-200 bg-white"
+                      }`}
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+                          selectedDepartment.slug === item.slug ? "bg-white text-orange-600" : "bg-gray-50 text-gray-700"
+                        }`}>
+                          <DepartmentGlyph type={item.sidebarIcon} className="h-5 w-5" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-gray-950">{item.label}</span>
+                          <span className="block text-xs text-gray-500">{formatCount(item.count)} items</span>
+                        </span>
+                      </div>
+                      <span className="text-gray-300">›</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : null}
         </section>
       </div>
     </main>
