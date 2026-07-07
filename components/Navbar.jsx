@@ -249,9 +249,36 @@ const NavAction = ({ children, label, onClick, badge }) => (
 
 const NotificationPopover = ({ unreadCount, notifications, onNavigate, onMarkAllRead }) => {
   const [open, setOpen] = useState(false);
+  const closeTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleOpen = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
+    closeTimerRef.current = setTimeout(() => {
+      setOpen(false);
+      closeTimerRef.current = null;
+    }, 120);
+  };
 
   return (
-    <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+    <div className="relative" onMouseEnter={handleOpen} onMouseLeave={handleClose}>
       <NavAction label="Alerts" onClick={() => onNavigate('/inbox')} badge={unreadCount}>
         <NotificationIcon />
       </NavAction>
