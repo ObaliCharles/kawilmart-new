@@ -29,8 +29,18 @@ const CategoryEditorialPanel = ({ section, quickCategories, reverse, navigate, p
         <div className={`flex flex-col justify-between border-b border-white/70 p-4 sm:p-6 lg:border-b-0 ${reverse ? "lg:order-2 lg:border-l lg:border-r-0 lg:border-white/70" : "lg:border-r lg:border-white/70"}`}>
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500 shadow-sm sm:gap-3 sm:py-2 sm:text-xs">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#f3eee6] text-sm sm:text-base">
-                <CategoryLineIcon category={section.value} className="h-4 w-4 text-gray-800" />
+              <span className="inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-[#f3eee6] text-sm sm:text-base">
+                {section.leadProduct?.image?.[0] ? (
+                  <Image
+                    src={section.leadProduct.image[0]}
+                    alt={section.label}
+                    width={28}
+                    height={28}
+                    className="h-full w-full object-contain p-1"
+                  />
+                ) : (
+                  <CategoryLineIcon category={section.value} className="h-4 w-4 text-gray-800" />
+                )}
               </span>
               Category focus
             </span>
@@ -75,7 +85,19 @@ const CategoryEditorialPanel = ({ section, quickCategories, reverse, navigate, p
                       onFocus={() => prefetchRoute(href)}
                       className="inline-flex w-full min-w-0 items-center justify-between gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-left text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 sm:w-auto sm:justify-start"
                     >
-                      <CategoryLineIcon category={category.value} className="h-4 w-4 shrink-0" />
+                      {category.previewProduct?.image?.[0] ? (
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white">
+                          <Image
+                            src={category.previewProduct.image[0]}
+                            alt={category.label}
+                            width={20}
+                            height={20}
+                            className="h-full w-full object-contain p-0.5"
+                          />
+                        </span>
+                      ) : (
+                        <CategoryLineIcon category={category.value} className="h-4 w-4 shrink-0" />
+                      )}
                       <span className="min-w-0 truncate [overflow-wrap:anywhere]">{category.label}</span>
                     </button>
                   );
@@ -215,6 +237,7 @@ const HomeProducts = () => {
             .map((categoryValue) => ({
               value: categoryValue,
               label: getCategoryMeta(categoryValue).label,
+              previewProduct: featuredProducts.find((product) => categoryMatchesSelection(product.category, categoryValue)) || null,
             }))
 
           return (

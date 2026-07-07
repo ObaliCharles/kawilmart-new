@@ -184,6 +184,32 @@ const getProductSearchScore = (product, query) => {
     coverageBonus: 80,
   });
 
+  const categoryMeta = getCategoryMeta(product.category);
+
+  score += scoreFieldMatch(categoryMeta.label, normalizedQuery, searchTerms, {
+    exact: 480,
+    startsWith: 320,
+    includes: 220,
+    term: 70,
+    coverageBonus: 120,
+  });
+
+  score += scoreFieldMatch(categoryMeta.aliases?.join(" "), normalizedQuery, searchTerms, {
+    exact: 300,
+    startsWith: 220,
+    includes: 160,
+    term: 56,
+    coverageBonus: 100,
+  });
+
+  score += scoreFieldMatch(product.sellerProfile?.name, normalizedQuery, searchTerms, {
+    exact: 420,
+    startsWith: 300,
+    includes: 200,
+    term: 64,
+    coverageBonus: 120,
+  });
+
   if (searchTerms.length > 1 && searchTerms.every((term) => nameWords.some((word) => word.startsWith(term)))) {
     score += 260;
   }
@@ -314,6 +340,7 @@ function AllProductsInner() {
   const sellerReferenceProduct = selectedSeller ? products.find((product) => product.userId === selectedSeller) : null;
   const sellerFilterLabel = sellerReferenceProduct?.sellerProfile?.name || sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
+  const resultsLabel = `${filteredProducts.length} result${filteredProducts.length === 1 ? "" : "s"}`;
   const resetFilters = () => {
     setSelectedCategory("All");
     setSelectedPriceRange(0);
@@ -502,34 +529,15 @@ function AllProductsInner() {
           </div>
         </section>
 
-        {hasActiveSearch ? (
-          <div className="mb-5 flex flex-col gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm text-gray-700">
-                Showing results for <span className="font-semibold text-orange-600">&quot;{deferredSearchQuery.trim()}&quot;</span>
-              </p>
-              <p className="mt-0.5 text-[13px] text-gray-500">{filteredProducts.length} results</p>
-            </div>
-            <select
-              value={effectiveSortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-full rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-500 md:w-auto"
-            >
-              {sortOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-        ) : null}
-
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[26px] font-bold text-gray-950">{hasActiveSearch ? "Search results" : selectedCategoryMeta?.label || "Laptops & Notebooks"}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''} found
-              {deferredSearchQuery.trim() ? ` for "${deferredSearchQuery.trim()}"` : ""}
-              {selectedSeller ? ` from ${sellerFilterLabel}` : ""}
-            </p>
+            <p className="text-[26px] font-bold text-gray-950">{hasActiveSearch ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
+            {!hasActiveSearch ? (
+              <p className="mt-1 text-sm text-gray-500">
+                {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''} found
+                {selectedSeller ? ` from ${sellerFilterLabel}` : ""}
+              </p>
+            ) : null}
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
             <label className="hidden text-sm font-medium text-gray-700 sm:block">Sort by:</label>
@@ -667,7 +675,7 @@ function AllProductsInner() {
                 <button onClick={() => setSelectedRating(0)} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
-            {searchQuery && (
+            {searchQuery && !hasActiveSearch && (
               <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
                 &quot;{searchQuery}&quot;
                 <button onClick={() => setSearchQuery("")} className="ml-1 font-bold hover:text-orange-900">x</button>

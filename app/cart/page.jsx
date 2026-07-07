@@ -125,7 +125,7 @@ const Cart = () => {
                 }
 
                 return (
-                    <article key={itemId} className="relative grid min-w-0 grid-cols-[5rem_minmax(0,1fr)] gap-x-3 gap-y-3 border-b border-gray-200 bg-white p-3 last:border-b-0 min-[380px]:grid-cols-[5.5rem_minmax(0,1fr)] min-[380px]:gap-x-4 min-[380px]:p-4 md:rounded-xl md:border md:grid-cols-[80px_minmax(0,1fr)_10rem_9rem] md:items-center">
+                    <article key={itemId} className="relative grid w-full min-w-0 max-w-full grid-cols-[4.75rem_minmax(0,1fr)] gap-x-3 gap-y-3 border-b border-gray-200 bg-white p-3 last:border-b-0 min-[380px]:grid-cols-[5.25rem_minmax(0,1fr)] min-[380px]:gap-x-4 min-[380px]:p-4 md:rounded-xl md:border md:grid-cols-[80px_minmax(0,1fr)_10rem_9rem] md:items-center">
                       <button
                         type="button"
                         className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center text-gray-500 hover:text-red-500"
@@ -136,7 +136,7 @@ const Cart = () => {
                           <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                         </svg>
                       </button>
-                    <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-gray-100 bg-white min-[380px]:h-[5.5rem] min-[380px]:w-[5.5rem] md:h-20 md:w-20 md:border-0">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-gray-100 bg-white min-[380px]:h-[5.25rem] min-[380px]:w-[5.25rem] md:h-20 md:w-20 md:border-0">
                       <CartProductImage product={product} />
                     </div>
 
@@ -147,24 +147,24 @@ const Cart = () => {
                     </div>
 
                     <div className="col-start-2 flex min-w-0 flex-wrap items-center justify-between gap-2 md:contents">
-                    <div className="flex h-10 w-32 max-w-full items-center justify-between rounded-md border border-gray-200 bg-white px-2 md:h-11 md:w-36 md:px-3">
-                      <button type="button" onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-8 w-8 items-center justify-center text-orange-600" aria-label="Decrease quantity">
-                        <Image src={assets.decrease_arrow} alt="" className="h-3 w-3" />
-                      </button>
-                      <input
-                        onChange={e => updateCartQuantity(product._id, Number(e.target.value))}
-                        type="number"
-                        value={quantity}
-                        className="w-10 text-center text-base font-medium outline-none"
-                      />
-                      <button type="button" onClick={() => addToCart(product._id)} className="flex h-8 w-8 items-center justify-center text-orange-600" aria-label="Increase quantity">
-                        <Image src={assets.increase_arrow} alt="" className="h-3 w-3" />
-                      </button>
-                    </div>
+                      <div className="flex h-10 w-full max-w-32 items-center justify-between rounded-md border border-gray-200 bg-white px-2 md:h-11 md:w-36 md:max-w-none md:px-3">
+                        <button type="button" onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-8 w-8 items-center justify-center text-orange-600" aria-label="Decrease quantity">
+                          <Image src={assets.decrease_arrow} alt="" className="h-3 w-3" />
+                        </button>
+                        <input
+                          onChange={e => updateCartQuantity(product._id, Number(e.target.value))}
+                          type="number"
+                          value={quantity}
+                          className="w-10 min-w-0 text-center text-base font-medium outline-none"
+                        />
+                        <button type="button" onClick={() => addToCart(product._id)} className="flex h-8 w-8 items-center justify-center text-orange-600" aria-label="Increase quantity">
+                          <Image src={assets.increase_arrow} alt="" className="h-3 w-3" />
+                        </button>
+                      </div>
 
-                    <p className="min-w-0 flex-1 text-right text-sm font-bold text-orange-600 [overflow-wrap:anywhere] md:flex-none md:text-left md:text-base">
-                      {formatCurrency(product.offerPrice * quantity)}
-                    </p>
+                      <p className="min-w-0 flex-1 text-right text-sm font-bold text-orange-600 [overflow-wrap:anywhere] md:flex-none md:text-left md:text-base">
+                        {formatCurrency(product.offerPrice * quantity)}
+                      </p>
                     </div>
                   </article>
                 );

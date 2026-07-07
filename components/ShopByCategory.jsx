@@ -1,12 +1,18 @@
 'use client'
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
+import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
 import { buildCategoryHref, getCategoryMeta, homeCategoryValues } from "@/lib/marketplaceCategories";
+import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
+
+const getCategoryPreviewProduct = (products, categoryValue) => (
+  products.find((product) => categoryMatchesSelection(product.category, categoryValue)) || null
+);
 
 const ShopByCategory = () => {
-  const { setIsRouteLoading } = useAppContext();
+  const { products, setIsRouteLoading } = useAppContext();
   const [isExpanded, setIsExpanded] = useState(false);
   const categories = useMemo(() => (
     homeCategoryValues.map((categoryValue) => {
@@ -14,9 +20,10 @@ const ShopByCategory = () => {
       return {
         ...meta,
         href: buildCategoryHref(categoryValue),
+        previewProduct: getCategoryPreviewProduct(products, categoryValue),
       };
     })
-  ), []);
+  ), [products]);
 
   const quickCategories = categories.slice(0, 6);
 
@@ -38,8 +45,18 @@ const ShopByCategory = () => {
               onClick={() => setIsRouteLoading(true)}
               className="inline-flex min-w-0 items-center justify-between gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 sm:justify-start"
             >
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-sm shadow-sm">
-                <CategoryLineIcon category={cat.value} className="h-4 w-4" />
+              <span className="inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white text-sm shadow-sm">
+                {cat.previewProduct?.image?.[0] ? (
+                  <Image
+                    src={cat.previewProduct.image[0]}
+                    alt={cat.label}
+                    width={28}
+                    height={28}
+                    className="h-full w-full object-contain p-1"
+                  />
+                ) : (
+                  <CategoryLineIcon category={cat.value} className="h-4 w-4" />
+                )}
               </span>
               <span className="truncate">{cat.label}</span>
             </Link>
@@ -67,8 +84,18 @@ const ShopByCategory = () => {
                 className="group rounded-2xl border border-white/90 bg-white/95 p-4 backdrop-blur-[2px] transition hover:border-orange-300 hover:shadow-sm"
               >
                 <div className="flex items-start gap-3">
-                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f5f2ed] text-lg">
-                    <CategoryLineIcon category={cat.value} className="h-5 w-5" />
+                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#f5f2ed] text-lg">
+                    {cat.previewProduct?.image?.[0] ? (
+                      <Image
+                        src={cat.previewProduct.image[0]}
+                        alt={cat.label}
+                        width={44}
+                        height={44}
+                        className="h-full w-full object-contain p-1"
+                      />
+                    ) : (
+                      <CategoryLineIcon category={cat.value} className="h-5 w-5" />
+                    )}
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-gray-900 transition group-hover:text-orange-700">

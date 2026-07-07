@@ -7,7 +7,7 @@ import { useAppContext } from "@/context/AppContext";
 import Image from "next/image";
 import { useClerk, UserButton, useUser, useAuth } from "@clerk/nextjs";
 import { NavbarUserSkeleton } from "@/components/dashboard/DashboardSkeletons";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { buildCategoryHref, homeCategoryValues, getCategoryMeta } from "@/lib/marketplaceCategories";
 
 const userButtonAppearance = {
@@ -294,7 +294,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
   const { isLoaded: isAuthLoaded } = useAuth();
   const { openSignIn, openUserProfile } = useClerk();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDesktopViewport, setIsDesktopViewport] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -415,7 +414,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
   }, [clerkReady, refreshUnreadNotifications, user]);
 
   useEffect(() => {
-    const routes = ['/', '/all-products', '/cart', '/my-orders', '/inbox'];
+    const routes = ['/', '/all-products', '/categories', '/cart', '/my-orders', '/inbox'];
     if (showSeller) routes.push('/seller');
     if (showAdmin) routes.push('/admin');
     if (showRider) routes.push('/dashboard/rider');
@@ -428,7 +427,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
 
   const isDockActive = (item) => {
     if (item.key === "home") return pathname === "/";
-    if (item.key === "categories") return pathname === "/all-products" && searchParams.get("filter") !== "flash";
+    if (item.key === "categories") return pathname === "/categories";
     if (item.key === "cart") return pathname === "/cart";
     if (item.key === "orders") return pathname === "/my-orders";
     return false;
@@ -462,7 +461,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
         { label: "My Payment Methods", href: "/cart", icon: "payment" },
         showAdmin ? { label: "Admin Dashboard", href: "/admin", icon: "admin", badge: "Admin" } : null,
         showSeller ? { label: "Seller Dashboard", href: "/seller", icon: "seller", badge: "Seller" } : null,
-        { label: "Vendor Center", href: "/seller", icon: "vendor", badge: "Vendor" },
+        showRider ? { label: "Delivery Dashboard", href: "/dashboard/rider", icon: "delivery", badge: "Rider" } : null,
       ].filter(Boolean),
     },
     {
@@ -615,6 +614,9 @@ const Navbar = ({ hideMobileHeader = false }) => {
           <div className="ml-auto hidden items-center gap-4 md:flex">
             <NavAction label="Orders" onClick={() => navigate('/my-orders')}><BagIcon /></NavAction>
             <NavAction label="Saved" onClick={() => navigate('/all-products')}><HeartIcon /></NavAction>
+            <NavAction label="Alerts" onClick={() => navigate('/inbox')} badge={unreadNotificationsCount}>
+              <NotificationIcon />
+            </NavAction>
             <NavAction label="My Cart" onClick={() => navigate('/cart')} badge={cartCount}><CartIcon /></NavAction>
             {!clerkReady || isDesktopViewport === null ? (
               <NavbarUserSkeleton showName />
@@ -640,6 +642,14 @@ const Navbar = ({ hideMobileHeader = false }) => {
           </form>
 
           <div className="ml-auto flex items-center gap-2 md:hidden">
+            <button type="button" onClick={() => navigate('/inbox')} aria-label="Open notifications" className="relative flex h-10 w-10 items-center justify-center text-gray-900">
+              <NotificationIcon />
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute right-0 top-0 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                  {formatBadgeCount(unreadNotificationsCount)}
+                </span>
+              )}
+            </button>
             <button type="button" onClick={() => navigate('/cart')} aria-label="Open cart" className="relative flex h-10 w-10 items-center justify-center text-gray-900">
               <AccountMenuIcon type="cart" className="h-6 w-6" />
               {cartCount > 0 && (
@@ -705,7 +715,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
                 className="relative"
                 onMouseLeave={() => openDropdown === 'nav-categories' ? closeDropdown() : undefined}
               >
-                <button type="button" onMouseEnter={() => setOpenDropdown('nav-categories')} onClick={() => toggleDropdown('nav-categories')} className="flex items-center gap-2 rounded-md bg-orange-600 px-5 py-2.5 text-white transition hover:bg-orange-700">
+                <button type="button" onMouseEnter={() => setOpenDropdown('nav-categories')} onClick={() => navigate('/categories')} className="flex items-center gap-2 rounded-md bg-orange-600 px-5 py-2.5 text-white transition hover:bg-orange-700">
                   <MenuIcon />
                   All category
                 </button>
@@ -763,7 +773,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
         <div className="mx-auto grid max-w-sm grid-cols-5 rounded-2xl border border-gray-100 bg-white px-1 py-1.5 text-[11px] font-semibold text-gray-500 shadow-sm">
           {[
             { key: "home", label: "Home", href: "/", icon: <DockIcon type="home" /> },
-            { key: "categories", label: "Categories", href: "/all-products", icon: <DockIcon type="categories" /> },
+            { key: "categories", label: "Categories", href: "/categories", icon: <DockIcon type="categories" /> },
             { key: "cart", label: "Cart", href: "/cart", icon: <DockIcon type="cart" />, badge: cartCount },
             { key: "orders", label: "Orders", href: "/my-orders", icon: <DockIcon type="orders" /> },
           ].map((item) => (

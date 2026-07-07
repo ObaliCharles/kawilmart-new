@@ -5,15 +5,7 @@ import { assets } from '@/assets/assets'
 import Image from 'next/image';
 import { useAppContext } from '@/context/AppContext';
 import { getProductStockSnapshot } from '@/lib/productStock';
-
-const getProductRating = (product) => {
-    const rating = product.ratingSummary?.average || product.rating || product.averageRating || 4.8;
-    const count = product.ratingSummary?.totalReviews || product.reviews?.length || product.likesCount || 128;
-    return {
-        rating: Math.max(0, Math.min(5, Number(rating) || 4.8)),
-        count,
-    };
-};
+import { getProductRatingSnapshot } from '@/lib/productRating';
 
 const ProductCard = ({ product }) => {
     const { addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike } = useAppContext();
@@ -29,7 +21,13 @@ const ProductCard = ({ product }) => {
       : null;
     const stockSnapshot = getProductStockSnapshot(product);
     const isOutOfStock = stockSnapshot.status === 'out';
-    const { rating, count } = getProductRating(product);
+    const { rating, reviewCount, hasRating, filledStars } = getProductRatingSnapshot(product);
+    const soldCount = Math.max(0, Number(product.soldCount) || 0);
+    const stockBarWidth = stockSnapshot.status === "out"
+      ? 0
+      : stockSnapshot.status === "low"
+        ? 28
+        : 62;
 
     const handleLikeClick = async (e) => {
         e.stopPropagation();
@@ -136,13 +134,36 @@ const ProductCard = ({ product }) => {
                     {[0, 1, 2, 3, 4].map((star) => (
                         <Image
                             key={star}
-                            src={star < Math.round(rating) ? assets.star_icon : assets.star_dull_icon}
+                            src={star < filledStars ? assets.star_icon : assets.star_dull_icon}
                             alt=""
                             className="h-3.5 w-3.5"
                         />
                     ))}
                 </span>
-                <span>{rating.toFixed(1)} ({count})</span>
+                <span>{hasRating ? rating.toFixed(1) : "New"}{reviewCount > 0 ? ` (${reviewCount})` : ""}</span>
+            </div>
+
+            <div className="mt-2 space-y-1.5">
+                {stockSnapshot.hasTrackedStock ? (
+                    <div className="space-y-1">
+                        <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                        <div
+                            className={`h-full rounded-full ${
+                                stockSnapshot.status === "out"
+                                    ? "bg-gray-300"
+                                    : stockSnapshot.status === "low"
+                                        ? "bg-rose-500"
+                                        : "bg-orange-500"
+                            }`}
+                            style={{ width: `${stockBarWidth}%` }}
+                        />
+                    </div>
+                        <p className="text-[11px] font-medium text-gray-500">{stockSnapshot.label}</p>
+                    </div>
+                ) : null}
+                {soldCount > 0 ? (
+                    <p className="text-[11px] font-medium text-gray-500">{soldCount} sold</p>
+                ) : null}
             </div>
 
             <div className="mt-auto pt-2">

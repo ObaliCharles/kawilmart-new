@@ -6,9 +6,11 @@ import { useEffect, useMemo, useState } from "react";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
+import Skeleton from "@/components/Skeleton";
 import { defaultSiteContent, resolveSiteContent } from "@/lib/defaultSiteContent";
 import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, sortProductsForLiveShowcase } from "@/lib/liveCommerce";
+import { getProductStockSnapshot } from "@/lib/productStock";
 
 const compactCategories = [
   ["Automobiles", "car", "/all-products?category=Automotive"],
@@ -80,45 +82,77 @@ const getPriceValue = (value) => {
   return Number.isFinite(numericValue) ? numericValue : 0;
 };
 
+const useImageLoadState = (src) => {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+
+    const revealTimer = window.setTimeout(() => {
+      setLoaded(true);
+    }, 250);
+
+    return () => window.clearTimeout(revealTimer);
+  }, [src]);
+
+  return [loaded, setLoaded];
+};
+
 const ProductImage = ({ product, alt, className, width, height, priority = false }) => {
   const fallbackImage = assets.upload_area;
   const [src, setSrc] = useState(() => getImage(product));
+  const [loaded, setLoaded] = useImageLoadState(src);
 
   useEffect(() => {
     setSrc(getImage(product));
   }, [product]);
 
   return (
-    <Image
-      src={src || fallbackImage}
-      alt={alt || product?.name || "Product image"}
-      width={width}
-      height={height}
-      className={className}
-      priority={priority}
-      onError={() => setSrc(fallbackImage)}
-    />
+    <span className={`relative z-0 block overflow-hidden ${className || ""}`}>
+      {!loaded ? <Skeleton className="absolute inset-0 z-0 h-full w-full rounded-[inherit]" /> : null}
+      <Image
+        src={src || fallbackImage}
+        alt={alt || product?.name || "Product image"}
+        width={width}
+        height={height}
+        className="relative z-0 h-full w-full object-contain"
+        priority={priority}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setLoaded(true);
+          setSrc(fallbackImage);
+        }}
+      />
+    </span>
   );
 };
 
 const ContentImage = ({ src, alt, className, width, height, priority = false }) => {
   const fallbackImage = assets.upload_area;
   const [imageSrc, setImageSrc] = useState(src || fallbackImage);
+  const [loaded, setLoaded] = useImageLoadState(imageSrc);
 
   useEffect(() => {
     setImageSrc(src || fallbackImage);
   }, [src]);
 
   return (
-    <Image
-      src={imageSrc || fallbackImage}
-      alt={alt || "KawilMart offer"}
-      width={width}
-      height={height}
-      className={className}
-      priority={priority}
-      onError={() => setImageSrc(fallbackImage)}
-    />
+    <span className={`relative z-0 block overflow-hidden ${className || ""}`}>
+      {!loaded ? <Skeleton className="absolute inset-0 z-0 h-full w-full rounded-[inherit]" /> : null}
+      <Image
+        src={imageSrc || fallbackImage}
+        alt={alt || "KawilMart offer"}
+        width={width}
+        height={height}
+        className="relative z-0 h-full w-full object-cover"
+        priority={priority}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setLoaded(true);
+          setImageSrc(fallbackImage);
+        }}
+      />
+    </span>
   );
 };
 
@@ -186,6 +220,22 @@ const SectionHeader = ({ title, onViewAll }) => (
   </div>
 );
 
+function getContentHref(item, fallback = "/all-products") {
+  if (item?.linkType === "category" && item.category) {
+    return `/all-products?category=${encodeURIComponent(item.category)}`;
+  }
+
+  if (item?.linkType === "store" && item.storeId) {
+    return `/store/${encodeURIComponent(item.storeId)}`;
+  }
+
+  if (item?.productId) {
+    return `/product/${item.productId}`;
+  }
+
+  return item?.primaryHref || item?.href || fallback;
+}
+
 const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className = "", priority = false }) => {
   const safeSlides = slides.filter((slide) => slide?.imageUrl);
   const fallbackHrefs = [
@@ -212,7 +262,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
               key={slide._id || index}
               type="button"
               onClick={() => navigate(href)}
-              className="relative min-w-full overflow-hidden bg-gray-950 text-left"
+              className="relative min-w-full overflow-hidden bg-gray-100 text-left"
             >
               <ContentImage
                 src={slide.imageUrl}
@@ -220,7 +270,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
                 width={1200}
                 height={520}
                 priority={priority && index === 0}
-                className="absolute inset-0 h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full"
               />
             </button>
           );
@@ -307,6 +357,7 @@ const MobileFlashCard = ({ product, navigate, prefetchRoute, formatCurrency, tog
   const activity = getProductActivitySnapshot(product);
   const originalPrice = getPriceValue(product.price);
   const offerPrice = getPriceValue(product.offerPrice || product.price);
+  const stockSnapshot = getProductStockSnapshot(product);
   const [liked, setLiked] = useState(Boolean(product.likedByCurrentUser));
 
   useEffect(() => {
@@ -328,24 +379,32 @@ const MobileFlashCard = ({ product, navigate, prefetchRoute, formatCurrency, tog
       onClick={() => navigate(`/product/${product._id}`)}
       onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
       onFocus={() => prefetchRoute(`/product/${product._id}`)}
-      className="relative w-[9.6rem] shrink-0 rounded-lg border border-gray-200 bg-white p-2 text-left shadow-sm"
+      className="relative isolate w-[9.6rem] shrink-0 rounded-lg border border-gray-200 bg-white p-2 text-left shadow-sm"
     >
-      <span className="absolute left-2 top-2 z-10 rounded bg-rose-500 px-2 py-1 text-[11px] font-bold text-white">
+      <span className="absolute left-2 top-2 z-20 rounded bg-rose-500 px-2 py-1 text-[11px] font-bold text-white">
         -{Math.max(activity.priceDropPercent, 15)}%
       </span>
-      <span onClick={likeProduct} className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ${liked ? "text-red-600" : "text-gray-400"}`}>
+      <span onClick={likeProduct} className={`absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ${liked ? "text-red-600" : "text-gray-400"}`}>
         <HeartGlyph filled={liked} />
       </span>
-      <span className="flex aspect-square items-center justify-center rounded-md bg-gray-50">
+      <span className="relative z-0 flex aspect-square items-center justify-center rounded-md bg-gray-50">
         <ProductImage product={product} alt={product.name} width={150} height={150} className="h-full w-full object-contain p-1" />
       </span>
       <span className="mt-2 block line-clamp-2 min-h-9 text-[12px] font-bold leading-[18px] text-gray-950">{product.name}</span>
       <span className="mt-1 block text-[11px] text-gray-500">{activity.localTrend}</span>
       <span className="mt-1 block text-sm font-extrabold text-orange-600">{formatCurrency(offerPrice)}</span>
       {originalPrice > offerPrice ? <span className="text-[11px] text-gray-400 line-through">{formatCurrency(originalPrice)}</span> : null}
-      <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-gray-100">
-        <span className="block h-full w-3/5 rounded-full bg-orange-600" />
-      </span>
+      {stockSnapshot.hasTrackedStock ? (
+        <div className="mt-2 space-y-1">
+          <span className="block h-1.5 overflow-hidden rounded-full bg-gray-100">
+            <span
+              className={`block h-full rounded-full ${stockSnapshot.status === "low" ? "bg-rose-500" : "bg-orange-600"}`}
+              style={{ width: `${stockSnapshot.status === "out" ? 0 : stockSnapshot.status === "low" ? 28 : 62}%` }}
+            />
+          </span>
+          <span className="block text-[10px] font-medium text-gray-500">{stockSnapshot.label}</span>
+        </div>
+      ) : null}
     </button>
   );
 };
@@ -354,6 +413,8 @@ const MobileProductCard = ({ product, navigate, prefetchRoute, formatCurrency, t
   const activity = getProductActivitySnapshot(product);
   const originalPrice = getPriceValue(product.price);
   const offerPrice = getPriceValue(product.offerPrice || product.price);
+  const stockSnapshot = getProductStockSnapshot(product);
+  const soldCount = Math.max(0, Number(product.soldCount) || 0);
   const [liked, setLiked] = useState(Boolean(product.likedByCurrentUser));
 
   useEffect(() => {
@@ -375,26 +436,37 @@ const MobileProductCard = ({ product, navigate, prefetchRoute, formatCurrency, t
       onClick={() => navigate(`/product/${product._id}`)}
       onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
       onFocus={() => prefetchRoute(`/product/${product._id}`)}
-      className="relative rounded-lg border border-gray-200 bg-white p-2 text-left shadow-sm"
+      className="relative isolate rounded-lg border border-gray-200 bg-white p-2 text-left shadow-sm"
     >
-      <span className={`absolute left-2 top-2 z-10 rounded px-2 py-1 text-[10px] font-bold text-white ${activity.hasDiscount ? "bg-rose-500" : "bg-green-500"}`}>
+      <span className={`absolute left-2 top-2 z-20 rounded px-2 py-1 text-[10px] font-bold text-white ${activity.hasDiscount ? "bg-rose-500" : "bg-green-500"}`}>
         {activity.hasDiscount ? `-${activity.priceDropPercent}%` : "NEW"}
       </span>
-      <span onClick={likeProduct} className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ${liked ? "text-red-600" : "text-gray-400"}`}>
+      <span onClick={likeProduct} className={`absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ${liked ? "text-red-600" : "text-gray-400"}`}>
         <HeartGlyph filled={liked} />
       </span>
-      <span className="flex aspect-[1.12/1] items-center justify-center rounded-md bg-gray-50">
+      <span className="relative z-0 flex aspect-[1.12/1] items-center justify-center rounded-md bg-gray-50">
         <ProductImage product={product} alt={product.name} width={190} height={170} className="h-full w-full object-contain p-2" />
       </span>
       <span className="mt-2 block line-clamp-2 min-h-10 text-[13px] font-bold leading-5 text-gray-950">{product.name}</span>
       <span className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
         <span className="text-orange-500">★</span>
-        {activity.displayRating || "4.9"} · {activity.likesCount > 0 ? `${activity.likesCount}+` : "10K+"} Sold
+        {activity.hasRating ? activity.displayRating.toFixed(1) : "New"} · {soldCount > 0 ? `${soldCount} sold` : "Fresh"}
       </span>
       <span className="mt-2 flex flex-wrap items-center gap-2">
         <span className="text-sm font-extrabold text-gray-950">{formatCurrency(offerPrice)}</span>
         {originalPrice > offerPrice ? <span className="text-[10px] text-rose-300 line-through">{formatCurrency(originalPrice)}</span> : null}
       </span>
+      {stockSnapshot.hasTrackedStock ? (
+        <div className="mt-2 space-y-1">
+          <span className="block h-1.5 overflow-hidden rounded-full bg-gray-100">
+            <span
+              className={`block h-full rounded-full ${stockSnapshot.status === "low" ? "bg-rose-500" : "bg-orange-600"}`}
+              style={{ width: `${stockSnapshot.status === "out" ? 0 : stockSnapshot.status === "low" ? 28 : 62}%` }}
+            />
+          </span>
+          <span className="block text-[10px] font-medium text-gray-500">{stockSnapshot.label}</span>
+        </div>
+      ) : null}
     </button>
   );
 };
@@ -421,6 +493,9 @@ const MobileHome = ({
   const secondPromoProduct = sortedProducts[2] || heroFallback;
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
   const mobileHeroSlides = heroSlides.length ? heroSlides : [{ ...defaultSiteContent.heroSlides[0], imageUrl: getImage(heroFallback) }];
+  const mobileMarketingBanners = (Array.isArray(marketingBanners) ? marketingBanners : [])
+    .filter((item) => item?.imageUrl)
+    .slice(0, 3);
 
   return (
     <main className="bg-[#fbfbfb] px-3 pb-8 pt-3 md:hidden">
@@ -430,7 +505,7 @@ const MobileHome = ({
         onSelect={setActiveHeroIndex}
         navigate={navigate}
         priority
-        className="aspect-[2.08/1] rounded-xl bg-gray-950 shadow-sm"
+        className="aspect-[2.08/1] rounded-xl bg-gray-100 shadow-sm"
       />
 
       <section className="mt-4 grid grid-cols-5 gap-x-2 gap-y-3">
@@ -501,9 +576,9 @@ const MobileHome = ({
       <button
         type="button"
         onClick={() => navigate(promoHref)}
-        className="relative mt-6 block aspect-[2.08/1] w-full overflow-hidden rounded-lg bg-gray-950 shadow-sm"
+        className="relative mt-6 block aspect-[2.08/1] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm"
       >
-        <ContentImage src={activePromo.imageUrl || getImage(promoProduct)} alt={activePromo.title || "New arrivals"} width={720} height={346} className="h-full w-full object-cover transition-opacity duration-500" />
+        <ContentImage src={activePromo.imageUrl || getImage(promoProduct)} alt={activePromo.title || "New arrivals"} width={720} height={346} className="h-full w-full transition-opacity duration-500" />
       </button>
 
       <section className="mt-5 grid grid-cols-2 gap-3">
@@ -521,11 +596,11 @@ const MobileHome = ({
         </div>
       </section>
 
-      {marketingBanners?.length ? (
+      {mobileMarketingBanners.length ? (
         <section className="mt-6 grid gap-2">
-          {marketingBanners.slice(0, 3).map((item, index) => (
+          {mobileMarketingBanners.map((item, index) => (
             <MarketingBannerTile
-              key={item._id || `mobile-market-banner-${index}`}
+              key={item?._id || item?.imageUrl || `mobile-market-banner-${index}`}
               item={item}
               navigate={navigate}
               prefetchRoute={prefetchRoute}
@@ -547,7 +622,10 @@ const MobileHome = ({
             <p className="mt-4 line-clamp-2 text-sm font-bold">{dealOfDay.name}</p>
             <p className="mt-3 text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
             <p className="mt-3 text-sm font-extrabold text-orange-500">{Math.max(getProductActivitySnapshot(dealOfDay).priceDropPercent, 15)}% OFF</p>
-            <span className="mt-3 block h-1.5 w-40 rounded-full bg-white/30"><span className="block h-full w-3/5 rounded-full bg-orange-600" /></span>
+            <span className="mt-3 block h-1.5 w-40 rounded-full bg-white/30">
+              <span className="block h-full w-3/5 rounded-full bg-orange-600" />
+            </span>
+            <span className="mt-2 block text-[11px] text-white/75">{getProductStockSnapshot(dealOfDay).label}</span>
           </div>
           <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="absolute bottom-5 right-2 h-40 w-40 object-contain" />
         </section>
@@ -568,7 +646,7 @@ const MobileHome = ({
               <span className="min-w-0">
                 <span className="block truncate text-[12px] font-extrabold text-gray-950">{product.sellerProfile?.name || "KawilMart Store"}</span>
                 <span className="mt-1 block text-[11px] text-orange-500">★ {(product.sellerProfile?.ratingSummary?.overall || 0).toFixed(1)}</span>
-                <span className="mt-1 block text-[11px] text-gray-500">{topStoreProducts.filter((item) => item.userId === product.userId).length}+ Products</span>
+                <span className="mt-1 block text-[11px] text-gray-500">{Math.max(0, Number(product.soldCount) || 0)} sold</span>
               </span>
             </button>
           ))}
@@ -629,12 +707,12 @@ const DealCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
       onClick={() => navigate(`/product/${product._id}`)}
       onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
       onFocus={() => prefetchRoute(`/product/${product._id}`)}
-      className="relative min-w-0 rounded-md border border-gray-200 bg-white p-2 text-left transition hover:border-orange-300"
+      className="relative isolate min-w-0 rounded-md border border-gray-200 bg-white p-2 text-left transition hover:border-orange-300"
     >
-      <span className="absolute left-2 top-2 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+      <span className="absolute left-2 top-2 z-20 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
         {activity.hasDiscount ? `-${activity.priceDropPercent}%` : "Offer"}
       </span>
-      <span className="flex aspect-[1.18/1] items-center justify-center">
+      <span className="relative z-0 flex aspect-[1.18/1] items-center justify-center">
         <ProductImage product={product} alt={product.name} width={140} height={118} className="h-full w-full object-contain" />
       </span>
       <span className="mt-2 line-clamp-2 min-h-8 text-[12px] font-semibold leading-4 text-gray-950">{product.name}</span>
@@ -648,7 +726,7 @@ const DealCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
   );
 };
 
-const MarketingBannerTile = ({ item, navigate, prefetchRoute, className = "", priority = false }) => {
+function MarketingBannerTile({ item, navigate, prefetchRoute, className = "", priority = false }) {
   const href = getContentHref(item, item?.href || "/all-products");
 
   if (!item?.imageUrl) {
@@ -669,11 +747,11 @@ const MarketingBannerTile = ({ item, navigate, prefetchRoute, className = "", pr
         width={900}
         height={420}
         priority={priority}
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+        className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
       />
     </button>
   );
-};
+}
 
 const MarketingBannerGrid = ({ items, navigate, prefetchRoute, className = "" }) => {
   const banners = uniqueById(items.filter((item) => item?.imageUrl)).slice(0, 5);
@@ -701,6 +779,109 @@ const MarketingBannerGrid = ({ items, navigate, prefetchRoute, className = "" })
     </section>
   );
 };
+
+const HomeStorefrontSkeleton = () => (
+  <>
+    <main className="bg-[#fbfbfb] px-3 pb-8 pt-3 md:hidden" aria-hidden="true">
+      <Skeleton className="aspect-[2.08/1] w-full rounded-xl" />
+
+      <section className="mt-4 grid grid-cols-5 gap-x-2 gap-y-3">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={`mobile-category-${index}`} className="flex flex-col items-center gap-2">
+            <Skeleton className="h-[3.35rem] w-[3.35rem] rounded-full" />
+            <Skeleton className="h-3 w-10 rounded-full" />
+          </div>
+        ))}
+      </section>
+
+      <section className="mt-4 grid grid-cols-2 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={`mobile-service-${index}`} className="flex items-center gap-2 px-2.5 py-3">
+            <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-3 w-20 rounded-full" />
+              <Skeleton className="h-2.5 w-24 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section className="mt-8">
+        <div className="mb-4 flex items-center justify-between">
+          <Skeleton className="h-6 w-28 rounded-xl" />
+          <Skeleton className="h-4 w-14 rounded-full" />
+        </div>
+        <div className="-mx-4 flex gap-3 overflow-hidden px-4 pb-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={`mobile-flash-${index}`} className="w-[9.6rem] shrink-0 space-y-2 rounded-lg border border-gray-200 bg-white p-2">
+              <Skeleton className="aspect-square w-full rounded-md" />
+              <Skeleton className="h-4 w-full rounded-full" />
+              <Skeleton className="h-4 w-3/4 rounded-full" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+
+    <main className="hidden bg-white px-4 pb-16 pt-4 md:block" aria-hidden="true">
+      <div className="mx-auto max-w-[1420px]">
+        <section className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)_245px]">
+          <aside className="rounded-md border border-gray-200 bg-white p-2.5 lg:row-span-2">
+            <div className="space-y-2">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <Skeleton key={`side-category-${index}`} className="h-9 w-full rounded-md" />
+              ))}
+            </div>
+          </aside>
+
+          <Skeleton className="h-[238px] rounded-md xl:h-[252px]" />
+          <Skeleton className="min-h-[238px] rounded-md xl:min-h-[252px]" />
+
+          <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={`feature-banner-${index}`} className="aspect-[2.15/1] rounded-md" />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-7">
+          <div className="mb-4 flex items-end justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-40 rounded-xl" />
+              <Skeleton className="h-3 w-64 rounded-full" />
+            </div>
+            <Skeleton className="h-10 w-44 rounded-md" />
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7">
+            {Array.from({ length: 7 }).map((_, index) => (
+              <div key={`deal-skeleton-${index}`} className="space-y-2 rounded-md border border-gray-200 bg-white p-2">
+                <Skeleton className="aspect-[1.18/1] w-full rounded-md" />
+                <Skeleton className="h-4 w-full rounded-full" />
+                <Skeleton className="h-4 w-3/4 rounded-full" />
+                <Skeleton className="h-4 w-20 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <Skeleton className="mb-3 h-6 w-44 rounded-xl" />
+          <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 10 }).map((_, index) => (
+              <div key={`market-item-skeleton-${index}`} className="space-y-3 rounded-md border border-gray-200 bg-white p-2.5">
+                <Skeleton className="aspect-square w-full rounded-md" />
+                <Skeleton className="h-4 w-full rounded-full" />
+                <Skeleton className="h-4 w-3/4 rounded-full" />
+                <Skeleton className="h-5 w-24 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
+  </>
+);
 
 const RecommendedCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
   const activity = getProductActivitySnapshot(product);
@@ -730,22 +911,6 @@ const RecommendedCard = ({ product, navigate, prefetchRoute, formatCurrency }) =
       <span className="mt-1.5 block text-[11px] text-gray-500">{activityLabel}</span>
     </button>
   );
-};
-
-const getContentHref = (item, fallback = "/all-products") => {
-  if (item?.linkType === "category" && item.category) {
-    return `/all-products?category=${encodeURIComponent(item.category)}`;
-  }
-
-  if (item?.linkType === "store" && item.storeId) {
-    return `/store/${encodeURIComponent(item.storeId)}`;
-  }
-
-  if (item?.productId) {
-    return `/product/${item.productId}`;
-  }
-
-  return item?.primaryHref || item?.href || fallback;
 };
 
 const getTimeParts = (milliseconds) => {
@@ -886,18 +1051,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const timeLeft = getTimeParts(earliestDealDeadline ? earliestDealDeadline - now : 0);
 
   if (!heroProduct && loadingProducts) {
-    return (
-      <main className="bg-white px-4 pb-16 pt-4">
-        <div className="mx-auto max-w-[1420px]">
-          <div className="h-[270px] animate-pulse rounded-md bg-gray-100" />
-          <div className="mt-7 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <div key={index} className="h-56 animate-pulse rounded-md bg-gray-100" />
-            ))}
-          </div>
-        </div>
-      </main>
-    );
+    return <HomeStorefrontSkeleton />;
   }
 
   if (!heroProduct) {
@@ -967,13 +1121,13 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             onSelect={setActiveHeroIndex}
             navigate={navigate}
             priority
-            className="h-[238px] rounded-md bg-gray-950 xl:h-[252px]"
+            className="h-[238px] rounded-md bg-gray-100 xl:h-[252px]"
           />
 
           <button
             type="button"
             onClick={() => navigate(getContentHref(activePromo, "/all-products?filter=flash"))}
-            className="relative block min-h-[238px] overflow-hidden rounded-md bg-gray-950 text-left xl:min-h-[252px]"
+            className="relative block min-h-[238px] overflow-hidden rounded-md bg-gray-100 text-left xl:min-h-[252px]"
           >
             <Image src={activePromo.imageUrl || getImage(heroProduct)} alt={activePromo.title || "Promotional offer"} width={420} height={520} className="absolute inset-0 h-full w-full object-cover" />
           </button>
