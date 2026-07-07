@@ -521,7 +521,7 @@ const AddProductInner = () => {
   const invoicePeriodOptions = dashboardStats?.invoicePeriodOptions || [];
   const invoiceSummary = dashboardStats?.invoiceSummary || {};
 
-  if (authReady && user && !isSeller) {
+  if (!authReady || !user || !isSeller) {
     return (
       <SellerApplicationLanding
         user={user}

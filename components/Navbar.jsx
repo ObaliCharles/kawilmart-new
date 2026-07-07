@@ -653,10 +653,10 @@ const Navbar = ({ hideMobileHeader = false }) => {
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
             <span className="font-medium text-gray-700">Uganda's marketplace for everyday essentials</span>
             <div className="flex items-center gap-10">
-              <button type="button" onClick={() => requireAuthNavigation('/seller')} className="transition hover:text-orange-600">Sell on KawilMart</button>
+              <button type="button" onClick={() => goTo('/seller')} className="transition hover:text-orange-600">Sell on KawilMart</button>
               <button type="button" onClick={() => requireAuthNavigation('/my-orders')} className="transition hover:text-orange-600">Track Order</button>
               <button type="button" onClick={() => navigate('/about')} className="transition hover:text-orange-600">Help Center</button>
-              <button type="button" onClick={() => requireAuthNavigation('/seller')} className="transition hover:text-orange-600">Become a Vendor</button>
+              <button type="button" onClick={() => goTo('/seller')} className="transition hover:text-orange-600">Become a Vendor</button>
             </div>
           </div>
         </div>
