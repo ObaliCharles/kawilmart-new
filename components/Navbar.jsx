@@ -544,7 +544,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
           <UserButton.Link label="Cart" labelIcon={<CartIcon />} href="/cart" />
           <UserButton.Link label="My Orders" labelIcon={<BagIcon />} href="/my-orders" />
           <UserButton.Link label="Inbox" labelIcon={<NotificationIcon />} href="/inbox" />
-          <UserButton.Action label="Logout" labelIcon={<AccountMenuIcon type="logout" className="h-5 w-5" />} onClick={() => void handleDesktopLogout()} />
         </UserButton.MenuItems>
       </UserButton>
     </div>
@@ -596,13 +595,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
 
   const handleMobileLogout = async () => {
     setIsMobileAccountOpen(false);
-    await signOut?.();
-    startTransition(() => {
-      navigate('/');
-    });
-  };
-
-  const handleDesktopLogout = async () => {
     await signOut?.();
     startTransition(() => {
       navigate('/');
