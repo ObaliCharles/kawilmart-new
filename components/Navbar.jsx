@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { startTransition, useEffect, useRef, useState } from "react";
 import { assets, BagIcon, BoxIcon, CartIcon, HomeIcon } from "@/assets/assets";
 import Link from "next/link"
 import { useAppContext } from "@/context/AppContext";
@@ -64,6 +64,7 @@ const AccountMenuIcon = ({ type, className = "h-5 w-5" }) => {
     bell: "M12 5a4 4 0 0 0-4 4v2.9c0 .5-.2 1-.5 1.4L6 15h12l-1.5-1.7c-.3-.4-.5-.9-.5-1.4V9a4 4 0 0 0-4-4Zm0 14a2.5 2.5 0 0 0 2.4-2H9.6A2.5 2.5 0 0 0 12 19Z",
     globe: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 0 1 0 18m0-18a14 14 0 0 0 0 18",
     settings: "M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm0-12v2m0 13v2m8.5-8.5h-2m-13 0h-2m14.5-6.5-1.4 1.4M6.9 17.1l-1.4 1.4m0-13 1.4 1.4m10.2 10.2 1.4 1.4",
+    logout: "M10 17v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v2M3 12h12m0 0-3-3m3 3-3 3",
     account: "M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z",
     cart: "M3 4h2.4l2 10.1a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 1.9-1.5L20 8H6.2M10 20h.01M17 20h.01",
     plus: "M12 5v14M5 12h14",
@@ -378,7 +379,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
   } = appContext;
   const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded: isAuthLoaded } = useAuth();
-  const { openSignIn, openUserProfile } = useClerk();
+  const { openSignIn, openUserProfile, signOut } = useClerk();
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDesktopViewport, setIsDesktopViewport] = useState(null);
@@ -543,6 +544,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
           <UserButton.Link label="Cart" labelIcon={<CartIcon />} href="/cart" />
           <UserButton.Link label="My Orders" labelIcon={<BagIcon />} href="/my-orders" />
           <UserButton.Link label="Inbox" labelIcon={<NotificationIcon />} href="/inbox" />
+          <UserButton.Action label="Logout" labelIcon={<AccountMenuIcon type="logout" className="h-5 w-5" />} onClick={() => void handleDesktopLogout()} />
         </UserButton.MenuItems>
       </UserButton>
     </div>
@@ -590,6 +592,21 @@ const Navbar = ({ hideMobileHeader = false }) => {
     }
 
     goTo(href);
+  };
+
+  const handleMobileLogout = async () => {
+    setIsMobileAccountOpen(false);
+    await signOut?.();
+    startTransition(() => {
+      navigate('/');
+    });
+  };
+
+  const handleDesktopLogout = async () => {
+    await signOut?.();
+    startTransition(() => {
+      navigate('/');
+    });
   };
 
   return (
@@ -643,6 +660,20 @@ const Navbar = ({ hideMobileHeader = false }) => {
               {accountSections.map((section) => (
                 <AccountMenuSection key={section.title} title={section.title} items={section.items} onNavigate={handleAccountNavigate} />
               ))}
+
+              <button
+                type="button"
+                onClick={() => void handleMobileLogout()}
+                className="flex w-full items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-4 py-4 text-left shadow-sm transition hover:bg-rose-100"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="flex h-7 w-7 items-center justify-center text-rose-600">
+                    <AccountMenuIcon type="logout" className="h-5 w-5" />
+                  </span>
+                  <span className="text-[15px] font-semibold text-rose-700">Logout</span>
+                </span>
+                <ChevronRight />
+              </button>
             </div>
           </div>
         </div>

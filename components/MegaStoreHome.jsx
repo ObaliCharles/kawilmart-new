@@ -236,6 +236,35 @@ function getContentHref(item, fallback = "/all-products") {
   return item?.primaryHref || item?.href || fallback;
 }
 
+const PromoSpotlightCard = ({ item, navigate, prefetchRoute, fallbackHref = "/all-products?filter=flash" }) => {
+  if (!item?.imageUrl) {
+    return null;
+  }
+
+  const href = getContentHref(item, fallbackHref);
+  const title = item.title || "Promotional content";
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(href)}
+      onMouseEnter={() => prefetchRoute(href)}
+      onFocus={() => prefetchRoute(href)}
+      className="relative min-h-40 overflow-hidden rounded-lg bg-gray-100 text-left shadow-sm"
+    >
+      <ContentImage src={item.imageUrl} alt={title} width={520} height={320} className="absolute inset-0 h-full w-full" />
+      <span className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/12 to-transparent" />
+      <span className="absolute inset-x-0 bottom-0 z-10 p-4 text-white">
+        <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-200">
+          {item.bannerType === "deal" ? "Deal of the day" : "Promotional content"}
+        </span>
+        <span className="mt-1 block text-lg font-extrabold leading-5">{title}</span>
+        {item.description ? <span className="mt-1 block text-[12px] leading-5 text-white/85">{item.description}</span> : null}
+      </span>
+    </button>
+  );
+};
+
 const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className = "", priority = false }) => {
   const safeSlides = slides.filter((slide) => slide?.imageUrl);
   const fallbackHrefs = [
@@ -497,13 +526,20 @@ const MobileHome = ({
   const heroFallback = sortedProducts[0];
   const dealOfDay = dealProducts[activePromo?._activeDealIndex || 0] || dealProducts[0] || sortedProducts[0];
   const topStoreProducts = uniqueById(sortedProducts).filter((product) => product.userId).slice(0, 8);
-  const promoProduct = sortedProducts[1] || heroFallback;
-  const secondPromoProduct = sortedProducts[2] || heroFallback;
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
   const mobileHeroSlides = heroSlides.length ? heroSlides : [{ ...defaultSiteContent.heroSlides[0], imageUrl: getImage(heroFallback) }];
   const mobileMarketingBanners = (Array.isArray(marketingBanners) ? marketingBanners : [])
     .filter((item) => item?.imageUrl)
     .slice(0, 3);
+  const promoSpotlightBanners = uniqueById(mobileMarketingBanners.filter((item) => item?.bannerType !== "deal"));
+  const bankOfferBanner =
+    promoSpotlightBanners.find((item) => /bank/i.test(item.title || "")) ||
+    promoSpotlightBanners[0] ||
+    defaultSiteContent.promoBanners[1];
+  const referBanner =
+    promoSpotlightBanners.find((item) => /refer/i.test(item.title || "")) ||
+    promoSpotlightBanners[1] ||
+    defaultSiteContent.promoBanners[2];
 
   return (
     <main className="bg-[#fbfbfb] px-3 pb-8 pt-3 md:hidden">
@@ -536,8 +572,16 @@ const MobileHome = ({
       <section className="mt-8">
         <SectionHeader title="Flash Sale" onViewAll={() => navigate("/all-products?filter=flash")} />
         <div className="mb-4 flex items-center gap-2">
-          {[padTime(timeLeft.hours || 8), padTime(timeLeft.minutes || 17), padTime(timeLeft.seconds || 56), "23"].map((value, index) => (
-            <span key={`${value}-${index}`} className="rounded-md bg-rose-500 px-2 py-1 text-[12px] font-extrabold text-white">{value}</span>
+          {[
+            [padTime(timeLeft.days), "D"],
+            [padTime(timeLeft.hours), "H"],
+            [padTime(timeLeft.minutes), "M"],
+            [padTime(timeLeft.seconds), "S"],
+          ].map(([value, label]) => (
+            <span key={label} className="inline-flex min-w-10 flex-col items-center rounded-md bg-rose-500 px-2 py-1 text-[11px] font-extrabold leading-none text-white">
+              <span>{value}</span>
+              <span className="mt-0.5 text-[8px] font-semibold uppercase tracking-[0.16em] text-rose-50">{label}</span>
+            </span>
           ))}
         </div>
         <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
@@ -586,12 +630,10 @@ const MobileHome = ({
         onClick={() => navigate(promoHref)}
         className="relative mt-6 block aspect-[2.08/1] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm"
       >
-        <ContentImage src={activePromo.imageUrl || getImage(promoProduct)} alt={activePromo.title || "New arrivals"} width={720} height={346} className="h-full w-full transition-opacity duration-500" />
+        <ContentImage src={activePromo.imageUrl || getImage(heroFallback)} alt={activePromo.title || "New arrivals"} width={720} height={346} className="h-full w-full transition-opacity duration-500" />
         {activePromo.bannerType === "deal" && activePromoCountdown ? (
-          <span className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/70 px-3 py-2 text-white backdrop-blur-sm">
-            <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-200">Deal of the day</span>
-            <span className="mt-1 block text-[12px] font-bold leading-5">{activePromo.title}</span>
-            <span className="mt-2 flex items-center gap-1 text-[10px] font-semibold">
+          <span className="absolute bottom-2 left-2 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+            <span className="flex items-center gap-1">
               <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.days)}</span>
               <span>:</span>
               <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.hours)}</span>
@@ -605,18 +647,8 @@ const MobileHome = ({
       </button>
 
       <section className="mt-5 grid grid-cols-2 gap-3">
-        <div className="relative min-h-40 overflow-hidden rounded-lg bg-orange-50 p-4">
-          <h3 className="text-lg font-extrabold leading-6 text-gray-950">Bank Offers Up to 20% Off</h3>
-          <p className="mt-2 text-[12px] leading-5 text-gray-600">Exclusive discounts on select cards.</p>
-          <button type="button" onClick={() => navigate(getContentHref(activePromo, "/all-products?filter=flash"))} className="mt-4 text-[12px] font-bold text-orange-600">Shop Now -&gt;</button>
-          <ProductImage product={secondPromoProduct} alt="Bank offer" width={120} height={100} className="absolute bottom-2 right-1 h-20 w-24 object-contain" />
-        </div>
-        <div className="relative min-h-40 overflow-hidden rounded-lg bg-orange-50 p-4">
-          <h3 className="text-lg font-extrabold leading-6 text-gray-950">Refer & Earn UGX 10,000</h3>
-          <p className="mt-2 text-[12px] leading-5 text-gray-600">Invite friends and get rewarded.</p>
-          <button type="button" onClick={() => navigate("/about")} className="mt-4 text-[12px] font-bold text-orange-600">Refer Now -&gt;</button>
-          <span className="absolute bottom-4 right-4 text-orange-500"><UtilityIcon type="gift" /></span>
-        </div>
+        <PromoSpotlightCard item={bankOfferBanner} navigate={navigate} prefetchRoute={prefetchRoute} fallbackHref={getContentHref(activePromo, "/all-products?filter=flash")} />
+        <PromoSpotlightCard item={referBanner} navigate={navigate} prefetchRoute={prefetchRoute} fallbackHref="/about" />
       </section>
 
       {mobileMarketingBanners.length ? (
@@ -766,34 +798,26 @@ function MarketingBannerTile({ item, navigate, prefetchRoute, className = "", pr
       onMouseEnter={() => prefetchRoute(href)}
       onFocus={() => prefetchRoute(href)}
       className={`group relative block overflow-hidden rounded-lg bg-gray-100 text-left shadow-sm ring-1 ring-gray-100 ${className}`}
-      >
-        <ContentImage
-          src={item.imageUrl}
-          alt={item.title || "Marketplace promotion"}
-          width={900}
-          height={420}
-          priority={priority}
-          className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
-        />
-        {item.bannerType === "deal" && item.dealEndsAt ? (
-          <span className="absolute inset-x-3 bottom-3 z-10 rounded-2xl bg-black/70 px-3 py-2 text-white backdrop-blur-sm">
-            <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-200">Deal of the day</span>
-            <span className="mt-1 block text-[13px] font-bold leading-5">{item.title}</span>
-            {remaining ? (
-              <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-white/90">
-                <span className="rounded-md bg-white/15 px-1.5 py-0.5">{padTime(remaining.days)}</span>
-                <span>:</span>
-                <span className="rounded-md bg-white/15 px-1.5 py-0.5">{padTime(remaining.hours)}</span>
-                <span>:</span>
-                <span className="rounded-md bg-white/15 px-1.5 py-0.5">{padTime(remaining.minutes)}</span>
-                <span>:</span>
-                <span className="rounded-md bg-white/15 px-1.5 py-0.5">{padTime(remaining.seconds)}</span>
-              </span>
-            ) : (
-              <span className="mt-2 block text-[11px] text-white/75">Deal ending soon</span>
-            )}
-          </span>
-        ) : null}
+    >
+      <ContentImage
+        src={item.imageUrl}
+        alt={item.title || "Marketplace promotion"}
+        width={900}
+        height={420}
+        priority={priority}
+        className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
+      />
+      {item.bannerType === "deal" && item.dealEndsAt ? (
+        <span className="absolute bottom-2 left-2 z-10 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+          {remaining ? (
+            <>
+              {padTime(remaining.days)}:{padTime(remaining.hours)}:{padTime(remaining.minutes)}:{padTime(remaining.seconds)}
+            </>
+          ) : (
+            "Deal ending soon"
+          )}
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -1253,10 +1277,8 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
           >
             <Image src={activePromo.imageUrl || getImage(heroProduct)} alt={activePromo.title || "Promotional offer"} width={420} height={520} className="absolute inset-0 h-full w-full object-cover" />
             {activePromo.bannerType === "deal" && activePromoCountdown ? (
-              <span className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/70 px-3 py-2 text-white backdrop-blur-sm">
-                <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-200">Deal of the day</span>
-                <span className="mt-1 block text-[13px] font-bold leading-5">{activePromo.title}</span>
-                <span className="mt-2 flex items-center gap-1 text-[10px] font-semibold">
+              <span className="absolute bottom-2 left-2 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+                <span className="flex items-center gap-1">
                   <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.days)}</span>
                   <span>:</span>
                   <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.hours)}</span>
@@ -1298,7 +1320,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
                     [padTime(timeLeft.seconds), "Secs"],
                   ].map(([value, label]) => (
                     <div key={label} className="text-center">
-                      <div className="rounded-md bg-orange-600 px-2.5 py-1.5 text-xs font-bold text-white">{value}</div>
+                      <div className="rounded-md bg-rose-500 px-2.5 py-1.5 text-xs font-bold text-white">{value}</div>
                       <div className="mt-1 text-[11px] text-gray-500">{label}</div>
                     </div>
                   ))}
