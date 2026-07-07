@@ -15,14 +15,14 @@ import { getOrderStatusBadgeClass, getOrderStatusDisplay, getPaymentStatusBadgeC
 import { downloadAuthenticatedFile } from "@/lib/clientDownloads";
 
 const MetricCard = ({ icon, label, value, sub, color, valueClassName = '' }) => (
-  <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
+  <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm ring-1 ring-black/[0.02] sm:p-5">
     <div className="flex items-start gap-3">
-      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl ${color}`}>
+      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${color}`}>
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-gray-500 sm:text-sm">{label}</p>
-        <p className={`mt-1 font-bold leading-tight text-gray-900 ${valueClassName || 'text-lg sm:text-2xl'}`}>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500 sm:text-xs">{label}</p>
+        <p className={`mt-1 font-semibold leading-tight text-gray-950 ${valueClassName || 'text-lg sm:text-2xl'}`}>
           {value}
         </p>
         {sub ? <p className="mt-1 text-xs text-gray-400">{sub}</p> : null}
@@ -55,6 +55,29 @@ const formatDateLabel = (value) => {
   });
 };
 
+const InlineSellerIcon = ({ type, className = "h-5 w-5" }) => {
+  const paths = {
+    storefront: "M4 10.5 6 5h12l2 5.5M6 10.5h12V19H6v-8.5ZM9 19v-5h6v5M8 5v5m4-5v5m4-5v5",
+    camera: "M4.5 8.5h3l1.5-2h6l1.5 2h3A1.5 1.5 0 0 1 20 10v7.5A1.5 1.5 0 0 1 18.5 19h-15A1.5 1.5 0 0 1 2 17.5V10A1.5 1.5 0 0 1 3.5 8.5Zm7.5 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
+    phone: "M7.5 3.5h9A1.5 1.5 0 0 1 18 5v14a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19V5a1.5 1.5 0 0 1 1.5-1.5Zm3 14.5h3",
+    truck: "M3.5 7h10v9h-10V7Zm10 3h3l2.5 3V16h-5.5v-6Zm-7.5 8a1.8 1.8 0 1 0 0 .1m11 0a1.8 1.8 0 1 0 0 .1",
+    clock: "M12 5a7 7 0 1 1 0 14 7 7 0 0 1 0-14Zm0 3.5V12l2.5 1.5",
+    shop: "M4 8h16M6 8l1-3h10l1 3M6 8v11h12V8M9 12h6M9 15h4",
+    wallet: "M4 7.5h14A1.5 1.5 0 0 1 19.5 9v7A1.5 1.5 0 0 1 18 17.5H6A2.5 2.5 0 0 1 3.5 15V9A1.5 1.5 0 0 1 5 7.5Zm10 4h4",
+    package: "M4.5 8.5 12 4l7.5 4.5V15L12 19l-7.5-4V8.5Zm7.5-4v4.5m0 0L4.5 8.5m7.5 0 7.5-4",
+    chart: "M5 18V6m0 12h14M8 14v-3m4 3V9m4 5V7",
+    invoice: "M7 4h8l3 3v13H7V4Zm2 4h6m-6 4h6m-6 4h4",
+    check: "M5 12.5 9.5 17 19 7.5",
+    star: "M12 4.5 14.9 9.9 21 10.8l-4.4 4.3 1 6.1L12 18.3 6.4 21.2l1-6.1L3 10.8l6.1-.9L12 4.5Z",
+  };
+
+  return (
+    <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
+      <path d={paths[type] || paths.shop} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+};
+
 const applicationSteps = [
   {
     step: "01",
@@ -79,11 +102,13 @@ const applicationSteps = [
 ];
 
 const ApplicationCard = ({ title, value, description, icon }) => (
-  <div className="rounded-3xl border border-white/70 bg-white/90 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+  <div className="rounded-3xl border border-white/70 bg-white/90 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.02] backdrop-blur-sm">
     <div className="flex items-start gap-3">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-xl">{icon}</div>
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
+        {icon}
+      </div>
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">{title}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">{title}</p>
         <p className="mt-1 text-sm font-semibold text-gray-950">{value}</p>
         <p className="mt-1 text-xs leading-5 text-gray-500">{description}</p>
       </div>
@@ -91,102 +116,188 @@ const ApplicationCard = ({ title, value, description, icon }) => (
   </div>
 );
 
-const buildVendorSupportHref = () => {
-  const params = new URLSearchParams({
-    tab: "support",
-    subject: "Vendor application",
-    content: [
-      "Hello KawilMart Support,",
-      "",
-      "I would like to apply to become a vendor on KawilMart.",
-      "Please review my account and guide me through the registration steps.",
-      "",
-      "Thank you.",
-    ].join("\n"),
-  });
+const emptyVendorApplication = (user = null) => ({
+  fullName: user?.fullName || user?.firstName || user?.username || "",
+  email: user?.primaryEmailAddress?.emailAddress || "",
+  phoneNumber: user?.primaryPhoneNumber?.phoneNumber || "",
+  businessName: "",
+  businessLocation: "",
+  whatYouSell: "",
+  notes: "",
+});
 
-  return `/inbox?${params.toString()}`;
-};
+const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) => {
+  const [application, setApplication] = useState(() => emptyVendorApplication(user));
+  const [submitting, setSubmitting] = useState(false);
 
-const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) => (
-  <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.18),transparent_30%),linear-gradient(180deg,#fffaf6_0%,#fffefc_48%,#f8fafc_100%)]">
-    <Navbar />
-    <main className="px-4 py-8 md:px-8 md:py-12">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <section className="overflow-hidden rounded-[2.25rem] border border-orange-100 bg-white/85 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-8 lg:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            <div className="space-y-5">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-600">Sell on KawilMart</p>
-              <h1 className="max-w-2xl text-4xl font-semibold leading-tight text-gray-950 md:text-5xl">
-                Apply to become a vendor and start selling from your own online storefront.
-              </h1>
-              <p className="max-w-2xl text-base leading-8 text-gray-600">
-                If you are logged in as <span className="font-semibold text-gray-900">{resolvedRole || "buyer"}</span>, this page gives you the full vendor application path, support contacts, and the steps we use to approve new sellers.
-              </p>
+  useEffect(() => {
+    setApplication((prev) => ({
+      ...prev,
+      ...emptyVendorApplication(user),
+      fullName: prev.fullName || user?.fullName || user?.firstName || user?.username || "",
+      email: prev.email || user?.primaryEmailAddress?.emailAddress || "",
+      phoneNumber: prev.phoneNumber || user?.primaryPhoneNumber?.phoneNumber || "",
+    }));
+  }, [user]);
 
-              <div className="flex flex-wrap gap-3">
-                <Link href={buildVendorSupportHref()} className="rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-700">
-                  Apply now
-                </Link>
-                <Link href="/legal#seller-obligations" className="rounded-full border border-orange-200 bg-white px-5 py-3 text-sm font-semibold text-orange-700 transition hover:border-orange-300 hover:bg-orange-50">
-                  View procedures
-                </Link>
-                <Link href={buildVendorSupportHref()} className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50">
-                  Open support draft
-                </Link>
-                {refreshAccessState ? (
-                  <button
-                    type="button"
-                    onClick={() => void refreshAccessState()}
-                    className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
-                  >
-                    Re-check access
-                  </button>
-                ) : null}
+  const handleChange = (field, value) => {
+    setApplication((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (submitting) {
+      return;
+    }
+
+    const requiredFields = ["fullName", "email", "businessName", "businessLocation", "whatYouSell"];
+    const hasMissingField = requiredFields.some((field) => !String(application[field] || "").trim());
+    if (hasMissingField) {
+      toast.error("Please fill in all required vendor application fields.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const { data } = await axios.post("/api/vendor-applications", application);
+
+      if (data.success) {
+        toast.success(data.message || "Application submitted successfully.");
+        setApplication((prev) => ({
+          ...emptyVendorApplication(user),
+          phoneNumber: prev.phoneNumber,
+        }));
+      } else {
+        toast.error(data.message || "Unable to submit your application.");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || "Unable to submit your application.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.16),transparent_28%),linear-gradient(180deg,#fff8f2_0%,#fffdfb_45%,#f8fafc_100%)]">
+      <Navbar />
+      <main className="px-4 py-8 md:px-8 md:py-12">
+        <div className="mx-auto max-w-6xl space-y-8">
+          <section className="overflow-hidden rounded-[2.5rem] border border-orange-100 bg-white/88 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-8 lg:p-10">
+            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+              <div className="space-y-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-600">Sell on KawilMart</p>
+                <h1 className="max-w-2xl text-4xl font-semibold tracking-[-0.04em] text-gray-950 md:text-5xl lg:text-6xl">
+                  Apply to become a vendor and start selling from a polished storefront.
+                </h1>
+                <p className="max-w-2xl text-base leading-8 text-gray-600 md:text-[1.03rem]">
+                  If you are logged in as <span className="font-semibold text-gray-900">{resolvedRole || "buyer"}</span>, this page gives you the full vendor application path, support contacts, and the steps we use to approve new sellers.
+                </p>
+
+                <div className="flex flex-wrap gap-3">
+                  <a href="#vendor-application-form" className="rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(234,88,12,0.18)] transition hover:bg-orange-700">
+                    Fill application
+                  </a>
+                  <Link href="/legal#seller-obligations" className="rounded-full border border-orange-200 bg-white px-5 py-3 text-sm font-semibold text-orange-700 transition hover:border-orange-300 hover:bg-orange-50">
+                    View procedures
+                  </Link>
+                  {refreshAccessState ? (
+                    <button
+                      type="button"
+                      onClick={() => void refreshAccessState()}
+                      className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
+                    >
+                      Re-check access
+                    </button>
+                  ) : null}
+                </div>
               </div>
-            </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <ApplicationCard
-                title="Account contact"
-                value={user?.primaryEmailAddress?.emailAddress || "Your signed-in account email"}
-                description="We use your logged-in account to follow up on the application."
-                icon="✉"
-              />
-              <ApplicationCard
-                title="Support contact"
-                value="support@yourdomain.com"
-                description="Send your application and questions to KawilMart support at the configured reply address."
-                icon="☎"
-              />
-              <ApplicationCard
-                title="Review time"
-                value="Manual approval"
-                description="A team member checks the details before seller access is enabled."
-                icon="⏱"
-              />
-              <ApplicationCard
-                title="Seller result"
-                value="Dashboard unlocked"
-                description="Approved accounts can list products, manage orders, and view analytics."
-                icon="🏪"
-              />
+              <form id="vendor-application-form" onSubmit={handleSubmit} className="rounded-[2rem] border border-orange-100 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] md:p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">Vendor application</p>
+                    <h2 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-gray-950">Tell us about your shop</h2>
+                  </div>
+                  <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700">No seller access needed</span>
+                </div>
+
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <input
+                    type="text"
+                    value={application.fullName}
+                    onChange={(event) => handleChange("fullName", event.target.value)}
+                    placeholder="Full name"
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                  />
+                  <input
+                    type="email"
+                    value={application.email}
+                    onChange={(event) => handleChange("email", event.target.value)}
+                    placeholder="Email address"
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                  />
+                  <input
+                    type="text"
+                    value={application.phoneNumber}
+                    onChange={(event) => handleChange("phoneNumber", event.target.value)}
+                    placeholder="Phone number"
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 sm:col-span-2"
+                  />
+                  <input
+                    type="text"
+                    value={application.businessName}
+                    onChange={(event) => handleChange("businessName", event.target.value)}
+                    placeholder="Business / shop name"
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                  />
+                  <input
+                    type="text"
+                    value={application.businessLocation}
+                    onChange={(event) => handleChange("businessLocation", event.target.value)}
+                    placeholder="Business location"
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300"
+                  />
+                  <textarea
+                    value={application.whatYouSell}
+                    onChange={(event) => handleChange("whatYouSell", event.target.value)}
+                    placeholder="What do you sell?"
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 sm:col-span-2 min-h-24 resize-none"
+                  />
+                  <textarea
+                    value={application.notes}
+                    onChange={(event) => handleChange("notes", event.target.value)}
+                    placeholder="Extra notes, social links, delivery coverage, or anything helpful"
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-orange-300 sm:col-span-2 min-h-24 resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="mt-5 w-full rounded-full bg-orange-600 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {submitting ? "Submitting..." : "Submit application"}
+                </button>
+                <p className="mt-3 text-xs leading-5 text-gray-500">
+                  We review applications manually and contact you through the email or phone number you provide.
+                </p>
+              </form>
             </div>
-          </div>
-        </section>
+          </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-sm md:p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-600">Application procedure</p>
-            <h2 className="mt-2 text-2xl font-semibold text-gray-950">A simple, guided process</h2>
+          <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-black/[0.02] backdrop-blur-sm md:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">Application procedure</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-gray-950">A simple, guided process</h2>
             <div className="mt-6 space-y-4">
               {applicationSteps.map((item) => (
                 <div key={item.step} className="grid gap-4 rounded-[1.5rem] border border-gray-100 bg-gray-50 p-4 md:grid-cols-[64px_1fr] md:p-5">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-base font-bold text-white">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-base font-bold text-white shadow-[0_10px_24px_rgba(234,88,12,0.18)]">
                     {item.step}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-950">{item.title}</h3>
+                    <h3 className="text-lg font-semibold tracking-[-0.02em] text-gray-950">{item.title}</h3>
                     <p className="mt-1 text-sm leading-6 text-gray-600">{item.text}</p>
                   </div>
                 </div>
@@ -195,8 +306,8 @@ const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) =>
           </div>
 
           <div className="space-y-4 rounded-[2rem] border border-orange-100 bg-[linear-gradient(180deg,#fff7ed_0%,#fffdfa_100%)] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.05)] md:p-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-600">What you can sell</p>
-            <h2 className="text-2xl font-semibold text-gray-950">Store setup tips</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">What you can sell</p>
+            <h2 className="text-2xl font-semibold tracking-[-0.03em] text-gray-950">Store setup tips</h2>
             <p className="text-sm leading-7 text-gray-600">
               Include clear photos, accurate pricing, short product descriptions, and a contact number that can receive order updates. Good listings are approved faster and convert better once the dashboard is active.
             </p>
@@ -206,19 +317,19 @@ const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) =>
                 title="Best practice"
                 value="Use clean product photos"
                 description="Bright, cropped images help your listings look polished and easier to trust."
-                icon="📷"
+                icon={<InlineSellerIcon type="camera" className="h-5 w-5" />}
               />
               <ApplicationCard
                 title="Best practice"
                 value="Keep your contacts reachable"
                 description="Use a phone number you can answer quickly so support can verify your application."
-                icon="📱"
+                icon={<InlineSellerIcon type="phone" className="h-5 w-5" />}
               />
               <ApplicationCard
                 title="Best practice"
                 value="Describe delivery clearly"
                 description="Tell us whether you prefer pickup, delivery, or both when your account is approved."
-                icon="🚚"
+                icon={<InlineSellerIcon type="truck" className="h-5 w-5" />}
               />
             </div>
           </div>
@@ -227,7 +338,8 @@ const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) =>
     </main>
     <Footer />
   </div>
-);
+  );
+};
 
 const SellerOverviewSkeleton = () => (
   <div className="space-y-6" aria-hidden="true">
@@ -565,10 +677,10 @@ const AddProductInner = () => {
                     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-orange-100">
                       Seller Overview
                     </p>
-                    <h1 className="mt-3 text-2xl font-semibold sm:text-3xl">
+                    <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
                       Welcome back, {user?.firstName || 'Seller'}
                     </h1>
-                    <p className="mt-2 max-w-2xl text-sm text-orange-50 sm:text-base">
+                    <p className="mt-2 max-w-2xl text-sm leading-7 text-orange-50 sm:text-base">
                       Track sales, orders, payments, and product performance from one place, then add new products right below.
                     </p>
                     <div className="mt-5 flex flex-wrap gap-3">
@@ -599,11 +711,11 @@ const AddProductInner = () => {
                   <div className="grid grid-cols-2 gap-3 sm:min-w-[340px]">
                     <div className="rounded-2xl bg-white/15 p-4 backdrop-blur-sm">
                       <p className="text-xs text-orange-100">Delivery Rate</p>
-                      <p className="mt-1 text-2xl font-bold">{dashboardStats.highlights.deliveryRate}%</p>
+                      <p className="mt-1 text-2xl font-bold tracking-[-0.03em]">{dashboardStats.highlights.deliveryRate}%</p>
                     </div>
                     <div className="rounded-2xl bg-white/15 p-4 backdrop-blur-sm">
                       <p className="text-xs text-orange-100">Cancellation Rate</p>
-                      <p className="mt-1 text-2xl font-bold">{dashboardStats.highlights.cancellationRate}%</p>
+                      <p className="mt-1 text-2xl font-bold tracking-[-0.03em]">{dashboardStats.highlights.cancellationRate}%</p>
                     </div>
                     <div className="rounded-2xl bg-white/15 p-4 backdrop-blur-sm">
                       <p className="text-xs text-orange-100">Best Seller</p>
@@ -623,7 +735,7 @@ const AddProductInner = () => {
 
               <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
                 <MetricCard
-                  icon="💰"
+                  icon={<InlineSellerIcon type="wallet" className="h-5 w-5 text-orange-600" />}
                   label="Completed Revenue"
                   value={formatCurrency(dashboardStats.totalRevenue)}
                   sub={`${dashboardStats.completedOrders} completed orders`}
@@ -631,21 +743,21 @@ const AddProductInner = () => {
                   valueClassName="text-[15px] break-words sm:text-2xl"
                 />
                 <MetricCard
-                  icon="📦"
+                  icon={<InlineSellerIcon type="package" className="h-5 w-5 text-blue-600" />}
                   label="Total Orders"
                   value={dashboardStats.totalOrders.toLocaleString()}
                   sub={`${dashboardStats.activeOrders} active right now`}
                   color="bg-blue-50"
                 />
                 <MetricCard
-                  icon="🛍️"
+                  icon={<InlineSellerIcon type="shop" className="h-5 w-5 text-purple-600" />}
                   label="Products"
                   value={dashboardStats.totalProducts.toLocaleString()}
                   sub={`${categoryEntries.length} categories in your shop`}
                   color="bg-purple-50"
                 />
                 <MetricCard
-                  icon="📊"
+                  icon={<InlineSellerIcon type="chart" className="h-5 w-5 text-orange-600" />}
                   label="Avg Order Value"
                   value={formatCurrency(dashboardStats.averageOrderValue)}
                   sub="Average sale size"
@@ -653,21 +765,21 @@ const AddProductInner = () => {
                   valueClassName="text-[15px] break-words sm:text-2xl"
                 />
                 <MetricCard
-                  icon="🧾"
+                  icon={<InlineSellerIcon type="invoice" className="h-5 w-5 text-cyan-600" />}
                   label="Units Sold"
                   value={dashboardStats.totalUnitsSold.toLocaleString()}
                   sub="Across all orders"
                   color="bg-cyan-50"
                 />
                 <MetricCard
-                  icon="✅"
+                  icon={<InlineSellerIcon type="check" className="h-5 w-5 text-emerald-600" />}
                   label="Paid Orders"
                   value={dashboardStats.paidOrders.toLocaleString()}
                   sub={`${dashboardStats.pendingPayments} awaiting payment`}
                   color="bg-emerald-50"
                 />
                 <MetricCard
-                  icon="🚚"
+                  icon={<InlineSellerIcon type="truck" className="h-5 w-5 text-lime-600" />}
                   label="Commission Due"
                   value={formatCurrency(dashboardStats.billing?.totalDue || 0)}
                   sub={`Invoice ${dashboardStats.billing?.invoiceNumber || 'pending'}`}
@@ -675,7 +787,7 @@ const AddProductInner = () => {
                   valueClassName="text-[15px] break-words sm:text-2xl"
                 />
                 <MetricCard
-                  icon="⭐"
+                  icon={<InlineSellerIcon type="star" className="h-5 w-5 text-yellow-600" />}
                   label="Subscription"
                   value={dashboardStats.subscription?.status || 'active'}
                   sub={`${formatCurrency(dashboardStats.subscription?.monthlyFee || 0)} monthly`}
