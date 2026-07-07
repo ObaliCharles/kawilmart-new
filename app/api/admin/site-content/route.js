@@ -99,6 +99,7 @@ export async function POST(request) {
         siteContent.heroSlides = Array.isArray(siteContent.heroSlides) ? siteContent.heroSlides : [];
         siteContent.featuredCards = Array.isArray(siteContent.featuredCards) ? siteContent.featuredCards : [];
         siteContent.promoBanners = Array.isArray(siteContent.promoBanners) ? siteContent.promoBanners : [];
+        siteContent.sidebarPromoBanners = Array.isArray(siteContent.sidebarPromoBanners) ? siteContent.sidebarPromoBanners : [];
         siteContent.categoryBanners = Array.isArray(siteContent.categoryBanners) ? siteContent.categoryBanners : [];
         siteContent.brandShowcases = Array.isArray(siteContent.brandShowcases) ? siteContent.brandShowcases : [];
 
@@ -185,6 +186,8 @@ export async function POST(request) {
                 storeId: formData.get("storeId")?.toString() || "",
                 productId: formData.get("productId")?.toString() || "",
                 href: formData.get("href")?.toString() || "",
+                bannerType: formData.get("bannerType")?.toString() || "promo",
+                dealEndsAt: formData.get("dealEndsAt")?.toString() || "",
             };
 
             await siteContent.save();
@@ -207,6 +210,8 @@ export async function POST(request) {
                 storeId: formData.get("storeId")?.toString() || "",
                 productId: formData.get("productId")?.toString() || "",
                 href: formData.get("href")?.toString() || "",
+                bannerType: formData.get("bannerType")?.toString() || "promo",
+                dealEndsAt: formData.get("dealEndsAt")?.toString() || "",
             };
 
             if (existingBanner) {
@@ -215,7 +220,7 @@ export async function POST(request) {
                 siteContent.promoBanners.push(nextBanner);
             }
 
-            siteContent.promoBanner = siteContent.promoBanners[0] || siteContent.promoBanner;
+            siteContent.promoBanner = siteContent.sidebarPromoBanners[0] || siteContent.promoBanners[0] || siteContent.promoBanner;
             await siteContent.save();
             return respondWithContent(siteContent, "Promo offer saved successfully");
         }
@@ -223,9 +228,48 @@ export async function POST(request) {
         if (action === "deletePromoBanner") {
             const itemId = formData.get("itemId")?.toString();
             siteContent.promoBanners = siteContent.promoBanners.filter((banner) => String(banner._id) !== itemId);
-            siteContent.promoBanner = siteContent.promoBanners[0] || siteContent.promoBanner;
+            siteContent.promoBanner = siteContent.sidebarPromoBanners[0] || siteContent.promoBanners[0] || siteContent.promoBanner;
             await siteContent.save();
             return respondWithContent(siteContent, "Promo offer deleted");
+        }
+
+        if (action === "upsertSidebarPromoBanner") {
+            const itemId = formData.get("itemId");
+            const existingBanner = itemId
+                ? siteContent.sidebarPromoBanners.find((banner) => String(banner._id) === String(itemId))
+                : null;
+
+            const nextBanner = {
+                title: formData.get("title")?.toString() || "",
+                description: formData.get("description")?.toString() || "",
+                imageUrl: await readImageUrl(formData, existingBanner?.imageUrl || ""),
+                buttonText: formData.get("buttonText")?.toString() || "View offer",
+                linkType: formData.get("linkType")?.toString() || "",
+                category: formData.get("category")?.toString() || "",
+                storeId: formData.get("storeId")?.toString() || "",
+                productId: formData.get("productId")?.toString() || "",
+                href: formData.get("href")?.toString() || "",
+                bannerType: formData.get("bannerType")?.toString() || "promo",
+                dealEndsAt: formData.get("dealEndsAt")?.toString() || "",
+            };
+
+            if (existingBanner) {
+                Object.assign(existingBanner, nextBanner);
+            } else {
+                siteContent.sidebarPromoBanners.push(nextBanner);
+            }
+
+            siteContent.promoBanner = siteContent.sidebarPromoBanners[0] || siteContent.promoBanners[0] || siteContent.promoBanner;
+            await siteContent.save();
+            return respondWithContent(siteContent, "Sidebar promo saved successfully");
+        }
+
+        if (action === "deleteSidebarPromoBanner") {
+            const itemId = formData.get("itemId")?.toString();
+            siteContent.sidebarPromoBanners = siteContent.sidebarPromoBanners.filter((banner) => String(banner._id) !== itemId);
+            siteContent.promoBanner = siteContent.sidebarPromoBanners[0] || siteContent.promoBanners[0] || siteContent.promoBanner;
+            await siteContent.save();
+            return respondWithContent(siteContent, "Sidebar promo deleted");
         }
 
         if (action === "upsertCategoryBanner") {

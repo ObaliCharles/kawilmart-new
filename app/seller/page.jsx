@@ -7,6 +7,7 @@ import { useAppContext } from "@/context/AppContext";
 import toast from "react-hot-toast";
 import axios from 'axios';
 import { useSearchParams } from "next/navigation";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/seller/Footer";
 import { SellerProductFormSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { defaultSellerCategory, sellerCategoryGroups } from "@/lib/marketplaceCategories";
@@ -54,44 +55,240 @@ const formatDateLabel = (value) => {
   });
 };
 
+const applicationSteps = [
+  {
+    step: "01",
+    title: "Prepare your business details",
+    text: "Add your shop name, location, contact number, and a short description of what you sell.",
+  },
+  {
+    step: "02",
+    title: "Send your application",
+    text: "Use the support inbox button to submit your request and include the account email on file.",
+  },
+  {
+    step: "03",
+    title: "Wait for review",
+    text: "The KawilMart team checks your details, confirms your role, and unlocks seller access when approved.",
+  },
+  {
+    step: "04",
+    title: "Start listing products",
+    text: "Once access is active, you can upload products, manage orders, and monitor performance from the seller dashboard.",
+  },
+];
+
+const ApplicationCard = ({ title, value, description, icon }) => (
+  <div className="rounded-3xl border border-white/70 bg-white/90 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+    <div className="flex items-start gap-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-xl">{icon}</div>
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-500">{title}</p>
+        <p className="mt-1 text-sm font-semibold text-gray-950">{value}</p>
+        <p className="mt-1 text-xs leading-5 text-gray-500">{description}</p>
+      </div>
+    </div>
+  </div>
+);
+
+const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) => (
+  <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.18),transparent_30%),linear-gradient(180deg,#fffaf6_0%,#fffefc_48%,#f8fafc_100%)]">
+    <Navbar />
+    <main className="px-4 py-8 md:px-8 md:py-12">
+      <div className="mx-auto max-w-6xl space-y-8">
+        <section className="overflow-hidden rounded-[2.25rem] border border-orange-100 bg-white/85 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-8 lg:p-10">
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div className="space-y-5">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-orange-600">Sell on KawilMart</p>
+              <h1 className="max-w-2xl text-4xl font-semibold leading-tight text-gray-950 md:text-5xl">
+                Apply to become a vendor and start selling from your own online storefront.
+              </h1>
+              <p className="max-w-2xl text-base leading-8 text-gray-600">
+                If you are logged in as <span className="font-semibold text-gray-900">{resolvedRole || "buyer"}</span>, this page gives you the full vendor application path, support contacts, and the steps we use to approve new sellers.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <Link href="/inbox?tab=support" className="rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-700">
+                  Apply now
+                </Link>
+                <Link href="/legal#seller-obligations" className="rounded-full border border-orange-200 bg-white px-5 py-3 text-sm font-semibold text-orange-700 transition hover:border-orange-300 hover:bg-orange-50">
+                  View procedures
+                </Link>
+                {refreshAccessState ? (
+                  <button
+                    type="button"
+                    onClick={() => void refreshAccessState()}
+                    className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
+                  >
+                    Re-check access
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ApplicationCard
+                title="Account contact"
+                value={user?.primaryEmailAddress?.emailAddress || "Your signed-in account email"}
+                description="We use your logged-in account to follow up on the application."
+                icon="✉"
+              />
+              <ApplicationCard
+                title="Support contact"
+                value="support@yourdomain.com"
+                description="Send your application and questions to KawilMart support at the configured reply address."
+                icon="☎"
+              />
+              <ApplicationCard
+                title="Review time"
+                value="Manual approval"
+                description="A team member checks the details before seller access is enabled."
+                icon="⏱"
+              />
+              <ApplicationCard
+                title="Seller result"
+                value="Dashboard unlocked"
+                description="Approved accounts can list products, manage orders, and view analytics."
+                icon="🏪"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-sm md:p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-600">Application procedure</p>
+            <h2 className="mt-2 text-2xl font-semibold text-gray-950">A simple, guided process</h2>
+            <div className="mt-6 space-y-4">
+              {applicationSteps.map((item) => (
+                <div key={item.step} className="grid gap-4 rounded-[1.5rem] border border-gray-100 bg-gray-50 p-4 md:grid-cols-[64px_1fr] md:p-5">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-base font-bold text-white">
+                    {item.step}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-950">{item.title}</h3>
+                    <p className="mt-1 text-sm leading-6 text-gray-600">{item.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4 rounded-[2rem] border border-orange-100 bg-[linear-gradient(180deg,#fff7ed_0%,#fffdfa_100%)] p-6 shadow-[0_18px_50px_rgba(15,23,42,0.05)] md:p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-600">What you can sell</p>
+            <h2 className="text-2xl font-semibold text-gray-950">Store setup tips</h2>
+            <p className="text-sm leading-7 text-gray-600">
+              Include clear photos, accurate pricing, short product descriptions, and a contact number that can receive order updates. Good listings are approved faster and convert better once the dashboard is active.
+            </p>
+
+            <div className="grid gap-3 pt-2">
+              <ApplicationCard
+                title="Best practice"
+                value="Use clean product photos"
+                description="Bright, cropped images help your listings look polished and easier to trust."
+                icon="📷"
+              />
+              <ApplicationCard
+                title="Best practice"
+                value="Keep your contacts reachable"
+                description="Use a phone number you can answer quickly so support can verify your application."
+                icon="📱"
+              />
+              <ApplicationCard
+                title="Best practice"
+                value="Describe delivery clearly"
+                description="Tell us whether you prefer pickup, delivery, or both when your account is approved."
+                icon="🚚"
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <Footer />
+  </div>
+);
+
 const SellerOverviewSkeleton = () => (
   <div className="space-y-6" aria-hidden="true">
-    <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-orange-200 via-orange-100 to-amber-100 p-6 md:p-8">
-      <div className="animate-pulse space-y-4">
-        <div className="h-4 w-32 rounded-full bg-white/70" />
-        <div className="h-8 w-56 max-w-full rounded-2xl bg-white/80" />
-        <div className="h-4 w-80 max-w-full rounded-full bg-white/70" />
-        <div className="grid grid-cols-2 gap-3 pt-4 md:max-w-md">
+    <div className="overflow-hidden rounded-3xl border border-orange-100 bg-white p-6 shadow-sm md:p-8">
+      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="space-y-4">
+          <div className="h-4 w-32 rounded-full bg-orange-100" />
+          <div className="h-9 w-72 max-w-full rounded-2xl bg-gray-100" />
+          <div className="h-4 w-96 max-w-full rounded-full bg-gray-100" />
+          <div className="flex flex-wrap gap-3 pt-2">
+            <div className="h-10 w-32 rounded-full bg-orange-100" />
+            <div className="h-10 w-28 rounded-full bg-gray-100" />
+            <div className="h-10 w-32 rounded-full bg-gray-100" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-20 rounded-2xl bg-white/70" />
+            <div key={index} className="rounded-2xl border border-gray-100 bg-gray-50 p-4 space-y-3">
+              <div className="h-3 w-20 rounded-full bg-gray-200" />
+              <div className="h-6 w-16 rounded-full bg-gray-200" />
+              <div className="h-3 w-24 rounded-full bg-gray-200" />
+            </div>
           ))}
         </div>
       </div>
     </div>
 
     <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-      {Array.from({ length: 8 }).map((_, index) => (
-        <div key={index} className="h-28 animate-pulse rounded-2xl bg-gray-100" />
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div key={index} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div className="animate-pulse space-y-3">
+            <div className="h-3 w-20 rounded-full bg-gray-100" />
+            <div className="h-8 w-24 rounded-full bg-gray-100" />
+            <div className="h-3 w-28 rounded-full bg-gray-100" />
+          </div>
+        </div>
       ))}
     </div>
 
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.45fr_0.95fr]">
-      <div className="h-80 animate-pulse rounded-2xl bg-gray-100" />
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 w-40 rounded-full bg-gray-100" />
+          <div className="h-52 rounded-2xl bg-gray-100" />
+        </div>
+      </div>
       <div className="space-y-6">
-        <div className="h-36 animate-pulse rounded-2xl bg-gray-100" />
-        <div className="h-36 animate-pulse rounded-2xl bg-gray-100" />
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 w-36 rounded-full bg-gray-100" />
+            <div className="h-24 rounded-2xl bg-gray-100" />
+          </div>
+        </div>
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 w-40 rounded-full bg-gray-100" />
+            <div className="h-24 rounded-2xl bg-gray-100" />
+          </div>
+        </div>
       </div>
     </div>
 
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-      <div className="h-80 animate-pulse rounded-2xl bg-gray-100" />
-      <div className="h-80 animate-pulse rounded-2xl bg-gray-100" />
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="animate-pulse space-y-3">
+          <div className="h-4 w-40 rounded-full bg-gray-100" />
+          <div className="h-52 rounded-2xl bg-gray-100" />
+        </div>
+      </div>
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="animate-pulse space-y-3">
+          <div className="h-4 w-40 rounded-full bg-gray-100" />
+          <div className="h-52 rounded-2xl bg-gray-100" />
+        </div>
+      </div>
     </div>
   </div>
 );
 
 const AddProductInner = () => {
-  const { getToken, router, authReady, user, formatCurrency, formatCompactCurrency } = useAppContext();
+  const { getToken, router, authReady, user, formatCurrency, formatCompactCurrency, isSeller, resolvedRole, refreshAccessState } = useAppContext();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
   const isEditMode = Boolean(editId);
@@ -323,6 +520,16 @@ const AddProductInner = () => {
   const invoiceHistory = dashboardStats?.invoices || [];
   const invoicePeriodOptions = dashboardStats?.invoicePeriodOptions || [];
   const invoiceSummary = dashboardStats?.invoiceSummary || {};
+
+  if (authReady && user && !isSeller) {
+    return (
+      <SellerApplicationLanding
+        user={user}
+        resolvedRole={resolvedRole}
+        refreshAccessState={refreshAccessState}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-1 flex-col justify-between">

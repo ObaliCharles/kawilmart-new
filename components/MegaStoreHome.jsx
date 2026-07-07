@@ -278,7 +278,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
       </div>
 
       {safeSlides.length > 1 ? (
-        <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/25 px-2.5 py-1.5 backdrop-blur-sm">
+        <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/25 px-2 py-1 backdrop-blur-sm">
           {safeSlides.map((slide, index) => (
             <button
               key={slide._id || index}
@@ -287,7 +287,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
                 event.stopPropagation();
                 onSelect(index);
               }}
-              className={`h-2 rounded-full transition-all ${currentIndex === index ? "w-5 bg-white" : "w-2 bg-white/55"}`}
+              className={`h-1.5 rounded-full transition-all ${currentIndex === index ? "w-3.5 bg-white" : "w-1.5 bg-white/60"}`}
               aria-label={`Show offer ${index + 1}`}
             />
           ))}
@@ -482,11 +482,13 @@ const MobileHome = ({
   activeHeroIndex,
   setActiveHeroIndex,
   activePromo,
+  activePromoCountdown,
   marketingBanners,
   dealProducts,
   recommendedProducts,
   sortedProducts,
   timeLeft,
+  now,
   navigate,
   prefetchRoute,
   formatCurrency,
@@ -585,6 +587,21 @@ const MobileHome = ({
         className="relative mt-6 block aspect-[2.08/1] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm"
       >
         <ContentImage src={activePromo.imageUrl || getImage(promoProduct)} alt={activePromo.title || "New arrivals"} width={720} height={346} className="h-full w-full transition-opacity duration-500" />
+        {activePromo.bannerType === "deal" && activePromoCountdown ? (
+          <span className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/70 px-3 py-2 text-white backdrop-blur-sm">
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-200">Deal of the day</span>
+            <span className="mt-1 block text-[12px] font-bold leading-5">{activePromo.title}</span>
+            <span className="mt-2 flex items-center gap-1 text-[10px] font-semibold">
+              <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.days)}</span>
+              <span>:</span>
+              <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.hours)}</span>
+              <span>:</span>
+              <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.minutes)}</span>
+              <span>:</span>
+              <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.seconds)}</span>
+            </span>
+          </span>
+        ) : null}
       </button>
 
       <section className="mt-5 grid grid-cols-2 gap-3">
@@ -610,6 +627,7 @@ const MobileHome = ({
               item={item}
               navigate={navigate}
               prefetchRoute={prefetchRoute}
+              now={now}
               className="aspect-[2.35/1]"
             />
           ))}
@@ -732,8 +750,10 @@ const DealCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
   );
 };
 
-function MarketingBannerTile({ item, navigate, prefetchRoute, className = "", priority = false }) {
+function MarketingBannerTile({ item, navigate, prefetchRoute, className = "", priority = false, now = Date.now() }) {
   const href = getContentHref(item, item?.href || "/all-products");
+  const dealDeadline = item?.bannerType === "deal" && item?.dealEndsAt ? new Date(item.dealEndsAt).getTime() : 0;
+  const remaining = dealDeadline > now ? getTimeParts(dealDeadline - now) : null;
 
   if (!item?.imageUrl) {
     return null;
@@ -746,20 +766,39 @@ function MarketingBannerTile({ item, navigate, prefetchRoute, className = "", pr
       onMouseEnter={() => prefetchRoute(href)}
       onFocus={() => prefetchRoute(href)}
       className={`group relative block overflow-hidden rounded-lg bg-gray-100 text-left shadow-sm ring-1 ring-gray-100 ${className}`}
-    >
-      <ContentImage
-        src={item.imageUrl}
-        alt={item.title || "Marketplace promotion"}
-        width={900}
-        height={420}
-        priority={priority}
-        className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
-      />
+      >
+        <ContentImage
+          src={item.imageUrl}
+          alt={item.title || "Marketplace promotion"}
+          width={900}
+          height={420}
+          priority={priority}
+          className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
+        />
+        {item.bannerType === "deal" && item.dealEndsAt ? (
+          <span className="absolute inset-x-3 bottom-3 z-10 rounded-2xl bg-black/70 px-3 py-2 text-white backdrop-blur-sm">
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-200">Deal of the day</span>
+            <span className="mt-1 block text-[13px] font-bold leading-5">{item.title}</span>
+            {remaining ? (
+              <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-white/90">
+                <span className="rounded-md bg-white/15 px-1.5 py-0.5">{padTime(remaining.days)}</span>
+                <span>:</span>
+                <span className="rounded-md bg-white/15 px-1.5 py-0.5">{padTime(remaining.hours)}</span>
+                <span>:</span>
+                <span className="rounded-md bg-white/15 px-1.5 py-0.5">{padTime(remaining.minutes)}</span>
+                <span>:</span>
+                <span className="rounded-md bg-white/15 px-1.5 py-0.5">{padTime(remaining.seconds)}</span>
+              </span>
+            ) : (
+              <span className="mt-2 block text-[11px] text-white/75">Deal ending soon</span>
+            )}
+          </span>
+        ) : null}
     </button>
   );
 }
 
-const MarketingBannerGrid = ({ items, navigate, prefetchRoute, className = "" }) => {
+const MarketingBannerGrid = ({ items, navigate, prefetchRoute, className = "", now = Date.now() }) => {
   const banners = uniqueById(items.filter((item) => item?.imageUrl)).slice(0, 5);
 
   if (!banners.length) {
@@ -774,6 +813,7 @@ const MarketingBannerGrid = ({ items, navigate, prefetchRoute, className = "" })
           item={item}
           navigate={navigate}
           prefetchRoute={prefetchRoute}
+          now={now}
           priority={index === 0}
           className={
             index < 2
@@ -986,7 +1026,34 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const recommendedProducts = sortedProducts;
   const heroSlides = resolvedContent.heroSlides.filter((slide) => slide.imageUrl);
   const promoSlides = resolvedContent.promoBanners.filter((banner) => banner.imageUrl);
+  const sidebarPromoSlides = resolvedContent.sidebarPromoBanners.filter((banner) => banner.imageUrl);
   const featuredCards = resolvedContent.featuredCards.filter((card) => card.imageUrl);
+  const promoDeckItems = useMemo(() => {
+    const items = uniqueById(promoSlides.filter(Boolean));
+
+    return items
+      .map((item) => ({
+        ...item,
+        _promoWeight: String(item._id || item.title || item.imageUrl || "promo")
+          .split("")
+          .reduce((sum, char) => sum + char.charCodeAt(0), 0),
+      }))
+      .sort((left, right) => left._promoWeight - right._promoWeight)
+      .map(({ _promoWeight, ...item }) => item);
+  }, [promoSlides]);
+  const sidebarPromoDeckItems = useMemo(() => {
+    const items = uniqueById(sidebarPromoSlides.filter(Boolean));
+
+    return items
+      .map((item) => ({
+        ...item,
+        _promoWeight: String(item._id || item.title || item.imageUrl || "sidebar-promo")
+          .split("")
+          .reduce((sum, char) => sum + char.charCodeAt(0), 0),
+      }))
+      .sort((left, right) => left._promoWeight - right._promoWeight)
+      .map(({ _promoWeight, ...item }) => item);
+  }, [sidebarPromoSlides]);
   const storeCards = Object.entries(
     sortedProducts.reduce((acc, product) => {
       const storeId = product.userId || product.sellerProfile?.id || product.sellerProfile?._id;
@@ -1017,7 +1084,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     .sort((left, right) => right.productCount - left.productCount)
     .slice(0, 8);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
-  const [activePromoIndex, setActivePromoIndex] = useState(0);
+  const [activeSidebarPromoIndex, setActiveSidebarPromoIndex] = useState(0);
   const [activeDealIndex, setActiveDealIndex] = useState(0);
   const [now, setNow] = useState(Date.now());
 
@@ -1034,16 +1101,16 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   }, [heroSlides.length]);
 
   useEffect(() => {
-    if (promoSlides.length < 2) {
+    if (sidebarPromoDeckItems.length < 2) {
       return undefined;
     }
 
     const interval = window.setInterval(() => {
-      setActivePromoIndex((current) => (current + 1) % promoSlides.length);
-    }, 6000);
+      setActiveSidebarPromoIndex((current) => (current + 1) % sidebarPromoDeckItems.length);
+    }, 3000);
 
     return () => window.clearInterval(interval);
-  }, [promoSlides.length]);
+  }, [sidebarPromoDeckItems.length]);
 
   useEffect(() => {
     if (dealProducts.length < 2) {
@@ -1065,8 +1132,24 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     return deadlines.length ? Math.min(...deadlines) : 0;
   }, [dealProducts]);
 
+  const earliestPromoDeadline = useMemo(() => {
+    const deadlines = promoDeckItems
+      .map((item) => (item.bannerType === "deal" && item.dealEndsAt ? new Date(item.dealEndsAt).getTime() : 0))
+      .filter((value) => Number.isFinite(value) && value > Date.now());
+
+    return deadlines.length ? Math.min(...deadlines) : 0;
+  }, [promoDeckItems]);
+
+  const earliestSidebarPromoDeadline = useMemo(() => {
+    const deadlines = sidebarPromoDeckItems
+      .map((item) => (item.bannerType === "deal" && item.dealEndsAt ? new Date(item.dealEndsAt).getTime() : 0))
+      .filter((value) => Number.isFinite(value) && value > Date.now());
+
+    return deadlines.length ? Math.min(...deadlines) : 0;
+  }, [sidebarPromoDeckItems]);
+
   useEffect(() => {
-    if (!earliestDealDeadline) {
+    if (!earliestDealDeadline && !earliestPromoDeadline && !earliestSidebarPromoDeadline) {
       return undefined;
     }
 
@@ -1075,14 +1158,16 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     }, 1000);
 
     return () => window.clearInterval(interval);
-  }, [earliestDealDeadline]);
+  }, [earliestDealDeadline, earliestPromoDeadline, earliestSidebarPromoDeadline]);
 
   const activeHero = heroSlides[activeHeroIndex % Math.max(heroSlides.length, 1)] || defaultSiteContent.heroSlides[0];
   const activePromo = {
-    ...(promoSlides[activePromoIndex % Math.max(promoSlides.length, 1)] || resolvedContent.promoBanner),
+    ...(sidebarPromoDeckItems[activeSidebarPromoIndex % Math.max(sidebarPromoDeckItems.length, 1)] || resolvedContent.promoBanner),
     _activeDealIndex: activeDealIndex,
   };
-  const marketingBanners = [...promoSlides, ...featuredCards];
+  const activePromoDeadline = activePromo.bannerType === "deal" && activePromo.dealEndsAt ? new Date(activePromo.dealEndsAt).getTime() : 0;
+  const activePromoCountdown = activePromoDeadline > now ? getTimeParts(activePromoDeadline - now) : null;
+  const marketingBanners = promoDeckItems;
   const timeLeft = getTimeParts(earliestDealDeadline ? earliestDealDeadline - now : 0);
 
   if (!heroProduct && loadingProducts) {
@@ -1111,15 +1196,17 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       activeHeroIndex={activeHeroIndex}
       setActiveHeroIndex={setActiveHeroIndex}
       activePromo={activePromo}
-      marketingBanners={marketingBanners.length ? marketingBanners : [...defaultSiteContent.heroSlides, ...defaultSiteContent.featuredCards]}
-      dealProducts={dealProducts}
-      recommendedProducts={recommendedProducts}
-      sortedProducts={sortedProducts}
-      timeLeft={timeLeft}
-      navigate={navigate}
-      prefetchRoute={prefetchRoute}
-      formatCurrency={formatCurrency}
-      toggleProductLike={toggleProductLike}
+      activePromoCountdown={activePromoCountdown}
+      marketingBanners={marketingBanners.length ? marketingBanners : defaultSiteContent.promoBanners}
+    dealProducts={dealProducts}
+    recommendedProducts={recommendedProducts}
+    sortedProducts={sortedProducts}
+    timeLeft={timeLeft}
+    now={now}
+    navigate={navigate}
+    prefetchRoute={prefetchRoute}
+    formatCurrency={formatCurrency}
+    toggleProductLike={toggleProductLike}
     />
     <main className="hidden bg-white px-4 pb-16 pt-4 md:block">
       <div className="mx-auto max-w-[1420px]">
@@ -1165,6 +1252,21 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             className="relative block min-h-[238px] overflow-hidden rounded-md bg-gray-100 text-left xl:min-h-[252px]"
           >
             <Image src={activePromo.imageUrl || getImage(heroProduct)} alt={activePromo.title || "Promotional offer"} width={420} height={520} className="absolute inset-0 h-full w-full object-cover" />
+            {activePromo.bannerType === "deal" && activePromoCountdown ? (
+              <span className="absolute inset-x-3 bottom-3 rounded-2xl bg-black/70 px-3 py-2 text-white backdrop-blur-sm">
+                <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-orange-200">Deal of the day</span>
+                <span className="mt-1 block text-[13px] font-bold leading-5">{activePromo.title}</span>
+                <span className="mt-2 flex items-center gap-1 text-[10px] font-semibold">
+                  <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.days)}</span>
+                  <span>:</span>
+                  <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.hours)}</span>
+                  <span>:</span>
+                  <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.minutes)}</span>
+                  <span>:</span>
+                  <span className="rounded bg-white/15 px-1.5 py-0.5">{padTime(activePromoCountdown.seconds)}</span>
+                </span>
+              </span>
+            ) : null}
           </button>
 
           <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
@@ -1240,9 +1342,10 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
         ) : null}
 
         <MarketingBannerGrid
-          items={marketingBanners.length ? marketingBanners : [...defaultSiteContent.heroSlides, ...defaultSiteContent.featuredCards]}
+          items={marketingBanners.length ? marketingBanners : defaultSiteContent.promoBanners}
           navigate={navigate}
           prefetchRoute={prefetchRoute}
+          now={now}
           className="mt-8"
         />
 

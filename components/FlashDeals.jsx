@@ -78,19 +78,19 @@ const FlashDeals = () => {
   const timeLeft = getTimeParts(earliestDeadline - now);
 
   return (
-    <section className="mt-14">
+    <section className="mt-14 overflow-hidden rounded-[2rem] border border-orange-100/70 bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.18),transparent_34%),linear-gradient(135deg,#fffaf6_0%,#fff4e8_52%,#ffe8d1_100%)] p-4 shadow-[0_18px_60px_rgba(234,88,12,0.08)] sm:p-6">
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl">⚡</span>
             <div>
-              <p className="text-2xl font-bold text-gray-900">Flash Deals</p>
-              <p className="text-sm text-gray-500">Current limited-time prices already active in your marketplace.</p>
+              <p className="text-2xl font-bold text-gray-950">Flash Deals</p>
+              <p className="text-sm text-gray-600">Current limited-time prices already active in your marketplace.</p>
             </div>
           </div>
 
           {hasCountdown ? (
-            <div className="inline-flex w-fit items-center gap-1 rounded-2xl bg-orange-600 px-3 py-2 text-sm font-bold text-white">
+            <div className="inline-flex w-fit items-center gap-1 rounded-2xl bg-orange-600 px-3 py-2 text-sm font-bold text-white shadow-sm">
               <span className="pr-1 text-xs font-semibold uppercase tracking-[0.14em] text-orange-100">Ends in</span>
               <span className="rounded-md bg-white px-1.5 py-0.5 text-orange-600">{pad(timeLeft.hours)}</span>
               <span>:</span>
@@ -105,10 +105,10 @@ const FlashDeals = () => {
           )}
         </div>
 
-        <Link
+          <Link
           href="/all-products?filter=flash"
           onClick={() => setIsRouteLoading(true)}
-          className="inline-flex items-center gap-1 text-sm font-medium text-orange-600 transition hover:text-orange-700 hover:underline"
+          className="inline-flex items-center gap-1 text-sm font-medium text-orange-700 transition hover:text-orange-800 hover:underline"
         >
           See all deals <span>→</span>
         </Link>
