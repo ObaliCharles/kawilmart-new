@@ -136,7 +136,7 @@ const Cart = () => {
                           <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                         </svg>
                       </button>
-                    <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-gray-100 bg-white min-[380px]:h-[5.25rem] min-[380px]:w-[5.25rem] md:h-20 md:w-20 md:border-0">
+                    <div className="flex h-[4.75rem] w-[4.75rem] items-center justify-center rounded-lg border border-gray-100 bg-white min-[380px]:h-[5.25rem] min-[380px]:w-[5.25rem] md:h-20 md:w-20 md:border-0">
                       <CartProductImage product={product} />
                     </div>
 
@@ -146,8 +146,8 @@ const Cart = () => {
                       <p className="mt-2 hidden text-sm text-gray-500 md:block">Unit price: {formatCurrency(product.offerPrice)}</p>
                     </div>
 
-                    <div className="col-start-2 flex min-w-0 flex-wrap items-center justify-between gap-2 md:contents">
-                      <div className="flex h-10 w-full max-w-32 items-center justify-between rounded-md border border-gray-200 bg-white px-2 md:h-11 md:w-36 md:max-w-none md:px-3">
+                    <div className="col-span-full flex min-w-0 items-center justify-between gap-2 min-[380px]:col-start-2 min-[380px]:col-span-1 md:contents">
+                      <div className="flex h-10 w-[7.25rem] shrink-0 items-center justify-between rounded-md border border-gray-200 bg-white px-2 md:h-11 md:w-36 md:px-3">
                         <button type="button" onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-8 w-8 items-center justify-center text-orange-600" aria-label="Decrease quantity">
                           <Image src={assets.decrease_arrow} alt="" className="h-3 w-3" />
                         </button>

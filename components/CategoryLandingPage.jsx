@@ -491,7 +491,7 @@ const buildGenericTiles = (products) => {
   }));
 };
 
-const CategoryBanner = ({ banner, navigate, prefetchRoute, fallbackTitle }) => {
+const CategoryBanner = ({ banner, navigate, prefetchRoute, fallbackTitle, className = "" }) => {
   const href = getContentTargetHref(banner);
 
   return (
@@ -500,7 +500,7 @@ const CategoryBanner = ({ banner, navigate, prefetchRoute, fallbackTitle }) => {
       onClick={() => navigate(href)}
       onMouseEnter={() => prefetchRoute(href)}
       onFocus={() => prefetchRoute(href)}
-      className="group relative block w-full overflow-hidden rounded-[1.35rem] border border-gray-200 bg-gray-950 text-left shadow-sm transition hover:shadow-md min-h-[185px] sm:min-h-[220px]"
+      className={`group relative block w-full overflow-hidden rounded-[1.35rem] border border-gray-200 bg-gray-950 text-left shadow-sm transition hover:shadow-md min-h-[185px] sm:min-h-[220px] ${className}`}
     >
       {banner?.imageUrl ? (
         <span className="absolute inset-0">
@@ -650,11 +650,11 @@ const SidebarItem = ({ item, active, onClick, count }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition ${
+    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${
       active ? "bg-orange-50 text-orange-600 ring-1 ring-orange-100" : "text-gray-700 hover:bg-gray-50"
     }`}
   >
-    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border ${
+    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
       active ? "border-orange-200 bg-white text-orange-600" : "border-gray-200 bg-white text-gray-700"
     }`}>
       <DepartmentGlyph type={item.sidebarIcon} className="h-4 w-4" />
@@ -667,13 +667,255 @@ const SidebarItem = ({ item, active, onClick, count }) => (
   </button>
 );
 
+const catalogPalettes = [
+  {
+    panel: "from-blue-50 via-white to-blue-50",
+    icon: "from-blue-600 to-sky-500",
+    text: "text-blue-700",
+    border: "border-blue-100",
+  },
+  {
+    panel: "from-orange-50 via-white to-orange-50",
+    icon: "from-orange-600 to-red-500",
+    text: "text-orange-600",
+    border: "border-orange-100",
+  },
+  {
+    panel: "from-violet-50 via-white to-violet-50",
+    icon: "from-violet-600 to-indigo-500",
+    text: "text-violet-700",
+    border: "border-violet-100",
+  },
+  {
+    panel: "from-cyan-50 via-white to-cyan-50",
+    icon: "from-cyan-600 to-teal-500",
+    text: "text-cyan-700",
+    border: "border-cyan-100",
+  },
+  {
+    panel: "from-slate-50 via-white to-blue-50",
+    icon: "from-blue-600 to-indigo-500",
+    text: "text-blue-700",
+    border: "border-blue-100",
+  },
+  {
+    panel: "from-pink-50 via-white to-rose-50",
+    icon: "from-pink-600 to-rose-500",
+    text: "text-pink-700",
+    border: "border-pink-100",
+  },
+  {
+    panel: "from-purple-50 via-white to-fuchsia-50",
+    icon: "from-purple-600 to-fuchsia-500",
+    text: "text-purple-700",
+    border: "border-purple-100",
+  },
+];
+
+const catalogSubcategoryMap = {
+  electronics: [
+    ["Smartphones", ["Phones & Tablets"], ["phone", "smartphone", "iphone", "galaxy"]],
+    ["Laptops", ["Computers & Electronics"], ["laptop", "macbook", "thinkpad"]],
+    ["Desktops", ["Computers & Electronics"], ["desktop", "pc", "tower"]],
+    ["Monitors", ["Computers & Electronics"], ["monitor", "display"]],
+    ["Accessories", ["Accessories"], ["charger", "cable", "adapter", "case"]],
+    ["Audio", ["Audio"], ["headphone", "speaker", "earbud", "audio"]],
+    ["Wearables", ["Watches & Wearables"], ["watch", "wearable"]],
+  ],
+  "mobiles-tablets": [
+    ["Smartphones", ["Phones & Tablets"], ["phone", "smartphone", "iphone"]],
+    ["Tablets", ["Phones & Tablets"], ["tablet", "ipad"]],
+    ["Phone Accessories", ["Accessories"], ["charger", "cable", "earphone"]],
+    ["Power Banks", ["Accessories"], ["power bank", "battery"]],
+    ["Cases & Covers", ["Accessories"], ["case", "cover"]],
+    ["Screen Protectors", ["Accessories"], ["screen protector", "glass"]],
+    ["SIM Devices", ["Phones & Tablets"], ["sim", "router", "mifi"]],
+  ],
+  "laptops-computers": [
+    ["Laptops", ["Computers & Electronics"], ["laptop", "macbook"]],
+    ["Desktops", ["Computers & Electronics"], ["desktop", "pc"]],
+    ["All-in-Ones", ["Computers & Electronics"], ["all in one"]],
+    ["Components", ["Computers & Electronics"], ["ssd", "ram", "gpu", "processor"]],
+    ["Printers", ["Office & Stationery", "Computers & Electronics"], ["printer", "scanner"]],
+    ["Storage", ["Computers & Electronics"], ["storage", "drive", "ssd"]],
+    ["Networking", ["Computers & Electronics"], ["router", "wifi"]],
+  ],
+  "tv-audio-video": [
+    ["Televisions", ["Appliances", "Computers & Electronics"], ["tv", "television"]],
+    ["Speakers", ["Audio"], ["speaker"]],
+    ["Headphones", ["Audio"], ["headphone"]],
+    ["Soundbars", ["Audio"], ["soundbar"]],
+    ["Projectors", ["Computers & Electronics"], ["projector"]],
+    ["Home Audio", ["Audio"], ["home audio"]],
+  ],
+  "cameras-accessories": [
+    ["Cameras", ["Computers & Electronics"], ["camera", "canon"]],
+    ["Lenses", ["Computers & Electronics"], ["lens"]],
+    ["Tripods", ["Accessories"], ["tripod"]],
+    ["Camera Bags", ["Accessories"], ["camera bag"]],
+    ["Flashes", ["Accessories"], ["flash"]],
+    ["Drones", ["Computers & Electronics"], ["drone"]],
+    ["Memory Cards", ["Accessories"], ["memory card", "sd card"]],
+  ],
+  "headphones-speakers": [
+    ["Headphones", ["Audio"], ["headphone"]],
+    ["Speakers", ["Audio"], ["speaker"]],
+    ["Earphones", ["Audio"], ["earphone", "earbud"]],
+    ["Soundbars", ["Audio"], ["soundbar"]],
+    ["Home Audio", ["Audio"], ["home audio"]],
+    ["Microphones", ["Audio"], ["microphone", "mic"]],
+    ["Car Audio", ["Audio", "Automotive"], ["car audio"]],
+  ],
+  gaming: [
+    ["Consoles", ["Accessories", "Computers & Electronics"], ["console", "playstation", "xbox"]],
+    ["Controllers", ["Accessories"], ["controller", "gamepad"]],
+    ["Gaming PCs", ["Computers & Electronics"], ["gaming pc"]],
+    ["Monitors", ["Computers & Electronics"], ["monitor"]],
+    ["Gaming Chairs", ["Home & Living"], ["gaming chair"]],
+    ["VR Headsets", ["Accessories"], ["vr"]],
+    ["Games", ["Accessories"], ["game"]],
+  ],
+  fashion: [
+    ["Shoes", ["Fashion"], ["shoe", "sneaker"]],
+    ["Clothing", ["Fashion"], ["shirt", "dress", "jacket"]],
+    ["Watches", ["Watches & Wearables", "Fashion"], ["watch"]],
+    ["Bags", ["Accessories", "Fashion"], ["bag"]],
+    ["Accessories", ["Accessories", "Fashion"], ["belt", "wallet"]],
+  ],
+  "home-appliances": [
+    ["Televisions", ["Appliances", "Computers & Electronics"], ["tv", "television"]],
+    ["Refrigerators", ["Appliances"], ["refrigerator", "fridge"]],
+    ["Washing Machines", ["Appliances"], ["washing machine"]],
+    ["Air Conditioners", ["Appliances"], ["air conditioner", "ac"]],
+    ["Microwaves", ["Appliances"], ["microwave"]],
+    ["Vacuum Cleaners", ["Appliances"], ["vacuum"]],
+    ["Fans", ["Appliances"], ["fan"]],
+  ],
+};
+
+const getCatalogSubcategories = (department) => (
+  catalogSubcategoryMap[department.slug] || [
+    ["Top Picks", department.matchCategories, []],
+    ["New Arrivals", department.matchCategories, ["new"]],
+    ["Best Sellers", department.matchCategories, ["best"]],
+    ["Accessories", ["Accessories", ...department.matchCategories], ["accessory"]],
+    ["Deals", department.matchCategories, ["deal", "offer"]],
+  ]
+);
+
+const productMatchesCatalogTile = (product, categories, keywords) => {
+  const categoryMatch = categories.some((category) => categoryMatchesSelection(product.category, category));
+  const keywordHaystack = `${normalizeText(product.name)} ${normalizeText(product.description)}`;
+  return categoryMatch || keywords.some((keyword) => keywordHaystack.includes(normalizeText(keyword)));
+};
+
+const findCatalogProduct = (products, categories, keywords, fallbackProducts) => (
+  products.find((product) => productMatchesCatalogTile(product, categories, keywords))
+  || fallbackProducts.find((product) => categories.some((category) => categoryMatchesSelection(product.category, category)))
+  || fallbackProducts[0]
+  || null
+);
+
+const CatalogPreviewTile = ({ label, product, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group flex min-w-0 flex-col items-center gap-2 text-center"
+  >
+    <span className="flex h-[4.4rem] w-[4.4rem] items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-gray-100 transition group-hover:-translate-y-0.5 group-hover:shadow-md sm:h-[4.6rem] sm:w-[4.6rem] xl:h-20 xl:w-20">
+      {product ? (
+        <Image src={getImage(product)} alt={label} width={96} height={96} className="h-full w-full object-contain p-2" />
+      ) : (
+        <DepartmentGlyph type="electronics" className="h-6 w-6 text-gray-500" />
+      )}
+    </span>
+    <span className="line-clamp-2 min-h-8 max-w-[6rem] text-[11px] font-bold leading-4 text-gray-950 sm:text-[12px]">
+      {label}
+    </span>
+  </button>
+);
+
+const CatalogRow = ({ row, navigate }) => {
+  const href = `/all-products?category=${encodeURIComponent(row.primaryCategory)}`;
+
+  return (
+    <section className={`overflow-hidden rounded-lg border ${row.palette.border} bg-gradient-to-r ${row.palette.panel} shadow-sm`}>
+      <div className="grid min-h-[7.8rem] grid-cols-[minmax(8.5rem,12rem)_minmax(0,1fr)] sm:grid-cols-[minmax(13rem,17rem)_minmax(0,1fr)_7rem]">
+        <button type="button" onClick={() => navigate(href)} className="flex min-w-0 items-center gap-3 p-4 text-left">
+          <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${row.palette.icon} text-white shadow-sm sm:h-14 sm:w-14`}>
+            <DepartmentGlyph type={row.sidebarIcon} className="h-6 w-6" />
+          </span>
+          <span className="min-w-0">
+            <span className={`block text-sm font-extrabold ${row.palette.text}`}>{row.label}</span>
+            <span className="mt-1 block text-[12px] font-semibold text-gray-700">{formatCount(row.count)} products</span>
+            <span className="mt-2 hidden text-[11px] leading-4 text-gray-500 sm:block">{row.description}</span>
+          </span>
+        </button>
+
+        <div className="flex min-w-0 gap-4 overflow-x-auto px-3 py-4 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible lg:grid-cols-5 xl:grid-cols-7">
+          {row.tiles.map((tile) => (
+            <CatalogPreviewTile
+              key={`${row.slug}-${tile.label}`}
+              label={tile.label}
+              product={tile.product}
+              onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || row.primaryCategory)}`)}
+            />
+          ))}
+        </div>
+
+        <button type="button" onClick={() => navigate(href)} className={`hidden items-center justify-center gap-2 text-sm font-extrabold ${row.palette.text} sm:flex`}>
+          View All
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">›</span>
+        </button>
+      </div>
+    </section>
+  );
+};
+
+const MobileCategoryCard = ({ row, navigate }) => {
+  const href = `/all-products?category=${encodeURIComponent(row.primaryCategory)}`;
+
+  return (
+    <section className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm">
+      <div className="flex items-center justify-between px-3 py-3">
+        <h2 className="min-w-0 truncate text-[15px] font-extrabold text-gray-950">{row.label}</h2>
+        <button type="button" onClick={() => navigate(href)} className="flex shrink-0 items-center gap-1 text-[12px] font-extrabold text-orange-600">
+          View all
+          <span className="text-lg leading-none">›</span>
+        </button>
+      </div>
+      <div className="grid grid-cols-4 gap-2 px-2 pb-3">
+        {row.tiles.slice(0, 4).map((tile) => (
+          <CatalogPreviewTile
+            key={`${row.slug}-mobile-${tile.label}`}
+            label={tile.label}
+            product={tile.product}
+            onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || row.primaryCategory)}`)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const MobileSidebarTab = ({ item, active, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`flex w-full flex-col items-center gap-1.5 rounded-lg px-1.5 py-3 text-center transition ${
+      active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
+    }`}
+  >
+    <DepartmentGlyph type={item.sidebarIcon} className="h-5 w-5" />
+    <span className="line-clamp-2 text-[10px] font-extrabold leading-3">{item.shortLabel || item.label}</span>
+  </button>
+);
+
 const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }) => {
   const { products, loadingProducts, navigate, prefetchRoute } = useAppContext();
   const searchParams = useSearchParams();
   const storefrontProducts = products.length ? products : initialProducts;
   const resolvedContent = initialSiteContent || { categoryBanners: [] };
-  const [categorySearch, setCategorySearch] = useState("");
-  const [showMobileCategoryMenu, setShowMobileCategoryMenu] = useState(false);
 
   const categoryParam = searchParams.get("category") || "";
   const selectedDepartment = useMemo(() => {
@@ -699,16 +941,7 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
     }))
   ), [storefrontProducts]);
 
-  const visibleSidebarProducts = useMemo(() => {
-    const q = normalizeText(categorySearch);
-    if (!q) return sidebarProducts;
-
-    return sidebarProducts.filter((item) => (
-      normalizeText(item.label).includes(q)
-      || normalizeText(item.description).includes(q)
-      || normalizeText(getCategoryMeta(item.matchCategories[0]).label).includes(q)
-    ));
-  }, [categorySearch, sidebarProducts]);
+  const visibleSidebarProducts = useMemo(() => sidebarProducts, [sidebarProducts]);
 
   const categoryTiles = useMemo(() => (
     selectedDepartment.slug === "electronics"
@@ -791,6 +1024,28 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
       .slice(0, 6);
   }, [selectedProducts]);
 
+  const catalogRows = useMemo(() => (
+    sidebarProducts.map((department, index) => {
+      const departmentProducts = getDepartmentProducts(storefrontProducts, department);
+      const subcategories = getCatalogSubcategories(department).slice(0, 7);
+      const palette = catalogPalettes[index % catalogPalettes.length];
+
+      return {
+        ...department,
+        palette,
+        primaryCategory: department.matchCategories[0] || department.label,
+        tiles: subcategories.map(([label, categories, keywords]) => ({
+          label,
+          categories,
+          product: findCatalogProduct(departmentProducts, categories, keywords, storefrontProducts),
+        })),
+      };
+    })
+  ), [sidebarProducts, storefrontProducts]);
+
+  const activeRow = catalogRows.find((row) => row.slug === selectedDepartment.slug) || catalogRows[0];
+  const remainingMobileRows = catalogRows.filter((row) => row.slug !== activeRow?.slug);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -801,6 +1056,115 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
   if (isHydrating) {
     return <CategoryPageSkeleton />;
   }
+
+  return (
+    <main className="min-h-screen overflow-x-hidden bg-[#f7f8fb]">
+      <div className="mx-auto grid max-w-[1600px] gap-4 px-3 pb-24 pt-3 md:px-5 md:pb-16 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6 lg:px-6 xl:px-8">
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 space-y-3">
+            <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+              <button
+                type="button"
+                onClick={() => navigate("/all-products")}
+                className="mb-2 flex w-full items-center gap-3 rounded-lg bg-orange-50 px-3 py-3 text-left text-orange-600"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm">
+                  <DepartmentGlyph type="electronics" className="h-4 w-4" />
+                </span>
+                <span className="text-sm font-extrabold">All Categories</span>
+              </button>
+              <div className="space-y-1">
+                {visibleSidebarProducts.map((item) => (
+                  <SidebarItem
+                    key={item.slug}
+                    item={item}
+                    active={Boolean(categoryParam) && selectedDepartment.slug === item.slug}
+                    count={item.count}
+                    onClick={() => selectDepartment(item)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <button type="button" onClick={() => navigate("/seller")} className="w-full rounded-lg bg-[#210062] p-5 text-center text-white shadow-sm">
+              <p className="text-base font-extrabold">KAWIL CLUB</p>
+              <p className="mt-2 text-xs leading-5 text-white/80">Exclusive member discounts & rewards</p>
+              <span className="mt-4 inline-flex rounded-full bg-white px-5 py-2 text-xs font-extrabold text-[#210062]">Join Now</span>
+            </button>
+
+            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+              {[
+                ["Secure Payments", "100% protected", "shield"],
+                ["Easy Returns", "7-day return policy", "returns"],
+                ["Customer Support", "24/7 support", "help"],
+              ].map(([title, text, icon]) => (
+                <div key={title} className="flex items-center gap-3 border-b border-gray-100 py-3 last:border-b-0">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-100 text-gray-700">
+                    <DepartmentGlyph type={icon} className="h-4 w-4" />
+                  </span>
+                  <span>
+                    <span className="block text-xs font-extrabold text-gray-950">{title}</span>
+                    <span className="block text-[11px] text-gray-500">{text}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <section className="min-w-0">
+          <div className="mb-4 hidden lg:block">
+            <h1 className="text-3xl font-extrabold text-gray-950">All Categories</h1>
+            <p className="mt-2 text-sm text-gray-500">Browse our wide range of categories and find what you need.</p>
+          </div>
+
+          <div className="grid grid-cols-[6.4rem_minmax(0,1fr)] gap-2 lg:hidden">
+            <aside className="sticky top-[4.4rem] h-[calc(100svh-9rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-lg border border-gray-100 bg-white p-2 shadow-sm [-webkit-overflow-scrolling:touch]">
+              <div className="space-y-2">
+                <MobileSidebarTab
+                  item={{ label: "All Categories", shortLabel: "All", sidebarIcon: "electronics" }}
+                  active={!categoryParam}
+                  onClick={() => navigate("/categories")}
+                />
+                {visibleSidebarProducts.map((item) => (
+                  <MobileSidebarTab
+                    key={item.slug}
+                    item={item}
+                    active={Boolean(categoryParam) && selectedDepartment.slug === item.slug}
+                    onClick={() => selectDepartment(item)}
+                  />
+                ))}
+              </div>
+            </aside>
+
+            <div className="min-w-0 space-y-3">
+              <button
+                type="button"
+                onClick={() => navigate("/all-products")}
+                className="flex min-h-[4.8rem] w-full items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-3 text-left shadow-sm"
+              >
+                <span>
+                  <span className="block text-sm font-extrabold text-gray-950">All Products</span>
+                  <span className="mt-1 block text-[12px] text-gray-500">Explore everything we have to offer</span>
+                </span>
+                <span className="text-2xl text-gray-400">›</span>
+              </button>
+              {activeRow ? <MobileCategoryCard row={activeRow} navigate={navigate} /> : null}
+              {remainingMobileRows.map((row) => (
+                <MobileCategoryCard key={row.slug} row={row} navigate={navigate} />
+              ))}
+            </div>
+          </div>
+
+          <div className="hidden space-y-4 lg:block">
+            {catalogRows.map((row) => (
+              <CatalogRow key={row.slug} row={row} navigate={navigate} />
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
@@ -831,23 +1195,178 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
         </aside>
 
         <section className="min-w-0 flex-1">
+          <div className="lg:hidden">
+            <section className="space-y-3">
+              <div className="rounded-[1.35rem] border border-gray-100 bg-white p-3.5 shadow-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-600">Categories</p>
+                    <h1 className="truncate text-lg font-extrabold text-gray-950">All Categories</h1>
+                  </div>
+                  <button type="button" onClick={() => navigate("/all-products")} className="shrink-0 text-xs font-bold text-orange-600">
+                    View all
+                  </button>
+                </div>
+
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                  {tileCounts.slice(0, 6).map((tile, index) => (
+                    <div key={tile.label} className="w-[6.25rem] shrink-0">
+                      <CategoryBubble
+                        tile={tile}
+                        product={tile.product}
+                        count={tile.count}
+                        bare
+                        compact
+                        onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/all-products")}
+                    className="flex w-[6.25rem] shrink-0 flex-col items-center justify-center rounded-[1.15rem] border border-gray-100 bg-white p-3 text-center shadow-sm"
+                  >
+                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-50 text-gray-500">
+                      <UtilityIcon type="grid" />
+                    </span>
+                    <span className="mt-2 text-[11px] font-semibold text-gray-950">More</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                <div className="rounded-[1.35rem] border border-gray-100 bg-white p-4 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-gray-950">All Categories</p>
+                      <p className="text-[11px] text-gray-500">{formatCount(selectedProducts.length)} products in this department</p>
+                    </div>
+                    <button type="button" onClick={() => navigate("/all-products?sort=popular")} className="text-xs font-bold text-orange-600">
+                      Popular
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {visibleSidebarProducts.slice(0, 8).map((item) => (
+                      <SidebarItem
+                        key={item.slug}
+                        item={item}
+                        active={selectedDepartment.slug === item.slug}
+                        count={item.count}
+                        onClick={() => selectDepartment(item)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/all-products")}
+                  className="flex min-h-[4.9rem] items-center justify-between gap-4 rounded-[1.35rem] border border-gray-100 bg-white px-4 py-4 text-left shadow-sm"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
+                      <DepartmentGlyph type="electronics" className="h-6 w-6" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-extrabold text-gray-950">All Products</span>
+                      <span className="block text-[11px] leading-5 text-gray-500">Explore everything we have to offer</span>
+                    </span>
+                  </span>
+                  <span className="text-gray-300">›</span>
+                </button>
+              </div>
+            </section>
+
+            <section className="mt-6">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-950">Featured categories</h2>
+                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {topCategoryCards.slice(0, 6).map((tile) => (
+                  <TopCategoryCard
+                    key={tile.label}
+                    tile={tile}
+                    product={tile.product}
+                    count={tile.count}
+                    onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section className="mt-6">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-950">Brands</h2>
+                <button type="button" onClick={() => navigate("/all-products?sort=popular")} className="text-sm font-semibold text-orange-600">View all</button>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {(showcaseBrandCards.length
+                  ? showcaseBrandCards
+                  : (brandCards.length ? brandCards : brandFallbacks.map((label) => ({ label, count: 0 })))
+                ).map((brand) => (
+                  <div key={brand._id || brand.brand || brand.label} className="w-[8.75rem] shrink-0">
+                    <BrandLogoCard
+                      label={brand.brand || brand.label}
+                      count={brand.count || 0}
+                      imageUrl={brand.imageUrl || ""}
+                      description={brand.description || ""}
+                      href={brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`}
+                      onClick={() => navigate(brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="mt-6">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-950">Shops</h2>
+                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
+              </div>
+              <div className="space-y-3">
+                {storeCards.length ? storeCards.map((store) => (
+                  <StoreCard
+                    key={store.id}
+                    store={store}
+                    onClick={() => navigate(`/store/${encodeURIComponent(store.id)}`)}
+                  />
+                )) : (
+                  <div className="rounded-[1.15rem] border border-dashed border-gray-200 bg-white p-6 text-sm text-gray-500">
+                    No stores found for this category yet.
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
           <div className="hidden lg:block">
-            <div className="mb-4">
-              <h1 className="text-3xl font-semibold tracking-tight text-gray-950">{selectedDepartment.label}</h1>
-              <p className="mt-1 text-sm text-gray-500">{selectedDepartment.description}</p>
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_390px]">
+              <div className="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-600">All Categories</p>
+                <div className="mt-2 flex items-end justify-between gap-4">
+                  <div className="min-w-0">
+                    <h1 className="truncate text-3xl font-extrabold tracking-tight text-gray-950">{selectedDepartment.label}</h1>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">{selectedDepartment.description}</p>
+                  </div>
+                  <button type="button" onClick={() => navigate("/all-products")} className="shrink-0 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600">
+                    View all
+                  </button>
+                </div>
+              </div>
+
+              <CategoryBanner
+                banner={selectedBanner}
+                fallbackTitle={selectedDepartment.heroTitle}
+                navigate={navigate}
+                prefetchRoute={prefetchRoute}
+                className="h-[180px] xl:h-[190px]"
+              />
             </div>
 
-            <CategoryBanner
-              banner={selectedBanner}
-              fallbackTitle={selectedDepartment.heroTitle}
-              navigate={navigate}
-              prefetchRoute={prefetchRoute}
-            />
-
-            <section className="mt-8">
-              <h2 className="text-xl font-semibold text-gray-950">Shop by category</h2>
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
-                {tileCounts.map((tile) => (
+            <section className="mt-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
+                {tileCounts.slice(0, 8).map((tile) => (
                   <CategoryBubble
                     key={tile.label}
                     tile={tile}
@@ -861,7 +1380,10 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
 
             <section className="mt-8">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-950">Top categories</h2>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-950">Top categories</h2>
+                  <p className="text-sm text-gray-500">Quick access to the strongest category groups in this department.</p>
+                </div>
                 <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
               </div>
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -879,7 +1401,10 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
 
             <section className="mt-8">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-950">Popular brands</h2>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-950">Popular brands</h2>
+                  <p className="text-sm text-gray-500">Local and global labels currently active in this category.</p>
+                </div>
                 <button type="button" onClick={() => navigate("/all-products?sort=popular")} className="text-sm font-semibold text-orange-600">View all brands →</button>
               </div>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
@@ -902,7 +1427,10 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
 
             <section className="mt-8">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-950">Shops</h2>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-950">Shops</h2>
+                  <p className="text-sm text-gray-500">Stores with products matching this category.</p>
+                </div>
                 <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all stores →</button>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -919,166 +1447,30 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
                 )}
               </div>
             </section>
-          </div>
 
-          <div className="lg:hidden">
-            <div className="px-1 pb-4">
-              <div className="rounded-[1.35rem] border border-gray-100 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowMobileCategoryMenu(true)}
-                    className="flex h-11 shrink-0 items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-900 shadow-sm"
-                  >
-                    <span className="text-base">☰</span>
-                    Menu
-                  </button>
-                  <div className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                    <p className="truncate text-sm font-semibold text-gray-950">{selectedDepartment.label}</p>
-                    <p className="truncate text-[11px] text-gray-500">{selectedDepartment.description}</p>
-                  </div>
+            <section className="mt-8">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-950">Products</h2>
+                  <p className="text-sm text-gray-500">{formatCount(selectedProducts.length)} items in {selectedDepartment.label.toLowerCase()}.</p>
                 </div>
-
-                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
-                  <DepartmentGlyph type="search" className="h-5 w-5 text-gray-500" />
-                  <input
-                    value={categorySearch}
-                    onChange={(event) => setCategorySearch(event.target.value)}
-                    placeholder="Search categories"
-                    className="min-w-0 flex-1 text-sm outline-none placeholder:text-gray-400"
+                <button type="button" onClick={() => navigate(`/all-products?category=${encodeURIComponent(selectedDepartment.matchCategories[0] || selectedDepartment.label)}`)} className="text-sm font-semibold text-orange-600">
+                  Open product list →
+                </button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+                {selectedProducts.slice(0, 15).map((product) => (
+                  <RecommendedCard
+                    key={product._id}
+                    product={product}
+                    navigate={navigate}
+                    prefetchRoute={prefetchRoute}
+                    formatCurrency={formatCurrency}
                   />
-                </div>
-              </div>
-            </div>
-
-            <section className="mt-6 px-1">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-950">Shop by category</h2>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {tileCounts.map((tile) => (
-                  <div key={tile.label} className="min-w-0">
-                    <CategoryBubble
-                      tile={tile}
-                      product={tile.product}
-                      count={tile.count}
-                      bare
-                      compact
-                      onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
-                    />
-                  </div>
                 ))}
-              </div>
-            </section>
-
-            <section className="mt-6 px-1">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-950">Top categories</h2>
-                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                {topCategoryCards.map((tile) => (
-                  <div key={tile.label} className="min-w-0">
-                    <TopCategoryCard
-                      tile={tile}
-                      product={tile.product}
-                      count={tile.count}
-                      onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="mt-6 px-1">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-950">Brands</h2>
-                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {(showcaseBrandCards.length
-                  ? showcaseBrandCards
-                  : (brandCards.length ? brandCards : brandFallbacks.map((label) => ({ label, count: 0 })))
-                ).map((brand) => (
-                  <div key={brand._id || brand.brand || brand.label} className="w-[8.75rem] shrink-0">
-                    <BrandLogoCard
-                      label={brand.brand || brand.label}
-                      count={brand.count || 0}
-                      imageUrl={brand.imageUrl || ""}
-                      description={brand.description || ""}
-                      href={brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`}
-                      onClick={() => navigate(brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="mt-6 px-1">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-950">Shops</h2>
-                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
-              </div>
-              <div className="space-y-3">
-                {storeCards.length ? storeCards.map((store) => (
-                  <StoreCard
-                    key={store.id}
-                    store={store}
-                    onClick={() => navigate(`/store/${encodeURIComponent(store.id)}`)}
-                  />
-                )) : (
-                  <div className="rounded-[1.15rem] border border-dashed border-gray-200 bg-white p-6 text-sm text-gray-500">
-                    No stores found for this category yet.
-                  </div>
-                )}
               </div>
             </section>
           </div>
-
-          {showMobileCategoryMenu ? (
-            <div className="fixed inset-0 z-50 bg-black/40 p-4 lg:hidden" onClick={() => setShowMobileCategoryMenu(false)}>
-              <div
-                className="mx-auto mt-16 max-h-[80vh] w-full max-w-md overflow-y-auto rounded-[1.35rem] bg-white p-4 shadow-2xl"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-950">Categories</p>
-                    <p className="text-[11px] text-gray-500">Pick a department to browse.</p>
-                  </div>
-                  <button type="button" onClick={() => setShowMobileCategoryMenu(false)} className="text-xl text-gray-400">×</button>
-                </div>
-                <div className="space-y-2">
-                  {visibleSidebarProducts.map((item) => (
-                    <button
-                      key={item.slug}
-                      type="button"
-                      onClick={() => {
-                        selectDepartment(item);
-                        setShowMobileCategoryMenu(false);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left ${
-                        selectedDepartment.slug === item.slug ? "border-orange-300 bg-orange-50" : "border-gray-200 bg-white"
-                      }`}
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
-                          selectedDepartment.slug === item.slug ? "bg-white text-orange-600" : "bg-gray-50 text-gray-700"
-                        }`}>
-                          <DepartmentGlyph type={item.sidebarIcon} className="h-5 w-5" />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-semibold text-gray-950">{item.label}</span>
-                          <span className="block text-xs text-gray-500">{formatCount(item.count)} items</span>
-                        </span>
-                      </div>
-                      <span className="text-gray-300">›</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : null}
         </section>
       </div>
     </main>

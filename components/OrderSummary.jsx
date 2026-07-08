@@ -135,7 +135,7 @@ const OrderSummary = () => {
   }, [authReady, getToken, user]);
 
   return (
-    <aside className="h-fit w-full rounded-lg border border-gray-200 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+    <aside className="h-fit w-full min-w-0 rounded-lg border border-gray-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-5">
       <h2 className="text-xl font-bold text-gray-950">Order Summary</h2>
 
       <div className="mt-5 space-y-5">
@@ -144,17 +144,17 @@ const OrderSummary = () => {
           <div className="relative inline-block w-full rounded-md border border-gray-200 text-sm">
             <button
               type="button"
-              className="peer w-full bg-white px-4 py-3 pr-2 text-left text-gray-700 focus:outline-none"
+              className="peer flex w-full items-center gap-2 bg-white px-3 py-3 text-left text-gray-700 focus:outline-none sm:px-4"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               disabled={isPlacingOrder}
             >
-              <span>
+              <span className="min-w-0 flex-1 truncate">
                 {selectedAddress
                   ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}, ${selectedAddress.state}`
                   : "Select Address"}
               </span>
               <svg
-                className={`w-5 h-5 inline float-right transition-transform duration-200 ${isDropdownOpen ? "rotate-0" : "-rotate-90"}`}
+                className={`h-5 w-5 shrink-0 transition-transform duration-200 ${isDropdownOpen ? "rotate-0" : "-rotate-90"}`}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -169,7 +169,7 @@ const OrderSummary = () => {
                 {userAddresses.map((address, index) => (
                   <li
                     key={index}
-                    className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer"
+                    className="cursor-pointer px-3 py-2 [overflow-wrap:anywhere] hover:bg-gray-500/10 sm:px-4"
                     onClick={() => handleAddressSelect(address)}
                   >
                     {address.fullName}, {address.area}, {address.city}, {address.state}
@@ -218,28 +218,28 @@ const OrderSummary = () => {
 
         <div className="border-t border-gray-200 pt-5">
           <label className="mb-2 block text-sm font-semibold text-gray-700">Promo Code</label>
-          <div className="flex gap-2">
+          <div className="flex min-w-0 gap-2">
             <input
               type="text"
               placeholder="Enter promo code"
               className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-600 outline-none focus:border-orange-500"
             />
-            <button type="button" className="rounded-md border border-orange-600 px-5 text-sm font-semibold text-orange-600 hover:bg-orange-50">Apply</button>
+            <button type="button" className="shrink-0 rounded-md border border-orange-600 px-4 text-sm font-semibold text-orange-600 hover:bg-orange-50 sm:px-5">Apply</button>
           </div>
         </div>
 
         <div className="space-y-3 border-t border-gray-200 pt-5">
-          <div className="flex justify-between text-sm">
+          <div className="flex min-w-0 justify-between gap-3 text-sm">
             <p className="text-gray-600">Subtotal</p>
-            <p className="text-gray-800">{formatCurrency(cartAmount)}</p>
+            <p className="min-w-0 text-right text-gray-800 [overflow-wrap:anywhere]">{formatCurrency(cartAmount)}</p>
           </div>
-          <div className="flex justify-between text-sm">
+          <div className="flex min-w-0 justify-between gap-3 text-sm">
             <p className="text-gray-600">{deliveryMode === DELIVERY_MODES.PICKUP ? "Pickup Fee" : "Estimated Delivery Fee"}</p>
-            <p className="font-medium text-green-600">{estimatedDeliveryFee === 0 ? "Free" : formatCurrency(estimatedDeliveryFee)}</p>
+            <p className="min-w-0 text-right font-medium text-green-600 [overflow-wrap:anywhere]">{estimatedDeliveryFee === 0 ? "Free" : formatCurrency(estimatedDeliveryFee)}</p>
           </div>
-          <div className="flex justify-between border-t border-gray-200 pt-5 text-xl font-bold text-gray-950">
+          <div className="flex min-w-0 justify-between gap-3 border-t border-gray-200 pt-5 text-xl font-bold text-gray-950">
             <p>Total</p>
-            <p>{formatCurrency(totalAmount)}</p>
+            <p className="min-w-0 text-right [overflow-wrap:anywhere]">{formatCurrency(totalAmount)}</p>
           </div>
           <p className="text-xs text-gray-500">
             Seller contact stays hidden until the seller accepts the order. Completed orders are confirmed inside the app.

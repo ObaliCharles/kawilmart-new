@@ -3,6 +3,8 @@ import ProductCard from "@/components/ProductCard";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { AllProductsPageSkeleton, ProductsGridSkeleton } from "@/components/PageSkeletons";
+import Image from "next/image";
+import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -47,11 +49,177 @@ const ratingOptions = [
 ];
 
 const filterCategoryHighlights = marketplaceFilterCategories.slice(0, 8);
+const mobileRailCategories = marketplaceFilterCategories;
 
 const CategoryGlyph = ({ className = "h-4 w-4" }) => (
   <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
     <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
   </svg>
+);
+
+const gridIconPath = "M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z";
+
+const selectedCategoryTiles = [
+  ["All", ["All"], ["all"]],
+  ["Smartphones", ["Phones & Tablets"], ["phone", "smartphone", "iphone", "galaxy"]],
+  ["Laptops", ["Computers & Electronics"], ["laptop", "macbook", "thinkpad"]],
+  ["Desktops", ["Computers & Electronics"], ["desktop", "pc", "tower"]],
+  ["Monitors", ["Computers & Electronics"], ["monitor", "display"]],
+  ["TV & Video", ["Computers & Electronics", "Appliances"], ["tv", "television"]],
+  ["Audio", ["Audio"], ["headphone", "speaker", "earbud"]],
+  ["Wearables", ["Watches & Wearables"], ["watch", "wearable"]],
+  ["Accessories", ["Accessories"], ["charger", "cable", "adapter"]],
+];
+
+const getProductImage = (product) => {
+  const image = Array.isArray(product?.image) ? product.image[0] : product?.image;
+  if (typeof image === "string" && image.trim()) return image.trim();
+  if (image && typeof image === "object" && typeof image.src === "string") return image.src;
+  return assets.upload_area;
+};
+
+const formatCount = (count) => new Intl.NumberFormat("en-US").format(Math.max(0, Number(count) || 0));
+
+const normalizeProductText = (product) => (
+  `${normalizeSearchText(product?.name)} ${normalizeSearchText(product?.description)} ${normalizeSearchText(product?.category)}`
+);
+
+const findTileProduct = (products, categoriesForTile, keywords) => (
+  products.find((product) => (
+    categoriesForTile.some((category) => category === "All" || categoryMatchesSelection(product.category, category))
+    || keywords.some((keyword) => normalizeProductText(product).includes(normalizeSearchText(keyword)))
+  )) || products[0] || null
+);
+
+const SelectedCategoryTile = ({ label, product, active, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`flex h-[5.5rem] min-w-[7.4rem] flex-col items-center justify-center gap-2 rounded-lg border bg-white px-3 py-2 text-center shadow-sm transition ${
+      active ? "border-orange-500 text-orange-600" : "border-gray-100 text-gray-950 hover:border-orange-200"
+    }`}
+  >
+    {label === "All" ? (
+      <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d={gridIconPath} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ) : (
+      <span className="flex h-9 w-14 items-center justify-center">
+        {product ? (
+          <Image src={getProductImage(product)} alt={label} width={72} height={48} className="h-full w-full object-contain" />
+        ) : (
+          <CategoryGlyph className="h-6 w-6" />
+        )}
+      </span>
+    )}
+    <span className="line-clamp-1 text-[12px] font-extrabold">{label}</span>
+  </button>
+);
+
+const SelectedProductCard = ({ product, formatCurrency, navigate, prefetchRoute, addToCart }) => {
+  const activity = getProductActivitySnapshot(product);
+  const originalPrice = Number(product.price) || 0;
+  const offerPrice = Number(product.offerPrice || product.price) || 0;
+  const rating = getRatingValue(product);
+  const discount = originalPrice > offerPrice ? Math.round(((originalPrice - offerPrice) / originalPrice) * 100) : activity.priceDropPercent;
+
+  return (
+    <article
+      onClick={() => navigate(`/product/${product._id}`)}
+      onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
+      onFocus={() => prefetchRoute(`/product/${product._id}`)}
+      className="group relative flex min-w-0 cursor-pointer flex-col rounded-lg border border-gray-100 bg-white p-3 shadow-sm transition hover:border-orange-200 hover:shadow-md"
+    >
+      {discount > 0 ? (
+        <span className="absolute left-3 top-3 z-10 rounded bg-orange-600 px-2 py-1 text-[11px] font-extrabold text-white">-{discount}%</span>
+      ) : null}
+      <button type="button" onClick={(event) => event.stopPropagation()} className="absolute right-3 top-3 z-10 text-gray-400 hover:text-orange-600" aria-label="Save product">
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
+        </svg>
+      </button>
+      <span className="flex aspect-[1.08/1] items-center justify-center">
+        <Image src={getProductImage(product)} alt={product.name} width={260} height={230} className="h-full w-full object-contain p-2 transition group-hover:scale-105" />
+      </span>
+      <h3 className="mt-3 line-clamp-2 min-h-10 text-[13px] font-extrabold leading-5 text-gray-950">{product.name}</h3>
+      <p className="mt-1 line-clamp-1 text-[12px] text-gray-500">{product.description || product.category}</p>
+      <div className="mt-3 flex min-w-0 flex-wrap items-end gap-2">
+        <p className="text-base font-extrabold text-orange-600">{formatCurrency(offerPrice)}</p>
+        {originalPrice > offerPrice ? <p className="text-[11px] text-gray-400 line-through">{formatCurrency(originalPrice)}</p> : null}
+      </div>
+      <div className="mt-3 flex items-center gap-3 text-[12px] text-gray-500">
+        <span className="font-semibold text-orange-500">★ {rating ? rating.toFixed(1) : "New"}</span>
+        <span>({activity.reviewCount || product.reviewCount || 0})</span>
+        <span className="truncate">{product.sellerLocation || product.location || "Kampala"}</span>
+      </div>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          void addToCart(product._id);
+        }}
+        className="mt-4 flex h-9 items-center justify-center gap-2 rounded-md border border-orange-200 text-[12px] font-extrabold text-orange-600 transition hover:bg-orange-50"
+      >
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 4h2.4l2 10.1a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 1.9-1.5L20 8H6.2M10 20h.01M17 20h.01" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Add to Cart
+      </button>
+    </article>
+  );
+};
+
+const MobileRailButton = ({ label, active, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`flex min-h-[4.25rem] w-full flex-col items-center justify-center gap-1 rounded-lg px-1.5 text-center transition ${
+      active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
+    }`}
+  >
+    <CategoryGlyph className="h-5 w-5" />
+    <span className="line-clamp-2 text-[10px] font-extrabold leading-3">{label}</span>
+  </button>
+);
+
+const MobileFeatureTile = ({ label, product, tone, onClick }) => (
+  <button type="button" onClick={onClick} className={`relative min-h-[6.5rem] overflow-hidden rounded-lg bg-gradient-to-br ${tone} p-3 text-left text-white shadow-sm`}>
+    <span className="relative z-10 block max-w-[6rem] text-sm font-extrabold leading-5">{label}</span>
+    <span className="relative z-10 mt-1 block max-w-[6rem] text-[10px] font-semibold text-white/90">Shop now</span>
+    <span className="absolute bottom-3 left-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-orange-600">›</span>
+    {product ? <Image src={getProductImage(product)} alt={label} width={115} height={95} className="absolute bottom-1 right-0 max-h-24 w-24 object-contain" /> : null}
+  </button>
+);
+
+const MobileProductMini = ({ product, formatCurrency, navigate, addToCart }) => (
+  <article onClick={() => navigate(`/product/${product._id}`)} className="relative min-w-0 rounded-lg border border-gray-100 bg-white p-2 shadow-sm">
+    <button type="button" onClick={(event) => event.stopPropagation()} className="absolute right-2 top-2 z-10 text-gray-400" aria-label="Save product">
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
+      </svg>
+    </button>
+    <span className="flex aspect-[1.12/1] items-center justify-center">
+      <Image src={getProductImage(product)} alt={product.name} width={150} height={130} className="h-full w-full object-contain p-1" />
+    </span>
+    <h3 className="line-clamp-2 min-h-9 text-[12px] font-bold leading-[18px] text-gray-950">{product.name}</h3>
+    <p className="mt-1 text-[10px] font-semibold text-orange-500">★ {getRatingValue(product) ? getRatingValue(product).toFixed(1) : "New"}</p>
+    <div className="mt-1 flex items-center justify-between gap-2">
+      <p className="min-w-0 text-[13px] font-extrabold text-gray-950 [overflow-wrap:anywhere]">{formatCurrency(product.offerPrice || product.price)}</p>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          void addToCart(product._id);
+        }}
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white"
+        aria-label="Add to cart"
+      >
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 4h2.4l2 10.1a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 1.9-1.5L20 8H6.2M10 20h.01M17 20h.01" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+    </div>
+  </article>
 );
 
 const normalizeSearchText = (value = "") => (
@@ -222,7 +390,7 @@ const getProductSearchScore = (product, query) => {
 };
 
 function AllProductsInner() {
-  const { products, loadingProducts } = useAppContext();
+  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, addToCart } = useAppContext();
   const searchParams = useSearchParams();
 
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -344,6 +512,25 @@ function AllProductsInner() {
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
   const resultsLabel = `${filteredProducts.length} result${filteredProducts.length === 1 ? "" : "s"}`;
   const compactHeading = hasActiveSearch || selectedBrand !== "all" || selectedSeller || selectedCondition !== "all" || selectedPriceRange !== 0 || selectedRating > 0;
+  const selectedCategoryMode = selectedCategory !== "All" && !hasActiveSearch && !selectedSeller;
+  const selectedCategoryPool = useMemo(() => (
+    selectedCategory === "All"
+      ? products
+      : products.filter((product) => categoryMatchesSelection(product.category, selectedCategory))
+  ), [products, selectedCategory]);
+  const selectedTileData = useMemo(() => (
+    selectedCategoryTiles.map(([label, tileCategories, keywords]) => ({
+      label,
+      categories: tileCategories,
+      product: label === "All" ? null : findTileProduct(selectedCategoryPool.length ? selectedCategoryPool : products, tileCategories, keywords),
+      count: label === "All"
+        ? selectedCategoryPool.length
+        : products.filter((product) => (
+          tileCategories.some((category) => categoryMatchesSelection(product.category, category))
+          || keywords.some((keyword) => normalizeProductText(product).includes(normalizeSearchText(keyword)))
+        )).length,
+    }))
+  ), [products, selectedCategoryPool]);
   const resetFilters = () => {
     setSelectedCategory("All");
     setSelectedPriceRange(0);
@@ -489,6 +676,293 @@ function AllProductsInner() {
       </button>
     </div>
   );
+
+  const SelectedFilterPanel = () => (
+    <aside className="hidden w-[17.5rem] shrink-0 lg:block">
+      <div className="sticky top-28 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <h2 className="text-sm font-extrabold text-gray-950">Filters</h2>
+          <button type="button" onClick={resetFilters} className="text-[12px] font-bold text-gray-700">Clear all</button>
+        </div>
+
+        <section className="border-b border-gray-100 px-4 py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-[13px] font-extrabold text-gray-950">Category</h3>
+            <span className="text-gray-400">⌃</span>
+          </div>
+          <div className="space-y-2.5">
+            {selectedTileData.slice(0, 7).map((tile) => (
+              <button
+                key={`filter-${tile.label}`}
+                type="button"
+                onClick={() => setSelectedCategory(tile.label === "All" ? selectedCategory : tile.categories[0])}
+                className="flex w-full items-center justify-between gap-3 text-left text-[12px] text-gray-700"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className={`h-3.5 w-3.5 rounded-full border ${tile.label === "All" ? "border-orange-600 bg-orange-600 ring-2 ring-orange-100" : "border-gray-300"}`} />
+                  <span className="truncate">{tile.label === "All" ? `All ${selectedCategoryMeta?.label || "Products"}` : tile.label}</span>
+                </span>
+                <span className="text-[11px] text-gray-500">{formatCount(tile.count)}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-b border-gray-100 px-4 py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-[13px] font-extrabold text-gray-950">Price (UGX)</h3>
+            <span className="text-gray-400">⌃</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <input value="UGX 10,000" readOnly className="min-w-0 rounded-md border border-gray-200 px-2 py-2 text-[11px] text-gray-600 outline-none" />
+            <input value="UGX 15,000,000" readOnly className="min-w-0 rounded-md border border-gray-200 px-2 py-2 text-[11px] text-gray-600 outline-none" />
+          </div>
+          <div className="mt-4 h-1.5 rounded-full bg-orange-100">
+            <div className="h-full w-full rounded-full bg-orange-600" />
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+            {priceRanges.slice(1).map((range, index) => (
+              <button
+                key={range.label}
+                type="button"
+                onClick={() => setSelectedPriceRange(index + 1)}
+                className={`rounded-md border px-2 py-1.5 ${selectedPriceRange === index + 1 ? "border-orange-500 bg-orange-50 text-orange-600" : "border-gray-200 text-gray-600"}`}
+              >
+                {range.label.replace("UGX ", "").replace("Under ", "Under ")}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-b border-gray-100 px-4 py-4">
+          <h3 className="mb-3 text-[13px] font-extrabold text-gray-950">Brands</h3>
+          <div className="mb-3 flex items-center gap-2 rounded-full bg-gray-50 px-3 py-2 text-[11px] text-gray-400">
+            <span>⌕</span>
+            <span>Search brands</span>
+          </div>
+          <div className="space-y-2">
+            {brandOptions.slice(0, 5).map((brand) => (
+              <button key={brand.value} type="button" onClick={() => setSelectedBrand(brand.value)} className="flex w-full items-center justify-between text-[12px] text-gray-700">
+                <span className="flex items-center gap-2">
+                  <span className={`h-3.5 w-3.5 rounded border ${selectedBrand === brand.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
+                  {brand.label}
+                </span>
+                <span className="text-[11px] text-gray-500">{brand.count}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-b border-gray-100 px-4 py-4">
+          <h3 className="mb-3 text-[13px] font-extrabold text-gray-950">Condition</h3>
+          <div className="space-y-2">
+            {conditionOptions.slice(1, 3).map((condition) => (
+              <button key={condition.value} type="button" onClick={() => setSelectedCondition(condition.value)} className="flex w-full items-center justify-between text-[12px] text-gray-700">
+                <span className="flex items-center gap-2">
+                  <span className={`h-3.5 w-3.5 rounded border ${selectedCondition === condition.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
+                  {condition.value === "new" ? "Brand New" : "Used"}
+                </span>
+                <span className="text-[11px] text-gray-500">{condition.value === "new" ? "3,124" : "1,112"}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="px-4 py-4">
+          <h3 className="mb-3 text-[13px] font-extrabold text-gray-950">Ratings</h3>
+          <div className="space-y-2">
+            {ratingOptions.slice(1).map((rating) => (
+              <button key={rating.value} type="button" onClick={() => setSelectedRating(rating.value)} className="flex w-full items-center justify-between text-[12px] text-gray-700">
+                <span className="text-orange-500">★★★★★ <span className="text-gray-500">& up</span></span>
+                <span className="text-[11px] text-gray-500">{formatCount(Math.round(rating.value * 900))}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+    </aside>
+  );
+
+  if (selectedCategoryMode) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen bg-[#f8f9fb] px-4 pb-24 pt-5 sm:px-6 lg:px-8 xl:px-10">
+          <div className="mx-auto max-w-[1500px]">
+            <div className="mb-5 hidden text-xs text-gray-500 lg:block">
+              Home <span className="mx-2">›</span> All Categories <span className="mx-2">›</span> <span className="font-extrabold text-gray-950">{selectedCategoryMeta?.label}</span>
+            </div>
+
+            <div className="grid grid-cols-[6.4rem_minmax(0,1fr)] gap-2 lg:hidden">
+              <aside className="sticky top-[4.4rem] h-[calc(100svh-9rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-lg border border-gray-100 bg-white p-2 shadow-sm [-webkit-overflow-scrolling:touch]">
+                <div className="space-y-2">
+                  <MobileRailButton label="All Categories" active onClick={() => setSelectedCategory("All")} />
+                  {mobileRailCategories.map((category) => (
+                    <MobileRailButton
+                      key={category}
+                      label={getCategoryMeta(category).label}
+                      active={categoryMatchesSelection(category, selectedCategory)}
+                      onClick={() => setSelectedCategory(category)}
+                    />
+                  ))}
+                </div>
+              </aside>
+
+              <section className="min-w-0 space-y-4">
+                <button type="button" onClick={() => setSortBy("newest")} className="relative block min-h-[9.75rem] w-full overflow-hidden rounded-lg bg-[#210062] px-4 py-5 text-left text-white shadow-sm">
+                  <span className="relative z-10 block max-w-[10rem] text-2xl font-extrabold leading-7">NEW ARRIVALS 2026</span>
+                  <span className="relative z-10 mt-2 block text-[12px] font-semibold text-white/90">The latest tech, now yours.</span>
+                  <span className="relative z-10 mt-4 inline-flex rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-gray-950">Shop Now ›</span>
+                  <span className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+                    {[0, 1, 2, 3].map((dot) => <span key={dot} className={`h-2 w-2 rounded-full ${dot === 0 ? "bg-orange-500" : "bg-white/80"}`} />)}
+                  </span>
+                  <span className="absolute inset-y-0 right-1 flex w-[58%] items-center justify-end">
+                    {selectedTileData.slice(1, 5).map((tile) => tile.product ? (
+                      <Image key={`hero-${tile.label}`} src={getProductImage(tile.product)} alt={tile.label} width={120} height={120} className="-ml-8 max-h-28 w-auto object-contain" />
+                    ) : null)}
+                  </span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {selectedTileData.slice(1, 7).map((tile, index) => (
+                    <MobileFeatureTile
+                      key={`feature-${tile.label}`}
+                      label={tile.label}
+                      product={tile.product}
+                      tone={[
+                        "from-orange-500 to-orange-600",
+                        "from-blue-700 to-sky-500",
+                        "from-blue-500 to-violet-500",
+                        "from-violet-600 to-fuchsia-500",
+                        "from-cyan-500 to-teal-500",
+                        "from-rose-500 to-pink-500",
+                      ][index]}
+                      onClick={() => setSelectedCategory(tile.categories[0])}
+                    />
+                  ))}
+                </div>
+
+                <section className="overflow-hidden rounded-lg bg-gradient-to-r from-red-500 to-orange-500 p-2.5 text-white shadow-sm">
+                  <div className="mb-2 flex items-center justify-between">
+                    <h2 className="text-sm font-extrabold">FLASH SALE</h2>
+                    <div className="flex items-center gap-1 text-[10px] font-extrabold">
+                      <span>Ends in</span>
+                      {["02", "45", "36"].map((part) => <span key={part} className="rounded bg-red-600 px-1.5 py-1">{part}</span>)}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 min-[430px]:grid-cols-4">
+                    {filteredProducts.slice(0, 4).map((product) => (
+                      <div key={`flash-${product._id}`} className="rounded-lg bg-white p-2 text-gray-950">
+                        <span className="mb-1 inline-flex rounded bg-red-500 px-1.5 py-0.5 text-[9px] font-extrabold text-white">-35%</span>
+                        <Image src={getProductImage(product)} alt={product.name} width={110} height={92} className="mx-auto h-20 w-full object-contain" />
+                        <p className="mt-1 line-clamp-2 text-[11px] font-bold leading-4">{product.name}</p>
+                        <p className="mt-1 text-[12px] font-extrabold text-orange-600">{formatCurrency(product.offerPrice || product.price)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {[
+                  ["TRENDING NOW", filteredProducts.slice(0, 4)],
+                  ["BEST SELLERS", filteredProducts.slice(4, 8)],
+                  ["LATEST ARRIVALS", filteredProducts.slice(8, 12)],
+                ].map(([title, items]) => items.length ? (
+                  <section key={title}>
+                    <div className="mb-2 flex items-center justify-between">
+                      <h2 className="text-sm font-extrabold text-gray-950">{title}</h2>
+                      <button type="button" className="text-[12px] font-bold text-gray-950">View all ›</button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 min-[430px]:grid-cols-4">
+                      {items.map((product) => (
+                        <MobileProductMini key={`${title}-${product._id}`} product={product} formatCurrency={formatCurrency} navigate={navigate} addToCart={addToCart} />
+                      ))}
+                    </div>
+                  </section>
+                ) : null)}
+              </section>
+            </div>
+
+            <div className="hidden gap-6 lg:flex">
+              <SelectedFilterPanel />
+
+              <section className="min-w-0 flex-1">
+                <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,46rem)] lg:items-center">
+                  <div>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-gray-950 lg:text-4xl">{selectedCategoryMeta?.label || selectedCategory}</h1>
+                    <p className="mt-3 text-sm leading-6 text-gray-500">Find the latest phones, laptops, audio, accessories and more.</p>
+                  </div>
+
+                  <button type="button" onClick={() => setSelectedCondition("flash")} className="relative hidden min-h-[8rem] overflow-hidden rounded-lg bg-[#060b14] px-8 py-6 text-left text-white shadow-sm lg:block">
+                    <span className="relative z-10 inline-flex rounded bg-yellow-500/20 px-2 py-1 text-[10px] font-extrabold text-yellow-400">TECH THAT INSPIRES</span>
+                    <span className="relative z-10 mt-3 block max-w-xs text-xl font-extrabold leading-7">Upgrade your world with the latest electronics</span>
+                    <span className="absolute bottom-5 right-7 rounded-md bg-white px-5 py-2 text-[12px] font-extrabold text-gray-950">Shop Now</span>
+                    <span className="absolute inset-y-0 right-36 flex w-80 items-center justify-end gap-3 opacity-95">
+                      {selectedTileData.slice(1, 6).map((tile) => tile.product ? (
+                        <Image key={tile.label} src={getProductImage(tile.product)} alt={tile.label} width={92} height={92} className="max-h-24 w-auto object-contain" />
+                      ) : null)}
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-8 flex gap-5 overflow-x-auto pb-2">
+                  {selectedTileData.map((tile) => (
+                    <SelectedCategoryTile
+                      key={`top-${tile.label}`}
+                      label={tile.label}
+                      product={tile.product}
+                      active={tile.label === "All"}
+                      onClick={() => {
+                        if (tile.label !== "All") setSelectedCategory(tile.categories[0]);
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-medium text-gray-500">{formatCount(filteredProducts.length)} products found</p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-500">Sort by:</span>
+                    <select
+                      value={effectiveSortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="h-10 rounded-md border border-gray-200 bg-white px-4 text-sm outline-none"
+                    >
+                      {sortOptions.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <span className="hidden h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-orange-600 sm:flex">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d={gridIconPath} stroke="currentColor" strokeWidth="1.8" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                {loadingProducts ? (
+                  <ProductsGridSkeleton showHeader={false} />
+                ) : (
+                  <div className="mt-5 grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+                    {filteredProducts.map((product) => (
+                      <SelectedProductCard
+                        key={product._id}
+                        product={product}
+                        formatCurrency={formatCurrency}
+                        navigate={navigate}
+                        prefetchRoute={prefetchRoute}
+                        addToCart={addToCart}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>

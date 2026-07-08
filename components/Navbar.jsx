@@ -756,7 +756,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
             )}
           </div>
 
-          <form onSubmit={handleSearch} className="flex min-w-0 flex-1 items-center rounded-lg border border-gray-200 bg-white px-3 md:hidden">
+          <form onSubmit={handleSearch} className="flex min-w-0 flex-[1_1_0%] items-center rounded-lg border border-gray-200 bg-white px-3 md:hidden">
             <SearchIcon />
             <input
               type="text"
@@ -767,21 +767,21 @@ const Navbar = ({ hideMobileHeader = false }) => {
             />
           </form>
 
-          <div className="ml-auto flex items-center gap-2 md:hidden">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 md:hidden">
             {isAuthenticated ? (
-              <button type="button" onClick={() => navigate('/inbox')} aria-label="Open notifications" className="relative flex h-10 w-10 items-center justify-center text-gray-900">
+              <button type="button" onClick={() => navigate('/inbox')} aria-label="Open notifications" className="relative flex h-9 w-9 shrink-0 items-center justify-center text-gray-900">
                 <NotificationIcon />
                 {unreadNotificationsCount > 0 && (
-                  <span className="absolute right-0 top-0 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                  <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
                     {formatBadgeCount(unreadNotificationsCount)}
                   </span>
                 )}
               </button>
             ) : null}
-            <button type="button" onClick={() => navigate('/cart')} aria-label="Open cart" className="relative flex h-10 w-10 items-center justify-center text-gray-900">
+            <button type="button" onClick={() => navigate('/cart')} aria-label="Open cart" className="relative flex h-9 w-9 shrink-0 items-center justify-center text-gray-900">
               <AccountMenuIcon type="cart" className="h-6 w-6" />
               {cartCount > 0 && (
-                <span className="absolute right-0 top-0 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
                   {formatBadgeCount(cartCount)}
                 </span>
               )}
@@ -913,7 +913,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
             >
               {item.icon}
               {item.badge > 0 && (
-                <span className="absolute right-4 top-1 inline-flex min-w-[1.05rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
+                <span className="absolute right-2 top-0 inline-flex min-w-[0.95rem] items-center justify-center rounded-full bg-orange-600 px-1 py-0.5 text-[8.5px] font-semibold leading-none text-white shadow-sm">
                   {formatBadgeCount(item.badge)}
                 </span>
               )}
