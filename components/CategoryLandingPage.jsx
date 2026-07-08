@@ -19,17 +19,21 @@ const normalizeText = (value = "") => (
 );
 
 const iconPaths = {
+  categories: "M4 5h6v6H4V5Zm10 0h6v6h-6V5ZM4 15h6v6H4v-6Zm10 0h6v6h-6v-6Z",
+  more: "M6 12h.01M12 12h.01M18 12h.01",
   electronics: "M5 7h14v9H5V7Zm-2 12h18M9 19l1-3m4 3-1-3M8 4h8",
   "mobiles-tablets": "M8 3h8a1.3 1.3 0 0 1 1.3 1.3v15.4A1.3 1.3 0 0 1 16 21H8a1.3 1.3 0 0 1-1.3-1.3V4.3A1.3 1.3 0 0 1 8 3Zm3 15h2",
   laptops: "M5 6h14v9H5V6Zm-2 12h18M9 18l1-3m5 3-1-3",
   tv: "M4 7h16v9H4V7Zm4 12h8m-4-3v3",
   cameras: "M5 7h3l1.5-2h5L16 7h3v12H5V7Zm7 9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z",
   audio: "M5 14v-2a7 7 0 0 1 14 0v2M5 14h3v5H5v-5Zm11 0h3v5h-3v-5Z",
+  headphone: "M5 14v-2a7 7 0 0 1 14 0v2M6 14v5H5v-5Zm13 0v5h-1v-5Z",
   gaming: "M6 10h12l1.2 6.2a2 2 0 0 1-1.9 2.4H6.7a2 2 0 0 1-1.9-2.4L6 10Zm3 3h.01M15 13h.01M9 7l1-2h4l1 2",
   wearables: "M9 3h6l1 4a6 6 0 0 1 0 10l-1 4H9l-1-4A6 6 0 0 1 8 7l1-4Zm3 5v4l2.5 1.5",
   accessories: "M7 7V5a2 2 0 0 1 4 0v2m4 0V5a2 2 0 0 1 4 0v2M7 7h14v6a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V7Zm-3 5h3",
   home: "M4 11.5 12 5l8 6.5M6.5 10v9h11v-9M10 19v-5h4v5",
   appliances: "M7 4h10v16H7V4Zm2 3h6m-5 10h4m-5-6h6v4H9v-4Z",
+  utensils: "M7 3v8m0 0a2 2 0 0 1-2-2V3m2 8v10m10-18v18m0-18c1.7 0 3 1.3 3 3v3h-3m0-6v18",
   beauty: "M9 14.5 16.5 7a2.1 2.1 0 0 1 3 3L12 17.5 8 18.5l1-4ZM5 20h14M6 8h5M7 4h3v10H7V4Z",
   fashion: "M8 4 5 6.5 3 11l3 1.5V20h12v-7.5l3-1.5-2-4.5L16 4l-2 2h-4L8 4Z",
   health: "M12 21s7-4.4 7-11a4 4 0 0 0-7-2.6A4 4 0 0 0 5 10c0 6.6 7 11 7 11ZM12 8v6M9 11h6",
@@ -97,7 +101,7 @@ const departmentConfigs = [
     heroTitle: "TV and Audio",
     heroSubtitle: "Sound, display, and home entertainment deals",
     heroCta: "Shop Now",
-    sidebarIcon: "audio",
+    sidebarIcon: "tv",
     matchCategories: ["Audio", "Computers & Electronics", "Appliances"],
     heroTone: "from-[#101115] via-[#181818] to-[#292929]",
   },
@@ -109,7 +113,7 @@ const departmentConfigs = [
     heroTitle: "Camera Picks",
     heroSubtitle: "Capture sharper moments with better gear",
     heroCta: "Shop Now",
-    sidebarIcon: "cameras",
+    sidebarIcon: "camera",
     matchCategories: ["Computers & Electronics", "Camera"],
     heroTone: "from-[#101827] via-[#18243a] to-[#2a3b59]",
   },
@@ -121,7 +125,7 @@ const departmentConfigs = [
     heroTitle: "Headphones and Speakers",
     heroSubtitle: "Bass-heavy audio picks and everyday wearables",
     heroCta: "Shop Now",
-    sidebarIcon: "audio",
+    sidebarIcon: "headphone",
     matchCategories: ["Audio", "Headphone", "Earphone"],
     heroTone: "from-[#170f1c] via-[#211627] to-[#30203d]",
   },
@@ -181,7 +185,7 @@ const departmentConfigs = [
     heroTitle: "Kitchen Appliances",
     heroSubtitle: "Tools that make meal prep easier",
     heroCta: "Shop Now",
-    sidebarIcon: "appliances",
+    sidebarIcon: "utensils",
     matchCategories: ["Appliances", "Home & Living"],
     heroTone: "from-[#1f130d] via-[#2d1b11] to-[#402614]",
   },
@@ -241,7 +245,7 @@ const departmentConfigs = [
     heroTitle: "Toys and Games",
     heroSubtitle: "Playful picks for all ages",
     heroCta: "Shop Now",
-    sidebarIcon: "gaming",
+    sidebarIcon: "cart",
     matchCategories: ["Sports & Outdoors"],
     heroTone: "from-[#1b1627] via-[#261f38] to-[#362c4b]",
   },
@@ -333,7 +337,8 @@ const SidebarItem = ({ item, active, onClick, count }) => (
     </span>
     <span className="min-w-0 flex-1">
       <span className="block truncate text-[12.5px] font-semibold">{item.label}</span>
-      <span className="block text-[10px] text-gray-400">{formatCount(count)} items</span>
+      <span className="mt-0.5 block line-clamp-2 text-[10px] leading-4 text-gray-400">{item.description}</span>
+      <span className="mt-1 block text-[10px] text-gray-400">{formatCount(count)} items</span>
     </span>
     <span className="text-gray-300">›</span>
   </button>
@@ -579,12 +584,53 @@ const MobileSidebarTab = ({ item, active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex w-full flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-center transition min-[380px]:gap-1.5 min-[380px]:py-3 ${
-      active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
+    className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition ${
+      active ? "bg-orange-50 text-orange-600 shadow-[inset_3px_0_0_0_#f97316]" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
     }`}
   >
-    <DepartmentGlyph type={item.sidebarIcon} className="h-[1.05rem] w-[1.05rem] min-[380px]:h-5 min-[380px]:w-5" />
-    <span className="line-clamp-2 text-[9px] font-extrabold leading-[11px] min-[380px]:text-[10px] min-[380px]:leading-3">{item.shortLabel || item.label}</span>
+    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+      active ? "bg-white text-orange-600" : "bg-white text-gray-700"
+    }`}>
+      <DepartmentGlyph type={item.sidebarIcon} className="h-4 w-4" />
+    </span>
+    <span className="min-w-0">
+      <span className="block text-[10px] font-bold leading-[12px] min-[380px]:text-[11px]">{item.shortLabel || item.label}</span>
+    </span>
+  </button>
+);
+
+const mobileQuickTabs = [
+  { label: "All", icon: "categories", href: "/categories" },
+  { label: "Phones", icon: "mobiles-tablets", href: "/categories?category=mobiles-tablets" },
+  { label: "Laptops", icon: "laptops", href: "/categories?category=laptops-computers" },
+  { label: "Audio", icon: "headphone", href: "/categories?category=headphones-speakers" },
+  { label: "TV & Video", icon: "tv", href: "/categories?category=tv-audio-video" },
+  { label: "Gaming", icon: "gaming", href: "/categories?category=gaming" },
+  { label: "More", icon: "more", href: "/all-products" },
+];
+
+const mobileQuickTabMatches = {
+  All: (department) => !department || department.slug === departmentConfigs[0].slug,
+  Phones: (department) => department?.slug === "mobiles-tablets",
+  Laptops: (department) => department?.slug === "laptops-computers",
+  Audio: (department) => department?.slug === "headphones-speakers",
+  "TV & Video": (department) => department?.slug === "tv-audio-video",
+  Gaming: (department) => department?.slug === "gaming",
+  More: (department) => !["mobiles-tablets", "laptops-computers", "headphones-speakers", "tv-audio-video", "gaming"].includes(department?.slug),
+};
+
+const MobileQuickTab = ({ item, active, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`flex h-[4.55rem] min-w-[5.35rem] flex-col items-center justify-center gap-1 rounded-2xl border px-2.5 text-center transition ${
+      active ? "border-orange-200 bg-orange-50 text-orange-600 shadow-sm" : "border-gray-200 bg-white text-gray-950 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
+    }`}
+  >
+    <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${active ? "bg-white text-orange-600" : "bg-white text-gray-700"}`}>
+      <DepartmentGlyph type={item.icon} className="h-4 w-4" />
+    </span>
+    <span className="text-[10px] font-semibold leading-3">{item.label}</span>
   </button>
 );
 
@@ -654,21 +700,21 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f7f8fb]">
-      <div className="mx-auto grid max-w-[1600px] gap-4 px-2 pb-24 pt-2 min-[380px]:px-3 min-[380px]:pt-3 md:px-5 md:pb-16 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6 lg:px-6 xl:px-8">
+      <div className="mx-auto grid max-w-[1600px] gap-3 px-2 pb-24 pt-2 min-[380px]:px-3 min-[380px]:pt-3 md:px-5 md:pb-16 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-4 lg:px-6 xl:px-8">
         <aside className="hidden lg:block">
-          <div className="sticky top-24 space-y-3">
-            <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-              <button
-                type="button"
-                onClick={() => navigate("/all-products")}
-                className="mb-2 flex w-full items-center gap-3 rounded-lg bg-orange-50 px-3 py-3 text-left text-orange-600"
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm">
-                  <DepartmentGlyph type="electronics" className="h-4 w-4" />
-                </span>
-                <span className="text-sm font-extrabold">All Categories</span>
-              </button>
-              <div className="space-y-1">
+          <div className="sticky top-20 space-y-2.5">
+            <div className="rounded-2xl border border-gray-200 bg-white p-2.5 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => navigate("/all-products")}
+                  className="mb-2 flex w-full items-center gap-2.5 rounded-xl bg-orange-50 px-2.5 py-2.5 text-left text-orange-600"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white shadow-sm">
+                  <DepartmentGlyph type="categories" className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-[13px] font-extrabold">All Categories</span>
+                </button>
+              <div className="space-y-0.5">
                 {visibleSidebarProducts.map((item) => (
                   <SidebarItem
                     key={item.slug}
@@ -681,25 +727,25 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
               </div>
             </div>
 
-            <button type="button" onClick={() => navigate("/seller")} className="w-full overflow-hidden rounded-lg bg-[radial-gradient(circle_at_20%_0%,#7c2dff,transparent_34%),linear-gradient(135deg,#240063,#5b0b50_58%,#20104f)] p-5 text-center text-white shadow-sm">
-              <p className="text-base font-extrabold">KAWIL CLUB</p>
-              <p className="mt-2 text-xs leading-5 text-white/80">Exclusive member discounts & rewards</p>
-              <span className="mt-4 inline-flex rounded-full bg-white px-5 py-2 text-xs font-extrabold text-[#210062]">Join Now</span>
+            <button type="button" onClick={() => navigate("/seller")} className="w-full overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_20%_0%,#7c2dff,transparent_34%),linear-gradient(135deg,#240063,#5b0b50_58%,#20104f)] p-4 text-center text-white shadow-sm">
+              <p className="text-[15px] font-extrabold">KAWIL CLUB</p>
+              <p className="mt-1.5 text-[11px] leading-4 text-white/80">Exclusive member discounts & rewards</p>
+              <span className="mt-3 inline-flex rounded-full bg-white px-4 py-1.5 text-[11px] font-extrabold text-[#210062]">Join Now</span>
             </button>
 
-            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
               {[
                 ["Secure Payments", "100% protected", "shield"],
                 ["Easy Returns", "7-day return policy", "returns"],
                 ["Customer Support", "24/7 support", "help"],
               ].map(([title, text, icon]) => (
-                <div key={title} className="flex items-center gap-3 border-b border-gray-100 py-3 last:border-b-0">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-100 text-gray-700">
-                    <DepartmentGlyph type={icon} className="h-4 w-4" />
+                <div key={title} className="flex items-center gap-2.5 border-b border-gray-100 py-2.5 last:border-b-0">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-gray-100 text-gray-700">
+                    <DepartmentGlyph type={icon} className="h-3.5 w-3.5" />
                   </span>
                   <span>
-                    <span className="block text-xs font-extrabold text-gray-950">{title}</span>
-                    <span className="block text-[11px] text-gray-500">{text}</span>
+                    <span className="block text-[11px] font-extrabold text-gray-950">{title}</span>
+                    <span className="block text-[10px] text-gray-500">{text}</span>
                   </span>
                 </div>
               ))}
@@ -709,15 +755,26 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
 
         <section className="min-w-0">
           <div className="mb-4 hidden lg:block">
-            <h1 className="text-3xl font-extrabold text-gray-950">All Categories</h1>
-            <p className="mt-2 text-sm text-gray-500">Browse our wide range of categories and find what you need.</p>
+            <h1 className="text-[28px] font-extrabold text-gray-950">All Categories</h1>
+            <p className="mt-2 text-[13px] text-gray-500">Browse our wide range of categories and find what you need.</p>
           </div>
 
-          <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-1.5 min-[380px]:grid-cols-[5.35rem_minmax(0,1fr)] min-[380px]:gap-2 lg:hidden">
-            <aside className="sticky left-0 top-[4.2rem] z-10 h-[calc(100svh-8.5rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-xl border border-gray-100 bg-white/95 p-1.5 shadow-sm backdrop-blur min-[380px]:top-[4.4rem] min-[380px]:p-2 [-webkit-overflow-scrolling:touch]">
-              <div className="space-y-1.5 min-[380px]:space-y-2">
+          <div className="mb-3 flex gap-2 overflow-x-auto pb-1 lg:hidden [-webkit-overflow-scrolling:touch]">
+            {mobileQuickTabs.map((item) => (
+              <MobileQuickTab
+                key={item.label}
+                item={item}
+                active={mobileQuickTabMatches[item.label]?.(selectedDepartment) || false}
+                onClick={() => navigate(item.href)}
+              />
+            ))}
+          </div>
+
+          <div className="grid grid-cols-[7.25rem_minmax(0,1fr)] gap-2 lg:hidden">
+            <aside className="sticky left-0 top-[4.2rem] z-10 h-[calc(100svh-8.5rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-2xl border border-gray-100 bg-white/95 p-2 shadow-sm backdrop-blur [-webkit-overflow-scrolling:touch]">
+              <div className="space-y-1.5">
                 <MobileSidebarTab
-                  item={{ label: "All Categories", shortLabel: "All", sidebarIcon: "electronics" }}
+                  item={{ label: "All Categories", shortLabel: "All", sidebarIcon: "categories" }}
                   active={!categoryParam}
                   onClick={() => navigate("/categories")}
                 />
