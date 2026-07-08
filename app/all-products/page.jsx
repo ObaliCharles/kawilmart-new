@@ -79,6 +79,37 @@ const CategoryGlyph = ({ category = "All", className = "h-4 w-4" }) => (
   </svg>
 );
 
+const categoryIconPaths = {
+  Fashion: "M8 4 5 6.5 3 11l3 1.5V20h12v-7.5l3-1.5-2-4.5L16 4l-2 2h-4L8 4Z",
+  "Beauty & Cosmetics": "M9 14.5 16.5 7a2.1 2.1 0 0 1 3 3L12 17.5 8 18.5l1-4ZM5 20h14M6 8h5M7 4h3v10H7V4Z",
+  "Health & Personal Care": "M12 21s7-4.4 7-11a4 4 0 0 0-7-2.6A4 4 0 0 0 5 10c0 6.6 7 11 7 11ZM12 8v6M9 11h6",
+  "Home & Living": "M4 11.5 12 5l8 6.5M6.5 10v9h11v-9M10 19v-5h4v5",
+  "Phones & Tablets": "M8 3h8a1.3 1.3 0 0 1 1.3 1.3v15.4A1.3 1.3 0 0 1 16 21H8a1.3 1.3 0 0 1-1.3-1.3V4.3A1.3 1.3 0 0 1 8 3Zm3 15h2",
+  "Computers & Electronics": "M5 6h14v9H5V6Zm-2 12h18M9 18l1-3m5 3-1-3",
+  Audio: "M5 14v-2a7 7 0 0 1 14 0v2M5 14h3v5H5v-5Zm11 0h3v5h-3v-5Z",
+  "Watches & Wearables": "M9 3h6l1 4a6 6 0 0 1 0 10l-1 4H9l-1-4A6 6 0 0 1 8 7l1-4Zm3 5v4l2.5 1.5",
+  Accessories: "M8 7V5a2 2 0 0 1 4 0v2m4 0V5a2 2 0 0 1 4 0v2M7 7h14v6a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V7ZM4 12h3",
+  Appliances: "M7 4h10v16H7V4Zm2 3h6m-5 10h4m-5-6h6v4H9v-4Z",
+  "Baby Products": "M8 10a4 4 0 0 1 8 0v2h1.5A2.5 2.5 0 0 1 20 14.5V19H4v-4.5A2.5 2.5 0 0 1 6.5 12H8v-2Zm2 7h.1M14 17h.1M10 9h4",
+  "Office & Stationery": "M5 19l4-1 10-10-3-3L6 15l-1 4Zm10-13 3 3M5 5h6M5 9h3",
+  "Sports & Outdoors": "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-18v18M4.5 8h15M4.5 16h15",
+  Automotive: "M5 17h14l-1.2-5.2A3 3 0 0 0 14.9 9H9.1a3 3 0 0 0-2.9 2.8L5 17Zm2 0v2m10-2v2M7.5 13h9",
+  "Books & Learning": "M5 5.5A2.5 2.5 0 0 1 7.5 3H20v16H7.5A2.5 2.5 0 0 0 5 21V5.5Zm0 0A2.5 2.5 0 0 0 7.5 8H20",
+  "Construction & Tools": "m14 6 4 4M4 20l8.5-8.5m2-6.5 4.5 4.5-3 3-4.5-4.5 3-3ZM5 7l4 4",
+};
+
+const CategoryIconBadge = ({ category, active = false, className = "h-9 w-9" }) => {
+  const iconPath = categoryIconPaths[category] || categoryIconPaths.Accessories;
+
+  return (
+    <span className={`inline-flex items-center justify-center rounded-xl ${className} ${active ? "bg-orange-50 text-orange-600" : "bg-white text-gray-700"}`}>
+      <svg className="h-[0.9em] w-[0.9em]" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path d={iconPath} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+};
+
 const gridIconPath = "M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z";
 
 const selectedCategoryTiles = [
@@ -199,8 +230,12 @@ const MobileRailButton = ({ label, category = label, active, onClick }) => (
       active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
     }`}
   >
-    <CategoryGlyph category={category} className="h-4 w-4 min-[380px]:h-[1.05rem] min-[380px]:w-[1.05rem]" />
-    <span className="line-clamp-1 text-[8.5px] font-extrabold leading-[10px] min-[380px]:text-[9.5px]">{label}</span>
+    <CategoryIconBadge
+      category={category}
+      active={active}
+      className="h-[1.55rem] w-[1.55rem] rounded-lg text-[0.95rem] min-[380px]:h-7 min-[380px]:w-7"
+    />
+    <span className="line-clamp-2 text-[9px] font-extrabold leading-[11px] min-[380px]:text-[10px] min-[380px]:leading-3">{label}</span>
   </button>
 );
 
@@ -614,25 +649,20 @@ function AllProductsInner() {
       <div>
         <p className="mb-3 text-sm font-bold text-gray-950">Related categories</p>
         <div className="max-h-72 space-y-0.5 overflow-y-auto pr-1">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${
-                selectedCategory === cat ? "bg-orange-50 font-semibold text-orange-600 shadow-[inset_3px_0_0_0_#f97316]" : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <span className="flex min-w-0 items-center gap-3">
-                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${selectedCategory === cat ? "bg-white text-orange-600" : "bg-white text-gray-700"}`}>
-                  <CategoryGlyph category={cat} className="h-4 w-4" />
-                </span>
-                <span className="truncate">{cat === "All" ? "All Products" : getCategoryMeta(cat).label}</span>
-              </span>
-              <span className="text-[11px] text-gray-400">{cat === "All" ? formatCount(filteredProducts.length) : formatCount(products.filter((product) => categoryMatchesSelection(product.category, cat)).length)}</span>
-            </button>
-          ))}
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm transition ${
+                  selectedCategory === cat ? "bg-orange-50 font-semibold text-orange-600" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <CategoryIconBadge category={cat === "All" ? "Accessories" : cat} active={selectedCategory === cat} className="h-5 w-5 rounded-md text-[0.72rem]" />
+                <span className="min-w-0 truncate">{cat === "All" ? cat : getCategoryMeta(cat).label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
       <div>
         <p className="mb-3 border-t border-gray-200 pt-4 text-sm font-bold text-gray-950">Price Range</p>
         <div className="space-y-1.5">
@@ -739,9 +769,7 @@ function AllProductsInner() {
                 }`}
               >
                 <span className="flex min-w-0 items-center gap-2">
-                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${tile.label === "All" ? "bg-white text-orange-600" : "bg-white text-gray-700"}`}>
-                    <CategoryGlyph category={tile.label === "All" ? "All" : tile.categories[0]} className="h-3.5 w-3.5" />
-                  </span>
+                  <CategoryIconBadge category={tile.label === "All" ? "Accessories" : tile.categories[0]} active={tile.label === "All" ? selectedCategory === "All" : selectedCategory === tile.categories[0]} className="h-5 w-5 rounded-md text-[0.72rem]" />
                   <span className="truncate">{tile.label === "All" ? `All ${selectedCategoryMeta?.label || "Products"}` : tile.label}</span>
                 </span>
                 <span className="text-[10px] text-gray-500">{formatCount(tile.count)}</span>
@@ -976,12 +1004,12 @@ function AllProductsInner() {
           )}
         </div>
 
-        <section className="mb-6 overflow-x-auto">
-          <div className="flex min-w-max gap-2 pb-1">
+        <section className="mb-4 overflow-x-auto">
+          <div className="flex min-w-max gap-1.5 pb-1">
             <button
               type="button"
               onClick={() => setSelectedCategory("All")}
-              className={`rounded-md border px-3 py-2 text-xs font-semibold transition ${
+              className={`rounded-full border px-2.5 py-1.5 text-[11px] font-semibold transition ${
                 selectedCategory === "All" ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
               }`}
             >
@@ -994,11 +1022,11 @@ function AllProductsInner() {
                   key={category}
                   type="button"
                   onClick={() => setSelectedCategory(category)}
-                  className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold transition ${
+                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold transition ${
                     selectedCategory === category ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
                   }`}
                 >
-                  <span><CategoryGlyph /></span>
+                  <CategoryIconBadge category={category} active={selectedCategory === category} className="h-4.5 w-4.5 rounded-full" />
                   <span>{meta.label}</span>
                 </button>
               );
@@ -1006,22 +1034,21 @@ function AllProductsInner() {
           </div>
         </section>
 
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[26px] font-bold text-gray-950">{compactHeading ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
+            <p className="text-[20px] font-bold leading-tight text-gray-950 sm:text-[26px]">{compactHeading ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
             {!compactHeading ? (
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-0.5 text-[12px] text-gray-500 sm:text-sm">
                 {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''} found
                 {selectedSeller ? ` from ${sellerFilterLabel}` : ""}
               </p>
             ) : null}
           </div>
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <label className="hidden text-sm font-medium text-gray-700 sm:block">Sort by:</label>
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <select
               value={effectiveSortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-500 sm:w-auto"
+              className="min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[12px] outline-none focus:border-orange-500 sm:w-auto sm:px-4 sm:py-2.5 sm:text-sm"
             >
               {sortOptions.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1029,15 +1056,15 @@ function AllProductsInner() {
             </select>
             <button
               onClick={() => setShowMobileFilters(true)}
-              className="flex items-center justify-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm md:hidden"
+              className="flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-2 text-[12px] md:hidden"
             >
               Filters
             </button>
           </div>
         </div>
 
-        <div className="mb-5 flex flex-col gap-3 border-y border-gray-200 bg-gray-50 px-3 py-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-3 flex flex-col gap-2 border-y border-gray-200 bg-gray-50 px-2 py-2 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap gap-1">
             <DropdownFilter
               label="Condition"
               valueLabel={selectedCondition !== "all" ? conditionOptions.find((option) => option.value === selectedCondition)?.label : ""}
@@ -1097,7 +1124,7 @@ function AllProductsInner() {
               <button
                 type="button"
                 onClick={() => setSortBy("relevance")}
-                className={`h-10 rounded-full border px-3.5 text-[13px] font-semibold shadow-sm transition ${
+                className={`h-9 rounded-full border px-3 text-[12px] font-semibold shadow-sm transition ${
                   effectiveSortBy === "relevance" ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
                 }`}
               >
@@ -1121,45 +1148,45 @@ function AllProductsInner() {
 
         {/* Active tags */}
         {(selectedCategory !== "All" || selectedPriceRange !== 0 || searchQuery || selectedSeller || selectedCondition !== "all" || selectedBrand !== "all" || selectedRating > 0) && (
-          <div className="mb-5 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-wrap gap-1.5">
             {selectedCategory !== "All" && (
-              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-medium text-orange-700">
                 {selectedCategoryMeta?.label || selectedCategory}
                 <button onClick={() => setSelectedCategory("All")} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
             {selectedPriceRange !== 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-medium text-orange-700">
                 {priceRanges[selectedPriceRange].label}
                 <button onClick={() => setSelectedPriceRange(0)} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
             {selectedCondition !== "all" && (
-              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-medium text-orange-700">
                 {conditionOptions.find((option) => option.value === selectedCondition)?.label}
                 <button onClick={() => setSelectedCondition("all")} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
             {selectedBrand !== "all" && (
-              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-medium text-orange-700">
                 {selectedBrand}
                 <button onClick={() => setSelectedBrand("all")} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
             {selectedRating > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-medium text-orange-700">
                 {selectedRating}+ rating
                 <button onClick={() => setSelectedRating(0)} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
             {searchQuery && !hasActiveSearch && (
-              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-medium text-orange-700">
                 &quot;{searchQuery}&quot;
                 <button onClick={() => setSearchQuery("")} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
             {selectedSeller && (
-              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-medium text-orange-700">
                 {sellerFilterLabel}
                 <button onClick={() => setSelectedSeller("")} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
