@@ -575,19 +575,6 @@ const MobileCategoryCard = ({ row, navigate }) => {
   );
 };
 
-const MobileSidebarTab = ({ item, active, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`flex w-full flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-center transition min-[380px]:gap-1.5 min-[380px]:py-3 ${
-      active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
-    }`}
-  >
-    <DepartmentGlyph type={item.sidebarIcon} className="h-[1.05rem] w-[1.05rem] min-[380px]:h-5 min-[380px]:w-5" />
-    <span className="line-clamp-2 text-[9px] font-extrabold leading-[11px] min-[380px]:text-[10px] min-[380px]:leading-3">{item.shortLabel || item.label}</span>
-  </button>
-);
-
 const CategoryLandingPage = ({ initialProducts = [] }) => {
   const { products, loadingProducts, navigate } = useAppContext();
   const searchParams = useSearchParams();
@@ -713,42 +700,22 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
             <p className="mt-2 text-sm text-gray-500">Browse our wide range of categories and find what you need.</p>
           </div>
 
-          <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-1.5 min-[380px]:grid-cols-[5.35rem_minmax(0,1fr)] min-[380px]:gap-2 lg:hidden">
-            <aside className="sticky left-0 top-[4.2rem] z-10 h-[calc(100svh-8.5rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-xl border border-gray-100 bg-white/95 p-1.5 shadow-sm backdrop-blur min-[380px]:top-[4.4rem] min-[380px]:p-2 [-webkit-overflow-scrolling:touch]">
-              <div className="space-y-1.5 min-[380px]:space-y-2">
-                <MobileSidebarTab
-                  item={{ label: "All Categories", shortLabel: "All", sidebarIcon: "electronics" }}
-                  active={!categoryParam}
-                  onClick={() => navigate("/categories")}
-                />
-                {visibleSidebarProducts.map((item) => (
-                  <MobileSidebarTab
-                    key={item.slug}
-                    item={item}
-                    active={Boolean(categoryParam) && selectedDepartment.slug === item.slug}
-                    onClick={() => selectDepartment(item)}
-                  />
-                ))}
-              </div>
-            </aside>
-
-            <div className="min-w-0 space-y-2.5 min-[380px]:space-y-3">
-              <button
-                type="button"
-                onClick={() => navigate("/all-products")}
-                className="flex min-h-[4.35rem] w-full items-center justify-between rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-left shadow-sm min-[380px]:min-h-[4.65rem] min-[380px]:px-4 min-[380px]:py-3"
-              >
-                <span>
-                  <span className="block text-[13px] font-extrabold text-gray-950 min-[380px]:text-sm">All Products</span>
-                  <span className="mt-1 block text-[11px] text-gray-500 min-[380px]:text-[12px]">Explore everything we have to offer</span>
-                </span>
-                <span className="text-xl text-gray-400 min-[380px]:text-2xl">›</span>
-              </button>
-              {activeRow ? <MobileCategoryCard row={activeRow} navigate={navigate} /> : null}
-              {remainingMobileRows.map((row) => (
-                <MobileCategoryCard key={row.slug} row={row} navigate={navigate} />
-              ))}
-            </div>
+          <div className="grid gap-2.5 lg:hidden">
+            <button
+              type="button"
+              onClick={() => navigate("/all-products")}
+              className="flex min-h-[4.35rem] w-full items-center justify-between rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-left shadow-sm min-[380px]:min-h-[4.65rem] min-[380px]:px-4 min-[380px]:py-3"
+            >
+              <span>
+                <span className="block text-[13px] font-extrabold text-gray-950 min-[380px]:text-sm">All Products</span>
+                <span className="mt-1 block text-[11px] text-gray-500 min-[380px]:text-[12px]">Explore everything we have to offer</span>
+              </span>
+              <span className="text-xl text-gray-400 min-[380px]:text-2xl">›</span>
+            </button>
+            {activeRow ? <MobileCategoryCard row={activeRow} navigate={navigate} /> : null}
+            {remainingMobileRows.map((row) => (
+              <MobileCategoryCard key={row.slug} row={row} navigate={navigate} />
+            ))}
           </div>
 
           <div className="hidden space-y-4 lg:block">
