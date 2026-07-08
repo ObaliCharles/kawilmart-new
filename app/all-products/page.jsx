@@ -48,12 +48,34 @@ const ratingOptions = [
   { label: "3.5 and up", value: 3.5 },
 ];
 
-const filterCategoryHighlights = marketplaceFilterCategories.slice(0, 8);
-const mobileRailCategories = marketplaceFilterCategories;
+const legacyRailCategories = new Set(["Smartphone", "Laptop", "Camera", "Headphone", "Earphone", "Watch"]);
+const primaryPanelCategories = marketplaceFilterCategories.filter((category) => !legacyRailCategories.has(category));
+const filterCategoryHighlights = primaryPanelCategories.slice(0, 8);
+const mobileRailCategories = primaryPanelCategories;
 
-const CategoryGlyph = ({ className = "h-4 w-4" }) => (
+const categoryIconPaths = {
+  All: "M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z",
+  Fashion: "M8 4 5 6.5 3 11l3 1.5V20h12v-7.5l3-1.5-2-4.5L16 4l-2 2h-4L8 4Z",
+  "Beauty & Cosmetics": "M9 14.5 16.5 7a2.1 2.1 0 0 1 3 3L12 17.5 8 18.5l1-4ZM5 20h14M6 8h5M7 4h3v10H7V4Z",
+  "Health & Personal Care": "M12 21s7-4.4 7-11a4 4 0 0 0-7-2.6A4 4 0 0 0 5 10c0 6.6 7 11 7 11ZM12 8v6M9 11h6",
+  "Home & Living": "M4 11.5 12 5l8 6.5M6.5 10v9h11v-9M10 19v-5h4v5",
+  "Phones & Tablets": "M8 3h8a1.3 1.3 0 0 1 1.3 1.3v15.4A1.3 1.3 0 0 1 16 21H8a1.3 1.3 0 0 1-1.3-1.3V4.3A1.3 1.3 0 0 1 8 3Zm3 15h2",
+  "Computers & Electronics": "M5 6h14v9H5V6Zm-2 12h18M9 18l1-3m5 3-1-3",
+  Audio: "M5 14v-2a7 7 0 0 1 14 0v2M5 14h3v5H5v-5Zm11 0h3v5h-3v-5Z",
+  "Watches & Wearables": "M9 3h6l1 4a6 6 0 0 1 0 10l-1 4H9l-1-4A6 6 0 0 1 8 7l1-4Zm3 5v4l2.5 1.5",
+  Accessories: "M7 7V5a2 2 0 0 1 4 0v2m4 0V5a2 2 0 0 1 4 0v2M7 7h14v6a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V7Zm-3 5h3",
+  Appliances: "M7 4h10v16H7V4Zm2 3h6m-5 10h4m-5-6h6v4H9v-4Z",
+  "Baby Products": "M6 10h12l1.2 6.2a2 2 0 0 1-1.9 2.4H6.7a2 2 0 0 1-1.9-2.4L6 10Zm3 3h.01M15 13h.01M9 7l1-2h4l1 2",
+  "Office & Stationery": "M5 5.5A2.5 2.5 0 0 1 7.5 3H20v16H7.5A2.5 2.5 0 0 0 5 21V5.5Zm0 0A2.5 2.5 0 0 0 7.5 8H20",
+  "Sports & Outdoors": "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-18v18M4.5 8h15M4.5 16h15",
+  Automotive: "M5 17h14l-1.2-5.2A3 3 0 0 0 14.9 9H9.1a3 3 0 0 0-2.9 2.8L5 17Zm2 0v2m10-2v2M7.5 13h9",
+  "Books & Learning": "M5 5.5A2.5 2.5 0 0 1 7.5 3H20v16H7.5A2.5 2.5 0 0 0 5 21V5.5Zm0 0A2.5 2.5 0 0 0 7.5 8H20",
+  "Construction & Tools": "m14 6 4 4M4 20l8.5-8.5m2-6.5 4.5 4.5-3 3-4.5-4.5 3-3ZM5 7l4 4",
+};
+
+const CategoryGlyph = ({ category = "All", className = "h-4 w-4" }) => (
   <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
-    <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    <path d={categoryIconPaths[category] || categoryIconPaths.All} stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.65" />
   </svg>
 );
 
@@ -95,24 +117,24 @@ const SelectedCategoryTile = ({ label, product, active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex h-[5.55rem] min-w-[7.35rem] flex-col items-center justify-center gap-2 rounded-lg border bg-white px-3 py-2 text-center shadow-sm transition ${
-      active ? "border-orange-500 text-orange-600" : "border-gray-100 text-gray-950 hover:border-orange-200"
+    className={`flex h-[5.15rem] min-w-[6.6rem] flex-col items-center justify-center gap-1.5 rounded-2xl border bg-white px-2.5 py-2 text-center shadow-sm transition ${
+      active ? "border-orange-500 text-orange-600 ring-1 ring-orange-100" : "border-gray-100 text-gray-950 hover:border-orange-200"
     }`}
   >
     {label === "All" ? (
-      <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d={gridIconPath} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ) : (
-      <span className="flex h-9 w-14 items-center justify-center">
+      <span className="flex h-8 w-12 items-center justify-center">
         {product ? (
           <Image src={getProductImage(product)} alt={label} width={72} height={48} className="h-full w-full object-contain" />
         ) : (
-          <CategoryGlyph className="h-6 w-6" />
+          <CategoryGlyph category={label} className="h-5 w-5" />
         )}
       </span>
     )}
-    <span className="line-clamp-1 text-[12px] font-extrabold">{label}</span>
+    <span className="line-clamp-1 text-[11px] font-extrabold leading-4">{label}</span>
   </button>
 );
 
@@ -169,16 +191,16 @@ const SelectedProductCard = ({ product, formatCurrency, navigate, prefetchRoute,
   );
 };
 
-const MobileRailButton = ({ label, active, onClick }) => (
+const MobileRailButton = ({ label, category = label, active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex min-h-[3.95rem] w-full flex-col items-center justify-center gap-1 rounded-lg px-1 text-center transition min-[380px]:min-h-[4.35rem] min-[380px]:px-1.5 ${
+    className={`flex min-h-[3.55rem] w-full flex-col items-center justify-center gap-1 rounded-lg px-1 text-center transition min-[380px]:min-h-[3.9rem] min-[380px]:px-1.5 ${
       active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
     }`}
   >
-    <CategoryGlyph className="h-[1.05rem] w-[1.05rem] min-[380px]:h-5 min-[380px]:w-5" />
-    <span className="line-clamp-2 text-[9px] font-extrabold leading-[11px] min-[380px]:text-[10px] min-[380px]:leading-3">{label}</span>
+    <CategoryGlyph category={category} className="h-4 w-4 min-[380px]:h-[1.05rem] min-[380px]:w-[1.05rem]" />
+    <span className="line-clamp-1 text-[8.5px] font-extrabold leading-[10px] min-[380px]:text-[9.5px]">{label}</span>
   </button>
 );
 
@@ -531,6 +553,16 @@ function AllProductsInner() {
         )).length,
     }))
   ), [products, selectedCategoryPool]);
+  const categoryPanelData = useMemo(() => (
+    mobileRailCategories.map((category) => {
+      const meta = getCategoryMeta(category);
+      return {
+        value: category,
+        label: meta.label,
+        count: products.filter((product) => categoryMatchesSelection(product.category, category)).length,
+      };
+    })
+  ), [products]);
   const resetFilters = () => {
     setSelectedCategory("All");
     setSelectedPriceRange(0);
@@ -586,11 +618,17 @@ function AllProductsInner() {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`w-full border-l-2 px-3 py-2 text-left text-sm transition ${
-                selectedCategory === cat ? "border-orange-600 bg-orange-50 font-semibold text-orange-600" : "border-transparent text-gray-600 hover:bg-gray-50"
+              className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                selectedCategory === cat ? "bg-orange-50 font-semibold text-orange-600 shadow-[inset_3px_0_0_0_#f97316]" : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              {cat === "All" ? cat : getCategoryMeta(cat).label}
+              <span className="flex min-w-0 items-center gap-3">
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${selectedCategory === cat ? "bg-white text-orange-600" : "bg-white text-gray-700"}`}>
+                  <CategoryGlyph category={cat} className="h-4 w-4" />
+                </span>
+                <span className="truncate">{cat === "All" ? "All Products" : getCategoryMeta(cat).label}</span>
+              </span>
+              <span className="text-[11px] text-gray-400">{cat === "All" ? formatCount(filteredProducts.length) : formatCount(products.filter((product) => categoryMatchesSelection(product.category, cat)).length)}</span>
             </button>
           ))}
         </div>
@@ -678,49 +716,53 @@ function AllProductsInner() {
   );
 
   const SelectedFilterPanel = () => (
-    <aside className="hidden w-[17.5rem] shrink-0 lg:block">
-      <div className="sticky top-28 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <h2 className="text-sm font-extrabold text-gray-950">Filters</h2>
-          <button type="button" onClick={resetFilters} className="text-[12px] font-bold text-gray-700">Clear all</button>
+    <aside className="hidden w-[15.75rem] shrink-0 lg:block">
+      <div className="sticky top-20 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-100 px-3.5 py-2.5">
+          <h2 className="text-[13px] font-extrabold text-gray-950">Filters</h2>
+          <button type="button" onClick={resetFilters} className="text-[11px] font-bold text-gray-700">Clear all</button>
         </div>
 
-        <section className="border-b border-gray-100 px-4 py-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[13px] font-extrabold text-gray-950">Category</h3>
+        <section className="border-b border-gray-100 px-3.5 py-3.5">
+          <div className="mb-2.5 flex items-center justify-between">
+            <h3 className="text-[12px] font-extrabold text-gray-950">Category</h3>
             <span className="text-gray-400">⌃</span>
           </div>
-          <div className="space-y-2.5">
+          <div className="space-y-1.5">
             {selectedTileData.slice(0, 7).map((tile) => (
               <button
                 key={`filter-${tile.label}`}
                 type="button"
                 onClick={() => setSelectedCategory(tile.label === "All" ? selectedCategory : tile.categories[0])}
-                className="flex w-full items-center justify-between gap-3 text-left text-[12px] text-gray-700"
+                className={`flex w-full items-center justify-between gap-2 rounded-xl px-2 py-[7px] text-left text-[11.5px] transition ${
+                  (tile.label === "All" ? selectedCategory === "All" : selectedCategory === tile.categories[0]) ? "bg-orange-50 text-orange-600" : "text-gray-700 hover:bg-gray-50"
+                }`}
               >
                 <span className="flex min-w-0 items-center gap-2">
-                  <span className={`h-3.5 w-3.5 rounded-full border ${tile.label === "All" ? "border-orange-600 bg-orange-600 ring-2 ring-orange-100" : "border-gray-300"}`} />
+                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${tile.label === "All" ? "bg-white text-orange-600" : "bg-white text-gray-700"}`}>
+                    <CategoryGlyph category={tile.label === "All" ? "All" : tile.categories[0]} className="h-3.5 w-3.5" />
+                  </span>
                   <span className="truncate">{tile.label === "All" ? `All ${selectedCategoryMeta?.label || "Products"}` : tile.label}</span>
                 </span>
-                <span className="text-[11px] text-gray-500">{formatCount(tile.count)}</span>
+                <span className="text-[10px] text-gray-500">{formatCount(tile.count)}</span>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="border-b border-gray-100 px-4 py-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[13px] font-extrabold text-gray-950">Price (UGX)</h3>
+        <section className="border-b border-gray-100 px-3.5 py-3.5">
+          <div className="mb-2.5 flex items-center justify-between">
+            <h3 className="text-[12px] font-extrabold text-gray-950">Price (UGX)</h3>
             <span className="text-gray-400">⌃</span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <input value="UGX 10,000" readOnly className="min-w-0 rounded-md border border-gray-200 px-2 py-2 text-[11px] text-gray-600 outline-none" />
-            <input value="UGX 15,000,000" readOnly className="min-w-0 rounded-md border border-gray-200 px-2 py-2 text-[11px] text-gray-600 outline-none" />
+          <div className="grid grid-cols-2 gap-1.5">
+            <input value="UGX 10,000" readOnly className="min-w-0 rounded-md border border-gray-200 px-2 py-[7px] text-[10px] text-gray-600 outline-none" />
+            <input value="UGX 15,000,000" readOnly className="min-w-0 rounded-md border border-gray-200 px-2 py-[7px] text-[10px] text-gray-600 outline-none" />
           </div>
-          <div className="mt-4 h-1.5 rounded-full bg-orange-100">
+          <div className="mt-3 h-1.5 rounded-full bg-orange-100">
             <div className="h-full w-full rounded-full bg-orange-600" />
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+          <div className="mt-2.5 grid grid-cols-2 gap-1.5 text-[10px]">
             {priceRanges.slice(1).map((range, index) => (
               <button
                 key={range.label}
@@ -734,47 +776,47 @@ function AllProductsInner() {
           </div>
         </section>
 
-        <section className="border-b border-gray-100 px-4 py-4">
-          <h3 className="mb-3 text-[13px] font-extrabold text-gray-950">Brands</h3>
-          <div className="mb-3 flex items-center gap-2 rounded-full bg-gray-50 px-3 py-2 text-[11px] text-gray-400">
+        <section className="border-b border-gray-100 px-3.5 py-3.5">
+          <h3 className="mb-2.5 text-[12px] font-extrabold text-gray-950">Brands</h3>
+          <div className="mb-2.5 flex items-center gap-2 rounded-full bg-gray-50 px-3 py-1.5 text-[10px] text-gray-400">
             <span>⌕</span>
             <span>Search brands</span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {brandOptions.slice(0, 5).map((brand) => (
-              <button key={brand.value} type="button" onClick={() => setSelectedBrand(brand.value)} className="flex w-full items-center justify-between text-[12px] text-gray-700">
+              <button key={brand.value} type="button" onClick={() => setSelectedBrand(brand.value)} className="flex w-full items-center justify-between text-[11.5px] text-gray-700">
                 <span className="flex items-center gap-2">
-                  <span className={`h-3.5 w-3.5 rounded border ${selectedBrand === brand.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
+                  <span className={`h-3 w-3 rounded border ${selectedBrand === brand.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
                   {brand.label}
                 </span>
-                <span className="text-[11px] text-gray-500">{brand.count}</span>
+                <span className="text-[10px] text-gray-500">{brand.count}</span>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="border-b border-gray-100 px-4 py-4">
-          <h3 className="mb-3 text-[13px] font-extrabold text-gray-950">Condition</h3>
-          <div className="space-y-2">
+        <section className="border-b border-gray-100 px-3.5 py-3.5">
+          <h3 className="mb-2.5 text-[12px] font-extrabold text-gray-950">Condition</h3>
+          <div className="space-y-1.5">
             {conditionOptions.slice(1, 3).map((condition) => (
-              <button key={condition.value} type="button" onClick={() => setSelectedCondition(condition.value)} className="flex w-full items-center justify-between text-[12px] text-gray-700">
+              <button key={condition.value} type="button" onClick={() => setSelectedCondition(condition.value)} className="flex w-full items-center justify-between text-[11.5px] text-gray-700">
                 <span className="flex items-center gap-2">
-                  <span className={`h-3.5 w-3.5 rounded border ${selectedCondition === condition.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
+                  <span className={`h-3 w-3 rounded border ${selectedCondition === condition.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
                   {condition.value === "new" ? "Brand New" : "Used"}
                 </span>
-                <span className="text-[11px] text-gray-500">{condition.value === "new" ? "3,124" : "1,112"}</span>
+                <span className="text-[10px] text-gray-500">{condition.value === "new" ? "3,124" : "1,112"}</span>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="px-4 py-4">
-          <h3 className="mb-3 text-[13px] font-extrabold text-gray-950">Ratings</h3>
-          <div className="space-y-2">
+        <section className="px-3.5 py-3.5">
+          <h3 className="mb-2.5 text-[12px] font-extrabold text-gray-950">Ratings</h3>
+          <div className="space-y-1.5">
             {ratingOptions.slice(1).map((rating) => (
-              <button key={rating.value} type="button" onClick={() => setSelectedRating(rating.value)} className="flex w-full items-center justify-between text-[12px] text-gray-700">
+              <button key={rating.value} type="button" onClick={() => setSelectedRating(rating.value)} className="flex w-full items-center justify-between text-[11.5px] text-gray-700">
                 <span className="text-orange-500">★★★★★ <span className="text-gray-500">& up</span></span>
-                <span className="text-[11px] text-gray-500">{formatCount(Math.round(rating.value * 900))}</span>
+                <span className="text-[10px] text-gray-500">{formatCount(Math.round(rating.value * 900))}</span>
               </button>
             ))}
           </div>
@@ -793,95 +835,48 @@ function AllProductsInner() {
               Home <span className="mx-2">›</span> All Categories <span className="mx-2">›</span> <span className="font-extrabold text-gray-950">{selectedCategoryMeta?.label}</span>
             </div>
 
-            <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-1.5 min-[380px]:grid-cols-[5.35rem_minmax(0,1fr)] min-[380px]:gap-2 lg:hidden">
-              <aside className="sticky left-0 top-[4.2rem] z-10 h-[calc(100svh-8.5rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-xl border border-gray-100 bg-white/95 p-1.5 shadow-sm backdrop-blur min-[380px]:top-[4.4rem] min-[380px]:p-2 [-webkit-overflow-scrolling:touch]">
-                <div className="space-y-1.5 min-[380px]:space-y-2">
-                  <MobileRailButton label="All Categories" active onClick={() => setSelectedCategory("All")} />
-                  {mobileRailCategories.map((category) => (
-                    <MobileRailButton
-                      key={category}
-                      label={getCategoryMeta(category).label}
-                      active={categoryMatchesSelection(category, selectedCategory)}
-                      onClick={() => setSelectedCategory(category)}
-                    />
-                  ))}
-                </div>
-              </aside>
-
-              <section className="min-w-0 space-y-4">
-                <button type="button" onClick={() => setSortBy("newest")} className="relative block min-h-[10.1rem] w-full overflow-hidden rounded-lg bg-[radial-gradient(circle_at_86%_14%,#ff7a00_0,transparent_24%),linear-gradient(135deg,#13006a_0%,#3416a8_42%,#9d12c8_100%)] px-4 py-5 text-left text-white shadow-sm">
-                  <span className="absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,.12),transparent_38%),radial-gradient(circle_at_84%_80%,rgba(255,255,255,.2),transparent_28%)]" />
-                  <span className="relative z-10 block max-w-[10rem] text-2xl font-extrabold leading-7">NEW ARRIVALS 2026</span>
-                  <span className="relative z-10 mt-2 block text-[12px] font-semibold text-white/90">The latest tech, now yours.</span>
-                  <span className="relative z-10 mt-4 inline-flex rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-gray-950 shadow-sm">Shop Now ›</span>
-                  <span className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-                    {[0, 1, 2, 3].map((dot) => <span key={dot} className={`h-2 w-2 rounded-full ${dot === 0 ? "bg-orange-500" : "bg-white/80"}`} />)}
-                  </span>
-                  <span className="absolute inset-y-0 right-1 flex w-[58%] items-center justify-end">
-                    {selectedTileData.slice(1, 5).map((tile) => tile.product ? (
-                      <Image key={`hero-${tile.label}`} src={getProductImage(tile.product)} alt={tile.label} width={120} height={120} className="-ml-9 max-h-28 w-auto object-contain drop-shadow-xl" />
-                    ) : null)}
-                  </span>
-                </button>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {selectedTileData.slice(1, 7).map((tile, index) => (
-                    <MobileFeatureTile
-                      key={`feature-${tile.label}`}
-                      label={tile.label}
-                      product={tile.product}
-                      tone={[
-                        "from-orange-500 to-orange-600",
-                        "from-blue-700 to-sky-500",
-                        "from-blue-500 to-violet-500",
-                        "from-violet-600 to-fuchsia-500",
-                        "from-cyan-500 to-teal-500",
-                        "from-rose-500 to-pink-500",
-                      ][index]}
-                      onClick={() => setSelectedCategory(tile.categories[0])}
-                    />
-                  ))}
-                </div>
-
-                <section className="overflow-hidden rounded-lg bg-gradient-to-r from-red-500 via-orange-500 to-orange-400 p-2.5 text-white shadow-sm">
-                  <div className="mb-2 flex items-center justify-between">
-                    <h2 className="text-sm font-extrabold">FLASH SALE</h2>
-                    <div className="flex items-center gap-1 text-[10px] font-extrabold">
-                      <span>Ends in</span>
-                      {["02", "45", "36"].map((part) => <span key={part} className="rounded bg-red-600 px-1.5 py-1">{part}</span>)}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 min-[430px]:grid-cols-4">
-                    {filteredProducts.slice(0, 4).map((product) => (
-                      <div key={`flash-${product._id}`} className="rounded-lg bg-white p-2 text-gray-950">
-                        <span className="mb-1 inline-flex rounded bg-red-500 px-1.5 py-0.5 text-[9px] font-extrabold text-white">-35%</span>
-                        <Image src={getProductImage(product)} alt={product.name} width={110} height={92} className="mx-auto h-20 w-full object-contain" />
-                        <p className="mt-1 line-clamp-2 text-[11px] font-bold leading-4">{product.name}</p>
-                        <p className="mt-1 text-[12px] font-extrabold text-orange-600">{formatCurrency(product.offerPrice || product.price)}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                {[
-                  ["TRENDING NOW", filteredProducts.slice(0, 4)],
-                  ["BEST SELLERS", filteredProducts.slice(4, 8)],
-                  ["LATEST ARRIVALS", filteredProducts.slice(8, 12)],
-                ].map(([title, items]) => items.length ? (
-                  <section key={title}>
-                    <div className="mb-2 flex items-center justify-between">
-                      <h2 className="text-sm font-extrabold text-gray-950">{title}</h2>
-                      <button type="button" className="text-[12px] font-bold text-gray-950">View all ›</button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 min-[430px]:grid-cols-4">
-                      {items.map((product) => (
-                        <MobileProductMini key={`${title}-${product._id}`} product={product} formatCurrency={formatCurrency} navigate={navigate} addToCart={addToCart} />
-                      ))}
-                    </div>
-                  </section>
-                ) : null)}
-              </section>
+            <div className="mb-3 flex gap-2 overflow-x-auto pb-1 lg:hidden [-webkit-overflow-scrolling:touch]">
+              {selectedTileData.map((tile) => (
+                <SelectedCategoryTile
+                  key={`mobile-top-${tile.label}`}
+                  label={tile.label}
+                  product={tile.product}
+                  active={tile.label === "All" ? selectedCategory === "All" : selectedCategory === tile.categories[0]}
+                  onClick={() => {
+                    if (tile.label === "All") {
+                      setSelectedCategory("All");
+                    } else {
+                      setSelectedCategory(tile.categories[0]);
+                    }
+                  }}
+                />
+              ))}
             </div>
+
+            <div className="grid gap-3 lg:hidden">
+              <button
+                type="button"
+                onClick={() => navigate("/all-products")}
+                className="flex min-h-[4.5rem] w-full items-center justify-between rounded-2xl border border-gray-100 bg-white px-4 py-3 text-left shadow-sm"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                    <CategoryGlyph category="All" className="h-5 w-5" />
+                  </span>
+                  <span>
+                    <span className="block text-[13px] font-extrabold text-gray-950">All Products</span>
+                    <span className="mt-1 block text-[11px] text-gray-500">Explore everything we have to offer</span>
+                  </span>
+                </span>
+                <span className="text-xl text-gray-400">›</span>
+              </button>
+
+              {activeRow ? <MobileCategoryCard row={activeRow} navigate={navigate} /> : null}
+              {remainingMobileRows.map((row) => (
+                <MobileCategoryCard key={row.slug} row={row} navigate={navigate} />
+              ))}
+            </div>
+          </div>
 
             <div className="hidden gap-6 lg:flex">
               <SelectedFilterPanel />
@@ -911,9 +906,13 @@ function AllProductsInner() {
                       key={`top-${tile.label}`}
                       label={tile.label}
                       product={tile.product}
-                      active={tile.label === "All"}
+                      active={tile.label === "All" ? selectedCategory === "All" : selectedCategory === tile.categories[0]}
                       onClick={() => {
-                        if (tile.label !== "All") setSelectedCategory(tile.categories[0]);
+                        if (tile.label === "All") {
+                          setSelectedCategory("All");
+                        } else {
+                          setSelectedCategory(tile.categories[0]);
+                        }
                       }}
                     />
                   ))}
