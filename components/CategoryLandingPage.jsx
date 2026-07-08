@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import Image from "next/image";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import Skeleton from "@/components/Skeleton";
-import { buildCategoryHref, categoryMatchesSelection, getCategoryMeta } from "@/lib/marketplaceCategories";
+import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
 import { useSearchParams } from "next/navigation";
 
 const normalizeText = (value = "") => (
@@ -295,120 +295,6 @@ const departmentConfigs = [
   },
 ];
 
-const electronicsTiles = [
-  {
-    label: "Mobiles & Tablets",
-    matchCategories: ["Phones & Tablets", "Smartphone"],
-    keywords: ["phone", "tablet", "mobile"],
-    icon: "mobiles-tablets",
-    tone: "from-sky-50 to-white",
-  },
-  {
-    label: "Laptops",
-    matchCategories: ["Computers & Electronics", "Laptop"],
-    keywords: ["laptop", "macbook", "asus"],
-    icon: "laptops",
-    tone: "from-indigo-50 to-white",
-  },
-  {
-    label: "TV & Video",
-    matchCategories: ["Computers & Electronics", "Appliances"],
-    keywords: ["tv", "television", "projector"],
-    icon: "tv",
-    tone: "from-slate-50 to-white",
-  },
-  {
-    label: "Audio",
-    matchCategories: ["Audio", "Headphone", "Earphone"],
-    keywords: ["speaker", "headphone", "earbud"],
-    icon: "audio",
-    tone: "from-violet-50 to-white",
-  },
-  {
-    label: "Cameras",
-    matchCategories: ["Computers & Electronics", "Camera"],
-    keywords: ["camera", "canon", "lens"],
-    icon: "cameras",
-    tone: "from-amber-50 to-white",
-  },
-  {
-    label: "Gaming",
-    matchCategories: ["Accessories"],
-    keywords: ["gaming", "playstation", "controller"],
-    icon: "gaming",
-    tone: "from-orange-50 to-white",
-  },
-  {
-    label: "Wearables",
-    matchCategories: ["Watches & Wearables", "Watch"],
-    keywords: ["watch", "smartwatch", "wearable"],
-    icon: "wearables",
-    tone: "from-emerald-50 to-white",
-  },
-  {
-    label: "Accessories",
-    matchCategories: ["Accessories"],
-    keywords: ["charger", "cable", "adapter"],
-    icon: "accessories",
-    tone: "from-orange-50 to-white",
-  },
-  {
-    label: "Smart Home",
-    matchCategories: ["Appliances", "Home & Living"],
-    keywords: ["smart", "home", "assistant"],
-    icon: "home",
-    tone: "from-lime-50 to-white",
-  },
-  {
-    label: "Storage",
-    matchCategories: ["Computers & Electronics"],
-    keywords: ["storage", "ssd", "disk", "drive"],
-    icon: "laptops",
-    tone: "from-cyan-50 to-white",
-  },
-  {
-    label: "Printers",
-    matchCategories: ["Office & Stationery", "Computers & Electronics"],
-    keywords: ["printer", "scanner"],
-    icon: "books",
-    tone: "from-fuchsia-50 to-white",
-  },
-  {
-    label: "Networking",
-    matchCategories: ["Computers & Electronics"],
-    keywords: ["router", "wifi", "network"],
-    icon: "electronics",
-    tone: "from-blue-50 to-white",
-  },
-  {
-    label: "Power & Cables",
-    matchCategories: ["Accessories"],
-    keywords: ["cable", "charger", "adapter"],
-    icon: "accessories",
-    tone: "from-yellow-50 to-white",
-  },
-  {
-    label: "Office Electronics",
-    matchCategories: ["Office & Stationery", "Computers & Electronics"],
-    keywords: ["office", "keyboard", "mouse"],
-    icon: "books",
-    tone: "from-stone-50 to-white",
-  },
-];
-
-const brandFallbacks = ["Samsung", "Apple", "HP", "Dell", "Sony", "JBL", "Canon", "Lenovo"];
-
-const brandLogoSources = {
-  Samsung: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/samsung.svg",
-  Apple: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/apple.svg",
-  HP: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/hp.svg",
-  Dell: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/dell.svg",
-  Sony: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/sony.svg",
-  JBL: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/jbl.svg",
-  Canon: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/canon.svg",
-  Lenovo: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/lenovo.svg",
-};
-
 const formatCount = (count) => new Intl.NumberFormat("en-US").format(Math.max(0, Number(count) || 0));
 
 const getImage = (product) => {
@@ -425,42 +311,6 @@ const getImage = (product) => {
   return assets.upload_area;
 };
 
-const getBrandLabel = (product) => {
-  const explicit = product?.brand || product?.manufacturer || product?.sellerProfile?.name;
-  if (explicit && String(explicit).trim()) {
-    return String(explicit).trim();
-  }
-
-  const firstToken = normalizeText(product?.name).split(" ").find((token) => token.length > 2);
-  return firstToken ? firstToken[0].toUpperCase() + firstToken.slice(1) : "Store";
-};
-
-const getContentTargetHref = (item) => {
-  if (item?.linkType === "category" && item.category) {
-    return `/all-products?category=${encodeURIComponent(item.category)}`;
-  }
-
-  if (item?.linkType === "store" && item.storeId) {
-    return `/store/${encodeURIComponent(item.storeId)}`;
-  }
-
-  if (item?.productId) {
-    return `/product/${item.productId}`;
-  }
-
-  return item?.href || "/all-products";
-};
-
-const findPlacementBanner = (banners, selectedDepartment) => {
-  const departmentCategories = selectedDepartment?.matchCategories || [];
-  const normalizedDepartmentLabel = normalizeText(selectedDepartment?.label);
-
-  return banners.find((banner) => (
-    departmentCategories.some((category) => categoryMatchesSelection(banner.placementCategory || banner.category, category))
-    || normalizeText(banner.placementCategory || banner.category).includes(normalizedDepartmentLabel)
-  )) || banners[0] || null;
-};
-
 const getDepartmentProducts = (products, department) => (
   products.filter((product) => (
     department.matchCategories.some((category) => categoryMatchesSelection(product.category, category))
@@ -468,190 +318,12 @@ const getDepartmentProducts = (products, department) => (
   ))
 );
 
-const findProductByTile = (products, tile) => {
-  const byCategory = products.find((product) => tile.matchCategories.some((category) => categoryMatchesSelection(product.category, category)));
-  if (byCategory) return byCategory;
-
-  const byKeyword = products.find((product) => {
-    const haystack = `${normalizeText(product.name)} ${normalizeText(product.description)}`;
-    return tile.keywords.some((keyword) => haystack.includes(keyword));
-  });
-
-  return byKeyword || products[0] || null;
-};
-
-const buildGenericTiles = (products) => {
-  const uniqueCategories = [...new Set(products.map((product) => product.category).filter(Boolean))];
-  return uniqueCategories.slice(0, 8).map((category) => ({
-    label: getCategoryMeta(category).label,
-    matchCategories: [category],
-    keywords: [],
-    icon: "electronics",
-    tone: "from-white to-white",
-  }));
-};
-
-const CategoryBanner = ({ banner, navigate, prefetchRoute, fallbackTitle, className = "" }) => {
-  const href = getContentTargetHref(banner);
-
-  return (
-    <button
-      type="button"
-      onClick={() => navigate(href)}
-      onMouseEnter={() => prefetchRoute(href)}
-      onFocus={() => prefetchRoute(href)}
-      className={`group relative block w-full overflow-hidden rounded-[1.35rem] border border-gray-200 bg-gray-950 text-left shadow-sm transition hover:shadow-md min-h-[185px] sm:min-h-[220px] ${className}`}
-    >
-      {banner?.imageUrl ? (
-        <span className="absolute inset-0">
-          <Image
-            src={banner.imageUrl}
-            alt={banner?.title || fallbackTitle || "Category banner"}
-            fill
-            className="object-cover transition duration-500 group-hover:scale-[1.02]"
-            sizes="(max-width: 1024px) 100vw, 72vw"
-            priority={false}
-          />
-          <span className="sr-only">{banner?.title || fallbackTitle || "Category banner"}</span>
-        </span>
-      ) : (
-        <div className="flex min-h-[185px] items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 px-6 py-8 sm:min-h-[220px]">
-          <div className="h-full w-full rounded-[1.15rem] border border-white/10 bg-white/5" />
-        </div>
-      )}
-    </button>
-  );
-};
-
-const CategoryBubble = ({ tile, product, onClick, count, bare = false, compact = false }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`group flex min-w-0 flex-col items-center gap-3 rounded-[1.15rem] p-3 text-center transition ${
-      bare ? "border border-transparent bg-transparent shadow-none hover:border-transparent hover:shadow-none" : "border border-gray-100 bg-white shadow-sm hover:border-gray-200 hover:shadow-md"
-    }`}
-  >
-    <div className={`flex ${compact ? "h-16 w-16" : "h-24 w-24"} items-center justify-center rounded-full bg-gradient-to-br ${tile.tone} p-2.5 sm:h-28 sm:w-28`}>
-      {product ? (
-        <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
-          <Image
-            src={getImage(product)}
-            alt={tile.label}
-            width={128}
-            height={128}
-            className="h-full w-full object-cover p-2.5 transition duration-300 group-hover:scale-105"
-          />
-        </span>
-      ) : (
-        <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-gray-700 shadow-sm">
-          <DepartmentGlyph type={tile.icon} className="h-6 w-6" />
-        </span>
-      )}
-    </div>
-    <div className="space-y-0.5">
-      <p className="truncate text-[12.5px] font-semibold text-gray-900">{tile.label}</p>
-      <p className="text-[11px] text-gray-500">{formatCount(count)} items</p>
-    </div>
-  </button>
-);
-
-const TopCategoryCard = ({ tile, product, onClick, count, bare = false }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`group relative overflow-hidden rounded-[1.15rem] p-3 text-left transition ${
-      bare ? "border border-transparent bg-transparent shadow-none hover:border-transparent hover:shadow-none" : `border border-gray-100 bg-gradient-to-br ${tile.tone} shadow-sm hover:shadow-md`
-    }`}
-  >
-    <div className="flex min-h-[108px] items-start justify-between gap-3">
-      <div className="min-w-0">
-        <p className="truncate text-[15px] font-semibold text-gray-900">{tile.label}</p>
-        <p className="mt-1 text-[11px] text-gray-500">Up to 35% off</p>
-        <p className="mt-5 text-[11px] font-semibold text-orange-600">Explore →</p>
-      </div>
-      <div className="relative flex h-20 w-20 shrink-0 items-center justify-center sm:h-24 sm:w-24">
-        {product ? (
-          <Image src={getImage(product)} alt={tile.label} width={104} height={104} className="h-full w-full object-contain transition duration-300 group-hover:scale-105" />
-        ) : (
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-gray-700 shadow-sm">
-            <DepartmentGlyph type={tile.icon} className="h-7 w-7" />
-          </span>
-        )}
-      </div>
-    </div>
-    <p className="mt-2 text-[11px] text-gray-500">{formatCount(count)} items</p>
-  </button>
-);
-
-const BrandLogoCard = ({ label, count, onClick, imageUrl, href, description }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="group flex min-w-0 flex-col items-center gap-3 rounded-[1.15rem] border border-gray-100 bg-white p-3.5 text-center shadow-sm transition hover:border-orange-300 hover:shadow-md sm:p-4"
-  >
-    <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white transition group-hover:scale-105 sm:h-20 sm:w-20">
-      {imageUrl ? (
-        <Image
-          src={imageUrl}
-          alt={label}
-          width={88}
-          height={88}
-          className="h-full w-full object-contain p-2.5"
-        />
-      ) : brandLogoSources[label] ? (
-        <Image
-          src={brandLogoSources[label]}
-          alt={label}
-          width={88}
-          height={88}
-          className="h-full w-full object-contain p-2.5"
-          unoptimized
-        />
-      ) : (
-        <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-100 text-base font-black tracking-[0.16em] text-orange-600">
-          {label.slice(0, 1)}
-        </span>
-      )}
-    </span>
-    <span className="text-[12px] font-semibold text-gray-900">{label}</span>
-    {description ? <span className="max-h-10 overflow-hidden text-[11px] leading-5 text-gray-500">{description}</span> : null}
-    <span className="text-[11px] text-gray-500">{formatCount(count)} items</span>
-  </button>
-);
-
-const StoreCard = ({ store, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="group flex min-w-0 items-center gap-3 rounded-[1.15rem] border border-gray-100 bg-white p-4 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md"
-  >
-    <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 text-lg font-semibold text-gray-700">
-      {store.avatarUrl ? (
-        <Image
-          src={store.avatarUrl}
-          alt={store.name}
-          width={64}
-          height={64}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <span>{store.name.slice(0, 1)}</span>
-      )}
-    </span>
-    <span className="min-w-0 flex-1">
-      <span className="block truncate text-sm font-semibold text-gray-950">{store.name}</span>
-      <span className="block truncate text-[11px] text-gray-500">{store.location || "Storefront"}</span>
-      <span className="mt-1 block text-[11px] text-orange-600">{formatCount(store.count)} items</span>
-    </span>
-  </button>
-);
-
 const SidebarItem = ({ item, active, onClick, count }) => (
   <button
     type="button"
     onClick={onClick}
     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition ${
-      active ? "bg-orange-50 text-orange-600 ring-1 ring-orange-100" : "text-gray-700 hover:bg-gray-50"
+      active ? "bg-orange-50 text-orange-600 ring-1 ring-orange-100" : "text-gray-950 hover:bg-gray-50"
     }`}
   >
     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
@@ -816,20 +488,24 @@ const findCatalogProduct = (products, categories, keywords, fallbackProducts) =>
   || null
 );
 
-const CatalogPreviewTile = ({ label, product, onClick }) => (
+const CatalogPreviewTile = ({ label, product, onClick, compact = false }) => (
   <button
     type="button"
     onClick={onClick}
-    className="group flex min-w-0 flex-col items-center gap-2 text-center"
+    className={`group flex min-w-0 flex-col items-center text-center ${compact ? "gap-1.5" : "gap-2"}`}
   >
-    <span className="flex h-[4.4rem] w-[4.4rem] items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-gray-100 transition group-hover:-translate-y-0.5 group-hover:shadow-md sm:h-[4.6rem] sm:w-[4.6rem] xl:h-20 xl:w-20">
+    <span className={`flex items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-gray-100 transition group-hover:-translate-y-0.5 group-hover:shadow-md ${
+      compact ? "h-[3.15rem] w-[3.15rem] min-[380px]:h-14 min-[380px]:w-14" : "h-[4.25rem] w-[4.25rem] sm:h-[4.6rem] sm:w-[4.6rem] xl:h-20 xl:w-20"
+    }`}>
       {product ? (
-        <Image src={getImage(product)} alt={label} width={96} height={96} className="h-full w-full object-contain p-2" />
+        <Image src={getImage(product)} alt={label} width={96} height={96} className={`h-full w-full object-contain ${compact ? "p-1.5" : "p-2"}`} />
       ) : (
-        <DepartmentGlyph type="electronics" className="h-6 w-6 text-gray-500" />
+        <DepartmentGlyph type="electronics" className={`${compact ? "h-5 w-5" : "h-6 w-6"} text-gray-500`} />
       )}
     </span>
-    <span className="line-clamp-2 min-h-8 max-w-[6rem] text-[11px] font-bold leading-4 text-gray-950 sm:text-[12px]">
+    <span className={`line-clamp-2 font-bold text-gray-950 ${
+      compact ? "min-h-7 max-w-[4.5rem] text-[9.5px] leading-[13px] min-[380px]:max-w-[5rem] min-[380px]:text-[10px]" : "min-h-8 max-w-[6.25rem] text-[11px] leading-4 sm:text-[12px]"
+    }`}>
       {label}
     </span>
   </button>
@@ -840,8 +516,8 @@ const CatalogRow = ({ row, navigate }) => {
 
   return (
     <section className={`overflow-hidden rounded-lg border ${row.palette.border} bg-gradient-to-r ${row.palette.panel} shadow-sm`}>
-      <div className="grid min-h-[7.8rem] grid-cols-[minmax(8.5rem,12rem)_minmax(0,1fr)] sm:grid-cols-[minmax(13rem,17rem)_minmax(0,1fr)_7rem]">
-        <button type="button" onClick={() => navigate(href)} className="flex min-w-0 items-center gap-3 p-4 text-left">
+      <div className="grid min-h-[7.2rem] grid-cols-[minmax(8.5rem,12rem)_minmax(0,1fr)] sm:grid-cols-[minmax(13.5rem,17rem)_minmax(0,1fr)_7.25rem]">
+        <button type="button" onClick={() => navigate(href)} className="flex min-w-0 items-center gap-3 px-4 py-3 text-left">
           <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${row.palette.icon} text-white shadow-sm sm:h-14 sm:w-14`}>
             <DepartmentGlyph type={row.sidebarIcon} className="h-6 w-6" />
           </span>
@@ -852,7 +528,7 @@ const CatalogRow = ({ row, navigate }) => {
           </span>
         </button>
 
-        <div className="flex min-w-0 gap-4 overflow-x-auto px-3 py-4 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible lg:grid-cols-5 xl:grid-cols-7">
+        <div className="flex min-w-0 gap-4 overflow-x-auto px-3 py-3 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible lg:grid-cols-5 xl:grid-cols-7">
           {row.tiles.map((tile) => (
             <CatalogPreviewTile
               key={`${row.slug}-${tile.label}`}
@@ -876,20 +552,21 @@ const MobileCategoryCard = ({ row, navigate }) => {
   const href = `/all-products?category=${encodeURIComponent(row.primaryCategory)}`;
 
   return (
-    <section className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm">
-      <div className="flex items-center justify-between px-3 py-3">
-        <h2 className="min-w-0 truncate text-[15px] font-extrabold text-gray-950">{row.label}</h2>
-        <button type="button" onClick={() => navigate(href)} className="flex shrink-0 items-center gap-1 text-[12px] font-extrabold text-orange-600">
+    <section className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+      <div className="flex items-center justify-between px-2.5 py-2.5 min-[380px]:px-3">
+        <h2 className="min-w-0 truncate text-[13.5px] font-extrabold text-gray-950 min-[380px]:text-[14px]">{row.label}</h2>
+        <button type="button" onClick={() => navigate(href)} className="flex shrink-0 items-center gap-0.5 text-[11px] font-extrabold text-orange-600 min-[380px]:text-[12px]">
           View all
-          <span className="text-lg leading-none">›</span>
+          <span className="text-base leading-none">›</span>
         </button>
       </div>
-      <div className="grid grid-cols-4 gap-2 px-2 pb-3">
+      <div className="grid grid-cols-4 gap-1 px-1.5 pb-2.5 min-[380px]:gap-1.5 min-[380px]:px-2 min-[380px]:pb-3">
         {row.tiles.slice(0, 4).map((tile) => (
           <CatalogPreviewTile
             key={`${row.slug}-mobile-${tile.label}`}
             label={tile.label}
             product={tile.product}
+            compact
             onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || row.primaryCategory)}`)}
           />
         ))}
@@ -902,20 +579,19 @@ const MobileSidebarTab = ({ item, active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex w-full flex-col items-center gap-1.5 rounded-lg px-1.5 py-3 text-center transition ${
+    className={`flex w-full flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-center transition min-[380px]:gap-1.5 min-[380px]:py-3 ${
       active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
     }`}
   >
-    <DepartmentGlyph type={item.sidebarIcon} className="h-5 w-5" />
-    <span className="line-clamp-2 text-[10px] font-extrabold leading-3">{item.shortLabel || item.label}</span>
+    <DepartmentGlyph type={item.sidebarIcon} className="h-[1.05rem] w-[1.05rem] min-[380px]:h-5 min-[380px]:w-5" />
+    <span className="line-clamp-2 text-[9px] font-extrabold leading-[11px] min-[380px]:text-[10px] min-[380px]:leading-3">{item.shortLabel || item.label}</span>
   </button>
 );
 
-const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }) => {
-  const { products, loadingProducts, navigate, prefetchRoute } = useAppContext();
+const CategoryLandingPage = ({ initialProducts = [] }) => {
+  const { products, loadingProducts, navigate } = useAppContext();
   const searchParams = useSearchParams();
   const storefrontProducts = products.length ? products : initialProducts;
-  const resolvedContent = initialSiteContent || { categoryBanners: [] };
 
   const categoryParam = searchParams.get("category") || "";
   const selectedDepartment = useMemo(() => {
@@ -930,10 +606,6 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
     return matchedDepartment || departmentConfigs[0];
   }, [categoryParam]);
 
-  const selectedProducts = useMemo(() => (
-    getDepartmentProducts(storefrontProducts, selectedDepartment)
-  ), [storefrontProducts, selectedDepartment]);
-
   const sidebarProducts = useMemo(() => (
     departmentConfigs.map((department) => ({
       ...department,
@@ -943,86 +615,9 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
 
   const visibleSidebarProducts = useMemo(() => sidebarProducts, [sidebarProducts]);
 
-  const categoryTiles = useMemo(() => (
-    selectedDepartment.slug === "electronics"
-      ? electronicsTiles
-      : buildGenericTiles(selectedProducts)
-  ), [selectedDepartment.slug, selectedProducts]);
-
   const selectDepartment = (department) => {
     navigate(`/categories?category=${encodeURIComponent(department.slug)}`);
   };
-
-  const selectedBanner = useMemo(() => (
-    findPlacementBanner(resolvedContent.categoryBanners || [], selectedDepartment)
-  ), [resolvedContent.categoryBanners, selectedDepartment]);
-
-  const showcaseBrandCards = useMemo(() => {
-    const cards = Array.isArray(resolvedContent.brandShowcases) ? resolvedContent.brandShowcases : [];
-    const departmentLabel = normalizeText(selectedDepartment.label);
-    const departmentCategories = selectedDepartment.matchCategories || [];
-
-    return cards.filter((item) => (
-      !item.placementCategory
-      || categoryMatchesSelection(item.placementCategory, selectedDepartment.label)
-      || normalizeText(item.placementCategory).includes(departmentLabel)
-      || departmentCategories.some((category) => categoryMatchesSelection(item.placementCategory, category))
-    ));
-  }, [resolvedContent.brandShowcases, selectedDepartment]);
-
-  const tileCounts = useMemo(() => (
-    categoryTiles.map((tile) => ({
-      ...tile,
-      count: selectedProducts.filter((product) => (
-        tile.matchCategories.some((category) => categoryMatchesSelection(product.category, category))
-        || tile.keywords?.some((keyword) => {
-          const haystack = `${normalizeText(product.name)} ${normalizeText(product.description)}`;
-          return haystack.includes(keyword);
-        })
-      )).length,
-      product: findProductByTile(selectedProducts, tile),
-    }))
-  ), [categoryTiles, selectedProducts]);
-
-  const topCategoryCards = useMemo(() => tileCounts.slice(0, 8), [tileCounts]);
-  const brandCards = useMemo(() => {
-    const counts = selectedProducts.reduce((acc, product) => {
-      const label = getBrandLabel(product);
-      const entry = acc.get(label) || { label, count: 0 };
-      entry.count += 1;
-      acc.set(label, entry);
-      return acc;
-    }, new Map());
-
-    return [...counts.values()]
-      .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label))
-      .slice(0, 8);
-  }, [selectedProducts]);
-
-  const storeCards = useMemo(() => {
-    const stores = selectedProducts.reduce((acc, product) => {
-      const storeId = product.userId || product.sellerProfile?.id || product.sellerProfile?._id;
-      if (!storeId) {
-        return acc;
-      }
-
-      const existing = acc.get(storeId) || {
-        id: storeId,
-        name: product.sellerProfile?.name || product.sellerProfile?.storeName || `Store ${String(storeId).slice(-6)}`,
-        avatarUrl: product.sellerProfile?.avatarUrl || product.sellerProfile?.image || "",
-        location: product.sellerProfile?.location || product.sellerLocation || product.location || "",
-        count: 0,
-      };
-
-      existing.count += 1;
-      acc.set(storeId, existing);
-      return acc;
-    }, new Map());
-
-    return [...stores.values()]
-      .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
-      .slice(0, 6);
-  }, [selectedProducts]);
 
   const catalogRows = useMemo(() => (
     sidebarProducts.map((department, index) => {
@@ -1059,7 +654,7 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f7f8fb]">
-      <div className="mx-auto grid max-w-[1600px] gap-4 px-3 pb-24 pt-3 md:px-5 md:pb-16 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6 lg:px-6 xl:px-8">
+      <div className="mx-auto grid max-w-[1600px] gap-4 px-2 pb-24 pt-2 min-[380px]:px-3 min-[380px]:pt-3 md:px-5 md:pb-16 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6 lg:px-6 xl:px-8">
         <aside className="hidden lg:block">
           <div className="sticky top-24 space-y-3">
             <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
@@ -1086,7 +681,7 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
               </div>
             </div>
 
-            <button type="button" onClick={() => navigate("/seller")} className="w-full rounded-lg bg-[#210062] p-5 text-center text-white shadow-sm">
+            <button type="button" onClick={() => navigate("/seller")} className="w-full overflow-hidden rounded-lg bg-[radial-gradient(circle_at_20%_0%,#7c2dff,transparent_34%),linear-gradient(135deg,#240063,#5b0b50_58%,#20104f)] p-5 text-center text-white shadow-sm">
               <p className="text-base font-extrabold">KAWIL CLUB</p>
               <p className="mt-2 text-xs leading-5 text-white/80">Exclusive member discounts & rewards</p>
               <span className="mt-4 inline-flex rounded-full bg-white px-5 py-2 text-xs font-extrabold text-[#210062]">Join Now</span>
@@ -1118,9 +713,9 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
             <p className="mt-2 text-sm text-gray-500">Browse our wide range of categories and find what you need.</p>
           </div>
 
-          <div className="grid grid-cols-[6.4rem_minmax(0,1fr)] gap-2 lg:hidden">
-            <aside className="sticky top-[4.4rem] h-[calc(100svh-9rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-lg border border-gray-100 bg-white p-2 shadow-sm [-webkit-overflow-scrolling:touch]">
-              <div className="space-y-2">
+          <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-1.5 min-[380px]:grid-cols-[5.35rem_minmax(0,1fr)] min-[380px]:gap-2 lg:hidden">
+            <aside className="sticky left-0 top-[4.2rem] z-10 h-[calc(100svh-8.5rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-xl border border-gray-100 bg-white/95 p-1.5 shadow-sm backdrop-blur min-[380px]:top-[4.4rem] min-[380px]:p-2 [-webkit-overflow-scrolling:touch]">
+              <div className="space-y-1.5 min-[380px]:space-y-2">
                 <MobileSidebarTab
                   item={{ label: "All Categories", shortLabel: "All", sidebarIcon: "electronics" }}
                   active={!categoryParam}
@@ -1137,17 +732,17 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
               </div>
             </aside>
 
-            <div className="min-w-0 space-y-3">
+            <div className="min-w-0 space-y-2.5 min-[380px]:space-y-3">
               <button
                 type="button"
                 onClick={() => navigate("/all-products")}
-                className="flex min-h-[4.8rem] w-full items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-3 text-left shadow-sm"
+                className="flex min-h-[4.35rem] w-full items-center justify-between rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-left shadow-sm min-[380px]:min-h-[4.65rem] min-[380px]:px-4 min-[380px]:py-3"
               >
                 <span>
-                  <span className="block text-sm font-extrabold text-gray-950">All Products</span>
-                  <span className="mt-1 block text-[12px] text-gray-500">Explore everything we have to offer</span>
+                  <span className="block text-[13px] font-extrabold text-gray-950 min-[380px]:text-sm">All Products</span>
+                  <span className="mt-1 block text-[11px] text-gray-500 min-[380px]:text-[12px]">Explore everything we have to offer</span>
                 </span>
-                <span className="text-2xl text-gray-400">›</span>
+                <span className="text-xl text-gray-400 min-[380px]:text-2xl">›</span>
               </button>
               {activeRow ? <MobileCategoryCard row={activeRow} navigate={navigate} /> : null}
               {remainingMobileRows.map((row) => (
@@ -1166,315 +761,6 @@ const CategoryLandingPage = ({ initialProducts = [], initialSiteContent = null }
     </main>
   );
 
-  return (
-    <main className="min-h-screen overflow-x-hidden bg-white">
-      <div className="mx-auto max-w-[1600px] px-4 pb-16 pt-4 lg:flex lg:gap-6 lg:px-6 xl:px-8">
-        <aside className="hidden w-[280px] shrink-0 lg:block">
-          <div className="sticky top-24 space-y-4">
-            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-bold text-gray-950">All Categories</p>
-              <div className="mt-2 space-y-1">
-                {visibleSidebarProducts.map((item) => (
-                  <SidebarItem
-                    key={item.slug}
-                    item={item}
-                    active={selectedDepartment.slug === item.slug}
-                    count={item.count}
-                    onClick={() => selectDepartment(item)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <button type="button" onClick={() => navigate("/seller")} className="rounded-lg border border-orange-200 bg-white p-4 text-left shadow-sm transition hover:border-orange-300">
-              <p className="text-base font-semibold text-orange-600">Become a Vendor</p>
-              <p className="mt-2 text-sm leading-6 text-gray-600">Sell your products with us and grow your business.</p>
-              <span className="mt-4 inline-flex rounded-lg border border-orange-300 px-4 py-2 text-sm font-semibold text-orange-600">Get Started</span>
-            </button>
-          </div>
-        </aside>
-
-        <section className="min-w-0 flex-1">
-          <div className="lg:hidden">
-            <section className="space-y-3">
-              <div className="rounded-[1.35rem] border border-gray-100 bg-white p-3.5 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-600">Categories</p>
-                    <h1 className="truncate text-lg font-extrabold text-gray-950">All Categories</h1>
-                  </div>
-                  <button type="button" onClick={() => navigate("/all-products")} className="shrink-0 text-xs font-bold text-orange-600">
-                    View all
-                  </button>
-                </div>
-
-                <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                  {tileCounts.slice(0, 6).map((tile, index) => (
-                    <div key={tile.label} className="w-[6.25rem] shrink-0">
-                      <CategoryBubble
-                        tile={tile}
-                        product={tile.product}
-                        count={tile.count}
-                        bare
-                        compact
-                        onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
-                      />
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => navigate("/all-products")}
-                    className="flex w-[6.25rem] shrink-0 flex-col items-center justify-center rounded-[1.15rem] border border-gray-100 bg-white p-3 text-center shadow-sm"
-                  >
-                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-50 text-gray-500">
-                      <UtilityIcon type="grid" />
-                    </span>
-                    <span className="mt-2 text-[11px] font-semibold text-gray-950">More</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3">
-                <div className="rounded-[1.35rem] border border-gray-100 bg-white p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-bold text-gray-950">All Categories</p>
-                      <p className="text-[11px] text-gray-500">{formatCount(selectedProducts.length)} products in this department</p>
-                    </div>
-                    <button type="button" onClick={() => navigate("/all-products?sort=popular")} className="text-xs font-bold text-orange-600">
-                      Popular
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {visibleSidebarProducts.slice(0, 8).map((item) => (
-                      <SidebarItem
-                        key={item.slug}
-                        item={item}
-                        active={selectedDepartment.slug === item.slug}
-                        count={item.count}
-                        onClick={() => selectDepartment(item)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => navigate("/all-products")}
-                  className="flex min-h-[4.9rem] items-center justify-between gap-4 rounded-[1.35rem] border border-gray-100 bg-white px-4 py-4 text-left shadow-sm"
-                >
-                  <span className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
-                      <DepartmentGlyph type="electronics" className="h-6 w-6" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-extrabold text-gray-950">All Products</span>
-                      <span className="block text-[11px] leading-5 text-gray-500">Explore everything we have to offer</span>
-                    </span>
-                  </span>
-                  <span className="text-gray-300">›</span>
-                </button>
-              </div>
-            </section>
-
-            <section className="mt-6">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-950">Featured categories</h2>
-                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                {topCategoryCards.slice(0, 6).map((tile) => (
-                  <TopCategoryCard
-                    key={tile.label}
-                    tile={tile}
-                    product={tile.product}
-                    count={tile.count}
-                    onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
-                  />
-                ))}
-              </div>
-            </section>
-
-            <section className="mt-6">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-950">Brands</h2>
-                <button type="button" onClick={() => navigate("/all-products?sort=popular")} className="text-sm font-semibold text-orange-600">View all</button>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {(showcaseBrandCards.length
-                  ? showcaseBrandCards
-                  : (brandCards.length ? brandCards : brandFallbacks.map((label) => ({ label, count: 0 })))
-                ).map((brand) => (
-                  <div key={brand._id || brand.brand || brand.label} className="w-[8.75rem] shrink-0">
-                    <BrandLogoCard
-                      label={brand.brand || brand.label}
-                      count={brand.count || 0}
-                      imageUrl={brand.imageUrl || ""}
-                      description={brand.description || ""}
-                      href={brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`}
-                      onClick={() => navigate(brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="mt-6">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-950">Shops</h2>
-                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
-              </div>
-              <div className="space-y-3">
-                {storeCards.length ? storeCards.map((store) => (
-                  <StoreCard
-                    key={store.id}
-                    store={store}
-                    onClick={() => navigate(`/store/${encodeURIComponent(store.id)}`)}
-                  />
-                )) : (
-                  <div className="rounded-[1.15rem] border border-dashed border-gray-200 bg-white p-6 text-sm text-gray-500">
-                    No stores found for this category yet.
-                  </div>
-                )}
-              </div>
-            </section>
-          </div>
-
-          <div className="hidden lg:block">
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_390px]">
-              <div className="rounded-[1.5rem] border border-gray-100 bg-white p-5 shadow-sm">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-600">All Categories</p>
-                <div className="mt-2 flex items-end justify-between gap-4">
-                  <div className="min-w-0">
-                    <h1 className="truncate text-3xl font-extrabold tracking-tight text-gray-950">{selectedDepartment.label}</h1>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500">{selectedDepartment.description}</p>
-                  </div>
-                  <button type="button" onClick={() => navigate("/all-products")} className="shrink-0 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600">
-                    View all
-                  </button>
-                </div>
-              </div>
-
-              <CategoryBanner
-                banner={selectedBanner}
-                fallbackTitle={selectedDepartment.heroTitle}
-                navigate={navigate}
-                prefetchRoute={prefetchRoute}
-                className="h-[180px] xl:h-[190px]"
-              />
-            </div>
-
-            <section className="mt-4">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
-                {tileCounts.slice(0, 8).map((tile) => (
-                  <CategoryBubble
-                    key={tile.label}
-                    tile={tile}
-                    product={tile.product}
-                    count={tile.count}
-                    onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
-                  />
-                ))}
-              </div>
-            </section>
-
-            <section className="mt-8">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-950">Top categories</h2>
-                  <p className="text-sm text-gray-500">Quick access to the strongest category groups in this department.</p>
-                </div>
-                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all</button>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                {topCategoryCards.map((tile) => (
-                  <TopCategoryCard
-                    key={tile.label}
-                    tile={tile}
-                    product={tile.product}
-                    count={tile.count}
-                    onClick={() => navigate(buildCategoryHref(tile.matchCategories[0] || selectedDepartment.matchCategories[0]))}
-                  />
-                ))}
-              </div>
-            </section>
-
-            <section className="mt-8">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-950">Popular brands</h2>
-                  <p className="text-sm text-gray-500">Local and global labels currently active in this category.</p>
-                </div>
-                <button type="button" onClick={() => navigate("/all-products?sort=popular")} className="text-sm font-semibold text-orange-600">View all brands →</button>
-              </div>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
-                {(showcaseBrandCards.length
-                  ? showcaseBrandCards
-                  : (brandCards.length ? brandCards : brandFallbacks.map((label) => ({ label, count: 0 })))
-                ).map((brand) => (
-                  <BrandLogoCard
-                    key={brand._id || brand.label}
-                    label={brand.brand || brand.label}
-                    count={brand.count || 0}
-                    imageUrl={brand.imageUrl || ""}
-                    description={brand.description || ""}
-                    href={brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`}
-                    onClick={() => navigate(brand.href || `/all-products?brand=${encodeURIComponent(brand.brand || brand.label)}`)}
-                  />
-                ))}
-              </div>
-            </section>
-
-            <section className="mt-8">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-950">Shops</h2>
-                  <p className="text-sm text-gray-500">Stores with products matching this category.</p>
-                </div>
-                <button type="button" onClick={() => navigate("/all-products")} className="text-sm font-semibold text-orange-600">View all stores →</button>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {storeCards.length ? storeCards.map((store) => (
-                  <StoreCard
-                    key={store.id}
-                    store={store}
-                    onClick={() => navigate(`/store/${encodeURIComponent(store.id)}`)}
-                  />
-                )) : (
-                  <div className="rounded-[1.15rem] border border-dashed border-gray-200 bg-white p-6 text-sm text-gray-500">
-                    No stores found for this category yet.
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section className="mt-8">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-950">Products</h2>
-                  <p className="text-sm text-gray-500">{formatCount(selectedProducts.length)} items in {selectedDepartment.label.toLowerCase()}.</p>
-                </div>
-                <button type="button" onClick={() => navigate(`/all-products?category=${encodeURIComponent(selectedDepartment.matchCategories[0] || selectedDepartment.label)}`)} className="text-sm font-semibold text-orange-600">
-                  Open product list →
-                </button>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-                {selectedProducts.slice(0, 15).map((product) => (
-                  <RecommendedCard
-                    key={product._id}
-                    product={product}
-                    navigate={navigate}
-                    prefetchRoute={prefetchRoute}
-                    formatCurrency={formatCurrency}
-                  />
-                ))}
-              </div>
-            </section>
-          </div>
-        </section>
-      </div>
-    </main>
-  );
 };
 
 const CategoryPageSkeleton = () => (

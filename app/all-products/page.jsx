@@ -95,7 +95,7 @@ const SelectedCategoryTile = ({ label, product, active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex h-[5.5rem] min-w-[7.4rem] flex-col items-center justify-center gap-2 rounded-lg border bg-white px-3 py-2 text-center shadow-sm transition ${
+    className={`flex h-[5.55rem] min-w-[7.35rem] flex-col items-center justify-center gap-2 rounded-lg border bg-white px-3 py-2 text-center shadow-sm transition ${
       active ? "border-orange-500 text-orange-600" : "border-gray-100 text-gray-950 hover:border-orange-200"
     }`}
   >
@@ -173,21 +173,21 @@ const MobileRailButton = ({ label, active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`flex min-h-[4.25rem] w-full flex-col items-center justify-center gap-1 rounded-lg px-1.5 text-center transition ${
+    className={`flex min-h-[3.95rem] w-full flex-col items-center justify-center gap-1 rounded-lg px-1 text-center transition min-[380px]:min-h-[4.35rem] min-[380px]:px-1.5 ${
       active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
     }`}
   >
-    <CategoryGlyph className="h-5 w-5" />
-    <span className="line-clamp-2 text-[10px] font-extrabold leading-3">{label}</span>
+    <CategoryGlyph className="h-[1.05rem] w-[1.05rem] min-[380px]:h-5 min-[380px]:w-5" />
+    <span className="line-clamp-2 text-[9px] font-extrabold leading-[11px] min-[380px]:text-[10px] min-[380px]:leading-3">{label}</span>
   </button>
 );
 
 const MobileFeatureTile = ({ label, product, tone, onClick }) => (
-  <button type="button" onClick={onClick} className={`relative min-h-[6.5rem] overflow-hidden rounded-lg bg-gradient-to-br ${tone} p-3 text-left text-white shadow-sm`}>
-    <span className="relative z-10 block max-w-[6rem] text-sm font-extrabold leading-5">{label}</span>
-    <span className="relative z-10 mt-1 block max-w-[6rem] text-[10px] font-semibold text-white/90">Shop now</span>
+  <button type="button" onClick={onClick} className={`relative min-h-[6.8rem] overflow-hidden rounded-lg bg-gradient-to-br ${tone} p-3 text-left text-white shadow-sm`}>
+    <span className="relative z-10 block max-w-[6.5rem] text-sm font-extrabold leading-5">{label}</span>
+    <span className="relative z-10 mt-1 block max-w-[6rem] text-[10px] font-semibold leading-4 text-white/90">Shop now</span>
     <span className="absolute bottom-3 left-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-orange-600">›</span>
-    {product ? <Image src={getProductImage(product)} alt={label} width={115} height={95} className="absolute bottom-1 right-0 max-h-24 w-24 object-contain" /> : null}
+    {product ? <Image src={getProductImage(product)} alt={label} width={120} height={100} className="absolute bottom-0 right-0 max-h-24 w-[6.2rem] object-contain drop-shadow-lg" /> : null}
   </button>
 );
 
@@ -787,15 +787,15 @@ function AllProductsInner() {
     return (
       <>
         <Navbar />
-        <main className="min-h-screen bg-[#f8f9fb] px-4 pb-24 pt-5 sm:px-6 lg:px-8 xl:px-10">
+        <main className="min-h-screen bg-[#f8f9fb] px-2 pb-24 pt-3 min-[380px]:px-3 min-[380px]:pt-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="mx-auto max-w-[1500px]">
             <div className="mb-5 hidden text-xs text-gray-500 lg:block">
               Home <span className="mx-2">›</span> All Categories <span className="mx-2">›</span> <span className="font-extrabold text-gray-950">{selectedCategoryMeta?.label}</span>
             </div>
 
-            <div className="grid grid-cols-[6.4rem_minmax(0,1fr)] gap-2 lg:hidden">
-              <aside className="sticky top-[4.4rem] h-[calc(100svh-9rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-lg border border-gray-100 bg-white p-2 shadow-sm [-webkit-overflow-scrolling:touch]">
-                <div className="space-y-2">
+            <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-1.5 min-[380px]:grid-cols-[5.35rem_minmax(0,1fr)] min-[380px]:gap-2 lg:hidden">
+              <aside className="sticky left-0 top-[4.2rem] z-10 h-[calc(100svh-8.5rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-xl border border-gray-100 bg-white/95 p-1.5 shadow-sm backdrop-blur min-[380px]:top-[4.4rem] min-[380px]:p-2 [-webkit-overflow-scrolling:touch]">
+                <div className="space-y-1.5 min-[380px]:space-y-2">
                   <MobileRailButton label="All Categories" active onClick={() => setSelectedCategory("All")} />
                   {mobileRailCategories.map((category) => (
                     <MobileRailButton
@@ -809,16 +809,17 @@ function AllProductsInner() {
               </aside>
 
               <section className="min-w-0 space-y-4">
-                <button type="button" onClick={() => setSortBy("newest")} className="relative block min-h-[9.75rem] w-full overflow-hidden rounded-lg bg-[#210062] px-4 py-5 text-left text-white shadow-sm">
+                <button type="button" onClick={() => setSortBy("newest")} className="relative block min-h-[10.1rem] w-full overflow-hidden rounded-lg bg-[radial-gradient(circle_at_86%_14%,#ff7a00_0,transparent_24%),linear-gradient(135deg,#13006a_0%,#3416a8_42%,#9d12c8_100%)] px-4 py-5 text-left text-white shadow-sm">
+                  <span className="absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,.12),transparent_38%),radial-gradient(circle_at_84%_80%,rgba(255,255,255,.2),transparent_28%)]" />
                   <span className="relative z-10 block max-w-[10rem] text-2xl font-extrabold leading-7">NEW ARRIVALS 2026</span>
                   <span className="relative z-10 mt-2 block text-[12px] font-semibold text-white/90">The latest tech, now yours.</span>
-                  <span className="relative z-10 mt-4 inline-flex rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-gray-950">Shop Now ›</span>
+                  <span className="relative z-10 mt-4 inline-flex rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-gray-950 shadow-sm">Shop Now ›</span>
                   <span className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
                     {[0, 1, 2, 3].map((dot) => <span key={dot} className={`h-2 w-2 rounded-full ${dot === 0 ? "bg-orange-500" : "bg-white/80"}`} />)}
                   </span>
                   <span className="absolute inset-y-0 right-1 flex w-[58%] items-center justify-end">
                     {selectedTileData.slice(1, 5).map((tile) => tile.product ? (
-                      <Image key={`hero-${tile.label}`} src={getProductImage(tile.product)} alt={tile.label} width={120} height={120} className="-ml-8 max-h-28 w-auto object-contain" />
+                      <Image key={`hero-${tile.label}`} src={getProductImage(tile.product)} alt={tile.label} width={120} height={120} className="-ml-9 max-h-28 w-auto object-contain drop-shadow-xl" />
                     ) : null)}
                   </span>
                 </button>
@@ -842,7 +843,7 @@ function AllProductsInner() {
                   ))}
                 </div>
 
-                <section className="overflow-hidden rounded-lg bg-gradient-to-r from-red-500 to-orange-500 p-2.5 text-white shadow-sm">
+                <section className="overflow-hidden rounded-lg bg-gradient-to-r from-red-500 via-orange-500 to-orange-400 p-2.5 text-white shadow-sm">
                   <div className="mb-2 flex items-center justify-between">
                     <h2 className="text-sm font-extrabold">FLASH SALE</h2>
                     <div className="flex items-center gap-1 text-[10px] font-extrabold">
