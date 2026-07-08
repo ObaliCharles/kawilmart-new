@@ -263,6 +263,8 @@ export default function AdminPromotions() {
     });
     const [newsletterForm, setNewsletterForm] = useState(defaultSiteContent.newsletter);
     const [savingContent, setSavingContent] = useState(false);
+    const featuredCards = Array.isArray(siteContent?.featuredCards) ? siteContent.featuredCards : [];
+    const promoBanners = Array.isArray(siteContent?.promoBanners) ? siteContent.promoBanners : [];
     const stores = useMemo(() => {
         const storeMap = new Map();
 
@@ -730,6 +732,7 @@ export default function AdminPromotions() {
     };
 
     const startEditingFeatured = (card) => {
+        if (!card?._id) return;
         setEditingFeaturedId(card._id);
         setFeaturedForm({
             title: card.title || '',
@@ -746,6 +749,7 @@ export default function AdminPromotions() {
     };
 
     const startEditingBanner = (banner) => {
+        if (!banner?._id) return;
         setEditingBannerId(banner._id);
         setBannerForm({
             title: banner.title || '',
@@ -1011,22 +1015,22 @@ export default function AdminPromotions() {
 
                 <div className="grid xl:grid-cols-[1.2fr_0.8fr] gap-6">
                     <div className="grid md:grid-cols-2 gap-4">
-                        {siteContent.featuredCards.map((card) => (
-                            <div key={card._id} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-3">
-                                {card.imageUrl && (
+                        {featuredCards.map((card, index) => (
+                            <div key={card?._id || `featured-card-${index}`} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-3">
+                                {card?.imageUrl && (
                                     <Image
                                         src={card.imageUrl}
-                                        alt={card.title}
+                                        alt={card?.title || 'Featured card'}
                                         width={640}
                                         height={640}
                                         className="rounded-xl object-cover w-full h-52"
                                     />
                                 )}
                                 <div>
-                                    <h3 className="font-semibold text-gray-900">{card.title}</h3>
-                                    <p className="text-sm text-gray-500 mt-1">{card.description}</p>
+                                    <h3 className="font-semibold text-gray-900">{card?.title || 'Featured card'}</h3>
+                                    <p className="text-sm text-gray-500 mt-1">{card?.description || ''}</p>
                                     <p className="text-xs text-gray-500 mt-2">
-                                        CTA: {card.productId ? productName(card.productId) : (card.href || 'None')}
+                                        CTA: {card?.productId ? productName(card.productId) : (card?.href || 'None')}
                                     </p>
                                 </div>
                                 <div className="flex gap-2">
@@ -1037,7 +1041,7 @@ export default function AdminPromotions() {
                                         Edit
                                     </button>
                                     <button
-                                        onClick={() => void deleteFeaturedCard(card._id)}
+                                        onClick={() => void deleteFeaturedCard(card?._id)}
                                         className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600"
                                     >
                                         Delete
@@ -1145,22 +1149,22 @@ export default function AdminPromotions() {
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4">
-                        {siteContent.promoBanners.map((banner) => (
-                            <div key={banner._id} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-3">
-                                {banner.imageUrl && (
+                        {promoBanners.map((banner, index) => (
+                            <div key={banner?._id || `promo-banner-${index}`} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-3">
+                                {banner?.imageUrl && (
                                     <Image
                                         src={banner.imageUrl}
-                                        alt={banner.title}
+                                        alt={banner?.title || 'Promo banner'}
                                         width={480}
                                         height={480}
                                         className="rounded-xl object-cover w-full h-44"
                                     />
                                 )}
                                 <div>
-                                    <h3 className="font-semibold text-gray-900">{banner.title}</h3>
-                                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{banner.description}</p>
+                                    <h3 className="font-semibold text-gray-900">{banner?.title || 'Promo banner'}</h3>
+                                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{banner?.description || ''}</p>
                                     <p className="text-xs text-gray-500 mt-2">
-                                        CTA: {banner.productId ? productName(banner.productId) : (banner.href || 'None')}
+                                        CTA: {banner?.productId ? productName(banner.productId) : (banner?.href || 'None')}
                                     </p>
                                 </div>
                                 <div className="flex gap-2">
@@ -1171,7 +1175,7 @@ export default function AdminPromotions() {
                                         Edit
                                     </button>
                                     <button
-                                        onClick={() => void deleteBanner(banner._id)}
+                                        onClick={() => void deleteBanner(banner?._id)}
                                         className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600"
                                     >
                                         Delete

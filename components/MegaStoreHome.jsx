@@ -651,7 +651,7 @@ const MobileHome = ({
         <section className="mt-6 grid gap-2">
           {mobileMarketingBanners.map((item, index) => (
             <MarketingBannerTile
-              key={item?._id || item?.imageUrl || `mobile-market-banner-${index}`}
+              key={getMarketingBannerKey(item, index)}
               item={item}
               navigate={navigate}
               prefetchRoute={prefetchRoute}
@@ -783,6 +783,12 @@ const DealCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
   );
 };
 
+const getMarketingBannerKey = (item, index) => {
+  const baseId = item?._id || item?.href || item?.title || item?.imageUrl || "";
+  const imageId = item?.imageUrl || "";
+  return baseId ? `${baseId}-${index}-${imageId}` : `market-banner-${index}-${imageId}`;
+};
+
 function MarketingBannerTile({ item, navigate, prefetchRoute, className = "", priority = false }) {
   const href = getContentHref(item, item?.href || "/all-products");
 
@@ -821,7 +827,7 @@ const MarketingBannerGrid = ({ items, navigate, prefetchRoute, className = "" })
     <section className={`grid gap-2.5 md:grid-cols-2 xl:grid-cols-6 ${className}`}>
       {banners.map((item, index) => (
         <MarketingBannerTile
-          key={item._id || `market-banner-${index}`}
+          key={getMarketingBannerKey(item, index)}
           item={item}
           navigate={navigate}
           prefetchRoute={prefetchRoute}
