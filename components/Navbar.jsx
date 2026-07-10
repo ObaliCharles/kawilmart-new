@@ -9,6 +9,7 @@ import { useClerk, UserButton, useUser, useAuth } from "@clerk/nextjs";
 import { NavbarUserSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { usePathname } from "next/navigation";
 import { buildCategoryHref, homeCategoryValues, getCategoryMeta } from "@/lib/marketplaceCategories";
+import CategoryLineIcon from "@/components/CategoryLineIcon";
 
 const userButtonAppearance = {
   elements: {
@@ -161,9 +162,9 @@ const CategoryDropdown = ({ categories, activeCategory, setActiveCategory, goTo,
               onClick={() => goTo(buildCategoryHref(category))}
               className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition ${isActive ? "bg-orange-50 text-orange-700" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"}`}
             >
-              <span className="flex min-w-0 items-center gap-3">
+                <span className="flex min-w-0 items-center gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-orange-50 text-orange-600">
-                  <CategoryGlyph category={category} />
+                  <CategoryLineIcon category={category} className="h-4 w-4" />
                 </span>
                 <span className="truncate">{meta.label}</span>
               </span>
@@ -175,7 +176,7 @@ const CategoryDropdown = ({ categories, activeCategory, setActiveCategory, goTo,
       <div className="min-w-0 p-3">
         <div className="mb-2 flex items-center gap-3 rounded-md bg-gray-50 px-3 py-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-orange-600 shadow-sm">
-            <CategoryGlyph category={selectedCategory} />
+            <CategoryLineIcon category={selectedCategory} className="h-5 w-5" />
           </span>
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-gray-950">{selectedMeta.label}</p>
@@ -813,7 +814,9 @@ const Navbar = ({ hideMobileHeader = false }) => {
                 </button>
               </form>
               {openDropdown === 'mobile-categories' ? (
-                <div className="mt-2 grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-white p-2 text-sm shadow-lg">
+                <div className="mt-2 rounded-2xl border border-gray-200 bg-white p-3 text-sm shadow-xl">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Browse categories</p>
+                  <div className="grid grid-cols-2 gap-2">
                   {homeCategoryValues.slice(0, 8).map((category) => {
                     const meta = getCategoryMeta(category);
                     return (
@@ -821,15 +824,16 @@ const Navbar = ({ hideMobileHeader = false }) => {
                         key={category}
                         type="button"
                         onClick={() => goTo(buildCategoryHref(category))}
-                        className="flex items-center gap-2 rounded-md px-2 py-2 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                        className="flex min-h-14 flex-col items-start justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-left text-gray-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
                       >
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-orange-50 text-orange-600">
-                          <CategoryGlyph category={category} className="h-4 w-4" />
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-orange-600 shadow-sm">
+                          <CategoryLineIcon category={category} className="h-4 w-4" />
                         </span>
-                        <span className="min-w-0 truncate">{meta.label}</span>
+                        <span className="min-w-0 pt-1 text-[11px] font-semibold leading-4">{meta.label}</span>
                       </button>
                     );
                   })}
+                  </div>
                 </div>
               ) : null}
             </div>
