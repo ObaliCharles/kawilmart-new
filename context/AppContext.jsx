@@ -241,7 +241,7 @@ export const AppContextProvider = (props) => {
         }
     }
 
-    const refreshNotifications = useCallback(async ({ silent = true } = {}) => {
+    const refreshNotifications = useCallback(async ({ silent = true, full = false } = {}) => {
         if (notificationsRefreshInFlight.current) {
             return []
         }
@@ -263,7 +263,7 @@ export const AppContextProvider = (props) => {
                 const nextNotifications = data.notifications || []
                 const unreadCount = nextNotifications.filter((notification) => !notification.read).length
                 setUnreadNotificationsCount(unreadCount)
-                setRecentNotifications(nextNotifications.slice(0, 4))
+                setRecentNotifications(full ? nextNotifications : nextNotifications.slice(0, 4))
                 return nextNotifications
             }
 
@@ -287,6 +287,13 @@ export const AppContextProvider = (props) => {
     }, [refreshNotifications])
 
     const markNotificationAsRead = useCallback(async (notificationId) => {
+        setRecentNotifications((current) =>
+            current.map((notification) =>
+                notification._id === notificationId ? { ...notification, read: true } : notification
+            )
+        );
+        setUnreadNotificationsCount((current) => Math.max(0, current - 1));
+
         try {
             if (!authReady || !user) {
                 return { success: false, message: 'Not authenticated' }
@@ -305,20 +312,26 @@ export const AppContextProvider = (props) => {
                         )
                     )
                 } else {
-                    await refreshNotifications({ silent: true })
+                    void refreshNotifications({ silent: true })
                 }
+            } else {
+                void refreshNotifications({ silent: true })
             }
 
             return data
         } catch (error) {
+            void refreshNotifications({ silent: true })
             return {
                 success: false,
                 message: error.message,
             }
         }
-    }, [authReady, getToken, refreshUnreadNotifications, user])
+    }, [authReady, getToken, refreshNotifications, user])
 
     const markAllNotificationsAsRead = useCallback(async () => {
+        setRecentNotifications((current) => current.map((notification) => ({ ...notification, read: true })));
+        setUnreadNotificationsCount(0);
+
         try {
             if (!authReady || !user) {
                 return { success: false, message: 'Not authenticated' }
@@ -331,16 +344,19 @@ export const AppContextProvider = (props) => {
             if (data.success) {
                 setUnreadNotificationsCount(0)
                 setRecentNotifications((current) => current.map((notification) => ({ ...notification, read: true })))
+            } else {
+                void refreshNotifications({ silent: true })
             }
 
             return data
         } catch (error) {
+            void refreshNotifications({ silent: true })
             return {
                 success: false,
                 message: error.message,
             }
         }
-    }, [authReady, getToken, user])
+    }, [authReady, getToken, refreshNotifications, user])
 
     const refreshAccessState = useCallback(async () => {
         try {

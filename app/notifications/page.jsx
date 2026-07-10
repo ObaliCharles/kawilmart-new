@@ -1,6 +1,6 @@
 'use client'
-import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import toast from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 import Footer from "@/components/Footer";
@@ -9,73 +9,68 @@ import { NotificationsPageSkeleton } from "@/components/PageSkeletons";
 import { useAppContext } from "@/context/AppContext";
 import { getApiErrorMessage } from "@/lib/apiErrors";
 
-const formatDateTime = (value) => {
-  if (!value) {
-    return "Now";
-  }
-
+const formatWhen = (value) => {
+  if (!value) return "Just now";
   const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) {
-    return "Now";
-  }
-
-  return date.toLocaleString();
+  if (!Number.isFinite(date.getTime())) return "Just now";
+  const now = Date.now();
+  const diff = now - date.getTime();
+  if (diff < 60000) return "Just now";
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 };
-
-const TabButton = ({ active, onClick, children, badge }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
-      active
-        ? "bg-gray-900 text-white"
-        : "bg-white text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-    }`}
-  >
-    {children}
-    {badge ? (
-      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${active ? "bg-white/15 text-white" : "bg-orange-100 text-orange-700"}`}>
-        {badge}
-      </span>
-    ) : null}
-  </button>
-);
 
 const InboxPage = () => {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") === "support" ? "support" : "inbox";
-  const initialSupportDraft = {
-    subject: searchParams.get("subject") || "",
-    content: searchParams.get("content") || "",
-  };
   const {
     user,
     authReady,
+    getToken,
     isAdmin,
-    recentNotifications,
+    navigate,
     markNotificationAsRead,
     markAllNotificationsAsRead,
-    setUnreadNotificationsCount,
     refreshNotifications,
   } = useAppContext();
+
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [notifications, setNotifications] = useState([]);
   const [supportMessages, setSupportMessages] = useState([]);
   const [supportParticipant, setSupportParticipant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [supportLoading, setSupportLoading] = useState(true);
-  const [markingAll, setMarkingAll] = useState(false);
-  const [supportDraft, setSupportDraft] = useState(initialSupportDraft);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState("all");
+  const [supportDraft, setSupportDraft] = useState({
+    subject: searchParams.get("subject") || "",
+    content: searchParams.get("content") || "",
+  });
   const [sendingSupport, setSendingSupport] = useState(false);
-  const [selectedNotificationId, setSelectedNotificationId] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
   const usesAdminSupportQueue = Boolean(isAdmin);
 
-  const notifications = recentNotifications;
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read).length,
     [notifications]
   );
 
-  const fetchSupportThread = async () => {
+  const filteredNotifications = useMemo(() => {
+    if (filter === "unread") return notifications.filter((n) => !n.read);
+    if (filter === "read") return notifications.filter((n) => n.read);
+    return notifications;
+  }, [filter, notifications]);
+
+  const loadNotifications = useCallback(async ({ background = false } = {}) => {
+    if (background) setRefreshing(true);
+    const list = await refreshNotifications({ silent: true, full: true });
+    setNotifications(list);
+    if (background) setRefreshing(false);
+    return list;
+  }, [refreshNotifications]);
+
+  const fetchSupportThread = useCallback(async () => {
     if (usesAdminSupportQueue) {
       setSupportMessages([]);
       setSupportParticipant(null);
@@ -86,92 +81,92 @@ const InboxPage = () => {
     try {
       setSupportLoading(true);
       const token = await getToken();
-      const { data } = await axios.get('/api/support/messages', {
-        headers: { Authorization: `Bearer ${token}` }
+      const { data } = await axios.get("/api/support/messages", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (data.success) {
         setSupportMessages(data.messages || []);
         setSupportParticipant(data.participant || null);
       } else {
-        toast.error(data.message || 'Failed to load support chat');
+        toast.error(data.message || "Failed to load support chat");
       }
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Failed to load support chat'));
+      toast.error(getApiErrorMessage(error, "Failed to load support chat"));
     } finally {
       setSupportLoading(false);
     }
-  };
+  }, [getToken, usesAdminSupportQueue]);
 
-  const markAsRead = async (notificationId) => {
-    try {
-      const data = await markNotificationAsRead(notificationId);
-
-      if (!data?.success) {
-        toast.error(data?.message || 'Failed to mark as read');
-        return;
-      }
-
-      setUnreadNotificationsCount(typeof data.unreadCount === "number" ? data.unreadCount : unreadCount);
-    } catch {
-      toast.error('Failed to mark as read');
+  const handleSelectNotification = (notification) => {
+    setExpandedId((current) => (current === notification._id ? null : notification._id));
+    if (!notification.read) {
+      setNotifications((current) =>
+        current.map((entry) =>
+          entry._id === notification._id ? { ...entry, read: true } : entry
+        )
+      );
+      void markNotificationAsRead(notification._id);
     }
   };
 
-  const markAllAsRead = async () => {
-    if (markingAll || unreadCount === 0) {
+  const handleMarkAllRead = () => {
+    if (unreadCount === 0) return;
+    setNotifications((current) => current.map((entry) => ({ ...entry, read: true })));
+    void markAllNotificationsAsRead();
+    toast.success("All marked as read");
+  };
+
+  const handleRefresh = () => {
+    if (activeTab === "inbox") {
+      void loadNotifications({ background: true });
       return;
     }
-
-    setMarkingAll(true);
-
-    try {
-      const data = await markAllNotificationsAsRead();
-
-      if (!data?.success) {
-        toast.error(data?.message || 'Failed to mark all as read');
-        return;
-      }
-
-      setUnreadNotificationsCount(0);
-      toast.success(data.message || 'All inbox messages marked as read');
-    } catch {
-      toast.error('Failed to mark all as read');
-    } finally {
-      setMarkingAll(false);
-    }
+    void fetchSupportThread();
   };
 
   const sendSupportMessage = async () => {
     if (usesAdminSupportQueue) {
-      toast.error('Open the admin support queue to reply to customers');
+      toast.error("Open admin management to reply to customers");
       return;
     }
 
-    if (!supportDraft.content.trim()) {
-      return;
-    }
+    const subject = supportDraft.subject;
+    const content = supportDraft.content.trim();
+    if (!content) return;
+
+    const optimisticMessage = {
+      _id: `temp-${Date.now()}`,
+      content,
+      subject,
+      isOwnMessage: true,
+      date: new Date().toISOString(),
+      senderLabel: user?.firstName || "You",
+    };
+
+    setSupportMessages((current) => [...current, optimisticMessage]);
+    setSupportDraft({ subject: "", content: "" });
+    setSendingSupport(true);
 
     try {
-      setSendingSupport(true);
       const token = await getToken();
-      const { data } = await axios.post('/api/support/messages', {
-        subject: supportDraft.subject,
-        content: supportDraft.content,
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const { data } = await axios.post(
+        "/api/support/messages",
+        { subject, content },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       if (!data.success) {
-        toast.error(data.message || 'Failed to send support message');
+        toast.error(data.message || "Failed to send message");
+        setSupportMessages((current) => current.filter((m) => m._id !== optimisticMessage._id));
         return;
       }
 
-      toast.success('Support message sent');
-      setSupportDraft({ subject: "", content: "" });
-      await fetchSupportThread();
+      toast.success("Message sent");
+      void fetchSupportThread();
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Failed to send support message'));
+      setSupportMessages((current) => current.filter((m) => m._id !== optimisticMessage._id));
+      toast.error(getApiErrorMessage(error, "Failed to send message"));
     } finally {
       setSendingSupport(false);
     }
@@ -182,35 +177,25 @@ const InboxPage = () => {
   }, [initialTab]);
 
   useEffect(() => {
-    setSupportDraft(initialSupportDraft);
-  }, [initialSupportDraft.content, initialSupportDraft.subject]);
+    if (!authReady) return;
 
-  useEffect(() => {
-    if (authReady && user) {
-      const pendingRequests = [refreshNotifications({ silent: true })];
-
-      if (usesAdminSupportQueue) {
-        setSupportMessages([]);
-        setSupportParticipant(null);
-        setSupportLoading(false);
-      } else {
-        pendingRequests.push(fetchSupportThread());
-      }
-
-      void Promise.all(pendingRequests).finally(() => setLoading(false));
-    } else {
+    if (!user) {
       setLoading(false);
+      setSupportLoading(false);
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authReady, user, usesAdminSupportQueue, refreshNotifications]);
 
-  useEffect(() => {
-    if (notifications.length && !selectedNotificationId) {
-      setSelectedNotificationId(notifications[0]._id);
+    const tasks = [loadNotifications()];
+    if (!usesAdminSupportQueue) {
+      tasks.push(fetchSupportThread());
+    } else {
+      setSupportLoading(false);
     }
-  }, [notifications, selectedNotificationId]);
 
-  if (loading && supportLoading) {
+    void Promise.all(tasks).finally(() => setLoading(false));
+  }, [authReady, user, usesAdminSupportQueue, loadNotifications, fetchSupportThread]);
+
+  if (!authReady || loading) {
     return (
       <>
         <Navbar />
@@ -220,286 +205,213 @@ const InboxPage = () => {
     );
   }
 
+  if (!user) {
+    return (
+      <>
+        <Navbar />
+        <main className="mx-auto max-w-lg px-4 py-16 text-center">
+          <p className="text-sm text-gray-600">Sign in to view notifications and support.</p>
+          <button type="button" onClick={() => navigate("/sign-in")} className="mt-4 rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white">
+            Sign in
+          </button>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />
-      <div className="min-h-screen px-4 py-8 sm:px-6 md:px-12 lg:px-24 xl:px-32">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <main className="mx-auto max-w-2xl px-4 py-5 sm:px-6 md:py-6">
+        <header className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Inbox & Support</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Keep up with order updates and chat with KawilMart support from one place.
+            <h1 className="text-lg font-bold text-gray-950">Notifications</h1>
+            <p className="text-xs text-gray-500">
+              {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing || supportLoading}
+            className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200 disabled:opacity-50"
+          >
+            {refreshing || supportLoading ? "..." : "Refresh"}
+          </button>
+        </header>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <TabButton active={activeTab === "inbox"} onClick={() => setActiveTab("inbox")} badge={unreadCount || undefined}>
-              Inbox
-            </TabButton>
-            <TabButton active={activeTab === "support"} onClick={() => setActiveTab("support")}>
-              Support Chat
-            </TabButton>
-          </div>
+        <div className="mt-4 inline-flex rounded-full bg-gray-100 p-1">
+          {[
+            ["inbox", "Inbox", unreadCount || null],
+            ["support", "Support", null],
+          ].map(([tab, label, badge]) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                activeTab === tab ? "bg-white text-gray-950 shadow-sm" : "text-gray-500"
+              }`}
+            >
+              {label}
+              {badge ? ` (${badge})` : ""}
+            </button>
+          ))}
         </div>
 
         {activeTab === "inbox" ? (
-          <div className="overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
-              <div className="flex items-center gap-2.5">
-                <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600">
-                  <span className="h-3.5 w-3.5 rounded-[3px] border border-gray-400" />
-                </button>
-                <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600">
-                  ↻
-                </button>
-                <button
-                  onClick={markAllAsRead}
-                  disabled={markingAll || unreadCount === 0}
-                  className={`rounded-xl border px-3.5 py-2 text-[12px] font-semibold transition ${
-                    markingAll || unreadCount === 0
-                      ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
-                      : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300'
-                  }`}
-                >
-                  {markingAll ? 'Marking...' : 'Mark all as read'}
-                </button>
+          <div className="mt-4">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="inline-flex rounded-full bg-gray-100 p-0.5">
+                {[
+                  ["all", "All"],
+                  ["unread", "Unread"],
+                  ["read", "Read"],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setFilter(value)}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                      filter === value ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
-              <div className="flex items-center gap-2">
-                <select className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[12px] text-gray-700 outline-none">
-                  <option>Filter</option>
-                  <option>Unread</option>
-                  <option>Read</option>
-                </select>
-              </div>
+              {unreadCount > 0 ? (
+                <button type="button" onClick={handleMarkAllRead} className="text-[11px] font-semibold text-orange-600">
+                  Mark all read
+                </button>
+              ) : null}
             </div>
 
-            <div className="grid min-h-[38rem] xl:grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)]">
-              <div className="border-b border-gray-200 xl:border-b-0 xl:border-r">
-                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-                  <p className="text-[12px] font-semibold text-gray-500">Inbox updates</p>
-                  <p className="text-[12px] text-gray-400">{notifications.length} total</p>
-                </div>
-                <div className="max-h-[34.5rem] overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="flex min-h-[22rem] items-center justify-center px-4 text-center text-sm text-gray-500">
-                      Your inbox is empty
-                    </div>
-                  ) : (
-                    notifications.map((notification) => {
-                      const isSelected = selectedNotificationId === notification._id;
-                      return (
-                        <button
-                          key={notification._id}
-                          type="button"
-                          onClick={() => setSelectedNotificationId(notification._id)}
-                          className={`flex w-full items-start gap-3 border-b border-gray-100 px-4 py-3.5 text-left transition ${
-                            isSelected ? 'bg-blue-50/70' : 'hover:bg-gray-50'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            readOnly
-                            className="mt-1 h-4 w-4 rounded border-gray-300"
-                          />
-                          <span className={`mt-1.5 h-2.5 w-2.5 rounded-full ${notification.read ? 'bg-gray-300' : 'bg-blue-500'}`} />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-3">
-                              <h3 className="truncate text-[13px] font-semibold text-gray-950">{notification.title}</h3>
-                              <span className="shrink-0 text-[11px] text-gray-500">{formatDateTime(notification.date)}</span>
-                            </div>
-                            <p className="mt-1 line-clamp-1 text-[12px] text-gray-500">{notification.message}</p>
-                          </div>
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-
-              <div className="bg-[#fbfbfc] px-5 py-5">
-                {notifications.length === 0 ? (
-                  <div className="flex h-full min-h-[22rem] items-center justify-center rounded-[1.25rem] border border-dashed border-gray-200 bg-white text-sm text-gray-500">
-                    Select a notification to preview it here.
-                  </div>
-                ) : (
-                  (() => {
-                    const selectedNotification = notifications.find((notification) => notification._id === selectedNotificationId) || notifications[0];
-                    return (
-                      <div className="rounded-[1.25rem] border border-gray-200 bg-white p-5 shadow-sm">
-                        <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">Notification</p>
-                            <h3 className="mt-2 text-[20px] font-semibold text-gray-950">{selectedNotification.title}</h3>
-                            <p className="mt-1 text-[12px] text-gray-500">{formatDateTime(selectedNotification.date)}</p>
-                          </div>
-                          {!selectedNotification.read ? (
-                            <button
-                              onClick={() => markAsRead(selectedNotification._id)}
-                              className="rounded-full bg-blue-600 px-4 py-2 text-[12px] font-semibold text-white transition hover:bg-blue-700"
-                            >
-                              Mark as read
-                            </button>
-                          ) : (
-                            <span className="rounded-full bg-gray-100 px-3 py-1.5 text-[11px] font-semibold text-gray-500">
-                              Read
+            <div className="divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
+              {filteredNotifications.length === 0 ? (
+                <div className="px-4 py-14 text-center text-sm text-gray-500">No notifications here</div>
+              ) : (
+                filteredNotifications.map((notification) => {
+                  const isExpanded = expandedId === notification._id;
+                  return (
+                    <div key={notification._id}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectNotification(notification)}
+                        className={`flex w-full items-start gap-3 px-3.5 py-3 text-left transition ${
+                          !notification.read ? "bg-orange-50/50" : "hover:bg-gray-50"
+                        }`}
+                      >
+                        <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.read ? "bg-gray-300" : "bg-orange-500"}`} />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-start justify-between gap-2">
+                            <span className={`line-clamp-1 text-sm ${notification.read ? "font-medium text-gray-800" : "font-semibold text-gray-950"}`}>
+                              {notification.title}
                             </span>
-                          )}
+                            <span className="shrink-0 text-[10px] text-gray-400">{formatWhen(notification.date)}</span>
+                          </span>
+                          <span className={`mt-0.5 block text-xs text-gray-500 ${isExpanded ? "" : "line-clamp-1"}`}>
+                            {notification.message}
+                          </span>
+                        </span>
+                      </button>
+                      {isExpanded ? (
+                        <div className="border-t border-gray-50 bg-gray-50/60 px-4 py-2.5">
+                          <p className="text-xs leading-5 text-gray-700">{notification.message}</p>
+                          <div className="mt-2 flex gap-2">
+                            {!notification.read ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setNotifications((current) =>
+                                    current.map((entry) =>
+                                      entry._id === notification._id ? { ...entry, read: true } : entry
+                                    )
+                                  );
+                                  void markNotificationAsRead(notification._id);
+                                }}
+                                className="text-[11px] font-semibold text-orange-600"
+                              >
+                                Mark read
+                              </button>
+                            ) : null}
+                            <button type="button" onClick={() => setActiveTab("support")} className="text-[11px] font-semibold text-gray-600">
+                              Get support
+                            </button>
+                          </div>
                         </div>
-                        <div className="space-y-4 py-5">
-                          <p className="text-[14px] leading-7 text-gray-700">{selectedNotification.message}</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => markAsRead(selectedNotification._id)}
-                            className="rounded-full border border-gray-200 bg-white px-4 py-2 text-[12px] font-semibold text-gray-800 hover:border-gray-300"
-                          >
-                            Mark as read
-                          </button>
-                          <Link href="/inbox?tab=support" className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-[12px] font-semibold text-blue-700">
-                            Open support
-                          </Link>
-                        </div>
-                      </div>
-                    );
-                  })()
-                )}
-              </div>
+                      ) : null}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         ) : usesAdminSupportQueue ? (
-          <div className="rounded-3xl border border-orange-200 bg-orange-50 p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-600">Admin Support Queue</p>
-            <h2 className="mt-3 text-2xl font-semibold text-gray-900">Support conversations are managed from Admin Management</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">
-              This inbox page is reserved for your notification feed. To reply to sellers, riders, and customers, open the management support queue where each conversation is tied to a specific account.
+          <div className="mt-4 rounded-xl bg-orange-50 p-5 ring-1 ring-orange-100">
+            <h2 className="text-sm font-bold text-gray-950">Admin support queue</h2>
+            <p className="mt-1 text-xs leading-5 text-gray-600">
+              Customer conversations are managed from Admin Management.
             </p>
-            <div className="mt-5">
-              <Link
-                href="/admin/management"
-                className="inline-flex rounded-full bg-gray-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-black"
-              >
-                Open Admin Management
-              </Link>
-            </div>
+            <button type="button" onClick={() => navigate("/admin/management")} className="mt-3 rounded-lg bg-gray-950 px-4 py-2 text-xs font-semibold text-white">
+              Open management
+            </button>
           </div>
         ) : (
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
-            <div className="space-y-4">
-              <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-500">Support Line</p>
-                <h2 className="mt-3 text-xl font-semibold text-gray-900">{supportParticipant?.name || 'KawilMart Support'}</h2>
-                <p className="mt-2 text-sm leading-6 text-gray-500">
-                  Ask about seller subscription access, store verification, account changes, orders, or any marketplace support need.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {supportParticipant?.badgeLabel ? (
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                      {supportParticipant.badgeLabel}
-                    </span>
-                  ) : null}
-                  {supportParticipant?.supportPriority ? (
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                      {supportParticipant.supportPriority} support
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900">Send a message</h3>
-                <div className="mt-4 space-y-3">
-                  <input
-                    type="text"
-                    value={supportDraft.subject}
-                    onChange={(event) => setSupportDraft((current) => ({ ...current, subject: event.target.value }))}
-                    placeholder="Subject, for example: Subscription payment"
-                    className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
-                  />
-                  <textarea
-                    value={supportDraft.content}
-                    onChange={(event) => setSupportDraft((current) => ({ ...current, content: event.target.value }))}
-                    placeholder="Describe what you need help with..."
-                    className="h-36 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={sendSupportMessage}
-                    disabled={sendingSupport || !supportDraft.content.trim()}
-                    className={`w-full rounded-full px-4 py-3 text-sm font-medium transition ${
-                      sendingSupport || !supportDraft.content.trim()
-                        ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                        : 'bg-orange-600 text-white hover:bg-orange-700'
-                    }`}
-                  >
-                    {sendingSupport ? 'Sending...' : 'Send to support'}
-                  </button>
-                </div>
-              </div>
+          <div className="mt-4 space-y-3">
+            <div className="rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-gray-100">
+              <p className="text-xs font-semibold text-gray-950">{supportParticipant?.name || "KawilMart Support"}</p>
+              <p className="mt-0.5 text-[11px] text-gray-500">Orders, account, seller access, and general help.</p>
             </div>
 
-            <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Conversation</h3>
-                  <p className="mt-1 text-sm text-gray-500">Replies from support appear here automatically.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => fetchSupportThread()}
-                  className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-gray-900 hover:text-gray-900"
-                >
-                  Refresh chat
-                </button>
-              </div>
-
-              <div className="mt-5 h-[540px] overflow-y-auto rounded-3xl bg-gray-50 p-4">
-                {supportLoading ? (
-                  <div className="flex h-full items-center justify-center text-sm text-gray-400">
-                    Loading support conversation...
-                  </div>
-                ) : supportMessages.length === 0 ? (
-                  <div className="flex h-full items-center justify-center text-center text-sm text-gray-400">
-                    No support messages yet. Your first message will start the conversation.
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {supportMessages.map((message) => (
-                      <div
-                        key={message._id || message.messageId}
-                        className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[85%] rounded-3xl px-4 py-3 text-sm shadow-sm ${
-                            message.isOwnMessage
-                              ? 'bg-gray-900 text-white'
-                              : 'bg-white text-gray-700'
-                          }`}
-                        >
-                          {message.subject ? (
-                            <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
-                              message.isOwnMessage ? 'text-white/70' : 'text-gray-400'
-                            }`}>
-                              {message.subject}
-                            </p>
-                          ) : null}
-                          <p className="mt-1 whitespace-pre-wrap leading-6">{message.content}</p>
-                          <p className={`mt-2 text-[11px] ${
-                            message.isOwnMessage ? 'text-white/60' : 'text-gray-400'
-                          }`}>
-                            {message.senderLabel || (message.isOwnMessage ? user?.firstName || 'You' : supportParticipant?.name || 'Support')} · {formatDateTime(message.date)}
-                          </p>
-                        </div>
+            <div className="max-h-72 overflow-y-auto rounded-xl bg-gray-50 p-3 ring-1 ring-gray-100">
+              {supportLoading ? (
+                <p className="py-8 text-center text-xs text-gray-400">Loading conversation...</p>
+              ) : supportMessages.length === 0 ? (
+                <p className="py-8 text-center text-xs text-gray-400">No messages yet. Send one below.</p>
+              ) : (
+                <div className="space-y-2">
+                  {supportMessages.map((message) => (
+                    <div key={message._id || message.messageId} className={`flex ${message.isOwnMessage ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[88%] rounded-2xl px-3 py-2 text-xs ${message.isOwnMessage ? "bg-gray-900 text-white" : "bg-white text-gray-700 ring-1 ring-gray-100"}`}>
+                        {message.subject ? <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide opacity-70">{message.subject}</p> : null}
+                        <p className="whitespace-pre-wrap leading-5">{message.content}</p>
+                        <p className={`mt-1 text-[10px] ${message.isOwnMessage ? "text-white/60" : "text-gray-400"}`}>{formatWhen(message.date)}</p>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-gray-100">
+              <input
+                type="text"
+                value={supportDraft.subject}
+                onChange={(event) => setSupportDraft((current) => ({ ...current, subject: event.target.value }))}
+                placeholder="Subject (optional)"
+                className="mb-2 w-full rounded-lg bg-gray-50 px-3 py-2 text-xs outline-none"
+              />
+              <textarea
+                value={supportDraft.content}
+                onChange={(event) => setSupportDraft((current) => ({ ...current, content: event.target.value }))}
+                placeholder="Write your message..."
+                rows={3}
+                className="w-full resize-none rounded-lg bg-gray-50 px-3 py-2 text-xs outline-none"
+              />
+              <button
+                type="button"
+                onClick={sendSupportMessage}
+                disabled={sendingSupport || !supportDraft.content.trim()}
+                className="mt-2 w-full rounded-lg bg-orange-600 py-2.5 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                {sendingSupport ? "Sending..." : "Send message"}
+              </button>
             </div>
           </div>
         )}
-      </div>
+      </main>
       <Footer />
     </>
   );

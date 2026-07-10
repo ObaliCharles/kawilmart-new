@@ -575,7 +575,7 @@ const MobileHome = ({
         {mobileFeaturedCategories.map(([label, category]) => (
           <MobileRoundCategory key={label} label={label} category={category} products={sortedProducts} navigate={navigate} />
         ))}
-        <button type="button" onClick={() => navigate("/all-products")} className="flex min-w-0 flex-col items-center gap-2 text-center">
+        <button type="button" onClick={() => navigate("/categories")} className="flex min-w-0 flex-col items-center gap-2 text-center">
           <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm"><UtilityIcon type="grid" /></span>
           <span className="line-clamp-2 min-h-7 text-[10px] font-bold leading-[14px] text-gray-950">More</span>
         </button>

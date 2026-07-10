@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/nextjs";
 import RouteLoader from "@/components/RouteLoader";
-import PageTransition from "@/components/PageTransition";
+import RouteShell from "@/components/RouteShell";
 
 export const metadata = {
   title: "KawilMart | Northern Uganda's Trusted Online Store",
@@ -69,9 +69,9 @@ export default function RootLayout({ children }) {
           <Suspense fallback={null}>
             <AppContextProvider>
               <RouteLoader />
-              <PageTransition>
+              <RouteShell>
                 {children}
-              </PageTransition>
+              </RouteShell>
             </AppContextProvider>
           </Suspense>
         </ClerkProvider>

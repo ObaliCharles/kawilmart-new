@@ -8,17 +8,16 @@ import toast from "react-hot-toast";
 
 const OrderSummary = () => {
   const {
-    router,
+    navigate,
     getCartAmount,
     getToken,
     user,
+    authReady,
     products,
     resolvedCartItems,
     setCartItems,
-    authReady,
     formatCurrency,
     fetchUserData,
-    loadingProducts,
   } = useAppContext();
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -26,6 +25,7 @@ const OrderSummary = () => {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [deliveryMode, setDeliveryMode] = useState(DELIVERY_MODES.DELIVERY);
   const cartAmount = getCartAmount();
+  const cartItemCount = Object.values(resolvedCartItems).filter((quantity) => quantity > 0).length;
 
   const estimatedDeliveryFee = useMemo(() => {
     if (!selectedAddress || deliveryMode === DELIVERY_MODES.PICKUP) {
@@ -68,17 +68,33 @@ const OrderSummary = () => {
       return;
     }
 
+    if (!authReady) {
+      return;
+    }
+
+    if (!user) {
+      toast.error("Please sign in to place an order");
+      navigate("/sign-in");
+      return;
+    }
+
+    if (!selectedAddress) {
+      toast.error("Please select an address");
+      return;
+    }
+
+    const cartItemsArray = Object.entries(resolvedCartItems)
+      .filter(([, quantity]) => quantity > 0)
+      .map(([key, quantity]) => ({ product: key, quantity }));
+
+    if (cartItemsArray.length === 0) {
+      toast.error("Cart is empty");
+      return;
+    }
+
+    setIsPlacingOrder(true);
+
     try {
-      if (loadingProducts) return toast.error("Cart items are still loading. Please wait a moment.");
-      if (!selectedAddress) return toast.error("Please select an address");
-
-      const cartItemsArray = Object.entries(resolvedCartItems)
-        .filter(([key, quantity]) => quantity > 0)
-        .map(([key, quantity]) => ({ product: key, quantity }));
-
-      if (cartItemsArray.length === 0) return toast.error("Cart is empty");
-
-      setIsPlacingOrder(true);
       const token = await getToken();
       const { data } = await axios.post(
         "/api/order/create",
@@ -92,9 +108,9 @@ const OrderSummary = () => {
 
       if (data.success) {
         setCartItems({});
-        await fetchUserData();
-        toast.success(data.message);
-        router.replace("/order-placed");
+        toast.success(data.message || "Order placed");
+        navigate("/order-placed", { scroll: true });
+        void fetchUserData();
       } else {
         toast.error(data.message);
       }
@@ -122,8 +138,6 @@ const OrderSummary = () => {
           if (data.addresses.length > 0) {
             setSelectedAddress(data.addresses[0]);
           }
-        } else {
-          toast.error(data.message);
         }
       } catch (error) {
         toast.error(error.message);
@@ -140,123 +154,122 @@ const OrderSummary = () => {
   ].filter(Boolean).join(", ");
 
   return (
-    <aside className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
-      <h2 className="text-base font-bold text-gray-950">Order summary</h2>
+    <aside className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-gray-100 sm:p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-bold text-gray-950">Summary</h2>
+        <span className="text-xs text-gray-500">{cartItemCount} item{cartItemCount === 1 ? "" : "s"}</span>
+      </div>
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-3 space-y-3">
         <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Delivery address</label>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Address</label>
+            <button
+              type="button"
+              onClick={() => navigate("/add-address")}
+              className="text-[11px] font-semibold text-orange-600"
+            >
+              + Add
+            </button>
+          </div>
           <div className="relative">
             <button
               type="button"
-              className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2.5 text-left text-sm text-gray-700 transition hover:border-gray-300"
+              className="flex w-full items-center justify-between gap-2 rounded-lg bg-gray-50 px-2.5 py-2 text-left text-xs text-gray-700"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               disabled={isPlacingOrder}
             >
-              <span className="min-w-0 flex-1">
-                {selectedAddress ? (
-                  <>
-                    <span className="block truncate font-medium text-gray-900">{selectedAddress.fullName}</span>
-                    <span className="mt-0.5 block truncate text-xs text-gray-500">{formatAddressLine(selectedAddress)}</span>
-                  </>
-                ) : (
-                  <span className="text-gray-500">Select address</span>
-                )}
+              <span className="min-w-0 flex-1 truncate">
+                {selectedAddress
+                  ? `${selectedAddress.fullName} · ${formatAddressLine(selectedAddress)}`
+                  : userAddresses.length === 0
+                    ? "No address — add one"
+                    : "Select address"}
               </span>
-              <svg
-                className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+              <svg className={`h-3.5 w-3.5 shrink-0 text-gray-400 ${isDropdownOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
             {isDropdownOpen && (
-              <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <ul className="absolute z-20 mt-1 max-h-44 w-full overflow-y-auto rounded-lg bg-white py-1 shadow-lg ring-1 ring-gray-100">
                 {userAddresses.map((address, index) => (
                   <li
-                    key={index}
-                    className="cursor-pointer px-3 py-2.5 hover:bg-gray-50"
+                    key={address._id || index}
+                    className="cursor-pointer px-2.5 py-2 hover:bg-gray-50"
                     onClick={() => handleAddressSelect(address)}
                   >
-                    <p className="text-sm font-medium text-gray-900">{address.fullName}</p>
-                    <p className="text-xs text-gray-500">{formatAddressLine(address)}</p>
+                    <p className="truncate text-xs font-medium text-gray-900">{address.fullName}</p>
+                    <p className="truncate text-[11px] text-gray-500">{formatAddressLine(address)}</p>
                   </li>
                 ))}
-                <li
-                  onClick={() => router.push("/add-address")}
-                  className="cursor-pointer border-t border-gray-100 px-3 py-2.5 text-center text-sm font-medium text-orange-600 hover:bg-orange-50"
-                >
-                  + Add new address
-                </li>
+                {userAddresses.length === 0 ? (
+                  <li
+                    onClick={() => navigate("/add-address")}
+                    className="cursor-pointer px-2.5 py-2 text-center text-xs font-medium text-orange-600 hover:bg-orange-50"
+                  >
+                    Add delivery address
+                  </li>
+                ) : null}
               </ul>
             )}
           </div>
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Fulfillment</label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setDeliveryMode(DELIVERY_MODES.DELIVERY)}
-              className={`rounded-lg border px-3 py-2.5 text-left transition ${
-                deliveryMode === DELIVERY_MODES.DELIVERY
-                  ? "border-orange-500 bg-orange-50 text-orange-800"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-              }`}
-            >
-              <p className="text-sm font-semibold">Delivery</p>
-              <p className="mt-0.5 text-[11px] leading-4 text-gray-500">Rider assigned after seller accepts</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeliveryMode(DELIVERY_MODES.PICKUP)}
-              className={`rounded-lg border px-3 py-2.5 text-left transition ${
-                deliveryMode === DELIVERY_MODES.PICKUP
-                  ? "border-orange-500 bg-orange-50 text-orange-800"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-              }`}
-            >
-              <p className="text-sm font-semibold">Pickup</p>
-              <p className="mt-0.5 text-[11px] leading-4 text-gray-500">Collect from seller after acceptance</p>
-            </button>
+          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400">Fulfillment</label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {[
+              [DELIVERY_MODES.DELIVERY, "Delivery"],
+              [DELIVERY_MODES.PICKUP, "Pickup"],
+            ].map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setDeliveryMode(mode)}
+                className={`rounded-lg px-2.5 py-2 text-xs font-semibold transition ${
+                  deliveryMode === mode
+                    ? "bg-orange-600 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="space-y-2.5 border-t border-gray-100 pt-4">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Subtotal</span>
+        <div className="space-y-1.5 border-t border-gray-100 pt-2.5 text-xs">
+          <div className="flex justify-between text-gray-600">
+            <span>Subtotal</span>
             <span className="font-medium text-gray-900">{formatCurrency(cartAmount)}</span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">{deliveryMode === DELIVERY_MODES.PICKUP ? "Pickup fee" : "Delivery fee"}</span>
+          <div className="flex justify-between text-gray-600">
+            <span>{deliveryMode === DELIVERY_MODES.PICKUP ? "Pickup" : "Delivery"}</span>
             <span className="font-medium text-emerald-600">{estimatedDeliveryFee === 0 ? "Free" : formatCurrency(estimatedDeliveryFee)}</span>
           </div>
-          <div className="flex justify-between border-t border-gray-100 pt-3">
-            <span className="text-base font-bold text-gray-950">Total</span>
-            <span className="text-base font-bold text-gray-950">{formatCurrency(totalAmount)}</span>
+          <div className="flex justify-between border-t border-gray-100 pt-2 text-sm font-bold text-gray-950">
+            <span>Total</span>
+            <span>{formatCurrency(totalAmount)}</span>
           </div>
         </div>
-
-        <p className="text-[11px] leading-4 text-gray-400">
-          Seller contact unlocks after order acceptance. Confirm delivery in-app once you receive your items.
-        </p>
       </div>
 
       <button
+        type="button"
         onClick={createOrder}
-        disabled={isPlacingOrder || loadingProducts}
-        className="mt-4 w-full rounded-lg bg-orange-600 py-3 text-sm font-semibold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-70"
+        disabled={isPlacingOrder || cartItemCount === 0}
+        className="mt-3 w-full rounded-lg bg-orange-600 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span className="flex items-center justify-center gap-2">
-          {(isPlacingOrder || loadingProducts) && (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+          {isPlacingOrder ? (
+            <>
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              Placing order...
+            </>
+          ) : (
+            "Place order"
           )}
-          {isPlacingOrder ? "Placing order..." : loadingProducts ? "Loading cart..." : "Place order"}
         </span>
       </button>
     </aside>
