@@ -402,7 +402,18 @@ const MobileServiceCard = ({ title, text, icon }) => (
   </div>
 );
 
-const MobileFlashCard = ({ product, navigate, prefetchRoute, formatCurrency, toggleProductLike }) => {
+const FLASH_CARD_BACKGROUNDS = [
+  "bg-gradient-to-br from-orange-300/90 via-amber-200 to-orange-100",
+  "bg-gradient-to-br from-rose-300/90 via-pink-200 to-rose-100",
+  "bg-gradient-to-br from-violet-300/85 via-purple-200 to-violet-100",
+  "bg-gradient-to-br from-sky-300/85 via-cyan-200 to-sky-100",
+  "bg-gradient-to-br from-amber-300/90 via-yellow-200 to-amber-100",
+  "bg-gradient-to-br from-fuchsia-300/85 via-pink-200 to-fuchsia-100",
+];
+
+const getFlashCardBackground = (index = 0) => FLASH_CARD_BACKGROUNDS[index % FLASH_CARD_BACKGROUNDS.length];
+
+const MobileFlashCard = ({ product, navigate, prefetchRoute, formatCurrency, toggleProductLike, cardIndex = 0 }) => {
   const activity = getProductActivitySnapshot(product);
   const originalPrice = getPriceValue(product.price);
   const offerPrice = getPriceValue(product.offerPrice || product.price);
@@ -428,30 +439,30 @@ const MobileFlashCard = ({ product, navigate, prefetchRoute, formatCurrency, tog
       onClick={() => navigate(`/product/${product._id}`)}
       onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
       onFocus={() => prefetchRoute(`/product/${product._id}`)}
-      className="relative isolate w-[9.6rem] shrink-0 rounded-lg border border-gray-200 bg-white p-2 text-left shadow-sm"
+      className={`relative isolate w-[8.5rem] shrink-0 rounded-xl p-2 text-left shadow-md transition hover:brightness-[1.03] ${getFlashCardBackground(cardIndex)}`}
     >
-      <span className="absolute left-2 top-2 z-20 rounded bg-rose-500 px-2 py-1 text-[11px] font-bold text-white">
+      <span className="absolute left-2 top-2 z-20 rounded-md bg-gray-950/80 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
         -{Math.max(activity.priceDropPercent, 15)}%
       </span>
-      <span onClick={likeProduct} className={`absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ${liked ? "text-red-600" : "text-gray-400"}`}>
+      <span onClick={likeProduct} className={`absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm ${liked ? "text-red-600" : "text-gray-500"}`}>
         <HeartGlyph filled={liked} />
       </span>
-      <span className="relative z-0 flex aspect-square items-center justify-center rounded-md bg-gray-50">
-        <ProductImage product={product} alt={product.name} width={150} height={150} className="h-full w-full object-contain p-1" />
+      <span className="relative z-0 flex aspect-square items-center justify-center rounded-lg bg-white/75 p-1 shadow-inner backdrop-blur-sm">
+        <ProductImage product={product} alt={product.name} width={150} height={150} className="h-full w-full object-contain" />
       </span>
       <span className="mt-2 block line-clamp-2 min-h-9 text-[12px] font-bold leading-[18px] text-gray-950">{product.name}</span>
-      <span className="mt-1 block text-[11px] text-gray-500">{activity.localTrend}</span>
-      <span className="mt-1 block text-sm font-extrabold text-orange-600">{formatCurrency(offerPrice)}</span>
-      {originalPrice > offerPrice ? <span className="text-[11px] text-gray-400 line-through">{formatCurrency(originalPrice)}</span> : null}
+      <span className="mt-1 block text-[11px] font-medium text-gray-700/80">{activity.localTrend}</span>
+      <span className="mt-1 block text-sm font-extrabold text-gray-950">{formatCurrency(offerPrice)}</span>
+      {originalPrice > offerPrice ? <span className="text-[11px] text-gray-700/60 line-through">{formatCurrency(originalPrice)}</span> : null}
       {stockSnapshot.hasTrackedStock ? (
         <div className="mt-2 space-y-1">
-          <span className="block h-1.5 overflow-hidden rounded-full bg-gray-100">
+          <span className="block h-1.5 overflow-hidden rounded-full bg-black/10">
             <span
-              className={`block h-full rounded-full ${stockSnapshot.status === "low" ? "bg-rose-500" : "bg-orange-600"}`}
+              className={`block h-full rounded-full ${stockSnapshot.status === "low" ? "bg-rose-600" : "bg-gray-900/70"}`}
               style={{ width: `${stockSnapshot.status === "out" ? 0 : stockSnapshot.status === "low" ? 28 : 62}%` }}
             />
           </span>
-          <span className="block text-[10px] font-medium text-gray-500">{stockSnapshot.label}</span>
+          <span className="block text-[10px] font-medium text-gray-800/70">{stockSnapshot.label}</span>
         </div>
       ) : null}
     </button>
@@ -532,6 +543,7 @@ const MobileHome = ({
   storeCards,
   storeLoadMoreRef,
   timeLeft,
+  hasCountdown,
   navigate,
   prefetchRoute,
   formatCurrency,
@@ -576,16 +588,22 @@ const MobileHome = ({
         <MobileServiceCard title="Secure Payment" text="Pay safely" icon={<UtilityIcon type="grid" />} />
       </section>
 
-      <section className="mt-8">
-        <SectionHeader title="Flash Sale" onViewAll={() => navigate("/all-products?filter=flash")} />
-        <div className="mb-4 flex items-center gap-2">
-          {[padTime(timeLeft.hours || 8), padTime(timeLeft.minutes || 17), padTime(timeLeft.seconds || 56), "23"].map((value, index) => (
-            <span key={`${value}-${index}`} className="rounded-md bg-rose-500 px-2 py-1 text-[12px] font-extrabold text-white">{value}</span>
-          ))}
+      <section className="-mx-3 mt-6 rounded-xl bg-gradient-to-br from-orange-100/90 via-rose-100/75 to-amber-50 px-3 py-3.5">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h2 className="text-base font-extrabold text-gray-950">Flash Sale</h2>
+            <p className="mt-0.5 text-[10px] text-gray-500">Limited-time deals</p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {hasCountdown ? <FlashCountdown timeLeft={timeLeft} size="sm" /> : null}
+            <button type="button" onClick={() => navigate("/all-products?filter=flash")} className="text-[11px] font-bold text-orange-600">
+              View all -&gt;
+            </button>
+          </div>
         </div>
-        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
-          {(dealProducts.length ? dealProducts : sortedProducts).slice(0, 8).map((product) => (
-            <MobileFlashCard key={`${product._id}-mobile-flash`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} toggleProductLike={toggleProductLike} />
+        <div className="-mx-3 flex gap-2.5 overflow-x-auto px-3 pb-1">
+          {(dealProducts.length ? dealProducts : sortedProducts).slice(0, 6).map((product, index) => (
+            <MobileFlashCard key={`${product._id}-mobile-flash`} product={product} cardIndex={index} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} toggleProductLike={toggleProductLike} />
           ))}
         </div>
       </section>
@@ -665,11 +683,11 @@ const MobileHome = ({
         <section onClick={() => navigate(`/product/${dealOfDay._id}`)} className="relative mt-6 cursor-pointer overflow-hidden rounded-lg bg-[#101923] px-6 py-7 text-white shadow-sm">
           <div className="relative z-10 max-w-[58%]">
             <h2 className="text-xl font-extrabold">Deal of the Day</h2>
-            <div className="mt-4 flex gap-2">
-              {[padTime(timeLeft.hours || 8), padTime(timeLeft.minutes || 17), padTime(timeLeft.seconds || 56)].map((value, index) => (
-                <span key={`${value}-dod-${index}`} className="rounded bg-orange-600 px-2 py-1 text-[12px] font-extrabold">{value}</span>
-              ))}
-            </div>
+            {hasCountdown ? (
+              <div className="mt-4">
+                <FlashCountdown timeLeft={timeLeft} size="sm" />
+              </div>
+            ) : null}
             <p className="mt-4 line-clamp-2 text-sm font-bold">{dealOfDay.name}</p>
             <p className="mt-3 text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
             <p className="mt-3 text-sm font-extrabold text-orange-500">{Math.max(getProductActivitySnapshot(dealOfDay).priceDropPercent, 15)}% OFF</p>
@@ -753,7 +771,7 @@ const CompactProduct = ({ product, navigate, prefetchRoute }) => (
   </button>
 );
 
-const DealCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
+const DealCard = ({ product, navigate, prefetchRoute, formatCurrency, cardIndex = 0 }) => {
   const activity = getProductActivitySnapshot(product);
   const originalPrice = getPriceValue(product.price);
   const offerPrice = getPriceValue(product.offerPrice || product.price);
@@ -764,20 +782,20 @@ const DealCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
       onClick={() => navigate(`/product/${product._id}`)}
       onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
       onFocus={() => prefetchRoute(`/product/${product._id}`)}
-      className="relative isolate min-w-0 rounded-md border border-gray-200 bg-white p-2 text-left transition hover:border-orange-300"
+      className={`relative isolate min-w-0 rounded-xl p-2.5 text-left shadow-md transition hover:brightness-[1.03] ${getFlashCardBackground(cardIndex)}`}
     >
-      <span className="absolute left-2 top-2 z-20 rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+      <span className="absolute left-2.5 top-2.5 z-20 rounded-md bg-gray-950/80 px-1.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-sm">
         {activity.hasDiscount ? `-${activity.priceDropPercent}%` : "Offer"}
       </span>
-      <span className="relative z-0 flex aspect-[1.18/1] items-center justify-center">
+      <span className="relative z-0 flex aspect-[1.15/1] items-center justify-center rounded-lg bg-white/75 p-1.5 shadow-inner backdrop-blur-sm">
         <ProductImage product={product} alt={product.name} width={140} height={118} className="h-full w-full object-contain" />
       </span>
       <span className="mt-2 line-clamp-2 min-h-8 text-[12px] font-semibold leading-4 text-gray-950">{product.name}</span>
       <span className="mt-2 flex flex-wrap items-center gap-1.5">
         {activity.hasDiscount ? (
-          <span className="text-[11px] text-gray-400 line-through">{formatCurrency(originalPrice)}</span>
+          <span className="text-[11px] text-gray-800/60 line-through">{formatCurrency(originalPrice)}</span>
         ) : null}
-        <span className="text-[12px] font-bold text-orange-600">{formatCurrency(offerPrice)}</span>
+        <span className="text-[12px] font-bold text-gray-950">{formatCurrency(offerPrice)}</span>
       </span>
     </button>
   );
@@ -990,6 +1008,61 @@ const getTimeParts = (milliseconds) => {
 
 const padTime = (value) => String(value).padStart(2, "0");
 
+const FlashCountdown = ({ timeLeft, size = "md" }) => {
+  const hasTime = Boolean(
+    timeLeft && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0)
+  );
+
+  if (!hasTime) {
+    return null;
+  }
+
+  const units = timeLeft.days > 0
+    ? [
+        [padTime(timeLeft.days), "Days"],
+        [padTime(timeLeft.hours), "Hrs"],
+        [padTime(timeLeft.minutes), "Min"],
+        [padTime(timeLeft.seconds), "Sec"],
+      ]
+    : [
+        [padTime(timeLeft.hours), "Hrs"],
+        [padTime(timeLeft.minutes), "Min"],
+        [padTime(timeLeft.seconds), "Sec"],
+      ];
+
+  if (size === "sm") {
+    return (
+      <div className="inline-flex items-center gap-1 rounded-lg bg-orange-700/10 px-2 py-1">
+        <span className="pr-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-orange-700">Ends</span>
+        {units.map(([value], index) => (
+          <span key={`${value}-${index}`} className="flex items-center gap-0.5">
+            {index > 0 ? <span className="text-[10px] font-bold text-orange-400">:</span> : null}
+            <span className="min-w-[1.35rem] rounded bg-orange-600 px-1 py-0.5 text-center text-[11px] font-extrabold tabular-nums text-white">
+              {value}
+            </span>
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="inline-flex items-center gap-1.5 rounded-xl bg-orange-700/10 px-2.5 py-1.5">
+      <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-orange-700">Ends in</span>
+      <div className="flex items-center gap-1">
+        {units.map(([value, label]) => (
+          <div key={label} className="text-center">
+            <span className="block min-w-[1.75rem] rounded-md bg-orange-600 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-white">
+              {value}
+            </span>
+            <span className="mt-0.5 block text-[9px] font-medium text-gray-500">{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const getPromotionRank = (product) => {
   const activity = getProductActivitySnapshot(product);
 
@@ -1036,7 +1109,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
 
         return (Number(rightProduct.date) || 0) - (Number(leftProduct.date) || 0);
       }),
-    7
+    5
   );
   const homeProducts = productsInCategories(sortedProducts, ["Home & Living", "Appliances", "Construction & Tools"], 10);
   const electronicsProducts = productsInCategories(sortedProducts, ["Computers & Electronics", "Phones & Tablets", "Audio", "Watches & Wearables", "Accessories"], 10);
@@ -1205,6 +1278,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       storeCards={visibleStoreCards}
       storeLoadMoreRef={storeLoadMoreRef}
       timeLeft={timeLeft}
+      hasCountdown={earliestDealDeadline > now}
       navigate={navigate}
       prefetchRoute={prefetchRoute}
       formatCurrency={formatCurrency}
@@ -1270,31 +1344,26 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
         </section>
 
         {dealProducts.length ? (
-          <section className="mt-7">
-            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <section className="mt-6 rounded-xl bg-gradient-to-br from-orange-100/80 via-rose-100/70 to-amber-50/90 px-4 py-4">
+            <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-bold text-gray-950">Deals and offers</h2>
-                <p className="text-xs text-gray-500">Active flash deals, discounts, and featured promotions set by admin.</p>
+                <h2 className="text-base font-bold text-gray-950">Flash Deals</h2>
+                <p className="text-[11px] text-gray-500">Active promotions ending soon</p>
               </div>
-              {earliestDealDeadline ? (
-                <div className="flex gap-2">
-                  {[
-                    [padTime(timeLeft.days), "Days"],
-                    [padTime(timeLeft.hours), "Hours"],
-                    [padTime(timeLeft.minutes), "Mins"],
-                    [padTime(timeLeft.seconds), "Secs"],
-                  ].map(([value, label]) => (
-                    <div key={label} className="text-center">
-                      <div className="rounded-md bg-orange-600 px-2.5 py-1.5 text-xs font-bold text-white">{value}</div>
-                      <div className="mt-1 text-[11px] text-gray-500">{label}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
+              <div className="flex items-center gap-3">
+                {earliestDealDeadline > now ? <FlashCountdown timeLeft={timeLeft} /> : null}
+                <button
+                  type="button"
+                  onClick={() => navigate("/all-products?filter=flash")}
+                  className="text-xs font-semibold text-orange-600 hover:text-orange-700"
+                >
+                  View all -&gt;
+                </button>
+              </div>
             </div>
-            <div className="grid gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7">
+            <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {dealProducts.map((product, index) => (
-                <DealCard key={`${product._id}-deal-${index}`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
+                <DealCard key={`${product._id}-deal-${index}`} product={product} cardIndex={index} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
               ))}
             </div>
           </section>

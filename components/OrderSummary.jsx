@@ -9,7 +9,6 @@ import toast from "react-hot-toast";
 const OrderSummary = () => {
   const {
     router,
-    getCartCount,
     getCartAmount,
     getToken,
     user,
@@ -134,60 +133,64 @@ const OrderSummary = () => {
     void fetchUserAddresses();
   }, [authReady, getToken, user]);
 
-  return (
-    <aside className="h-fit w-full min-w-0 rounded-lg border border-gray-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-5">
-      <h2 className="text-lg font-bold text-gray-950">Order Summary</h2>
+  const formatAddressLine = (address) => [
+    address.village || address.area,
+    address.district || address.city,
+    address.region || address.state,
+  ].filter(Boolean).join(", ");
 
-      <div className="mt-5 space-y-5">
+  return (
+    <aside className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
+      <h2 className="text-base font-bold text-gray-950">Order summary</h2>
+
+      <div className="mt-4 space-y-4">
         <div>
-          <label className="mb-2 block text-[13px] font-semibold text-gray-700">Select Address</label>
-          <div className="relative inline-block w-full rounded-md border border-gray-200 text-sm">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Delivery address</label>
+          <div className="relative">
             <button
               type="button"
-              className="peer flex w-full items-center gap-2 bg-white px-3 py-2.5 text-left text-gray-700 focus:outline-none sm:px-3.5"
+              className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50/40 px-3 py-2.5 text-left text-sm text-gray-700 transition hover:border-gray-300"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               disabled={isPlacingOrder}
             >
-              <span className="min-w-0 flex-1 truncate">
-                {selectedAddress
-                  ? [
-                    selectedAddress.fullName,
-                    selectedAddress.village || selectedAddress.area,
-                    selectedAddress.district || selectedAddress.city,
-                    selectedAddress.region || selectedAddress.state,
-                  ].filter(Boolean).join(", ")
-                  : "Select Address"}
+              <span className="min-w-0 flex-1">
+                {selectedAddress ? (
+                  <>
+                    <span className="block truncate font-medium text-gray-900">{selectedAddress.fullName}</span>
+                    <span className="mt-0.5 block truncate text-xs text-gray-500">{formatAddressLine(selectedAddress)}</span>
+                  </>
+                ) : (
+                  <span className="text-gray-500">Select address</span>
+                )}
               </span>
               <svg
-                className={`h-5 w-5 shrink-0 transition-transform duration-200 ${isDropdownOpen ? "rotate-0" : "-rotate-90"}`}
+                className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="#6B7280"
+                stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
             {isDropdownOpen && (
-              <ul className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white py-1 shadow-md">
+              <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
                 {userAddresses.map((address, index) => (
                   <li
                     key={index}
-                    className="cursor-pointer px-3 py-2 [overflow-wrap:anywhere] hover:bg-gray-500/10"
+                    className="cursor-pointer px-3 py-2.5 hover:bg-gray-50"
                     onClick={() => handleAddressSelect(address)}
                   >
-                    <p className="text-[13px] font-semibold text-gray-900">{address.fullName}</p>
-                    <p className="text-[12px] text-gray-500">
-                      {[address.village || address.area, address.district || address.city, address.region || address.state].filter(Boolean).join(", ")}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900">{address.fullName}</p>
+                    <p className="text-xs text-gray-500">{formatAddressLine(address)}</p>
                   </li>
                 ))}
                 <li
                   onClick={() => router.push("/add-address")}
-                  className="cursor-pointer px-3 py-2 text-center text-[13px] font-medium text-orange-600 hover:bg-gray-500/10"
+                  className="cursor-pointer border-t border-gray-100 px-3 py-2.5 text-center text-sm font-medium text-orange-600 hover:bg-orange-50"
                 >
-                  + Add New Address
+                  + Add new address
                 </li>
               </ul>
             )}
@@ -195,86 +198,67 @@ const OrderSummary = () => {
         </div>
 
         <div>
-          <label className="mb-2 block text-[13px] font-semibold text-gray-700">Fulfillment</label>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Fulfillment</label>
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => setDeliveryMode(DELIVERY_MODES.DELIVERY)}
-              className={`rounded-md border px-3 py-2.5 text-left transition ${
+              className={`rounded-lg border px-3 py-2.5 text-left transition ${
                 deliveryMode === DELIVERY_MODES.DELIVERY
-                  ? "border-orange-500 bg-orange-50 text-orange-700"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-orange-200"
+                  ? "border-orange-500 bg-orange-50 text-orange-800"
+                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
               }`}
             >
-              <p className="text-[13px] font-semibold">Delivery</p>
-              <p className="mt-1 text-[11px] text-gray-500">One rider will be assigned and must accept before contacts unlock.</p>
+              <p className="text-sm font-semibold">Delivery</p>
+              <p className="mt-0.5 text-[11px] leading-4 text-gray-500">Rider assigned after seller accepts</p>
             </button>
             <button
               type="button"
               onClick={() => setDeliveryMode(DELIVERY_MODES.PICKUP)}
-              className={`rounded-md border px-3 py-2.5 text-left transition ${
+              className={`rounded-lg border px-3 py-2.5 text-left transition ${
                 deliveryMode === DELIVERY_MODES.PICKUP
-                  ? "border-orange-500 bg-orange-50 text-orange-700"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-orange-200"
+                  ? "border-orange-500 bg-orange-50 text-orange-800"
+                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
               }`}
             >
-              <p className="text-[13px] font-semibold">Pickup</p>
-              <p className="mt-1 text-[11px] text-gray-500">Collect directly from the seller after they accept your order.</p>
+              <p className="text-sm font-semibold">Pickup</p>
+              <p className="mt-0.5 text-[11px] leading-4 text-gray-500">Collect from seller after acceptance</p>
             </button>
           </div>
         </div>
 
-        <div className="border-t border-gray-200 pt-5">
-          <label className="mb-2 block text-[13px] font-semibold text-gray-700">Promo Code</label>
-          <div className="flex min-w-0 gap-2">
-            <input
-              type="text"
-              placeholder="Enter promo code"
-              className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-600 outline-none focus:border-orange-500"
-            />
-            <button type="button" className="shrink-0 rounded-md border border-orange-600 px-3.5 text-[13px] font-semibold text-orange-600 hover:bg-orange-50 sm:px-4">Apply</button>
+        <div className="space-y-2.5 border-t border-gray-100 pt-4">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Subtotal</span>
+            <span className="font-medium text-gray-900">{formatCurrency(cartAmount)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">{deliveryMode === DELIVERY_MODES.PICKUP ? "Pickup fee" : "Delivery fee"}</span>
+            <span className="font-medium text-emerald-600">{estimatedDeliveryFee === 0 ? "Free" : formatCurrency(estimatedDeliveryFee)}</span>
+          </div>
+          <div className="flex justify-between border-t border-gray-100 pt-3">
+            <span className="text-base font-bold text-gray-950">Total</span>
+            <span className="text-base font-bold text-gray-950">{formatCurrency(totalAmount)}</span>
           </div>
         </div>
 
-        <div className="space-y-3 border-t border-gray-200 pt-5">
-          <div className="flex min-w-0 justify-between gap-3 text-sm">
-            <p className="text-gray-600">Subtotal</p>
-            <p className="min-w-0 text-right text-gray-800 [overflow-wrap:anywhere]">{formatCurrency(cartAmount)}</p>
-          </div>
-          <div className="flex min-w-0 justify-between gap-3 text-sm">
-            <p className="text-gray-600">{deliveryMode === DELIVERY_MODES.PICKUP ? "Pickup Fee" : "Estimated Delivery Fee"}</p>
-            <p className="min-w-0 text-right font-medium text-green-600 [overflow-wrap:anywhere]">{estimatedDeliveryFee === 0 ? "Free" : formatCurrency(estimatedDeliveryFee)}</p>
-          </div>
-          <div className="flex min-w-0 justify-between gap-3 border-t border-gray-200 pt-5 text-xl font-bold text-gray-950">
-            <p>Total</p>
-            <p className="min-w-0 text-right [overflow-wrap:anywhere]">{formatCurrency(totalAmount)}</p>
-          </div>
-          <p className="text-xs text-gray-500">
-            Seller contact stays hidden until the seller accepts the order. Completed orders are confirmed inside the app.
-          </p>
-        </div>
+        <p className="text-[11px] leading-4 text-gray-400">
+          Seller contact unlocks after order acceptance. Confirm delivery in-app once you receive your items.
+        </p>
       </div>
 
       <button
         onClick={createOrder}
         disabled={isPlacingOrder || loadingProducts}
-        className="mt-5 w-full rounded-md bg-orange-600 py-3 text-[15px] font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-70"
+        className="mt-4 w-full rounded-lg bg-orange-600 py-3 text-sm font-semibold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-70"
       >
         <span className="flex items-center justify-center gap-2">
           {(isPlacingOrder || loadingProducts) && (
-            <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
           )}
-          {isPlacingOrder ? "Placing Order..." : loadingProducts ? "Loading cart..." : "Place Order"}
+          {isPlacingOrder ? "Placing order..." : loadingProducts ? "Loading cart..." : "Place order"}
         </span>
       </button>
-      <div className="mt-4 text-center">
-        <p className="text-[11px] text-gray-400">We accept</p>
-        <div className="mt-2 flex justify-center gap-2">
-          {["VISA", "MC", "Pay"].map((item) => (
-            <span key={item} className="rounded border border-gray-200 px-2.5 py-0.5 text-[11px] font-bold text-gray-500">{item}</span>
-          ))}
-        </div>
-      </div>
     </aside>
   );
 };
