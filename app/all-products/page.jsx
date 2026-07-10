@@ -22,6 +22,12 @@ const priceRanges = [
   { label: "Above UGX 1M", min: 1000000, max: Infinity },
 ];
 
+const formatPriceRangeLabel = (range) => {
+  if (!range) return "All Prices";
+  if (range.label === "All Prices") return range.label;
+  return range.label.replace("UGX ", "").replace("Under ", "Under ");
+};
+
 const sortOptions = [
   { label: "Best Match", value: "relevance" },
   { label: "Default", value: "default" },
@@ -51,11 +57,44 @@ const ratingOptions = [
 const filterCategoryHighlights = marketplaceFilterCategories.slice(0, 8);
 const mobileRailCategories = marketplaceFilterCategories;
 
-const CategoryGlyph = ({ className = "h-4 w-4" }) => (
-  <svg className={className} aria-hidden="true" viewBox="0 0 24 24" fill="none">
-    <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
-  </svg>
-);
+const CategoryGlyph = ({ className = "h-4 w-4", category = "all" }) => {
+  const iconPaths = {
+    all: "M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z",
+    fashion: "M8 4 5 6.5 3 11l3 1.5V20h12v-7.5L21 11l-2-4.5L16 4l-2 2h-4L8 4Z",
+    "beauty & cosmetics": "M9 14.5 16.5 7a2.1 2.1 0 0 1 3 3L12 17.5 8 18.5l1-4ZM5 20h14M6 8h5M7 4h3v10H7V4Z",
+    "health & personal care": "M12 21s7-4.4 7-11a4 4 0 0 0-7-2.6A4 4 0 0 0 5 10c0 6.6 7 11 7 11ZM12 8v6M9 11h6",
+    "home & living": "M4 11.5 12 5l8 6.5M6.5 10v9h11v-9M10 19v-5h4v5",
+    "phones & tablets": "M8 3h8a1.3 1.3 0 0 1 1.3 1.3v15.4A1.3 1.3 0 0 1 16 21H8a1.3 1.3 0 0 1-1.3-1.3V4.3A1.3 1.3 0 0 1 8 3Zm3 15h2",
+    "computers & electronics": "M5 6h14v9H5V6Zm-2 12h18M9 18l1-3m5 3-1-3",
+    audio: "M5 14v-2a7 7 0 0 1 14 0v2M5 14h3v5H5v-5Zm11 0h3v5h-3v-5Z",
+    "watches & wearables": "M9 3h6l1 4a6 6 0 0 1 0 10l-1 4H9l-1-4A6 6 0 0 1 8 7l1-4Zm3 5v4l2.5 1.5",
+    accessories: "M8 7V5a2 2 0 0 1 4 0v2m4 0V5a2 2 0 0 1 4 0v2M7 7h14v6a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V7ZM4 12h3",
+    appliances: "M7 4h10v16H7V4Zm2 3h6m-5 10h4m-5-6h6v4H9v-4Z",
+    "baby products": "M8 10a4 4 0 0 1 8 0v2h1.5A2.5 2.5 0 0 1 20 14.5V19H4v-4.5A2.5 2.5 0 0 1 6.5 12H8v-2Zm2 7h.1M14 17h.1M10 9h4",
+    "office & stationery": "M5 19l4-1 10-10-3-3L6 15l-1 4Zm10-13 3 3M5 5h6M5 9h3",
+    "sports & outdoors": "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-18v18M4.5 8h15M4.5 16h15",
+    automotive: "M5 17h14l-1.2-5.2A3 3 0 0 0 14.9 9H9.1a3 3 0 0 0-2.9 2.8L5 17Zm2 0v2m10-2v2M7.5 13h9",
+    "books & learning": "M5 5.5A2.5 2.5 0 0 1 7.5 3H20v16H7.5A2.5 2.5 0 0 0 5 21V5.5Zm0 0A2.5 2.5 0 0 0 7.5 8H20",
+    "construction & tools": "m14 6 4 4M4 20l8.5-8.5m2-6.5 4.5 4.5-3 3-4.5-4.5 3-3ZM5 7l4 4",
+    smartphone: "M8 3h8a1.3 1.3 0 0 1 1.3 1.3v15.4A1.3 1.3 0 0 1 16 21H8a1.3 1.3 0 0 1-1.3-1.3V4.3A1.3 1.3 0 0 1 8 3Zm3 15h2",
+    laptop: "M5 6h14v9H5V6Zm-2 12h18M9 18l1-3m5 3-1-3",
+    camera: "M5 8h2l1.5-2h7L16 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2Zm7 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z",
+    headphone: "M5 14v-2a7 7 0 0 1 14 0v2M5 14h3v5H5v-5Zm11 0h3v5h-3v-5Z",
+    earphone: "M7 10a5 5 0 0 1 10 0v4a2.5 2.5 0 0 1-2.5 2.5H9.5A2.5 2.5 0 0 1 7 14v-4Zm2 5v3m4-3v3",
+    watch: "M9 3h6l1 4a6 6 0 0 1 0 10l-1 4H9l-1-4A6 6 0 0 1 8 7l1-4Zm3 5v4l2.5 1.5",
+  };
+
+  const normalizedCategory = String(category || "all").trim().toLowerCase();
+  const pathData = iconPaths[normalizedCategory] || iconPaths.all;
+
+  return (
+    <span className={`inline-flex items-center justify-center ${className}`} aria-hidden="true">
+      <svg className="h-full w-full" viewBox="0 0 24 24" fill="none">
+        <path d={pathData} stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+};
 
 const gridIconPath = "M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z";
 
@@ -169,7 +208,7 @@ const SelectedProductCard = ({ product, formatCurrency, navigate, prefetchRoute,
   );
 };
 
-const MobileRailButton = ({ label, active, onClick }) => (
+const MobileRailButton = ({ label, category = "all", active, onClick }) => (
   <button
     type="button"
     onClick={onClick}
@@ -177,7 +216,7 @@ const MobileRailButton = ({ label, active, onClick }) => (
       active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
     }`}
   >
-    <CategoryGlyph className="h-[1.05rem] w-[1.05rem] min-[380px]:h-5 min-[380px]:w-5" />
+    <CategoryGlyph category={category} className="h-[1.05rem] w-[1.05rem] min-[380px]:h-5 min-[380px]:w-5" />
     <span className="line-clamp-2 text-[9px] font-extrabold leading-[11px] min-[380px]:text-[10px] min-[380px]:leading-3">{label}</span>
   </button>
 );
@@ -402,6 +441,7 @@ function AllProductsInner() {
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [selectedRating, setSelectedRating] = useState(0);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const hasActiveSearch = deferredSearchQuery.trim().length > 0;
   const effectiveSortBy = hasActiveSearch
@@ -422,7 +462,12 @@ function AllProductsInner() {
     setSelectedBrand(brand || "all");
     setSelectedCondition(filter === "flash" ? "flash" : "all");
     setSortBy(filter === "flash" ? "discount" : sortOptions.some((option) => option.value === sort) ? sort : "default");
+    setCurrentPage(1);
   }, [searchParams]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedPriceRange, selectedCondition, selectedBrand, selectedRating, searchQuery, selectedSeller, effectiveSortBy]);
 
   const brandOptions = useMemo(() => {
     const counts = products.reduce((acc, product) => {
@@ -506,7 +551,16 @@ function AllProductsInner() {
     return filtered.map(({ product }) => product);
   };
 
+  const handlePriceRangeChange = (nextIndex) => {
+    const normalizedIndex = Math.max(0, Math.min(priceRanges.length - 1, Number(nextIndex) || 0));
+    setSelectedPriceRange(normalizedIndex);
+  };
+
   const filteredProducts = filterAndSort();
+  const pageSize = 24;
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const pagedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
   const sellerReferenceProduct = selectedSeller ? products.find((product) => product.userId === selectedSeller) : null;
   const sellerFilterLabel = sellerReferenceProduct?.sellerProfile?.name || sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
@@ -544,12 +598,12 @@ function AllProductsInner() {
 
   const DropdownFilter = ({ label, valueLabel, children }) => (
     <details className="group relative">
-      <summary className="flex h-10 cursor-pointer list-none items-center gap-2 rounded-full border border-gray-200 bg-white px-3.5 text-[13px] font-semibold text-gray-800 shadow-sm transition hover:border-orange-300 hover:text-orange-600 [&::-webkit-details-marker]:hidden">
+      <summary className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-800 shadow-sm transition hover:border-orange-300 hover:text-orange-600 [&::-webkit-details-marker]:hidden">
         <span>{label}</span>
-        {valueLabel ? <span className="max-w-24 truncate rounded-full bg-orange-50 px-2 py-0.5 text-[11px] text-orange-700">{valueLabel}</span> : null}
-        <span className="text-gray-400 transition group-open:rotate-180">⌄</span>
+        {valueLabel ? <span className="max-w-20 truncate rounded-full bg-orange-50 px-1.5 py-0 text-[9px] text-orange-700">{valueLabel}</span> : null}
+        <span className="text-gray-400 transition group-open:rotate-180 text-xs">⌄</span>
       </summary>
-      <div className="absolute left-0 top-12 z-40 w-56 rounded-md border border-gray-200 bg-white p-2 shadow-xl">
+      <div className="absolute left-0 top-9 z-40 w-48 rounded-md border border-gray-200 bg-white p-1.5 shadow-xl">
         {children}
       </div>
     </details>
@@ -559,7 +613,7 @@ function AllProductsInner() {
     <button
       type="button"
       onClick={onClick}
-      className={`block w-full rounded px-3 py-2 text-left text-[13px] transition ${
+      className={`block w-full rounded px-2 py-1.5 text-left text-[11px] transition ${
         active ? "bg-orange-50 font-semibold text-orange-600" : "text-gray-700 hover:bg-gray-50"
       }`}
     >
@@ -568,25 +622,25 @@ function AllProductsInner() {
   );
 
   const FilterPanel = () => (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <div>
-        <p className="mb-3 text-lg font-bold text-gray-950">Electronics & Gadgets</p>
+        <p className="mb-2 text-sm font-bold text-gray-950">Electronics & Gadgets</p>
         <input
           type="text"
           placeholder="Search products..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-md border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-orange-500"
+          className="w-full rounded-md border border-gray-200 px-3 py-1.5 text-xs outline-none focus:border-orange-500"
         />
       </div>
       <div>
-        <p className="mb-3 text-sm font-bold text-gray-950">Related categories</p>
+        <p className="mb-2 text-xs font-bold text-gray-950">Related categories</p>
         <div className="max-h-72 space-y-0.5 overflow-y-auto pr-1">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`w-full border-l-2 px-3 py-2 text-left text-sm transition ${
+              className={`w-full border-l-2 px-2 py-1.5 text-left text-xs transition ${
                 selectedCategory === cat ? "border-orange-600 bg-orange-50 font-semibold text-orange-600" : "border-transparent text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -596,13 +650,13 @@ function AllProductsInner() {
         </div>
       </div>
       <div>
-        <p className="mb-3 border-t border-gray-200 pt-4 text-sm font-bold text-gray-950">Price Range</p>
-        <div className="space-y-1.5">
+        <p className="mb-2 border-t border-gray-200 pt-3 text-xs font-bold text-gray-950">Price Range</p>
+        <div className="space-y-1">
           {priceRanges.map((range, index) => (
             <button
               key={index}
               onClick={() => setSelectedPriceRange(index)}
-              className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${
+              className={`w-full rounded-md px-2 py-1.5 text-left text-xs transition ${
                 selectedPriceRange === index ? "bg-orange-600 font-semibold text-white" : "text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -612,13 +666,13 @@ function AllProductsInner() {
         </div>
       </div>
       <div>
-        <p className="mb-3 border-t border-gray-200 pt-4 text-sm font-bold text-gray-950">Condition</p>
-        <div className="space-y-1.5">
+        <p className="mb-2 border-t border-gray-200 pt-3 text-xs font-bold text-gray-950">Condition</p>
+        <div className="space-y-1">
           {conditionOptions.map((condition) => (
             <button
               key={condition.value}
               onClick={() => setSelectedCondition(condition.value)}
-              className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${
+              className={`w-full rounded-md px-2 py-1.5 text-left text-xs transition ${
                 selectedCondition === condition.value ? "bg-orange-600 font-semibold text-white" : "text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -628,11 +682,11 @@ function AllProductsInner() {
         </div>
       </div>
       <div>
-        <p className="mb-3 border-t border-gray-200 pt-4 text-sm font-bold text-gray-950">Brand</p>
-        <div className="max-h-56 space-y-1.5 overflow-y-auto pr-1">
+        <p className="mb-2 border-t border-gray-200 pt-3 text-xs font-bold text-gray-950">Brand</p>
+        <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
           <button
             onClick={() => setSelectedBrand("all")}
-            className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${
+            className={`w-full rounded-md px-2 py-1.5 text-left text-xs transition ${
               selectedBrand === "all" ? "bg-orange-600 font-semibold text-white" : "text-gray-600 hover:bg-gray-50"
             }`}
           >
@@ -642,24 +696,24 @@ function AllProductsInner() {
             <button
               key={brand.value}
               onClick={() => setSelectedBrand(brand.value)}
-              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition ${
+              className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs transition ${
                 selectedBrand === brand.value ? "bg-orange-600 font-semibold text-white" : "text-gray-600 hover:bg-gray-50"
               }`}
             >
               <span>{brand.label}</span>
-              <span className="text-xs opacity-70">{brand.count}</span>
+              <span className="text-[10px] opacity-70">{brand.count}</span>
             </button>
           ))}
         </div>
       </div>
       <div>
-        <p className="mb-3 border-t border-gray-200 pt-4 text-sm font-bold text-gray-950">Rating</p>
-        <div className="space-y-1.5">
+        <p className="mb-2 border-t border-gray-200 pt-3 text-xs font-bold text-gray-950">Rating</p>
+        <div className="space-y-1">
           {ratingOptions.map((rating) => (
             <button
               key={rating.value}
               onClick={() => setSelectedRating(rating.value)}
-              className={`w-full rounded-md px-3 py-2 text-left text-sm transition ${
+              className={`w-full rounded-md px-2 py-1.5 text-left text-xs transition ${
                 selectedRating === rating.value ? "bg-orange-600 font-semibold text-white" : "text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -670,7 +724,7 @@ function AllProductsInner() {
       </div>
       <button
         onClick={resetFilters}
-        className="w-full rounded-md border border-orange-500 py-2.5 text-sm font-semibold text-orange-600 transition hover:bg-orange-50"
+        className="w-full rounded-md border border-orange-500 py-1.5 text-xs font-semibold text-orange-600 transition hover:bg-orange-50"
       >
         Clear All Filters
       </button>
@@ -678,103 +732,128 @@ function AllProductsInner() {
   );
 
   const SelectedFilterPanel = () => (
-    <aside className="hidden w-[17.5rem] shrink-0 lg:block">
-      <div className="sticky top-28 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <h2 className="text-sm font-extrabold text-gray-950">Filters</h2>
-          <button type="button" onClick={resetFilters} className="text-[12px] font-bold text-gray-700">Clear all</button>
+    <aside className="hidden w-[17.5rem] shrink-0 self-start lg:block">
+      <div className="sticky top-24 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
+          <h2 className="text-xs font-extrabold text-gray-950">Filters</h2>
+          <button type="button" onClick={resetFilters} className="text-[10px] font-bold text-gray-700">Clear</button>
         </div>
 
-        <section className="border-b border-gray-100 px-4 py-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[13px] font-extrabold text-gray-950">Category</h3>
-            <span className="text-gray-400">⌃</span>
+        <section className="border-b border-gray-100 px-3 py-3">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-[11px] font-extrabold text-gray-950">Category</h3>
+            <span className="text-gray-400 text-xs">⌃</span>
           </div>
-          <div className="space-y-2.5">
+          <div className="space-y-1.5">
             {selectedTileData.slice(0, 7).map((tile) => (
               <button
                 key={`filter-${tile.label}`}
                 type="button"
                 onClick={() => setSelectedCategory(tile.label === "All" ? selectedCategory : tile.categories[0])}
-                className="flex w-full items-center justify-between gap-3 text-left text-[12px] text-gray-700"
+                className="flex w-full items-center justify-between gap-2 text-left text-[10px] text-gray-700"
               >
-                <span className="flex min-w-0 items-center gap-2">
-                  <span className={`h-3.5 w-3.5 rounded-full border ${tile.label === "All" ? "border-orange-600 bg-orange-600 ring-2 ring-orange-100" : "border-gray-300"}`} />
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className={`h-3 w-3 rounded-full border ${
+                    tile.label === "All" ? "border-orange-600 bg-orange-600 ring-1 ring-orange-100" : "border-gray-300"
+                  }`} />
                   <span className="truncate">{tile.label === "All" ? `All ${selectedCategoryMeta?.label || "Products"}` : tile.label}</span>
                 </span>
-                <span className="text-[11px] text-gray-500">{formatCount(tile.count)}</span>
+                <span className="text-[9px] text-gray-500">{formatCount(tile.count)}</span>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="border-b border-gray-100 px-4 py-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[13px] font-extrabold text-gray-950">Price (UGX)</h3>
-            <span className="text-gray-400">⌃</span>
+        <section className="border-b border-gray-100 px-3 py-3">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-[11px] font-extrabold text-gray-950">Price (UGX)</h3>
+            <span className="text-gray-400 text-xs">⌃</span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <input value="UGX 10,000" readOnly className="min-w-0 rounded-md border border-gray-200 px-2 py-2 text-[11px] text-gray-600 outline-none" />
-            <input value="UGX 15,000,000" readOnly className="min-w-0 rounded-md border border-gray-200 px-2 py-2 text-[11px] text-gray-600 outline-none" />
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              onClick={() => handlePriceRangeChange(Math.max(0, selectedPriceRange - 1))}
+              className="min-w-0 rounded-md border border-gray-200 px-2 py-1.5 text-left text-[10px] text-gray-600 transition hover:border-orange-200 hover:bg-orange-50"
+            >
+              <span className="block text-[9px] uppercase tracking-wide text-gray-400">Lower</span>
+              <span className="block truncate font-semibold text-gray-800">{formatPriceRangeLabel(priceRanges[Math.max(0, selectedPriceRange - 1)])}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePriceRangeChange(Math.min(priceRanges.length - 1, selectedPriceRange + 1))}
+              className="min-w-0 rounded-md border border-gray-200 px-2 py-1.5 text-left text-[10px] text-gray-600 transition hover:border-orange-200 hover:bg-orange-50"
+            >
+              <span className="block text-[9px] uppercase tracking-wide text-gray-400">Selected</span>
+              <span className="block truncate font-semibold text-gray-800">{formatPriceRangeLabel(priceRanges[selectedPriceRange])}</span>
+            </button>
           </div>
-          <div className="mt-4 h-1.5 rounded-full bg-orange-100">
-            <div className="h-full w-full rounded-full bg-orange-600" />
+          <div className="mt-3">
+            <input
+              type="range"
+              min="0"
+              max={priceRanges.length - 1}
+              step="1"
+              value={selectedPriceRange}
+              onChange={(event) => handlePriceRangeChange(event.target.value)}
+              className="w-full accent-orange-600"
+              aria-label="Price range slider"
+            />
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
-            {priceRanges.slice(1).map((range, index) => (
+          <div className="mt-3 space-y-0.5 rounded-2xl border border-gray-100 bg-gray-50 p-1.5 text-[10px]">
+            {priceRanges.map((range, index) => (
               <button
                 key={range.label}
                 type="button"
-                onClick={() => setSelectedPriceRange(index + 1)}
-                className={`rounded-md border px-2 py-1.5 ${selectedPriceRange === index + 1 ? "border-orange-500 bg-orange-50 text-orange-600" : "border-gray-200 text-gray-600"}`}
+                onClick={() => handlePriceRangeChange(index)}
+                className={`w-full rounded-xl px-2 py-1.5 text-left transition ${selectedPriceRange === index ? "bg-orange-600 text-white" : "text-gray-600 hover:bg-orange-50"}`}
               >
-                {range.label.replace("UGX ", "").replace("Under ", "Under ")}
+                {formatPriceRangeLabel(range)}
               </button>
             ))}
           </div>
         </section>
 
-        <section className="border-b border-gray-100 px-4 py-4">
-          <h3 className="mb-3 text-[13px] font-extrabold text-gray-950">Brands</h3>
-          <div className="mb-3 flex items-center gap-2 rounded-full bg-gray-50 px-3 py-2 text-[11px] text-gray-400">
+        <section className="border-b border-gray-100 px-3 py-3">
+          <h3 className="mb-2 text-[11px] font-extrabold text-gray-950">Brands</h3>
+          <div className="mb-2 flex items-center gap-1.5 rounded-full bg-gray-50 px-2 py-1.5 text-[10px] text-gray-400">
             <span>⌕</span>
             <span>Search brands</span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {brandOptions.slice(0, 5).map((brand) => (
-              <button key={brand.value} type="button" onClick={() => setSelectedBrand(brand.value)} className="flex w-full items-center justify-between text-[12px] text-gray-700">
-                <span className="flex items-center gap-2">
-                  <span className={`h-3.5 w-3.5 rounded border ${selectedBrand === brand.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
+              <button key={brand.value} type="button" onClick={() => setSelectedBrand(brand.value)} className="flex w-full items-center justify-between text-[10px] text-gray-700">
+                <span className="flex items-center gap-1.5">
+                  <span className={`h-3 w-3 rounded border ${selectedBrand === brand.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
                   {brand.label}
                 </span>
-                <span className="text-[11px] text-gray-500">{brand.count}</span>
+                <span className="text-[9px] text-gray-500">{brand.count}</span>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="border-b border-gray-100 px-4 py-4">
-          <h3 className="mb-3 text-[13px] font-extrabold text-gray-950">Condition</h3>
-          <div className="space-y-2">
+        <section className="border-b border-gray-100 px-3 py-3">
+          <h3 className="mb-2 text-[11px] font-extrabold text-gray-950">Condition</h3>
+          <div className="space-y-1.5">
             {conditionOptions.slice(1, 3).map((condition) => (
-              <button key={condition.value} type="button" onClick={() => setSelectedCondition(condition.value)} className="flex w-full items-center justify-between text-[12px] text-gray-700">
-                <span className="flex items-center gap-2">
-                  <span className={`h-3.5 w-3.5 rounded border ${selectedCondition === condition.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
+              <button key={condition.value} type="button" onClick={() => setSelectedCondition(condition.value)} className="flex w-full items-center justify-between text-[10px] text-gray-700">
+                <span className="flex items-center gap-1.5">
+                  <span className={`h-3 w-3 rounded border ${selectedCondition === condition.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
                   {condition.value === "new" ? "Brand New" : "Used"}
                 </span>
-                <span className="text-[11px] text-gray-500">{condition.value === "new" ? "3,124" : "1,112"}</span>
+                <span className="text-[9px] text-gray-500">{condition.value === "new" ? "3,124" : "1,112"}</span>
               </button>
             ))}
           </div>
         </section>
 
-        <section className="px-4 py-4">
-          <h3 className="mb-3 text-[13px] font-extrabold text-gray-950">Ratings</h3>
-          <div className="space-y-2">
+        <section className="px-3 py-3">
+          <h3 className="mb-2 text-[11px] font-extrabold text-gray-950">Ratings</h3>
+          <div className="space-y-1.5">
             {ratingOptions.slice(1).map((rating) => (
-              <button key={rating.value} type="button" onClick={() => setSelectedRating(rating.value)} className="flex w-full items-center justify-between text-[12px] text-gray-700">
+              <button key={rating.value} type="button" onClick={() => setSelectedRating(rating.value)} className="flex w-full items-center justify-between text-[10px] text-gray-700">
                 <span className="text-orange-500">★★★★★ <span className="text-gray-500">& up</span></span>
-                <span className="text-[11px] text-gray-500">{formatCount(Math.round(rating.value * 900))}</span>
+                <span className="text-[9px] text-gray-500">{formatCount(Math.round(rating.value * 900))}</span>
               </button>
             ))}
           </div>
@@ -796,11 +875,12 @@ function AllProductsInner() {
             <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-1.5 min-[380px]:grid-cols-[5.35rem_minmax(0,1fr)] min-[380px]:gap-2 lg:hidden">
               <aside className="sticky left-0 top-[4.2rem] z-10 h-[calc(100svh-8.5rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-xl border border-gray-100 bg-white/95 p-1.5 shadow-sm backdrop-blur min-[380px]:top-[4.4rem] min-[380px]:p-2 [-webkit-overflow-scrolling:touch]">
                 <div className="space-y-1.5 min-[380px]:space-y-2">
-                  <MobileRailButton label="All Categories" active onClick={() => setSelectedCategory("All")} />
+                  <MobileRailButton label="All Categories" category="all" active={selectedCategory === "All"} onClick={() => setSelectedCategory("All")} />
                   {mobileRailCategories.map((category) => (
                     <MobileRailButton
                       key={category}
                       label={getCategoryMeta(category).label}
+                      category={category}
                       active={categoryMatchesSelection(category, selectedCategory)}
                       onClick={() => setSelectedCategory(category)}
                     />
@@ -911,9 +991,13 @@ function AllProductsInner() {
                       key={`top-${tile.label}`}
                       label={tile.label}
                       product={tile.product}
-                      active={tile.label === "All"}
+                      active={tile.label === "All" ? selectedCategory === "All" : selectedCategory === tile.categories[0]}
                       onClick={() => {
-                        if (tile.label !== "All") setSelectedCategory(tile.categories[0]);
+                        if (tile.label === "All") {
+                          setSelectedCategory("All");
+                        } else {
+                          setSelectedCategory(tile.categories[0]);
+                        }
                       }}
                     />
                   ))}
@@ -977,16 +1061,17 @@ function AllProductsInner() {
           )}
         </div>
 
-        <section className="mb-6 overflow-x-auto">
+        <section className="mb-4 overflow-x-auto">
           <div className="flex min-w-max gap-2 pb-1">
             <button
               type="button"
               onClick={() => setSelectedCategory("All")}
-              className={`rounded-md border px-3 py-2 text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition ${
                 selectedCategory === "All" ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
               }`}
             >
-              All categories
+              <CategoryGlyph category="all" className="h-3.5 w-3.5 shrink-0" />
+              <span>All products</span>
             </button>
             {filterCategoryHighlights.map((category) => {
               const meta = getCategoryMeta(category);
@@ -995,11 +1080,11 @@ function AllProductsInner() {
                   key={category}
                   type="button"
                   onClick={() => setSelectedCategory(category)}
-                  className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold transition ${
+                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition ${
                     selectedCategory === category ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
                   }`}
                 >
-                  <span><CategoryGlyph /></span>
+                  <CategoryGlyph category={meta.label} className="h-3.5 w-3.5 shrink-0" />
                   <span>{meta.label}</span>
                 </button>
               );
@@ -1007,22 +1092,22 @@ function AllProductsInner() {
           </div>
         </section>
 
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[26px] font-bold text-gray-950">{compactHeading ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
+            <p className="text-xl font-bold text-gray-950">{compactHeading ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
             {!compactHeading ? (
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-0.5 text-xs text-gray-500">
                 {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''} found
                 {selectedSeller ? ` from ${sellerFilterLabel}` : ""}
               </p>
             ) : null}
           </div>
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <label className="hidden text-sm font-medium text-gray-700 sm:block">Sort by:</label>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <label className="hidden text-xs font-medium text-gray-700 sm:block">Sort:</label>
             <select
               value={effectiveSortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-orange-500 sm:w-auto"
+              className="w-full rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs outline-none focus:border-orange-500 sm:w-auto"
             >
               {sortOptions.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1030,15 +1115,15 @@ function AllProductsInner() {
             </select>
             <button
               onClick={() => setShowMobileFilters(true)}
-              className="flex items-center justify-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm md:hidden"
+              className="flex items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs md:hidden"
             >
               Filters
             </button>
           </div>
         </div>
 
-        <div className="mb-5 flex flex-col gap-3 border-y border-gray-200 bg-gray-50 px-3 py-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-3 flex flex-col gap-1.5 border-y border-gray-200 bg-gray-50 px-2 py-2 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap gap-1.5">
             <DropdownFilter
               label="Condition"
               valueLabel={selectedCondition !== "all" ? conditionOptions.find((option) => option.value === selectedCondition)?.label : ""}
@@ -1098,7 +1183,7 @@ function AllProductsInner() {
               <button
                 type="button"
                 onClick={() => setSortBy("relevance")}
-                className={`h-10 rounded-full border px-3.5 text-[13px] font-semibold shadow-sm transition ${
+                className={`h-8 rounded-full border px-3 text-[11px] font-semibold shadow-sm transition ${
                   effectiveSortBy === "relevance" ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
                 }`}
               >
@@ -1106,12 +1191,12 @@ function AllProductsInner() {
               </button>
             ) : null}
           </div>
-          <div className="hidden items-center gap-2 lg:flex">
-            <span className="text-sm text-gray-600">Sort by:</span>
+          <div className="hidden items-center gap-1.5 lg:flex">
+            <span className="text-xs text-gray-600">Sort:</span>
             <select
               value={effectiveSortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm outline-none focus:border-orange-500"
+              className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs outline-none focus:border-orange-500"
             >
               {sortOptions.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1153,7 +1238,7 @@ function AllProductsInner() {
                 <button onClick={() => setSelectedRating(0)} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
-            {searchQuery && !hasActiveSearch && (
+            {searchQuery && (
               <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
                 &quot;{searchQuery}&quot;
                 <button onClick={() => setSearchQuery("")} className="ml-1 font-bold hover:text-orange-900">x</button>
@@ -1200,26 +1285,48 @@ function AllProductsInner() {
                 <p className="text-sm">Try adjusting your filters</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-5 pb-14 min-[340px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredProducts.map((product, index) => (
-                  <ProductCard key={index} product={product} />
+              <div className="grid grid-cols-2 gap-2 pb-8 min-[480px]:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                {pagedProducts.map((product, index) => (
+                  <ProductCard key={`${product._id || index}-${currentPage}`} product={product} />
                 ))}
               </div>
             )}
-            {filteredProducts.length > 0 ? (
-              <div className="mb-14 flex items-center justify-center gap-3">
-                {["<", "1", "2", "3", "4", "5", ">"].map((item) => (
+            {filteredProducts.length > 0 && totalPages > 1 ? (
+              <div className="mb-14 flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={currentPage === 1}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  ‹
+                </button>
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
                   <button
-                    key={item}
+                    key={page}
                     type="button"
-                    className={`flex h-11 w-11 items-center justify-center rounded-full text-sm font-semibold ${
-                      item === "1" ? "bg-orange-600 text-white" : "border border-gray-200 bg-white text-gray-700"
+                    onClick={() => setCurrentPage(page)}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
+                      currentPage === page ? "bg-orange-600 text-white" : "border border-gray-200 bg-white text-gray-700"
                     }`}
                   >
-                    {item}
+                    {page}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  disabled={currentPage === totalPages}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  ›
+                </button>
               </div>
+            ) : null}
+            {filteredProducts.length > 0 ? (
+              <p className="mb-8 text-center text-[11px] text-gray-400">
+                Showing {startIndex + 1}-{Math.min(startIndex + pageSize, filteredProducts.length)} of {filteredProducts.length} items
+              </p>
             ) : null}
           </div>
         </div>

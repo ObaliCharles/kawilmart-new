@@ -136,21 +136,26 @@ const OrderSummary = () => {
 
   return (
     <aside className="h-fit w-full min-w-0 rounded-lg border border-gray-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-5">
-      <h2 className="text-xl font-bold text-gray-950">Order Summary</h2>
+      <h2 className="text-lg font-bold text-gray-950">Order Summary</h2>
 
       <div className="mt-5 space-y-5">
         <div>
-          <label className="mb-2 block text-sm font-semibold text-gray-700">Select Address</label>
+          <label className="mb-2 block text-[13px] font-semibold text-gray-700">Select Address</label>
           <div className="relative inline-block w-full rounded-md border border-gray-200 text-sm">
             <button
               type="button"
-              className="peer flex w-full items-center gap-2 bg-white px-3 py-3 text-left text-gray-700 focus:outline-none sm:px-4"
+              className="peer flex w-full items-center gap-2 bg-white px-3 py-2.5 text-left text-gray-700 focus:outline-none sm:px-3.5"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               disabled={isPlacingOrder}
             >
               <span className="min-w-0 flex-1 truncate">
                 {selectedAddress
-                  ? `${selectedAddress.fullName}, ${selectedAddress.area}, ${selectedAddress.city}, ${selectedAddress.state}`
+                  ? [
+                    selectedAddress.fullName,
+                    selectedAddress.village || selectedAddress.area,
+                    selectedAddress.district || selectedAddress.city,
+                    selectedAddress.region || selectedAddress.state,
+                  ].filter(Boolean).join(", ")
                   : "Select Address"}
               </span>
               <svg
@@ -165,19 +170,22 @@ const OrderSummary = () => {
             </button>
 
             {isDropdownOpen && (
-              <ul className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white py-1.5 shadow-md">
+              <ul className="absolute z-10 mt-1 w-full rounded-md border border-gray-200 bg-white py-1 shadow-md">
                 {userAddresses.map((address, index) => (
                   <li
                     key={index}
-                    className="cursor-pointer px-3 py-2 [overflow-wrap:anywhere] hover:bg-gray-500/10 sm:px-4"
+                    className="cursor-pointer px-3 py-2 [overflow-wrap:anywhere] hover:bg-gray-500/10"
                     onClick={() => handleAddressSelect(address)}
                   >
-                    {address.fullName}, {address.area}, {address.city}, {address.state}
+                    <p className="text-[13px] font-semibold text-gray-900">{address.fullName}</p>
+                    <p className="text-[12px] text-gray-500">
+                      {[address.village || address.area, address.district || address.city, address.region || address.state].filter(Boolean).join(", ")}
+                    </p>
                   </li>
                 ))}
                 <li
                   onClick={() => router.push("/add-address")}
-                  className="px-4 py-2 hover:bg-gray-500/10 cursor-pointer text-center"
+                  className="cursor-pointer px-3 py-2 text-center text-[13px] font-medium text-orange-600 hover:bg-gray-500/10"
                 >
                   + Add New Address
                 </li>
@@ -187,44 +195,44 @@ const OrderSummary = () => {
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-semibold text-gray-700">Fulfillment</label>
+          <label className="mb-2 block text-[13px] font-semibold text-gray-700">Fulfillment</label>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
             <button
               type="button"
               onClick={() => setDeliveryMode(DELIVERY_MODES.DELIVERY)}
-              className={`rounded-md border px-4 py-3 text-left transition ${
+              className={`rounded-md border px-3 py-2.5 text-left transition ${
                 deliveryMode === DELIVERY_MODES.DELIVERY
                   ? "border-orange-500 bg-orange-50 text-orange-700"
                   : "border-gray-200 bg-white text-gray-600 hover:border-orange-200"
               }`}
             >
-              <p className="font-medium">Delivery</p>
-              <p className="mt-1 text-xs text-gray-500">One rider will be assigned and must accept before contacts unlock.</p>
+              <p className="text-[13px] font-semibold">Delivery</p>
+              <p className="mt-1 text-[11px] text-gray-500">One rider will be assigned and must accept before contacts unlock.</p>
             </button>
             <button
               type="button"
               onClick={() => setDeliveryMode(DELIVERY_MODES.PICKUP)}
-              className={`rounded-md border px-4 py-3 text-left transition ${
+              className={`rounded-md border px-3 py-2.5 text-left transition ${
                 deliveryMode === DELIVERY_MODES.PICKUP
                   ? "border-orange-500 bg-orange-50 text-orange-700"
                   : "border-gray-200 bg-white text-gray-600 hover:border-orange-200"
               }`}
             >
-              <p className="font-medium">Pickup</p>
-              <p className="mt-1 text-xs text-gray-500">Collect directly from the seller after they accept your order.</p>
+              <p className="text-[13px] font-semibold">Pickup</p>
+              <p className="mt-1 text-[11px] text-gray-500">Collect directly from the seller after they accept your order.</p>
             </button>
           </div>
         </div>
 
         <div className="border-t border-gray-200 pt-5">
-          <label className="mb-2 block text-sm font-semibold text-gray-700">Promo Code</label>
+          <label className="mb-2 block text-[13px] font-semibold text-gray-700">Promo Code</label>
           <div className="flex min-w-0 gap-2">
             <input
               type="text"
               placeholder="Enter promo code"
-              className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-600 outline-none focus:border-orange-500"
+              className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2.5 text-sm text-gray-600 outline-none focus:border-orange-500"
             />
-            <button type="button" className="shrink-0 rounded-md border border-orange-600 px-4 text-sm font-semibold text-orange-600 hover:bg-orange-50 sm:px-5">Apply</button>
+            <button type="button" className="shrink-0 rounded-md border border-orange-600 px-3.5 text-[13px] font-semibold text-orange-600 hover:bg-orange-50 sm:px-4">Apply</button>
           </div>
         </div>
 
@@ -250,7 +258,7 @@ const OrderSummary = () => {
       <button
         onClick={createOrder}
         disabled={isPlacingOrder || loadingProducts}
-        className="mt-5 w-full rounded-md bg-orange-600 py-3.5 text-base font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-70"
+        className="mt-5 w-full rounded-md bg-orange-600 py-3 text-[15px] font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-70"
       >
         <span className="flex items-center justify-center gap-2">
           {(isPlacingOrder || loadingProducts) && (
@@ -260,10 +268,10 @@ const OrderSummary = () => {
         </span>
       </button>
       <div className="mt-4 text-center">
-        <p className="text-xs text-gray-400">We accept</p>
+        <p className="text-[11px] text-gray-400">We accept</p>
         <div className="mt-2 flex justify-center gap-2">
           {["VISA", "MC", "Pay"].map((item) => (
-            <span key={item} className="rounded border border-gray-200 px-3 py-1 text-xs font-bold text-gray-500">{item}</span>
+            <span key={item} className="rounded border border-gray-200 px-2.5 py-0.5 text-[11px] font-bold text-gray-500">{item}</span>
           ))}
         </div>
       </div>

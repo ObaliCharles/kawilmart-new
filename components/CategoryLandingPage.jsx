@@ -575,6 +575,33 @@ const MobileCategoryCard = ({ row, navigate }) => {
   );
 };
 
+const MobileCategoryCardDirect = ({ row, navigate }) => {
+  const href = `/all-products?category=${encodeURIComponent(row.primaryCategory)}`;
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+      <div className="flex items-center justify-between px-2.5 py-2.5 min-[380px]:px-3">
+        <h2 className="min-w-0 truncate text-[13.5px] font-extrabold text-gray-950 min-[380px]:text-[14px]">{row.label}</h2>
+        <button type="button" onClick={() => navigate(href)} className="flex shrink-0 items-center gap-0.5 text-[11px] font-extrabold text-orange-600 min-[380px]:text-[12px]">
+          View all
+          <span className="text-base leading-none">›</span>
+        </button>
+      </div>
+      <div className="grid grid-cols-4 gap-1 px-1.5 pb-2.5 min-[380px]:gap-1.5 min-[380px]:px-2 min-[380px]:pb-3">
+        {row.tiles.slice(0, 4).map((tile) => (
+          <CatalogPreviewTile
+            key={`${row.slug}-mobile-${tile.label}`}
+            label={tile.label}
+            product={tile.product}
+            compact
+            onClick={() => navigate(href)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+};
+
 const MobileSidebarTab = ({ item, active, onClick }) => (
   <button
     type="button"
@@ -713,42 +740,21 @@ const CategoryLandingPage = ({ initialProducts = [] }) => {
             <p className="mt-2 text-sm text-gray-500">Browse our wide range of categories and find what you need.</p>
           </div>
 
-          <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-1.5 min-[380px]:grid-cols-[5.35rem_minmax(0,1fr)] min-[380px]:gap-2 lg:hidden">
-            <aside className="sticky left-0 top-[4.2rem] z-10 h-[calc(100svh-8.5rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-xl border border-gray-100 bg-white/95 p-1.5 shadow-sm backdrop-blur min-[380px]:top-[4.4rem] min-[380px]:p-2 [-webkit-overflow-scrolling:touch]">
-              <div className="space-y-1.5 min-[380px]:space-y-2">
-                <MobileSidebarTab
-                  item={{ label: "All Categories", shortLabel: "All", sidebarIcon: "electronics" }}
-                  active={!categoryParam}
-                  onClick={() => navigate("/categories")}
-                />
-                {visibleSidebarProducts.map((item) => (
-                  <MobileSidebarTab
-                    key={item.slug}
-                    item={item}
-                    active={Boolean(categoryParam) && selectedDepartment.slug === item.slug}
-                    onClick={() => selectDepartment(item)}
-                  />
-                ))}
-              </div>
-            </aside>
-
-            <div className="min-w-0 space-y-2.5 min-[380px]:space-y-3">
-              <button
-                type="button"
-                onClick={() => navigate("/all-products")}
-                className="flex min-h-[4.35rem] w-full items-center justify-between rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-left shadow-sm min-[380px]:min-h-[4.65rem] min-[380px]:px-4 min-[380px]:py-3"
-              >
-                <span>
-                  <span className="block text-[13px] font-extrabold text-gray-950 min-[380px]:text-sm">All Products</span>
-                  <span className="mt-1 block text-[11px] text-gray-500 min-[380px]:text-[12px]">Explore everything we have to offer</span>
-                </span>
-                <span className="text-xl text-gray-400 min-[380px]:text-2xl">›</span>
-              </button>
-              {activeRow ? <MobileCategoryCard row={activeRow} navigate={navigate} /> : null}
-              {remainingMobileRows.map((row) => (
-                <MobileCategoryCard key={row.slug} row={row} navigate={navigate} />
-              ))}
-            </div>
+          <div className="space-y-2.5 min-[380px]:space-y-3 lg:hidden">
+            <button
+              type="button"
+              onClick={() => navigate("/all-products")}
+              className="flex min-h-[4.35rem] w-full items-center justify-between rounded-xl border border-gray-100 bg-white px-3 py-2.5 text-left shadow-sm min-[380px]:min-h-[4.65rem] min-[380px]:px-4 min-[380px]:py-3"
+            >
+              <span>
+                <span className="block text-[13px] font-extrabold text-gray-950 min-[380px]:text-sm">All Products</span>
+                <span className="mt-1 block text-[11px] text-gray-500 min-[380px]:text-[12px]">Explore everything we have to offer</span>
+              </span>
+              <span className="text-xl text-gray-400 min-[380px]:text-2xl">›</span>
+            </button>
+            {catalogRows.map((row) => (
+              <MobileCategoryCardDirect key={row.slug} row={row} navigate={navigate} />
+            ))}
           </div>
 
           <div className="hidden space-y-4 lg:block">
