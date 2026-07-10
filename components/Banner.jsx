@@ -1,6 +1,6 @@
 'use client'
 
-import React from "react";
+import React, { useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { defaultSiteContent } from "@/lib/defaultSiteContent";
@@ -8,11 +8,17 @@ import { useAppContext } from "@/context/AppContext";
 
 const Banner = ({ banner = defaultSiteContent.promoBanner }) => {
   const { navigate, prefetchRoute } = useAppContext();
+  const [imgError, setImgError] = useState(false);
+
   const ctaHref = banner.linkType === "category" && banner.category
     ? `/all-products?category=${encodeURIComponent(banner.category)}`
     : banner.linkType === "store" && banner.storeId
       ? `/store/${encodeURIComponent(banner.storeId)}`
       : banner.productId ? `/product/${banner.productId}` : (banner.href || "/all-products");
+
+  const imageSrc = !imgError && banner.imageUrl
+    ? banner.imageUrl
+    : (banner.imageUrl ? banner.imageUrl : assets.jbl_soundbox_image);
 
   return (
     <section className="my-16 overflow-hidden rounded-[2rem] bg-[#E6E9F2]">
@@ -42,11 +48,12 @@ const Banner = ({ banner = defaultSiteContent.promoBanner }) => {
           <div className="absolute inset-x-[10%] bottom-[12%] top-[12%] rounded-full bg-white/60 blur-3xl" />
           <Image
             className="relative h-auto w-full max-w-[260px] object-contain sm:max-w-[320px] lg:max-w-[400px]"
-            src={banner.imageUrl || assets.jbl_soundbox_image}
+            src={imageSrc}
             alt={banner.title || "Promotional banner"}
             width={480}
             height={480}
             sizes="(max-width: 640px) 72vw, (max-width: 1024px) 42vw, 32vw"
+            onError={() => setImgError(true)}
           />
         </div>
       </div>

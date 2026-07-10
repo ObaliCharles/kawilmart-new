@@ -13,8 +13,8 @@ export const ProductsGridSkeleton = ({ showHeader = true, cardCount = 10 }) => {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {Array.from({ length: cardCount }).map((_, index) => (
-          <div key={index} className="space-y-3">
-            <Skeleton className="h-52 w-full rounded-xl" />
+          <div key={index} className="space-y-3 rounded-xl bg-white p-3 ring-1 ring-gray-100">
+            <Skeleton className="aspect-square w-full rounded-lg" />
             <Skeleton className="h-4 w-4/5 rounded-full" />
             <Skeleton className="h-3 w-3/5 rounded-full" />
             <Skeleton className="h-3 w-2/5 rounded-full" />
@@ -31,30 +31,54 @@ export const ProductsGridSkeleton = ({ showHeader = true, cardCount = 10 }) => {
 
 export const AllProductsPageSkeleton = () => {
   return (
-    <div className="px-6 md:px-16 lg:px-32 py-8 min-h-screen bg-gray-50/30" aria-hidden="true">
-      <div className="flex items-center justify-between mb-6 gap-4">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-40 rounded-xl" />
-          <Skeleton className="h-4 w-48 rounded-full" />
-        </div>
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-40 rounded-lg" />
-          <Skeleton className="h-10 w-24 rounded-lg md:hidden" />
+    <div className="min-h-screen bg-gray-50/30" aria-hidden="true">
+      {/* Navbar placeholder */}
+      <div className="sticky top-0 z-40 border-b border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-[1500px] items-center gap-2 px-3 py-2.5 md:gap-3 md:px-5 lg:gap-5">
+          <Skeleton className="h-10 w-28 rounded-md" />
+          <Skeleton className="hidden flex-1 md:block h-10 rounded-md" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9 rounded-full" />
+            <Skeleton className="h-9 w-9 rounded-full" />
+            <Skeleton className="h-9 w-24 rounded-full" />
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-8">
-        <div className="hidden md:block w-56 flex-shrink-0">
-          <div className="sticky top-6 bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-4">
-            <Skeleton className="h-10 w-full rounded-lg" />
-            {Array.from({ length: 7 }).map((_, index) => (
-              <Skeleton key={index} className="h-9 w-full rounded-lg" />
-            ))}
+      <div className="px-4 py-6 sm:px-6 md:px-8 lg:px-10 xl:px-12">
+        <div className="flex items-center justify-between mb-6 gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-40 rounded-xl" />
+            <Skeleton className="h-4 w-48 rounded-full" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-40 rounded-lg" />
+            <Skeleton className="h-10 w-24 rounded-lg md:hidden" />
           </div>
         </div>
 
-        <div className="flex-1">
-          <ProductsGridSkeleton showHeader={false} />
+        <div className="flex gap-8">
+          <div className="hidden md:block w-56 flex-shrink-0">
+            <div className="sticky top-36 bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-4">
+              <Skeleton className="h-10 w-full rounded-lg" />
+              {Array.from({ length: 7 }).map((_, index) => (
+                <Skeleton key={index} className="h-9 w-full rounded-lg" />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex-1">
+            <ProductsGridSkeleton showHeader={false} />
+          </div>
+        </div>
+      </div>
+
+      {/* Dock placeholder */}
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-white/95 px-4 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.10)] backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-sm grid-cols-5 gap-1">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 rounded-xl" />
+          ))}
         </div>
       </div>
     </div>
@@ -63,63 +87,87 @@ export const AllProductsPageSkeleton = () => {
 
 export const ProductDetailSkeleton = () => {
   return (
-    <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10" aria-hidden="true">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-        <div className="px-5 lg:px-16 xl:px-20 space-y-4">
-          <Skeleton className="h-[420px] w-full rounded-2xl" />
-          <div className="grid grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-24 w-full rounded-xl" />
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-5">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-3 flex-1">
-              <Skeleton className="h-9 w-5/6 rounded-xl" />
-              <Skeleton className="h-5 w-32 rounded-full" />
-            </div>
-            <Skeleton className="h-11 w-24 rounded-full" />
-          </div>
-
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full rounded-full" />
-            <Skeleton className="h-4 w-11/12 rounded-full" />
-            <Skeleton className="h-4 w-3/4 rounded-full" />
-          </div>
-
-          <Skeleton className="h-10 w-44 rounded-xl" />
-          <Skeleton className="h-px w-full rounded-full" />
-
-          <div className="space-y-3 max-w-72">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-4 w-full rounded-full" />
-            ))}
-          </div>
-
-          <div className="space-y-3 p-4 bg-white rounded-xl border border-gray-100">
-            <Skeleton className="h-5 w-40 rounded-full" />
-            <Skeleton className="h-4 w-full rounded-full" />
-            <Skeleton className="h-4 w-5/6 rounded-full" />
-            <Skeleton className="h-4 w-4/5 rounded-full" />
-          </div>
-
-          <div className="flex items-center gap-4 pt-4">
-            <Skeleton className="h-12 w-full rounded-xl" />
-            <Skeleton className="h-12 w-full rounded-xl" />
+    <div className="min-h-screen bg-white" aria-hidden="true">
+      {/* Navbar placeholder */}
+      <div className="sticky top-0 z-40 border-b border-gray-200 bg-white">
+        <div className="mx-auto flex max-w-[1500px] items-center gap-2 px-3 py-2.5 md:gap-3 md:px-5 lg:gap-5">
+          <Skeleton className="h-10 w-28 rounded-md" />
+          <Skeleton className="hidden flex-1 md:block h-10 rounded-md" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9 rounded-full" />
+            <Skeleton className="h-9 w-9 rounded-full" />
+            <Skeleton className="h-9 w-24 rounded-full" />
           </div>
         </div>
       </div>
 
-      <div className="space-y-6 pb-16">
-        <div className="flex flex-col items-center space-y-2">
-          <Skeleton className="h-8 w-56 rounded-xl" />
-          <Skeleton className="h-1 w-28 rounded-full" />
+      <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+          <div className="px-5 lg:px-16 xl:px-20 space-y-4">
+            <Skeleton className="h-[420px] w-full rounded-2xl" />
+            <div className="grid grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-24 w-full rounded-xl" />
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-3 flex-1">
+                <Skeleton className="h-9 w-5/6 rounded-xl" />
+                <Skeleton className="h-5 w-32 rounded-full" />
+              </div>
+              <Skeleton className="h-11 w-24 rounded-full" />
+            </div>
+
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-full rounded-full" />
+              <Skeleton className="h-4 w-11/12 rounded-full" />
+              <Skeleton className="h-4 w-3/4 rounded-full" />
+            </div>
+
+            <Skeleton className="h-10 w-44 rounded-xl" />
+            <Skeleton className="h-px w-full rounded-full" />
+
+            <div className="space-y-3 max-w-72">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-4 w-full rounded-full" />
+              ))}
+            </div>
+
+            <div className="space-y-3 p-4 bg-white rounded-xl border border-gray-100">
+              <Skeleton className="h-5 w-40 rounded-full" />
+              <Skeleton className="h-4 w-full rounded-full" />
+              <Skeleton className="h-4 w-5/6 rounded-full" />
+              <Skeleton className="h-4 w-4/5 rounded-full" />
+            </div>
+
+            <div className="flex items-center gap-4 pt-4">
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <Skeleton className="h-12 w-full rounded-xl" />
+            </div>
+          </div>
         </div>
-        <ProductsGridSkeleton showHeader={false} cardCount={5} />
-        <div className="flex justify-center">
-          <Skeleton className="h-10 w-32 rounded-lg" />
+
+        <div className="space-y-6 pb-16">
+          <div className="flex flex-col items-center space-y-2">
+            <Skeleton className="h-8 w-56 rounded-xl" />
+            <Skeleton className="h-1 w-28 rounded-full" />
+          </div>
+          <ProductsGridSkeleton showHeader={false} cardCount={5} />
+          <div className="flex justify-center">
+            <Skeleton className="h-10 w-32 rounded-lg" />
+          </div>
+        </div>
+      </div>
+
+      {/* Dock placeholder */}
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-white/95 px-4 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.10)] backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-sm grid-cols-5 gap-1">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 rounded-xl" />
+          ))}
         </div>
       </div>
     </div>
