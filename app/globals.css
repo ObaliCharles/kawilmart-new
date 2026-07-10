@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --motion-fast: 120ms;
+  --motion-base: 140ms;
+  --motion-snappy: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 @keyframes skeleton-shimmer {
   0% {
     transform: translateX(-100%);
@@ -14,8 +20,100 @@
   }
 }
 
-* {
-    scroll-behavior: smooth;
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes route-progress-active {
+  0% {
+    transform: translateX(-100%);
+    width: 35%;
+  }
+
+  50% {
+    transform: translateX(80%);
+    width: 55%;
+  }
+
+  100% {
+    transform: translateX(220%);
+    width: 35%;
+  }
+}
+
+@keyframes route-progress-complete {
+  from {
+    transform: translateX(-10%);
+    width: 100%;
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(0);
+    width: 100%;
+    opacity: 0;
+  }
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  a,
+  [role="button"],
+  summary,
+  label[for],
+  select,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    touch-action: manipulation;
+  }
+
+  button,
+  a,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  select,
+  summary {
+    transition-property: color, background-color, border-color, opacity, box-shadow, transform, filter;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-snappy);
+  }
+
+  button:active:not(:disabled),
+  [role="button"]:active:not(:disabled),
+  input[type="button"]:active:not(:disabled),
+  input[type="submit"]:active:not(:disabled),
+  input[type="reset"]:active:not(:disabled) {
+    transform: scale(0.985);
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 }
 
 body {
@@ -24,13 +122,54 @@ body {
   color: #111827;
 }
 
-@layer base {
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
+@layer utilities {
+  .page-enter {
+    animation: page-enter 180ms var(--motion-snappy) both;
   }
+
+  .route-progress-bar {
+    height: 100%;
+    border-radius: 0 999px 999px 0;
+    will-change: transform, width, opacity;
+  }
+
+  .route-progress-bar.is-active {
+    animation: route-progress-active 0.65s var(--motion-snappy) infinite;
+  }
+
+  .route-progress-bar.is-complete {
+    animation: route-progress-complete 180ms var(--motion-snappy) forwards;
+  }
+
+  .interactive-lift {
+    transition-property: transform, box-shadow, border-color, background-color, color, opacity, filter;
+    transition-duration: var(--motion-base);
+    transition-timing-function: var(--motion-snappy);
+  }
+
+  .interactive-lift:hover {
+    transform: translateY(-1px);
+  }
+
+  .interactive-lift:active {
+    transform: translateY(0) scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .page-enter {
+    animation: none;
+  }
+}
 
 ::-webkit-scrollbar {
   display: none;

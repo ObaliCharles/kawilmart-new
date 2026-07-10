@@ -596,6 +596,7 @@ export const AppContextProvider = (props) => {
         }
 
         const { scroll = true } = options
+        prefetchRoute(href)
         setIsRouteLoading(true)
 
         startTransition(() => {
@@ -603,13 +604,17 @@ export const AppContextProvider = (props) => {
         })
     }
 
-    const prefetchRoute = (href) => {
+    const prefetchRoute = useCallback((href) => {
         if (!href) {
             return
         }
 
-        router.prefetch(href)
-    }
+        try {
+            router.prefetch(href)
+        } catch {
+            // Prefetch is best-effort.
+        }
+    }, [router])
 
     const handleRouteSettled = useCallback(() => {
         setIsRouteLoading(false)

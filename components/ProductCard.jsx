@@ -91,13 +91,13 @@ const ProductCard = ({ product }) => {
             }}
             onMouseEnter={() => prefetchRoute(productHref)}
             onFocus={() => prefetchRoute(productHref)}
-            className="group flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-2 transition hover:border-orange-300 hover:shadow-[0_8px_16px_rgba(15,23,42,0.06)]"
+            className="group interactive-lift flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-2 hover:border-orange-300 hover:shadow-[0_6px_14px_rgba(15,23,42,0.05)]"
         >
             <div className="relative flex aspect-[1.12/1] items-center justify-center overflow-hidden rounded-md bg-white">
                 <Image
                     src={product.image[0]}
                     alt={product.name}
-                    className="h-full w-full object-contain p-3 transition duration-300 group-hover:scale-105"
+                    className="h-full w-full object-contain p-3 transition duration-200 ease-snappy group-hover:scale-[1.03]"
                     width={360}
                     height={320}
                     sizes="(max-width: 639px) 44vw, (max-width: 1023px) 30vw, (max-width: 1535px) 22vw, 18vw"

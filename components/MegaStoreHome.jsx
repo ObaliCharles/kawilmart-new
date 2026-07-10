@@ -439,7 +439,7 @@ const MobileFlashCard = ({ product, navigate, prefetchRoute, formatCurrency, tog
       onClick={() => navigate(`/product/${product._id}`)}
       onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
       onFocus={() => prefetchRoute(`/product/${product._id}`)}
-      className={`relative isolate w-[8.5rem] shrink-0 rounded-xl p-2 text-left shadow-md transition hover:brightness-[1.03] ${getFlashCardBackground(cardIndex)}`}
+      className={`relative isolate w-[8.5rem] shrink-0 rounded-xl p-2 text-left shadow-md interactive-lift ${getFlashCardBackground(cardIndex)}`}
     >
       <span className="absolute left-2 top-2 z-20 rounded-md bg-gray-950/80 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
         -{Math.max(activity.priceDropPercent, 15)}%
@@ -782,7 +782,7 @@ const DealCard = ({ product, navigate, prefetchRoute, formatCurrency, cardIndex 
       onClick={() => navigate(`/product/${product._id}`)}
       onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
       onFocus={() => prefetchRoute(`/product/${product._id}`)}
-      className={`relative isolate min-w-0 rounded-xl p-2.5 text-left shadow-md transition hover:brightness-[1.03] ${getFlashCardBackground(cardIndex)}`}
+      className={`relative isolate min-w-0 rounded-xl p-2.5 text-left shadow-md interactive-lift ${getFlashCardBackground(cardIndex)}`}
     >
       <span className="absolute left-2.5 top-2.5 z-20 rounded-md bg-gray-950/80 px-1.5 py-0.5 text-[9px] font-bold text-white backdrop-blur-sm">
         {activity.hasDiscount ? `-${activity.priceDropPercent}%` : "Offer"}
