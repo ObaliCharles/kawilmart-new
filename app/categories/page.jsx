@@ -1,21 +1,17 @@
-import CategoryLandingPage from "@/components/CategoryLandingPage";
+import CategoryBrowserPage from "@/components/CategoryBrowserPage";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import { getResolvedSiteContent } from "@/lib/getSiteContent";
 import { getStorefrontProductsSafe } from "@/lib/getStorefrontProducts";
 
 export const dynamic = "force-dynamic";
 
 const CategoriesPage = async () => {
-  const [initialProducts, initialSiteContent] = await Promise.all([
-    getStorefrontProductsSafe(),
-    getResolvedSiteContent(),
-  ]);
+  const initialProducts = await getStorefrontProductsSafe();
 
   return (
     <>
       <Navbar />
-      <CategoryLandingPage initialProducts={initialProducts} initialSiteContent={initialSiteContent} />
+      <CategoryBrowserPage initialProducts={initialProducts} />
       <Footer />
     </>
   );

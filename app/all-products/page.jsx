@@ -10,6 +10,7 @@ import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation";
 import { categoryMatchesSelection, getCategoryMeta, marketplaceFilterCategories } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot } from "@/lib/liveCommerce";
+import { getCategoryExperience } from "@/lib/categoryExperiences";
 
 const categories = ["All", ...marketplaceFilterCategories];
 
@@ -96,20 +97,6 @@ const CategoryGlyph = ({ className = "h-4 w-4", category = "all" }) => {
   );
 };
 
-const gridIconPath = "M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z";
-
-const selectedCategoryTiles = [
-  ["All", ["All"], ["all"]],
-  ["Smartphones", ["Phones & Tablets"], ["phone", "smartphone", "iphone", "galaxy"]],
-  ["Laptops", ["Computers & Electronics"], ["laptop", "macbook", "thinkpad"]],
-  ["Desktops", ["Computers & Electronics"], ["desktop", "pc", "tower"]],
-  ["Monitors", ["Computers & Electronics"], ["monitor", "display"]],
-  ["TV & Video", ["Computers & Electronics", "Appliances"], ["tv", "television"]],
-  ["Audio", ["Audio"], ["headphone", "speaker", "earbud"]],
-  ["Wearables", ["Watches & Wearables"], ["watch", "wearable"]],
-  ["Accessories", ["Accessories"], ["charger", "cable", "adapter"]],
-];
-
 const getProductImage = (product) => {
   const image = Array.isArray(product?.image) ? product.image[0] : product?.image;
   if (typeof image === "string" && image.trim()) return image.trim();
@@ -118,42 +105,6 @@ const getProductImage = (product) => {
 };
 
 const formatCount = (count) => new Intl.NumberFormat("en-US").format(Math.max(0, Number(count) || 0));
-
-const normalizeProductText = (product) => (
-  `${normalizeSearchText(product?.name)} ${normalizeSearchText(product?.description)} ${normalizeSearchText(product?.category)}`
-);
-
-const findTileProduct = (products, categoriesForTile, keywords) => (
-  products.find((product) => (
-    categoriesForTile.some((category) => category === "All" || categoryMatchesSelection(product.category, category))
-    || keywords.some((keyword) => normalizeProductText(product).includes(normalizeSearchText(keyword)))
-  )) || products[0] || null
-);
-
-const SelectedCategoryTile = ({ label, product, active, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`flex h-[5.55rem] min-w-[7.35rem] flex-col items-center justify-center gap-2 rounded-lg border bg-white px-3 py-2 text-center shadow-sm transition ${
-      active ? "border-orange-500 text-orange-600" : "border-gray-100 text-gray-950 hover:border-orange-200"
-    }`}
-  >
-    {label === "All" ? (
-      <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d={gridIconPath} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ) : (
-      <span className="flex h-9 w-14 items-center justify-center">
-        {product ? (
-          <Image src={getProductImage(product)} alt={label} width={72} height={48} className="h-full w-full object-contain" />
-        ) : (
-          <CategoryGlyph className="h-6 w-6" />
-        )}
-      </span>
-    )}
-    <span className="line-clamp-1 text-[12px] font-extrabold">{label}</span>
-  </button>
-);
 
 const SelectedProductCard = ({ product, formatCurrency, navigate, prefetchRoute, addToCart }) => {
   const activity = getProductActivitySnapshot(product);
@@ -207,28 +158,6 @@ const SelectedProductCard = ({ product, formatCurrency, navigate, prefetchRoute,
     </article>
   );
 };
-
-const MobileRailButton = ({ label, category = "all", active, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={`flex min-h-[3.95rem] w-full flex-col items-center justify-center gap-1 rounded-lg px-1 text-center transition min-[380px]:min-h-[4.35rem] min-[380px]:px-1.5 ${
-      active ? "bg-gradient-to-br from-orange-600 to-orange-500 text-white shadow-sm" : "bg-white text-gray-950 hover:bg-orange-50 hover:text-orange-600"
-    }`}
-  >
-    <CategoryGlyph category={category} className="h-[1.05rem] w-[1.05rem] min-[380px]:h-5 min-[380px]:w-5" />
-    <span className="line-clamp-2 text-[9px] font-extrabold leading-[11px] min-[380px]:text-[10px] min-[380px]:leading-3">{label}</span>
-  </button>
-);
-
-const MobileFeatureTile = ({ label, product, tone, onClick }) => (
-  <button type="button" onClick={onClick} className={`relative min-h-[6.8rem] overflow-hidden rounded-lg bg-gradient-to-br ${tone} p-3 text-left text-white shadow-sm`}>
-    <span className="relative z-10 block max-w-[6.5rem] text-sm font-extrabold leading-5">{label}</span>
-    <span className="relative z-10 mt-1 block max-w-[6rem] text-[10px] font-semibold leading-4 text-white/90">Shop now</span>
-    <span className="absolute bottom-3 left-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-orange-600">›</span>
-    {product ? <Image src={getProductImage(product)} alt={label} width={120} height={100} className="absolute bottom-0 right-0 max-h-24 w-[6.2rem] object-contain drop-shadow-lg" /> : null}
-  </button>
-);
 
 const MobileProductMini = ({ product, formatCurrency, navigate, addToCart }) => (
   <article onClick={() => navigate(`/product/${product._id}`)} className="relative min-w-0 rounded-lg border border-gray-100 bg-white p-2 shadow-sm">
@@ -572,19 +501,9 @@ function AllProductsInner() {
       ? products
       : products.filter((product) => categoryMatchesSelection(product.category, selectedCategory))
   ), [products, selectedCategory]);
-  const selectedTileData = useMemo(() => (
-    selectedCategoryTiles.map(([label, tileCategories, keywords]) => ({
-      label,
-      categories: tileCategories,
-      product: label === "All" ? null : findTileProduct(selectedCategoryPool.length ? selectedCategoryPool : products, tileCategories, keywords),
-      count: label === "All"
-        ? selectedCategoryPool.length
-        : products.filter((product) => (
-          tileCategories.some((category) => categoryMatchesSelection(product.category, category))
-          || keywords.some((keyword) => normalizeProductText(product).includes(normalizeSearchText(keyword)))
-        )).length,
-    }))
-  ), [products, selectedCategoryPool]);
+  const selectedCategoryExperience = useMemo(() => (
+    getCategoryExperience(selectedCategoryPool.length ? selectedCategoryPool : products, selectedCategory)
+  ), [selectedCategoryPool, products, selectedCategory]);
   const resetFilters = () => {
     setSelectedCategory("All");
     setSelectedPriceRange(0);
@@ -745,18 +664,27 @@ function AllProductsInner() {
             <span className="text-gray-400 text-xs">⌃</span>
           </div>
           <div className="space-y-1.5">
-            {selectedTileData.slice(0, 7).map((tile) => (
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("All")}
+              className="flex w-full items-center justify-between gap-2 text-left text-[10px] text-gray-700"
+            >
+              <span className="flex min-w-0 items-center gap-1.5">
+                <span className={`h-3 w-3 rounded-full border ${selectedCategory === "All" ? "border-orange-600 bg-orange-600 ring-1 ring-orange-100" : "border-gray-300"}`} />
+                <span className="truncate">{`All ${selectedCategoryExperience.meta.label}`}</span>
+              </span>
+              <span className="text-[9px] text-gray-500">{formatCount(selectedCategoryPool.length)}</span>
+            </button>
+            {selectedCategoryExperience.tiles.slice(0, 6).map((tile) => (
               <button
                 key={`filter-${tile.label}`}
                 type="button"
-                onClick={() => setSelectedCategory(tile.label === "All" ? selectedCategory : tile.categories[0])}
+                onClick={() => setSelectedCategory(tile.categories[0] || selectedCategoryExperience.meta.value)}
                 className="flex w-full items-center justify-between gap-2 text-left text-[10px] text-gray-700"
               >
                 <span className="flex min-w-0 items-center gap-1.5">
-                  <span className={`h-3 w-3 rounded-full border ${
-                    tile.label === "All" ? "border-orange-600 bg-orange-600 ring-1 ring-orange-100" : "border-gray-300"
-                  }`} />
-                  <span className="truncate">{tile.label === "All" ? `All ${selectedCategoryMeta?.label || "Products"}` : tile.label}</span>
+                  <span className={`h-3 w-3 rounded-full border ${selectedCategory === (tile.categories[0] || selectedCategoryExperience.meta.value) ? "border-orange-600 bg-orange-600 ring-1 ring-orange-100" : "border-gray-300"}`} />
+                  <span className="truncate">{tile.label}</span>
                 </span>
                 <span className="text-[9px] text-gray-500">{formatCount(tile.count)}</span>
               </button>
@@ -863,183 +791,372 @@ function AllProductsInner() {
   );
 
   if (selectedCategoryMode) {
+    const promoCards = [
+      {
+        title: "Limited-time offers",
+        description: `Hand-picked savings in ${selectedCategoryExperience.meta.label.toLowerCase()}.`,
+        tone: "from-orange-500 to-red-500",
+      },
+      {
+        title: "Bundle savings",
+        description: "Pair related items and save more at checkout.",
+        tone: "from-blue-600 to-cyan-500",
+      },
+      {
+        title: "Top-rated picks",
+        description: "Popular products from trusted sellers and stores.",
+        tone: "from-violet-600 to-fuchsia-500",
+      },
+    ];
+
+    const compactGroups = [
+      ["TRENDING NOW", filteredProducts.slice(0, 4)],
+      ["BEST SELLERS", filteredProducts.slice(4, 8)],
+      ["NEW ARRIVALS", filteredProducts.slice(8, 12)],
+    ];
+
     return (
       <>
         <Navbar />
-        <main className="min-h-screen bg-[#f8f9fb] px-2 pb-24 pt-3 min-[380px]:px-3 min-[380px]:pt-4 sm:px-6 lg:px-8 xl:px-10">
-          <div className="mx-auto max-w-[1500px]">
-            <div className="mb-5 hidden text-xs text-gray-500 lg:block">
-              Home <span className="mx-2">›</span> All Categories <span className="mx-2">›</span> <span className="font-extrabold text-gray-950">{selectedCategoryMeta?.label}</span>
-            </div>
+        <main className="min-h-screen bg-[#f5f7fb] pb-16">
+          <div className="mx-auto max-w-[1600px] px-3 pt-3 sm:px-4 lg:px-6 xl:px-8">
+            <div className="grid gap-4 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] lg:gap-6">
+              <SelectedFilterPanel />
 
-            <div className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-1.5 min-[380px]:grid-cols-[5.35rem_minmax(0,1fr)] min-[380px]:gap-2 lg:hidden">
-              <aside className="sticky left-0 top-[4.2rem] z-10 h-[calc(100svh-8.5rem)] touch-pan-y overflow-y-auto overscroll-contain rounded-xl border border-gray-100 bg-white/95 p-1.5 shadow-sm backdrop-blur min-[380px]:top-[4.4rem] min-[380px]:p-2 [-webkit-overflow-scrolling:touch]">
-                <div className="space-y-1.5 min-[380px]:space-y-2">
-                  <MobileRailButton label="All Categories" category="all" active={selectedCategory === "All"} onClick={() => setSelectedCategory("All")} />
-                  {mobileRailCategories.map((category) => (
-                    <MobileRailButton
-                      key={category}
-                      label={getCategoryMeta(category).label}
-                      category={category}
-                      active={categoryMatchesSelection(category, selectedCategory)}
-                      onClick={() => setSelectedCategory(category)}
-                    />
-                  ))}
-                </div>
-              </aside>
-
-              <section className="min-w-0 space-y-4">
-                <button type="button" onClick={() => setSortBy("newest")} className="relative block min-h-[10.1rem] w-full overflow-hidden rounded-lg bg-[radial-gradient(circle_at_86%_14%,#ff7a00_0,transparent_24%),linear-gradient(135deg,#13006a_0%,#3416a8_42%,#9d12c8_100%)] px-4 py-5 text-left text-white shadow-sm">
-                  <span className="absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,.12),transparent_38%),radial-gradient(circle_at_84%_80%,rgba(255,255,255,.2),transparent_28%)]" />
-                  <span className="relative z-10 block max-w-[10rem] text-2xl font-extrabold leading-7">NEW ARRIVALS 2026</span>
-                  <span className="relative z-10 mt-2 block text-[12px] font-semibold text-white/90">The latest tech, now yours.</span>
-                  <span className="relative z-10 mt-4 inline-flex rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-gray-950 shadow-sm">Shop Now ›</span>
-                  <span className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-                    {[0, 1, 2, 3].map((dot) => <span key={dot} className={`h-2 w-2 rounded-full ${dot === 0 ? "bg-orange-500" : "bg-white/80"}`} />)}
-                  </span>
-                  <span className="absolute inset-y-0 right-1 flex w-[58%] items-center justify-end">
-                    {selectedTileData.slice(1, 5).map((tile) => tile.product ? (
-                      <Image key={`hero-${tile.label}`} src={getProductImage(tile.product)} alt={tile.label} width={120} height={120} className="-ml-9 max-h-28 w-auto object-contain drop-shadow-xl" />
-                    ) : null)}
-                  </span>
-                </button>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {selectedTileData.slice(1, 7).map((tile, index) => (
-                    <MobileFeatureTile
-                      key={`feature-${tile.label}`}
-                      label={tile.label}
-                      product={tile.product}
-                      tone={[
-                        "from-orange-500 to-orange-600",
-                        "from-blue-700 to-sky-500",
-                        "from-blue-500 to-violet-500",
-                        "from-violet-600 to-fuchsia-500",
-                        "from-cyan-500 to-teal-500",
-                        "from-rose-500 to-pink-500",
-                      ][index]}
-                      onClick={() => setSelectedCategory(tile.categories[0])}
-                    />
-                  ))}
-                </div>
-
-                <section className="overflow-hidden rounded-lg bg-gradient-to-r from-red-500 via-orange-500 to-orange-400 p-2.5 text-white shadow-sm">
-                  <div className="mb-2 flex items-center justify-between">
-                    <h2 className="text-sm font-extrabold">FLASH SALE</h2>
-                    <div className="flex items-center gap-1 text-[10px] font-extrabold">
-                      <span>Ends in</span>
-                      {["02", "45", "36"].map((part) => <span key={part} className="rounded bg-red-600 px-1.5 py-1">{part}</span>)}
+              <section className="min-w-0">
+                <div className="lg:hidden">
+                  <div className="rounded-[1.4rem] border border-gray-100 bg-white px-4 py-3 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <svg className="h-5 w-5 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="m21 21-4.2-4.2m1.2-5.3a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                      </svg>
+                      <input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={`Search ${selectedCategoryExperience.meta.label.toLowerCase()}...`}
+                        className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
+                      />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 min-[430px]:grid-cols-4">
-                    {filteredProducts.slice(0, 4).map((product) => (
-                      <div key={`flash-${product._id}`} className="rounded-lg bg-white p-2 text-gray-950">
-                        <span className="mb-1 inline-flex rounded bg-red-500 px-1.5 py-0.5 text-[9px] font-extrabold text-white">-35%</span>
-                        <Image src={getProductImage(product)} alt={product.name} width={110} height={92} className="mx-auto h-20 w-full object-contain" />
-                        <p className="mt-1 line-clamp-2 text-[11px] font-bold leading-4">{product.name}</p>
-                        <p className="mt-1 text-[12px] font-extrabold text-orange-600">{formatCurrency(product.offerPrice || product.price)}</p>
-                      </div>
+
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory("All")}
+                      className={`flex h-[4.8rem] min-w-[6.8rem] flex-col items-center justify-center gap-2 rounded-2xl border px-3 text-center text-[11px] font-semibold ${
+                        selectedCategory === "All" ? "border-orange-500 bg-white text-orange-700 shadow-md" : "border-gray-100 bg-white text-gray-700"
+                      }`}
+                    >
+                      All
+                    </button>
+                    {selectedCategoryExperience.tiles.map((tile) => (
+                      <button
+                        key={`mobile-chip-${tile.label}`}
+                        type="button"
+                        onClick={() => setSelectedCategory(tile.categories[0] || selectedCategory)}
+                        className="flex h-[4.8rem] min-w-[6.8rem] flex-col items-center justify-center gap-1 rounded-2xl border border-gray-100 bg-white px-3 text-center shadow-sm"
+                      >
+                        <span className="text-[10px] font-semibold text-gray-600">{tile.label}</span>
+                        <span className="text-[9px] text-gray-400">{formatCount(tile.count)} items</span>
+                      </button>
                     ))}
                   </div>
-                </section>
 
-                {[
-                  ["TRENDING NOW", filteredProducts.slice(0, 4)],
-                  ["BEST SELLERS", filteredProducts.slice(4, 8)],
-                  ["LATEST ARRIVALS", filteredProducts.slice(8, 12)],
-                ].map(([title, items]) => items.length ? (
-                  <section key={title}>
+                  <div className={`mt-4 overflow-hidden rounded-[2rem] bg-gradient-to-br ${selectedCategoryExperience.heroTint} p-5 text-white shadow-sm`}>
+                    <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold text-white/90">
+                      {selectedCategoryExperience.heroBadge}
+                    </div>
+                    <h1 className="mt-3 max-w-md text-3xl font-black leading-tight">
+                      {selectedCategoryExperience.meta.label}
+                    </h1>
+                    <p className="mt-2 max-w-md text-sm leading-6 text-white/85">
+                      {selectedCategoryExperience.heroSubtitle}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCondition("flash")}
+                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-gray-950 shadow-sm"
+                    >
+                      View hot deals
+                      <span aria-hidden="true">→</span>
+                    </button>
+                    <div className="mt-5 flex items-end justify-between gap-3">
+                      <div className="flex items-end gap-2">
+                        {selectedCategoryExperience.heroProducts.slice(0, 3).map((product, index) => (
+                          <Image
+                            key={`${product?._id || index}-${index}`}
+                            src={getProductImage(product)}
+                            alt={product?.name || selectedCategoryExperience.meta.label}
+                            width={96}
+                            height={96}
+                            className={`h-24 w-24 object-contain drop-shadow-xl ${index === 0 ? "rotate-[-9deg]" : ""}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">
+                        {formatCount(filteredProducts.length)} results
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {selectedCategoryExperience.tiles.slice(0, 6).map((tile) => (
+                      <button
+                        key={`mobile-tile-${tile.label}`}
+                        type="button"
+                        onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
+                        className="flex min-h-[10rem] flex-col rounded-[1.4rem] border border-gray-100 bg-white p-3 text-left shadow-sm"
+                      >
+                        <span className="flex-1 items-center justify-center">
+                          {tile.product ? (
+                            <Image src={getProductImage(tile.product)} alt={tile.label} width={180} height={160} className="mx-auto h-20 w-full object-contain" />
+                          ) : null}
+                        </span>
+                        <span className="mt-2 text-center text-sm font-semibold text-gray-950">{tile.label}</span>
+                        <span className="mt-1 text-center text-[11px] text-gray-500">{tile.description || `${tile.count || 0} items`}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <section className="mt-4 overflow-hidden rounded-[1.5rem] bg-gradient-to-r from-orange-500 via-red-500 to-orange-400 p-3 text-white shadow-sm">
                     <div className="mb-2 flex items-center justify-between">
-                      <h2 className="text-sm font-extrabold text-gray-950">{title}</h2>
-                      <button type="button" className="text-[12px] font-bold text-gray-950">View all ›</button>
+                      <h2 className="text-sm font-black tracking-wide">FLASH DEALS</h2>
+                      <button type="button" onClick={() => setSelectedCondition("flash")} className="text-[11px] font-semibold text-white/90">
+                        See all
+                      </button>
                     </div>
                     <div className="grid grid-cols-2 gap-2 min-[430px]:grid-cols-4">
-                      {items.map((product) => (
-                        <MobileProductMini key={`${title}-${product._id}`} product={product} formatCurrency={formatCurrency} navigate={navigate} addToCart={addToCart} />
+                      {filteredProducts.slice(0, 4).map((product, index) => (
+                        <button key={`flash-${product._id}`} type="button" className="rounded-[1.1rem] bg-white p-2 text-left text-gray-950 shadow-sm" onClick={() => navigate(`/product/${product._id}`)}>
+                          <span className="inline-flex rounded-full bg-orange-600 px-2 py-0.5 text-[9px] font-bold text-white">
+                            -{Math.max(5, 10 + index * 3)}%
+                          </span>
+                          <Image src={getProductImage(product)} alt={product.name} width={120} height={96} className="mx-auto h-20 w-full object-contain" />
+                          <p className="mt-1 line-clamp-2 text-[11px] font-semibold leading-4 text-gray-900">{product.name}</p>
+                          <p className="mt-1 text-[12px] font-black text-orange-600">{formatCurrency(product.offerPrice || product.price)}</p>
+                        </button>
                       ))}
                     </div>
                   </section>
-                ) : null)}
-              </section>
-            </div>
 
-            <div className="hidden gap-6 lg:flex">
-              <SelectedFilterPanel />
-
-              <section className="min-w-0 flex-1">
-                <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(28rem,46rem)] lg:items-center">
-                  <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-gray-950 lg:text-4xl">{selectedCategoryMeta?.label || selectedCategory}</h1>
-                    <p className="mt-3 text-sm leading-6 text-gray-500">Find the latest phones, laptops, audio, accessories and more.</p>
-                  </div>
-
-                  <button type="button" onClick={() => setSelectedCondition("flash")} className="relative hidden min-h-[8rem] overflow-hidden rounded-lg bg-[#060b14] px-8 py-6 text-left text-white shadow-sm lg:block">
-                    <span className="relative z-10 inline-flex rounded bg-yellow-500/20 px-2 py-1 text-[10px] font-extrabold text-yellow-400">TECH THAT INSPIRES</span>
-                    <span className="relative z-10 mt-3 block max-w-xs text-xl font-extrabold leading-7">Upgrade your world with the latest electronics</span>
-                    <span className="absolute bottom-5 right-7 rounded-md bg-white px-5 py-2 text-[12px] font-extrabold text-gray-950">Shop Now</span>
-                    <span className="absolute inset-y-0 right-36 flex w-80 items-center justify-end gap-3 opacity-95">
-                      {selectedTileData.slice(1, 6).map((tile) => tile.product ? (
-                        <Image key={tile.label} src={getProductImage(tile.product)} alt={tile.label} width={92} height={92} className="max-h-24 w-auto object-contain" />
-                      ) : null)}
-                    </span>
-                  </button>
-                </div>
-
-                <div className="mt-8 flex gap-5 overflow-x-auto pb-2">
-                  {selectedTileData.map((tile) => (
-                    <SelectedCategoryTile
-                      key={`top-${tile.label}`}
-                      label={tile.label}
-                      product={tile.product}
-                      active={tile.label === "All" ? selectedCategory === "All" : selectedCategory === tile.categories[0]}
-                      onClick={() => {
-                        if (tile.label === "All") {
-                          setSelectedCategory("All");
-                        } else {
-                          setSelectedCategory(tile.categories[0]);
-                        }
-                      }}
-                    />
-                  ))}
-                </div>
-
-                <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-sm font-medium text-gray-500">{formatCount(filteredProducts.length)} products found</p>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-500">Sort by:</span>
-                    <select
-                      value={effectiveSortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="h-10 rounded-md border border-gray-200 bg-white px-4 text-sm outline-none"
-                    >
-                      {sortOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                    <span className="hidden h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-orange-600 sm:flex">
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d={gridIconPath} stroke="currentColor" strokeWidth="1.8" />
-                      </svg>
-                    </span>
-                  </div>
-                </div>
-
-                {loadingProducts ? (
-                  <ProductsGridSkeleton showHeader={false} />
-                ) : (
-                  <div className="mt-5 grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-                    {filteredProducts.map((product) => (
-                      <SelectedProductCard
-                        key={product._id}
-                        product={product}
-                        formatCurrency={formatCurrency}
-                        navigate={navigate}
-                        prefetchRoute={prefetchRoute}
-                        addToCart={addToCart}
-                      />
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {promoCards.map((card) => (
+                      <button
+                        key={card.title}
+                        type="button"
+                        onClick={() => setSelectedCondition("flash")}
+                        className={`rounded-[1.4rem] bg-gradient-to-br ${card.tone} p-4 text-left text-white shadow-sm`}
+                      >
+                        <p className="text-sm font-black">{card.title}</p>
+                        <p className="mt-1 text-xs leading-5 text-white/85">{card.description}</p>
+                      </button>
                     ))}
                   </div>
-                )}
+
+                  <div className="mt-5 space-y-5">
+                    {compactGroups.map(([title, items]) => items.length ? (
+                      <section key={title}>
+                        <div className="mb-2 flex items-center justify-between">
+                          <h2 className="text-sm font-black text-gray-950">{title}</h2>
+                          <button type="button" onClick={() => setSelectedCategory(selectedCategoryExperience.meta.value)} className="text-[12px] font-semibold text-orange-600">
+                            View all →
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 min-[430px]:grid-cols-4">
+                          {items.map((product) => (
+                            <MobileProductMini key={`${title}-${product._id}`} product={product} formatCurrency={formatCurrency} navigate={navigate} addToCart={addToCart} />
+                          ))}
+                        </div>
+                      </section>
+                    ) : null)}
+                  </div>
+                </div>
+
+                <div className="hidden lg:block">
+                  <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,34rem)] lg:items-center">
+                    <div className="rounded-[2.2rem] border border-gray-100 bg-white p-8 shadow-sm">
+                      <div className="inline-flex rounded-full bg-orange-50 px-3 py-1 text-[11px] font-semibold text-orange-700">
+                        {selectedCategoryExperience.heroBadge}
+                      </div>
+                      <h1 className="mt-4 text-4xl font-black tracking-tight text-gray-950">
+                        {selectedCategoryExperience.meta.label}
+                      </h1>
+                      <p className="mt-3 max-w-xl text-sm leading-6 text-gray-500">
+                        {selectedCategoryExperience.heroSubtitle}
+                      </p>
+                      <div className="mt-5 flex flex-wrap gap-3">
+                        <button type="button" onClick={() => setSelectedCondition("flash")} className="rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-sm">
+                          View hot deals
+                        </button>
+                        <button type="button" onClick={() => setSelectedCategory("All")} className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700">
+                          Reset category
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className={`overflow-hidden rounded-[2.2rem] bg-gradient-to-br ${selectedCategoryExperience.heroTint} p-6 text-white shadow-sm`}>
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Featured category</p>
+                          <p className="mt-1 text-3xl font-black">{selectedCategoryExperience.meta.label}</p>
+                        </div>
+                        <div className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">
+                          {formatCount(filteredProducts.length)} items
+                        </div>
+                      </div>
+                      <div className="mt-4 flex items-end justify-end gap-3">
+                        {selectedCategoryExperience.heroProducts.slice(0, 4).map((product, index) => (
+                          <Image
+                            key={`${product?._id || index}-${index}`}
+                            src={getProductImage(product)}
+                            alt={product?.name || selectedCategoryExperience.meta.label}
+                            width={120}
+                            height={120}
+                            className={`h-28 w-28 object-contain drop-shadow-2xl ${index === 0 ? "rotate-[-10deg]" : ""}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex gap-3 overflow-x-auto pb-1">
+                    {selectedCategoryExperience.tiles.map((tile) => (
+                      <button
+                        key={`desktop-chip-${tile.label}`}
+                        type="button"
+                        onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
+                        className="flex min-h-[5rem] min-w-[7.5rem] flex-col items-center justify-center gap-1 rounded-2xl border border-gray-100 bg-white px-3 text-center shadow-sm transition hover:border-orange-200 hover:bg-orange-50"
+                      >
+                        <span className="text-[11px] font-semibold text-gray-900">{tile.label}</span>
+                        <span className="text-[10px] text-gray-500">{formatCount(tile.count)} items</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {selectedCategoryExperience.tiles.slice(0, 6).map((tile) => (
+                      <button
+                        key={`desktop-tile-${tile.label}`}
+                        type="button"
+                        onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
+                        className="group rounded-[1.6rem] border border-gray-100 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
+                      >
+                        <span className="flex items-center justify-end">
+                          <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-semibold text-orange-700">
+                            {tile.count ? `${tile.count} items` : "Browse"}
+                          </span>
+                        </span>
+                        <span className="mt-2 flex h-28 items-center justify-center">
+                          {tile.product ? (
+                            <Image src={getProductImage(tile.product)} alt={tile.label} width={160} height={140} className="h-full w-full object-contain transition group-hover:scale-105" />
+                          ) : null}
+                        </span>
+                        <p className="mt-2 text-base font-bold text-gray-950">{tile.label}</p>
+                        <p className="mt-1 text-sm leading-6 text-gray-500">{tile.description || "Tap to explore"}</p>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 grid gap-4 xl:grid-cols-3">
+                    {promoCards.map((card) => (
+                      <button
+                        key={`promo-${card.title}`}
+                        type="button"
+                        onClick={() => setSelectedCondition("flash")}
+                        className={`rounded-[1.6rem] bg-gradient-to-br ${card.tone} p-5 text-left text-white shadow-sm`}
+                      >
+                        <p className="text-sm font-black uppercase tracking-[0.14em]">{card.title}</p>
+                        <p className="mt-2 text-sm leading-6 text-white/85">{card.description}</p>
+                        <span className="mt-4 inline-flex rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">Shop now →</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
+                    <section className="overflow-hidden rounded-[2rem] border border-gray-100 bg-white shadow-sm">
+                      <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                        <div>
+                          <p className="text-sm font-bold text-gray-950">Flash deals</p>
+                          <p className="text-xs text-gray-500">High-converting products for this category.</p>
+                        </div>
+                        <button type="button" onClick={() => setSelectedCondition("flash")} className="text-sm font-semibold text-orange-600">
+                          View all →
+                        </button>
+                      </div>
+                      <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
+                        {filteredProducts.slice(0, 5).map((product, index) => (
+                          <button key={`desktop-flash-${product._id}`} type="button" onClick={() => navigate(`/product/${product._id}`)} className="rounded-[1.2rem] border border-gray-100 bg-white p-3 text-left shadow-sm transition hover:border-orange-200">
+                            <span className="inline-flex rounded-full bg-orange-600 px-2 py-0.5 text-[9px] font-bold text-white">
+                              -{Math.max(5, 9 + index * 4)}%
+                            </span>
+                            <Image src={getProductImage(product)} alt={product.name} width={140} height={110} className="mt-2 h-24 w-full object-contain" />
+                            <p className="mt-2 line-clamp-2 text-[12px] font-semibold leading-4 text-gray-900">{product.name}</p>
+                            <p className="mt-1 text-[12px] font-black text-orange-600">{formatCurrency(product.offerPrice || product.price)}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="space-y-3">
+                      {[
+                        selectedCategoryExperience.tiles.slice(0, 2),
+                        selectedCategoryExperience.tiles.slice(2, 4),
+                        selectedCategoryExperience.tiles.slice(4, 6),
+                      ].map((row, index) => (
+                        <div key={`brand-row-${index}`} className="overflow-hidden rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm">
+                          <div className="mb-3 flex items-center justify-between">
+                            <p className="text-sm font-bold text-gray-950">
+                              {["Featured", "Popular", "Latest"][index]}
+                            </p>
+                            <span className="text-xs text-gray-400">View all</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            {row.map((tile) => (
+                              <button
+                                key={`side-${tile.label}`}
+                                type="button"
+                                onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
+                                className="rounded-[1.15rem] border border-gray-100 bg-gray-50 p-3 text-left"
+                              >
+                                <p className="line-clamp-1 text-sm font-semibold text-gray-950">{tile.label}</p>
+                                <p className="mt-1 text-[11px] text-gray-500">{formatCount(tile.count)} items</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </section>
+                  </div>
+
+                  <div className="mt-6 space-y-6">
+                    {compactGroups.map(([title, items]) => items.length ? (
+                      <section key={`desktop-${title}`}>
+                        <div className="mb-3 flex items-center justify-between">
+                          <h2 className="text-sm font-bold text-gray-950">{title}</h2>
+                          <button type="button" onClick={() => setSelectedCondition("flash")} className="text-sm font-semibold text-orange-600">
+                            View all →
+                          </button>
+                        </div>
+                        {loadingProducts ? (
+                          <ProductsGridSkeleton showHeader={false} />
+                        ) : (
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+                            {items.map((product) => (
+                              <SelectedProductCard
+                                key={product._id}
+                                product={product}
+                                formatCurrency={formatCurrency}
+                                navigate={navigate}
+                                prefetchRoute={prefetchRoute}
+                                addToCart={addToCart}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    ) : null)}
+                  </div>
+                </div>
               </section>
             </div>
           </div>
