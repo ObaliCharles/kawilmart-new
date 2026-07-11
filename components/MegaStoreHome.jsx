@@ -635,7 +635,7 @@ const MobileHome = ({
           {mobileTopCategories.map(([label, category]) => (
             <MobileTopCategory key={label} label={label} category={category} products={sortedProducts} navigate={navigate} />
           ))}
-          <button type="button" onClick={() => navigate("/all-products")} className="flex h-[6.7rem] flex-col items-center justify-center rounded-xl border border-gray-200 bg-white text-center shadow-sm">
+          <button type="button" onClick={() => navigate("/categories")} className="flex h-[6.7rem] flex-col items-center justify-center rounded-xl border border-gray-200 bg-white text-center shadow-sm">
             <span className="text-gray-400"><UtilityIcon type="grid" /></span>
             <span className="mt-2 text-[12px] font-bold text-gray-950">All Categories</span>
           </button>
@@ -1309,7 +1309,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
                   </div>
                 </div>
               ))}
-              <button type="button" onClick={() => navigate("/all-products")} className="px-2.5 py-2 text-[12px] font-semibold text-orange-600">+ More categories</button>
+              <button type="button" onClick={() => navigate("/categories")} className="px-2.5 py-2 text-[12px] font-semibold text-orange-600">+ More categories</button>
             </div>
           </aside>
 

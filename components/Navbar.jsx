@@ -512,7 +512,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
   }, [clerkReady, refreshUnreadNotifications, user]);
 
   useEffect(() => {
-    const routes = ['/', '/all-products', '/categories', '/cart', '/my-orders', '/inbox'];
+    const routes = ['/', '/categories', '/all-products', '/cart', '/my-orders', '/inbox'];
     if (showSeller) routes.push('/seller');
     if (showAdmin) routes.push('/admin');
     if (showRider) routes.push('/dashboard/rider');

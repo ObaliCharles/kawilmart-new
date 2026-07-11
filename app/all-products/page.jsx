@@ -235,6 +235,216 @@ const getBrandLabel = (product) => {
   return firstNameToken ? firstNameToken[0].toUpperCase() + firstNameToken.slice(1) : "Other";
 };
 
+const getTileProducts = (products, tile, fallbackCategory, count = 4) => {
+  const categoriesToMatch = Array.isArray(tile?.categories) ? tile.categories : [];
+  const keywordsToMatch = Array.isArray(tile?.keywords) ? tile.keywords.map(normalizeSearchText).filter(Boolean) : [];
+
+  const matches = products.filter((product) => {
+    const productCategory = product?.category || "";
+    const haystack = normalizeSearchText(`${product?.name || ""} ${product?.description || ""} ${productCategory}`);
+
+    return categoriesToMatch.some((category) => categoryMatchesSelection(productCategory, category))
+      || keywordsToMatch.some((keyword) => haystack.includes(keyword));
+  });
+
+  const fallbackMatches = matches.length
+    ? matches
+    : products.filter((product) => categoryMatchesSelection(product?.category, fallbackCategory));
+
+  return fallbackMatches.slice(0, count);
+};
+
+const getDiscountPercent = (product, fallback = 6) => {
+  const originalPrice = Number(product?.price) || 0;
+  const offerPrice = Number(product?.offerPrice || product?.price) || 0;
+
+  if (originalPrice > offerPrice) {
+    return Math.max(1, Math.round(((originalPrice - offerPrice) / originalPrice) * 100));
+  }
+
+  return fallback;
+};
+
+const mobileSectionThemes = [
+  {
+    surface: "bg-[#eef9ea]",
+    text: "text-[#2d7b1f]",
+    iconBg: "bg-[#2f8b25]",
+    addBg: "bg-[#edf8e9]",
+    addText: "text-[#3c982d]",
+  },
+  {
+    surface: "bg-[#fff3e9]",
+    text: "text-[#9a3412]",
+    iconBg: "bg-[#f45b12]",
+    addBg: "bg-[#fff0e4]",
+    addText: "text-[#f45b12]",
+  },
+  {
+    surface: "bg-[#edf7ff]",
+    text: "text-[#1d4f9a]",
+    iconBg: "bg-[#248bd8]",
+    addBg: "bg-[#e9f5ff]",
+    addText: "text-[#248bd8]",
+  },
+  {
+    surface: "bg-[#fff1f7]",
+    text: "text-[#9d174d]",
+    iconBg: "bg-[#db2777]",
+    addBg: "bg-[#fff0f6]",
+    addText: "text-[#db2777]",
+  },
+];
+
+const supermarketMobileTiles = [
+  {
+    label: "Fresh Foods",
+    categories: ["Home & Living"],
+    keywords: ["fresh", "vegetable", "fruit", "tomato", "onion", "avocado", "spinach", "meat"],
+    description: "Fresh vegetables, fruits, meat & more",
+  },
+  {
+    label: "Food Cupboard",
+    categories: ["Home & Living", "Appliances"],
+    keywords: ["rice", "sugar", "oil", "coffee", "pasta", "flour", "cereal"],
+    description: "Staples to keep your kitchen full",
+  },
+  {
+    label: "Beverages",
+    categories: ["Home & Living", "Appliances"],
+    keywords: ["drink", "juice", "water", "soda", "coffee", "tea", "beverage"],
+    description: "Refreshing drinks for every moment",
+  },
+  {
+    label: "Household",
+    categories: ["Home & Living", "Appliances"],
+    keywords: ["detergent", "clean", "mop", "broom", "household", "soap"],
+    description: "Cleaning and home essentials",
+  },
+  {
+    label: "Personal Care",
+    categories: ["Health & Personal Care", "Beauty & Cosmetics"],
+    keywords: ["lotion", "soap", "shampoo", "deodorant", "care"],
+    description: "Daily care for the family",
+  },
+  {
+    label: "Baby Care",
+    categories: ["Baby Products"],
+    keywords: ["baby", "diaper", "nappy", "feeding"],
+    description: "Baby care and feeding essentials",
+  },
+];
+
+const supermarketRailTiles = [
+  supermarketMobileTiles[1],
+  supermarketMobileTiles[0],
+  supermarketMobileTiles[2],
+  supermarketMobileTiles[3],
+  supermarketMobileTiles[4],
+  supermarketMobileTiles[5],
+].filter(Boolean);
+
+const supermarketTileIcons = {
+  "Food Cupboard": "🫙",
+  "Fresh Foods": "🥬",
+  Beverages: "🍹",
+  Household: "🧴",
+  "Personal Care": "🧼",
+  "Baby Care": "🍼",
+};
+
+const MobileCategoryProductCard = ({ product, formatCurrency, navigate, addToCart, theme, discount, fallbackLabel = "Browse item" }) => (
+  <article
+    onClick={() => product?._id ? navigate(`/product/${product._id}`) : undefined}
+    className={`relative min-w-0 overflow-hidden rounded-xl border border-black/5 bg-white p-1.5 shadow-[0_8px_18px_rgba(15,23,42,0.08)] min-[390px]:rounded-2xl min-[390px]:p-2 ${product?._id ? "cursor-pointer" : ""}`}
+  >
+    <span className={`absolute left-1.5 top-1.5 z-10 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white min-[390px]:left-2 min-[390px]:top-2 min-[390px]:px-2 min-[390px]:text-[10px] ${theme.iconBg}`}>
+      -{discount}%
+    </span>
+    <span className="flex h-[4.75rem] items-center justify-center min-[390px]:h-[5.8rem]">
+      <Image src={getProductImage(product)} alt={product?.name || fallbackLabel} width={150} height={120} className="h-full w-full object-contain p-1" />
+    </span>
+    <h3 className="mt-1 line-clamp-2 min-h-8 text-[10px] font-semibold leading-4 text-gray-950 min-[390px]:text-[11px]">{product?.name || fallbackLabel}</h3>
+    <div className="mt-1 flex items-end justify-between gap-1">
+      <p className="min-w-0 text-[10px] font-black leading-3 text-gray-950 [overflow-wrap:anywhere] min-[390px]:text-[12px]">
+        {product ? formatCurrency(product.offerPrice || product.price) : "Browse"}
+      </p>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          if (product?._id) void addToCart(product._id);
+        }}
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full min-[390px]:h-8 min-[390px]:w-8 ${theme.addBg} ${theme.addText}`}
+        aria-label={product?._id ? "Add to cart" : "Browse category"}
+      >
+        <svg className="h-4 w-4 min-[390px]:h-5 min-[390px]:w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
+    </div>
+  </article>
+);
+
+const MobileCategorySection = ({ tile, products, experience, index, formatCurrency, navigate, addToCart }) => {
+  const theme = mobileSectionThemes[index % mobileSectionThemes.length];
+  const sectionProducts = getTileProducts(products, tile, experience.meta.value, 4);
+  const heroProducts = sectionProducts.length ? sectionProducts : experience.heroProducts.slice(0, 4);
+  const leadProduct = heroProducts[0] || experience.featuredProduct;
+  const displayProducts = heroProducts.length ? heroProducts.slice(0, 4) : Array.from({ length: 4 }, (_, productIndex) => ({
+    _placeholder: true,
+    name: [tile.label, "Deal", "Pick", "Essential"][productIndex] || tile.label,
+  }));
+
+  return (
+    <section className={`overflow-hidden rounded-[1.35rem] ${theme.surface} p-3 shadow-sm`}>
+      <div className="grid min-h-[8.8rem] grid-cols-[minmax(0,1fr)_minmax(7rem,42%)] gap-2 min-[390px]:min-h-[9.6rem] min-[390px]:grid-cols-[minmax(0,1fr)_minmax(8rem,42%)]">
+        <div className="flex min-w-0 gap-2 min-[390px]:gap-3">
+          <span className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white min-[390px]:h-11 min-[390px]:w-11 ${theme.iconBg}`}>
+            <CategoryGlyph category={tile.categories?.[0] || experience.meta.value} className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 pt-1">
+            <h2 className={`text-[22px] font-black leading-tight min-[390px]:text-2xl ${theme.text}`}>{tile.label}</h2>
+            <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-gray-700 min-[390px]:text-sm">{tile.description || experience.heroSubtitle}</p>
+            <button
+              type="button"
+              onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories?.[0] || experience.meta.value)}`)}
+              className={`mt-2 inline-flex items-center gap-2 text-[13px] font-black min-[390px]:mt-3 min-[390px]:text-sm ${theme.text}`}
+            >
+              View All
+              <span aria-hidden="true">-&gt;</span>
+            </button>
+          </div>
+        </div>
+        <div className="relative flex items-end justify-end overflow-hidden">
+          <Image
+            src={getProductImage(leadProduct)}
+            alt={leadProduct?.name || tile.label}
+            width={240}
+            height={180}
+            className="h-28 w-full object-contain drop-shadow-xl min-[390px]:h-32"
+          />
+        </div>
+      </div>
+
+      <div className="mt-2 grid grid-cols-4 gap-1.5 min-[390px]:gap-2">
+        {displayProducts.map((product, productIndex) => (
+          <MobileCategoryProductCard
+            key={`${tile.label}-${product?._id || productIndex}`}
+            product={product?._placeholder ? null : product}
+            formatCurrency={formatCurrency}
+            navigate={navigate}
+            addToCart={addToCart}
+            theme={theme}
+            discount={getDiscountPercent(product, 5 + ((index + productIndex) % 4) * 2)}
+            fallbackLabel={product?.name || tile.label}
+          />
+        ))}
+      </div>
+    </section>
+  );
+};
+
 const scoreFieldMatch = (value, normalizedQuery, searchTerms, weights) => {
   const normalizedValue = normalizeSearchText(value);
 
@@ -360,14 +570,20 @@ const getProductSearchScore = (product, query) => {
 function AllProductsInner() {
   const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, addToCart } = useAppContext();
   const searchParams = useSearchParams();
+  const initialCategory = searchParams.get("category") || "All";
+  const initialSearch = searchParams.get("search") || "";
+  const initialSeller = searchParams.get("seller") || "";
+  const initialBrand = searchParams.get("brand") || "all";
+  const initialFilter = searchParams.get("filter");
+  const initialSort = searchParams.get("sort");
 
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedPriceRange, setSelectedPriceRange] = useState(0);
-  const [sortBy, setSortBy] = useState("default");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSeller, setSelectedSeller] = useState("");
-  const [selectedCondition, setSelectedCondition] = useState("all");
-  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [sortBy, setSortBy] = useState(initialFilter === "flash" ? "discount" : sortOptions.some((option) => option.value === initialSort) ? initialSort : "default");
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [selectedSeller, setSelectedSeller] = useState(initialSeller);
+  const [selectedCondition, setSelectedCondition] = useState(initialFilter === "flash" ? "flash" : "all");
+  const [selectedBrand, setSelectedBrand] = useState(initialBrand);
   const [selectedRating, setSelectedRating] = useState(0);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -504,6 +720,10 @@ function AllProductsInner() {
   const selectedCategoryExperience = useMemo(() => (
     getCategoryExperience(selectedCategoryPool.length ? selectedCategoryPool : products, selectedCategory)
   ), [selectedCategoryPool, products, selectedCategory]);
+  const useSupermarketMobileDisplay = selectedCategory === "Home & Living";
+  const mobileDisplayTiles = useSupermarketMobileDisplay
+    ? supermarketMobileTiles
+    : selectedCategoryExperience.tiles;
   const resetFilters = () => {
     setSelectedCategory("All");
     setSelectedPriceRange(0);
@@ -817,7 +1037,7 @@ function AllProductsInner() {
 
     return (
       <>
-        <Navbar />
+        <Navbar hideMobileHeader />
         <main className="min-h-screen bg-[#f5f7fb] pb-16">
           <div className="mx-auto max-w-[1600px] px-3 pt-3 sm:px-4 lg:px-6 xl:px-8">
             <div className="grid gap-4 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] lg:gap-6">
@@ -825,151 +1045,132 @@ function AllProductsInner() {
 
               <section className="min-w-0">
                 <div className="lg:hidden">
-                  <div className="rounded-[1.4rem] border border-gray-100 bg-white px-4 py-3 shadow-sm">
+                  <div className="rounded-full border border-gray-200 bg-white px-4 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.08)]">
                     <div className="flex items-center gap-3">
-                      <svg className="h-5 w-5 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <svg className="h-6 w-6 shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="m21 21-4.2-4.2m1.2-5.3a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                       </svg>
                       <input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={`Search ${selectedCategoryExperience.meta.label.toLowerCase()}...`}
-                        className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
+                        placeholder="Search for products, brands..."
+                        className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-gray-400"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowMobileFilters(true)}
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white shadow-sm"
+                        aria-label="Open filters"
+                      >
+                        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M5 7h8m3 0h3M5 17h3m3 0h8M11 5v4m0 6v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
 
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                  <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
                     <button
                       type="button"
-                      onClick={() => setSelectedCategory("All")}
-                      className={`flex h-[4.8rem] min-w-[6.8rem] flex-col items-center justify-center gap-2 rounded-2xl border px-3 text-center text-[11px] font-semibold ${
-                        selectedCategory === "All" ? "border-orange-500 bg-white text-orange-700 shadow-md" : "border-gray-100 bg-white text-gray-700"
-                      }`}
+                      onClick={() => navigate("/all-products")}
+                      className="flex h-[6.1rem] min-w-[5.9rem] flex-col items-center justify-center gap-2 rounded-2xl border border-orange-500 bg-white px-2 text-center text-[12px] font-black text-orange-700 shadow-sm"
                     >
-                      All
+                      <span className="text-3xl" aria-hidden="true">🛒</span>
+                      <span>All</span>
                     </button>
-                    {selectedCategoryExperience.tiles.map((tile) => (
-                      <button
-                        key={`mobile-chip-${tile.label}`}
-                        type="button"
-                        onClick={() => setSelectedCategory(tile.categories[0] || selectedCategory)}
-                        className="flex h-[4.8rem] min-w-[6.8rem] flex-col items-center justify-center gap-1 rounded-2xl border border-gray-100 bg-white px-3 text-center shadow-sm"
-                      >
-                        <span className="text-[10px] font-semibold text-gray-600">{tile.label}</span>
-                        <span className="text-[9px] text-gray-400">{formatCount(tile.count)} items</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className={`mt-4 overflow-hidden rounded-[2rem] bg-gradient-to-br ${selectedCategoryExperience.heroTint} p-5 text-white shadow-sm`}>
-                    <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold text-white/90">
-                      {selectedCategoryExperience.heroBadge}
-                    </div>
-                    <h1 className="mt-3 max-w-md text-3xl font-black leading-tight">
-                      {selectedCategoryExperience.meta.label}
-                    </h1>
-                    <p className="mt-2 max-w-md text-sm leading-6 text-white/85">
-                      {selectedCategoryExperience.heroSubtitle}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCondition("flash")}
-                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-gray-950 shadow-sm"
-                    >
-                      View hot deals
-                      <span aria-hidden="true">→</span>
-                    </button>
-                    <div className="mt-5 flex items-end justify-between gap-3">
-                      <div className="flex items-end gap-2">
-                        {selectedCategoryExperience.heroProducts.slice(0, 3).map((product, index) => (
-                          <Image
-                            key={`${product?._id || index}-${index}`}
-                            src={getProductImage(product)}
-                            alt={product?.name || selectedCategoryExperience.meta.label}
-                            width={96}
-                            height={96}
-                            className={`h-24 w-24 object-contain drop-shadow-xl ${index === 0 ? "rotate-[-9deg]" : ""}`}
-                          />
-                        ))}
-                      </div>
-                      <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">
-                        {formatCount(filteredProducts.length)} results
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {selectedCategoryExperience.tiles.slice(0, 6).map((tile) => (
-                      <button
-                        key={`mobile-tile-${tile.label}`}
-                        type="button"
-                        onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
-                        className="flex min-h-[10rem] flex-col rounded-[1.4rem] border border-gray-100 bg-white p-3 text-left shadow-sm"
-                      >
-                        <span className="flex-1 items-center justify-center">
-                          {tile.product ? (
-                            <Image src={getProductImage(tile.product)} alt={tile.label} width={180} height={160} className="mx-auto h-20 w-full object-contain" />
-                          ) : null}
-                        </span>
-                        <span className="mt-2 text-center text-sm font-semibold text-gray-950">{tile.label}</span>
-                        <span className="mt-1 text-center text-[11px] text-gray-500">{tile.description || `${tile.count || 0} items`}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <section className="mt-4 overflow-hidden rounded-[1.5rem] bg-gradient-to-r from-orange-500 via-red-500 to-orange-400 p-3 text-white shadow-sm">
-                    <div className="mb-2 flex items-center justify-between">
-                      <h2 className="text-sm font-black tracking-wide">FLASH DEALS</h2>
-                      <button type="button" onClick={() => setSelectedCondition("flash")} className="text-[11px] font-semibold text-white/90">
-                        See all
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 min-[430px]:grid-cols-4">
-                      {filteredProducts.slice(0, 4).map((product, index) => (
-                        <button key={`flash-${product._id}`} type="button" className="rounded-[1.1rem] bg-white p-2 text-left text-gray-950 shadow-sm" onClick={() => navigate(`/product/${product._id}`)}>
-                          <span className="inline-flex rounded-full bg-orange-600 px-2 py-0.5 text-[9px] font-bold text-white">
-                            -{Math.max(5, 10 + index * 3)}%
-                          </span>
-                          <Image src={getProductImage(product)} alt={product.name} width={120} height={96} className="mx-auto h-20 w-full object-contain" />
-                          <p className="mt-1 line-clamp-2 text-[11px] font-semibold leading-4 text-gray-900">{product.name}</p>
-                          <p className="mt-1 text-[12px] font-black text-orange-600">{formatCurrency(product.offerPrice || product.price)}</p>
+                    {useSupermarketMobileDisplay ? (
+                      supermarketRailTiles.map((tile) => (
+                        <button
+                          key={`mobile-supermarket-rail-${tile.label}`}
+                          type="button"
+                          onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories?.[0] || selectedCategory)}`)}
+                          className="flex h-[6.1rem] min-w-[6.7rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-gray-100 bg-white px-2 text-center text-gray-900 shadow-sm"
+                        >
+                          <span className="text-3xl leading-none" aria-hidden="true">{supermarketTileIcons[tile.label] || "🛍️"}</span>
+                          <span className="line-clamp-2 text-[12px] font-black leading-4">{tile.label}</span>
                         </button>
-                      ))}
+                      ))
+                    ) : (
+                      mobileRailCategories.slice(0, 7).map((category) => {
+                        const meta = getCategoryMeta(category);
+                        const active = selectedCategory === category;
+
+                        return (
+                          <button
+                            key={`mobile-selected-rail-${category}`}
+                            type="button"
+                            onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
+                            className={`flex h-[6.1rem] min-w-[6.7rem] flex-col items-center justify-center gap-1.5 rounded-2xl border bg-white px-2 text-center shadow-sm ${
+                              active ? "border-orange-500 text-orange-700" : "border-gray-100 text-gray-900"
+                            }`}
+                          >
+                            <span className="text-3xl leading-none" aria-hidden="true">{meta.icon}</span>
+                            <span className="line-clamp-2 text-[12px] font-black leading-4">{meta.label}</span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="mt-5 space-y-4">
+                    {mobileDisplayTiles.slice(0, useSupermarketMobileDisplay ? 3 : 4).map((tile, index) => (
+                      <MobileCategorySection
+                        key={`mobile-display-${tile.label}`}
+                        tile={tile}
+                        products={filteredProducts.length ? filteredProducts : selectedCategoryPool}
+                        experience={selectedCategoryExperience}
+                        index={index}
+                        formatCurrency={formatCurrency}
+                        navigate={navigate}
+                        addToCart={addToCart}
+                      />
+                    ))}
+                  </div>
+
+                  <section className="mt-5 overflow-hidden rounded-[1.35rem] bg-white p-3 shadow-sm">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <h2 className="text-base font-black text-gray-950">{useSupermarketMobileDisplay ? "Supermarket Picks" : `${selectedCategoryExperience.meta.label} Picks`}</h2>
+                        <p className="text-[11px] font-semibold text-gray-500">{formatCount(filteredProducts.length)} products available</p>
+                      </div>
+                      <button type="button" onClick={() => setSelectedCondition("flash")} className="text-[12px] font-black text-orange-600">
+                        View All -&gt;
+                      </button>
                     </div>
+                    {loadingProducts ? (
+                      <ProductsGridSkeleton showHeader={false} />
+                    ) : (
+                      <div className="grid grid-cols-4 gap-1.5 min-[390px]:gap-2">
+                        {filteredProducts.slice(0, 8).map((product, index) => {
+                          const theme = mobileSectionThemes[index % mobileSectionThemes.length];
+
+                          return (
+                            <MobileCategoryProductCard
+                              key={`mobile-picks-${product._id || index}`}
+                              product={product}
+                              formatCurrency={formatCurrency}
+                              navigate={navigate}
+                              addToCart={addToCart}
+                              theme={theme}
+                              discount={getDiscountPercent(product, 6 + (index % 3) * 2)}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
                   </section>
 
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {promoCards.map((card) => (
-                      <button
-                        key={card.title}
-                        type="button"
-                        onClick={() => setSelectedCondition("flash")}
-                        className={`rounded-[1.4rem] bg-gradient-to-br ${card.tone} p-4 text-left text-white shadow-sm`}
-                      >
-                        <p className="text-sm font-black">{card.title}</p>
-                        <p className="mt-1 text-xs leading-5 text-white/85">{card.description}</p>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 space-y-5">
-                    {compactGroups.map(([title, items]) => items.length ? (
-                      <section key={title}>
-                        <div className="mb-2 flex items-center justify-between">
-                          <h2 className="text-sm font-black text-gray-950">{title}</h2>
-                          <button type="button" onClick={() => setSelectedCategory(selectedCategoryExperience.meta.value)} className="text-[12px] font-semibold text-orange-600">
-                            View all →
-                          </button>
+                  {showMobileFilters && (
+                    <div className="fixed inset-0 z-50 bg-black/45" onClick={() => setShowMobileFilters(false)}>
+                      <div className="absolute bottom-0 left-0 right-0 max-h-[82vh] overflow-y-auto rounded-t-3xl bg-white p-5" onClick={(event) => event.stopPropagation()}>
+                        <div className="mb-4 flex items-center justify-between">
+                          <p className="text-lg font-black text-gray-950">Filters</p>
+                          <button type="button" onClick={() => setShowMobileFilters(false)} className="text-2xl font-bold text-gray-400">x</button>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 min-[430px]:grid-cols-4">
-                          {items.map((product) => (
-                            <MobileProductMini key={`${title}-${product._id}`} product={product} formatCurrency={formatCurrency} navigate={navigate} addToCart={addToCart} />
-                          ))}
-                        </div>
-                      </section>
-                    ) : null)}
-                  </div>
+                        <FilterPanel />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="hidden lg:block">

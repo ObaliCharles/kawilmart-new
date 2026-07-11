@@ -1079,7 +1079,7 @@ const StorePage = () => {
                 <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="text-[12px] font-semibold text-gray-950">Stores list</p>
-                    <button type="button" onClick={() => navigate("/categories")} className="text-[11px] font-semibold text-orange-600">
+                    <button type="button" onClick={() => navigate("/all-products")} className="text-[11px] font-semibold text-orange-600">
                       Browse
                     </button>
                   </div>
