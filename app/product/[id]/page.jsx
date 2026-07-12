@@ -384,7 +384,7 @@ const Product = () => {
                     <div className="w-28 h-0.5 bg-orange-600 mt-2"></div>
                 </div>
                 <div className="mt-6 grid w-full grid-cols-1 gap-3 pb-14 min-[340px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 xl:gap-6">
-                    {relatedProducts.map((product) => <ProductCard key={product._id} product={product} />)}
+                    {relatedProducts.map((product, index) => <ProductCard key={`related-${index}-${product._id || product.name}`} product={product} />)}
                 </div>
                 <button
                     onClick={() => navigate('/all-products')}

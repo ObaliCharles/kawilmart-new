@@ -603,7 +603,7 @@ const MobileHome = ({
         </div>
         <div className="-mx-3 flex gap-2.5 overflow-x-auto px-3 pb-1">
           {(dealProducts.length ? dealProducts : sortedProducts).slice(0, 6).map((product, index) => (
-            <MobileFlashCard key={`${product._id}-mobile-flash`} product={product} cardIndex={index} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} toggleProductLike={toggleProductLike} />
+            <MobileFlashCard key={`mobile-flash-${index}-${product._id || product.name}`} product={product} cardIndex={index} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} toggleProductLike={toggleProductLike} />
           ))}
         </div>
       </section>
@@ -623,8 +623,8 @@ const MobileHome = ({
           ))}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {recommendedProducts.slice(0, 6).map((product) => (
-            <MobileProductCard key={`${product._id}-mobile-reco`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} toggleProductLike={toggleProductLike} />
+          {recommendedProducts.slice(0, 6).map((product, index) => (
+            <MobileProductCard key={`mobile-reco-${index}-${product._id || product.name}`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} toggleProductLike={toggleProductLike} />
           ))}
         </div>
       </section>
@@ -1363,7 +1363,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             </div>
             <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {dealProducts.map((product, index) => (
-                <DealCard key={`${product._id}-deal-${index}`} product={product} cardIndex={index} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
+                <DealCard key={`deal-${index}-${product._id || product.name}`} product={product} cardIndex={index} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
               ))}
             </div>
           </section>
@@ -1376,8 +1376,8 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
               <button type="button" onClick={() => navigate("/all-products?category=Home%20%26%20Living")} className="text-xs font-semibold text-orange-600">Explore all -&gt;</button>
             </div>
             <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-5">
-              {homeProducts.map((product) => (
-                <CompactProduct key={`${product._id}-home`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} />
+              {homeProducts.map((product, index) => (
+                <CompactProduct key={`home-${index}-${product._id || product.name}`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} />
               ))}
             </div>
           </section>
@@ -1390,8 +1390,8 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
               <button type="button" onClick={() => navigate("/all-products?category=Computers%20%26%20Electronics")} className="text-xs font-semibold text-orange-600">Explore all -&gt;</button>
             </div>
             <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-5">
-              {electronicsProducts.map((product) => (
-                <CompactProduct key={`${product._id}-electronics`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} />
+              {electronicsProducts.map((product, index) => (
+                <CompactProduct key={`electronics-${index}-${product._id || product.name}`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} />
               ))}
             </div>
           </section>
@@ -1407,8 +1407,8 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
         <section className="mt-8">
           <h2 className="mb-3 text-lg font-bold text-gray-950">All marketplace items</h2>
           <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5">
-            {recommendedProducts.map((product) => (
-              <RecommendedCard key={product._id} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
+            {recommendedProducts.map((product, index) => (
+              <RecommendedCard key={`recommended-${index}-${product._id || product.name}`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
             ))}
           </div>
         </section>

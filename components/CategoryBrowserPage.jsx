@@ -278,7 +278,7 @@ const CategoryTile = ({ tile, product, onClick }) => (
 );
 
 const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
-  const { products, navigate, setIsRouteLoading } = useAppContext();
+  const { products, navigate } = useAppContext();
   const [selectedDepartment, setSelectedDepartment] = useState("Supermarket");
   const storefrontProducts = products.length ? products : initialProducts;
   const currentDepartment = useMemo(
@@ -287,7 +287,6 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
   );
 
   const goToCategory = (category) => {
-    setIsRouteLoading(true);
     navigate(categoryHref(category));
   };
 

@@ -164,9 +164,9 @@ const HomeOfferCollections = () => {
                 </div>
 
                 <div className="mt-6 space-y-3">
-                  {card.products.map((product) => (
+                  {card.products.map((product, productIndex) => (
                     <div
-                      key={product._id}
+                      key={`${card.title || card.category || "offer"}-${productIndex}-${product._id || product.name}`}
                       className="flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-[#fbfaf8] px-4 py-3"
                     >
                       <div className="min-w-0">

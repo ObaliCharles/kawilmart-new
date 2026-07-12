@@ -1,6 +1,6 @@
 'use client'
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, createContext, startTransition, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { Suspense, createContext, startTransition, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { toast } from 'react-hot-toast';
@@ -115,7 +115,10 @@ export const AppContextProvider = (props) => {
     const [recentNotifications, setRecentNotifications] = useState([])
     const notificationsRefreshInFlight = useRef(false)
     const normalizedCartItems = normalizeCartItems(cartItems)
-    const visibleProductIds = products.map((product) => String(product?._id || "")).filter(Boolean)
+    const visibleProductIds = useMemo(
+        () => products.map((product) => String(product?._id || "")).filter(Boolean),
+        [products]
+    )
     const resolvedCartItems = loadingProducts && !products.length
         ? normalizedCartItems
         : filterCartItemsByProductIds(normalizedCartItems, visibleProductIds)
@@ -612,11 +615,10 @@ export const AppContextProvider = (props) => {
         }
 
         const { scroll = true } = options
-        prefetchRoute(href)
         setIsRouteLoading(true)
 
         startTransition(() => {
-            router.push(href, { scroll })
+            router.push(nextHref, { scroll })
         })
     }
 
@@ -626,7 +628,7 @@ export const AppContextProvider = (props) => {
         }
 
         try {
-            router.prefetch(href)
+            router.prefetch(normalizeHref(href))
         } catch {
             // Prefetch is best-effort.
         }

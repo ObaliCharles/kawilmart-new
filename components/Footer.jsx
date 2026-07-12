@@ -4,7 +4,6 @@ import React from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import Link from "next/link";
-import { useAppContext } from "@/context/AppContext";
 
 const footerColumns = [
   {
@@ -47,7 +46,7 @@ const footerColumns = [
   },
 ];
 
-const FooterLink = ({ href, children, onNavigate }) => {
+const FooterLink = ({ href, children }) => {
   const isExternal = href.startsWith("mailto:");
 
   if (isExternal) {
@@ -55,7 +54,7 @@ const FooterLink = ({ href, children, onNavigate }) => {
   }
 
   return (
-    <Link className="transition hover:text-white" href={href} onClick={onNavigate}>
+    <Link className="transition hover:text-white" href={href}>
       {children}
     </Link>
   );
@@ -63,8 +62,6 @@ const FooterLink = ({ href, children, onNavigate }) => {
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const { setIsRouteLoading } = useAppContext();
-  const onNavigate = () => setIsRouteLoading(true);
 
   return (
     <>
@@ -103,7 +100,6 @@ const Footer = () => {
                 <Link
                   key={column.title}
                   href={column.links[0][1]}
-                  onClick={onNavigate}
                   className="flex items-center justify-between py-3 text-[13px] font-semibold text-white"
                 >
                   {column.title}
@@ -113,10 +109,10 @@ const Footer = () => {
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-2 text-[11px]">
-              <Link href="/legal#privacy" onClick={onNavigate} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center font-medium text-white/90">Privacy</Link>
-              <Link href="/legal#terms" onClick={onNavigate} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center font-medium text-white/90">Terms</Link>
-              <Link href="/legal#terms" onClick={onNavigate} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center font-medium text-white/90">Shipping</Link>
-              <Link href="/legal#terms" onClick={onNavigate} className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center font-medium text-white/90">Refunds</Link>
+              <Link href="/legal#privacy" className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center font-medium text-white/90">Privacy</Link>
+              <Link href="/legal#terms" className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center font-medium text-white/90">Terms</Link>
+              <Link href="/legal#terms" className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center font-medium text-white/90">Shipping</Link>
+              <Link href="/legal#terms" className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-center font-medium text-white/90">Refunds</Link>
             </div>
           </div>
 
@@ -156,7 +152,7 @@ const Footer = () => {
               <ul className="mt-4 space-y-2 text-[13px] text-slate-300">
                 {column.links.map(([label, href]) => (
                   <li key={label}>
-                    <FooterLink href={href} onNavigate={onNavigate}>{label}</FooterLink>
+                    <FooterLink href={href}>{label}</FooterLink>
                   </li>
                 ))}
               </ul>
@@ -195,9 +191,9 @@ const Footer = () => {
           <div className="mx-auto flex max-w-[1500px] flex-col gap-4 px-5 py-5 text-xs text-slate-300 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-5">
             <p>© {currentYear} KawilMart. All rights reserved.</p>
             <div className="flex flex-wrap gap-6">
-              <Link href="/legal#privacy" onClick={onNavigate} className="transition hover:text-white">Privacy Policy</Link>
-              <Link href="/legal#terms" onClick={onNavigate} className="transition hover:text-white">Terms of Service</Link>
-              <Link href="/legal#privacy" onClick={onNavigate} className="transition hover:text-white">Cookie Policy</Link>
+              <Link href="/legal#privacy" className="transition hover:text-white">Privacy Policy</Link>
+              <Link href="/legal#terms" className="transition hover:text-white">Terms of Service</Link>
+              <Link href="/legal#privacy" className="transition hover:text-white">Cookie Policy</Link>
             </div>
           </div>
         </div>

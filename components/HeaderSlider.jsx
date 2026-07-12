@@ -56,7 +56,7 @@ const HeaderSlider = ({ slides = defaultSiteContent.heroSlides }) => {
 
           return (
             <div
-              key={slide._id || slide.id || index}
+              key={`hero-slide-${index}-${slide._id || slide.id || slide.title || "slide"}`}
               className="grid min-w-full gap-6 bg-[#E6E9F2] px-5 py-6 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.92fr)] lg:items-center lg:px-12 xl:px-16"
             >
               <div className="order-2 min-w-0 lg:order-1">
@@ -112,7 +112,7 @@ const HeaderSlider = ({ slides = defaultSiteContent.heroSlides }) => {
       <div className="flex items-center justify-center gap-2 bg-white py-4">
         {sliderData.map((slide, index) => (
           <button
-            key={slide._id || index}
+            key={`hero-dot-${index}-${slide._id || slide.id || slide.title || "slide"}`}
             type="button"
             onClick={() => setCurrentSlide(index)}
             className={`h-2.5 rounded-full transition-all ${

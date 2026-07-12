@@ -1,4 +1,5 @@
 'use client'
+
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { useAppContext } from "@/context/AppContext";
@@ -21,14 +22,21 @@ const getTimeParts = (milliseconds) => {
 const pad = (value) => String(value).padStart(2, "0");
 
 const FlashDeals = () => {
-  const { products, formatCurrency, navigate, prefetchRoute, setIsRouteLoading } = useAppContext();
+  const { products, formatCurrency, navigate, prefetchRoute } = useAppContext();
 
-  const flashDeals = useMemo(() => (
-    products
-      .filter((product) => getProductActivitySnapshot(product).flashDealActive)
-      .sort((leftProduct, rightProduct) => {
-        const leftActivity = getProductActivitySnapshot(leftProduct);
-        const rightActivity = getProductActivitySnapshot(rightProduct);
+  const flashDeals = useMemo(() => {
+    const now = Date.now();
+    return products
+      .map((product) => ({ product, activity: getProductActivitySnapshot(product) }))
+      .filter(({ activity }) => activity.flashDealActive)
+      .filter(({ activity }) => {
+        // Only show deals that haven't expired
+        if (!activity.hasFlashDealDeadline) return true;
+        return activity.flashDealEndsAt > now;
+      })
+      .sort((left, right) => {
+        const leftActivity = left.activity;
+        const rightActivity = right.activity;
 
         if (leftActivity.hasFlashDealDeadline && rightActivity.hasFlashDealDeadline) {
           return leftActivity.flashDealEndsAt - rightActivity.flashDealEndsAt;
@@ -42,15 +50,16 @@ const FlashDeals = () => {
           return 1;
         }
 
-        return rightActivity.priceDropPercent - leftActivity.priceDropPercent;
+        return right.activity.priceDropPercent - left.activity.priceDropPercent;
       })
-      .slice(0, 6)
-  ), [products]);
+      .slice(0, 6);
+  }, [products]);
 
   const earliestDeadline = useMemo(() => {
+    const now = Date.now();
     const deadlines = flashDeals
-      .map((product) => getProductActivitySnapshot(product).flashDealEndsAt)
-      .filter((value) => Number.isFinite(value) && value > Date.now());
+      .map(({ activity }) => activity.flashDealEndsAt)
+      .filter((value) => Number.isFinite(value) && value > now);
 
     return deadlines.length ? Math.min(...deadlines) : 0;
   }, [flashDeals]);
@@ -76,9 +85,10 @@ const FlashDeals = () => {
 
   const hasCountdown = earliestDeadline > now;
   const timeLeft = getTimeParts(earliestDeadline - now);
+  const isExpired = !hasCountdown && earliestDeadline > 0;
 
   return (
-    <section className="mt-14 overflow-hidden rounded-[2rem] border border-orange-100/70 bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.18),transparent_34%),linear-gradient(135deg,#fffaf6_0%,#fff4e8_52%,#ffe8d1_100%)] p-4 shadow-[0_18px_60px_rgba(234,88,12,0.08)] sm:p-6">
+    <section className="mt-14 overflow-hidden rounded-[2rem] bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 p-4 shadow-[0_18px_60px_rgba(234,88,12,0.12)] sm:p-6">
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <div className="flex items-center gap-2">
@@ -89,25 +99,28 @@ const FlashDeals = () => {
             </div>
           </div>
 
-          {hasCountdown ? (
-            <div className="inline-flex w-fit items-center gap-1 rounded-2xl bg-orange-600 px-3 py-2 text-sm font-bold text-white shadow-sm">
-              <span className="pr-1 text-xs font-semibold uppercase tracking-[0.14em] text-orange-100">Ends in</span>
-              <span className="rounded-md bg-white px-1.5 py-0.5 text-orange-600">{pad(timeLeft.hours)}</span>
+          {isExpired ? (
+            <div className="inline-flex w-fit items-center gap-1 rounded-full border-2 border-red-200 bg-red-50 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-red-700">
+              Deal ended
+            </div>
+          ) : hasCountdown ? (
+            <div className="inline-flex w-fit items-center gap-1 rounded-2xl bg-red-600 px-3 py-2 text-sm font-bold text-white shadow-lg">
+              <span className="pr-1 text-xs font-semibold uppercase tracking-[0.14em] text-red-100">Ends in</span>
+              <span className="rounded-md bg-white px-1.5 py-0.5 text-red-600">{pad(timeLeft.hours)}</span>
               <span>:</span>
-              <span className="rounded-md bg-white px-1.5 py-0.5 text-orange-600">{pad(timeLeft.minutes)}</span>
+              <span className="rounded-md bg-white px-1.5 py-0.5 text-red-600">{pad(timeLeft.minutes)}</span>
               <span>:</span>
-              <span className="rounded-md bg-white px-1.5 py-0.5 text-orange-600">{pad(timeLeft.seconds)}</span>
+              <span className="rounded-md bg-white px-1.5 py-0.5 text-red-600">{pad(timeLeft.seconds)}</span>
             </div>
           ) : (
-            <div className="inline-flex w-fit rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-orange-700">
+            <div className="inline-flex w-fit rounded-full border-2 border-orange-300 bg-orange-100 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-orange-800">
               Limited-time offers live now
             </div>
           )}
         </div>
 
-          <Link
+        <Link
           href="/all-products?filter=flash"
-          onClick={() => setIsRouteLoading(true)}
           className="inline-flex items-center gap-1 text-sm font-medium text-orange-700 transition hover:text-orange-800 hover:underline"
         >
           See all deals <span>→</span>
@@ -115,25 +128,24 @@ const FlashDeals = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        {flashDeals.map((product) => {
-          const activity = getProductActivitySnapshot(product);
+        {flashDeals.map(({ product, activity }, index) => {
           const location = getLocationLabel(product.sellerProfile?.location || product.sellerLocation || product.location);
           const sellerName = product.sellerProfile?.name || "Marketplace seller";
 
           return (
             <div
-              key={product._id}
+              key={`flash-card-${index}-${product._id || product.name}`}
               onClick={() => {
                 navigate(`/product/${product._id}`);
                 scrollTo(0, 0);
               }}
               onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
               onFocus={() => prefetchRoute(`/product/${product._id}`)}
-              className="group cursor-pointer overflow-hidden rounded-[1.5rem] border border-gray-200 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-orange-300 hover:shadow-lg"
+              className="group cursor-pointer overflow-hidden rounded-[1.5rem] border-2 border-red-200 bg-white shadow-[0_8px_24px_rgba(234,88,12,0.1)] transition-all duration-200 hover:-translate-y-1 hover:border-red-300 hover:shadow-[0_12px_32px_rgba(234,88,12,0.18)]"
             >
-              <div className="relative flex aspect-[4/3] items-center justify-center bg-gray-50 p-4">
+              <div className="relative flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 p-4">
                 {activity.hasDiscount ? (
-                  <span className="absolute left-3 top-3 rounded-full bg-orange-600 px-2.5 py-1 text-[11px] font-bold text-white">
+                  <span className="absolute left-3 top-3 rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-md">
                     -{activity.priceDropPercent}%
                   </span>
                 ) : (
@@ -166,7 +178,7 @@ const FlashDeals = () => {
                     {location}
                   </AddressMeta>
                   <div className="mt-1 flex flex-wrap items-baseline gap-2">
-                    <p className="text-sm font-bold text-orange-600">{formatCurrency(product.offerPrice)}</p>
+                    <p className="text-sm font-bold text-red-600">{formatCurrency(product.offerPrice)}</p>
                     {activity.hasDiscount ? (
                       <p className="text-xs text-gray-400 line-through">{formatCurrency(product.price)}</p>
                     ) : null}
@@ -174,10 +186,12 @@ const FlashDeals = () => {
                 </div>
 
                 <div className="space-y-1 text-[11px] text-gray-500">
-                  <p>
+                  <p className="font-medium">
                     {activity.flashDealCountdownLabel
                       ? `Ends in ${activity.flashDealCountdownLabel}`
-                      : "Deal stays active until the seller updates it"}
+                      : isExpired
+                        ? "This deal has ended"
+                        : "Deal stays active until the seller updates it"}
                   </p>
                   <p>
                     {activity.hasRating

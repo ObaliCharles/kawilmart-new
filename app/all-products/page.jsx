@@ -23,12 +23,6 @@ const priceRanges = [
   { label: "Above UGX 1M", min: 1000000, max: Infinity },
 ];
 
-const formatPriceRangeLabel = (range) => {
-  if (!range) return "All Prices";
-  if (range.label === "All Prices") return range.label;
-  return range.label.replace("UGX ", "").replace("Under ", "Under ");
-};
-
 const sortOptions = [
   { label: "Best Match", value: "relevance" },
   { label: "Default", value: "default" },
@@ -105,90 +99,7 @@ const getProductImage = (product) => {
 };
 
 const formatCount = (count) => new Intl.NumberFormat("en-US").format(Math.max(0, Number(count) || 0));
-
-const SelectedProductCard = ({ product, formatCurrency, navigate, prefetchRoute, addToCart }) => {
-  const activity = getProductActivitySnapshot(product);
-  const originalPrice = Number(product.price) || 0;
-  const offerPrice = Number(product.offerPrice || product.price) || 0;
-  const rating = getRatingValue(product);
-  const discount = originalPrice > offerPrice ? Math.round(((originalPrice - offerPrice) / originalPrice) * 100) : activity.priceDropPercent;
-
-  return (
-    <article
-      onClick={() => navigate(`/product/${product._id}`)}
-      onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
-      onFocus={() => prefetchRoute(`/product/${product._id}`)}
-      className="group relative flex min-w-0 cursor-pointer flex-col rounded-lg border border-gray-100 bg-white p-3 shadow-sm transition hover:border-orange-200 hover:shadow-md"
-    >
-      {discount > 0 ? (
-        <span className="absolute left-3 top-3 z-10 rounded bg-orange-600 px-2 py-1 text-[11px] font-extrabold text-white">-{discount}%</span>
-      ) : null}
-      <button type="button" onClick={(event) => event.stopPropagation()} className="absolute right-3 top-3 z-10 text-gray-400 hover:text-orange-600" aria-label="Save product">
-        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
-        </svg>
-      </button>
-      <span className="flex aspect-[1.08/1] items-center justify-center">
-        <Image src={getProductImage(product)} alt={product.name} width={260} height={230} className="h-full w-full object-contain p-2 transition group-hover:scale-105" />
-      </span>
-      <h3 className="mt-3 line-clamp-2 min-h-10 text-[13px] font-extrabold leading-5 text-gray-950">{product.name}</h3>
-      <p className="mt-1 line-clamp-1 text-[12px] text-gray-500">{product.description || product.category}</p>
-      <div className="mt-3 flex min-w-0 flex-wrap items-end gap-2">
-        <p className="text-base font-extrabold text-orange-600">{formatCurrency(offerPrice)}</p>
-        {originalPrice > offerPrice ? <p className="text-[11px] text-gray-400 line-through">{formatCurrency(originalPrice)}</p> : null}
-      </div>
-      <div className="mt-3 flex items-center gap-3 text-[12px] text-gray-500">
-        <span className="font-semibold text-orange-500">★ {rating ? rating.toFixed(1) : "New"}</span>
-        <span>({activity.reviewCount || product.reviewCount || 0})</span>
-        <span className="truncate">{product.sellerLocation || product.location || "Kampala"}</span>
-      </div>
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          void addToCart(product._id);
-        }}
-        className="mt-4 flex h-9 items-center justify-center gap-2 rounded-md border border-orange-200 text-[12px] font-extrabold text-orange-600 transition hover:bg-orange-50"
-      >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M3 4h2.4l2 10.1a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 1.9-1.5L20 8H6.2M10 20h.01M17 20h.01" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Add to Cart
-      </button>
-    </article>
-  );
-};
-
-const MobileProductMini = ({ product, formatCurrency, navigate, addToCart }) => (
-  <article onClick={() => navigate(`/product/${product._id}`)} className="relative min-w-0 rounded-lg border border-gray-100 bg-white p-2 shadow-sm">
-    <button type="button" onClick={(event) => event.stopPropagation()} className="absolute right-2 top-2 z-10 text-gray-400" aria-label="Save product">
-      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
-      </svg>
-    </button>
-    <span className="flex aspect-[1.12/1] items-center justify-center">
-      <Image src={getProductImage(product)} alt={product.name} width={150} height={130} className="h-full w-full object-contain p-1" />
-    </span>
-    <h3 className="line-clamp-2 min-h-9 text-[12px] font-bold leading-[18px] text-gray-950">{product.name}</h3>
-    <p className="mt-1 text-[10px] font-semibold text-orange-500">★ {getRatingValue(product) ? getRatingValue(product).toFixed(1) : "New"}</p>
-    <div className="mt-1 flex items-center justify-between gap-2">
-      <p className="min-w-0 text-[13px] font-extrabold text-gray-950 [overflow-wrap:anywhere]">{formatCurrency(product.offerPrice || product.price)}</p>
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          void addToCart(product._id);
-        }}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white"
-        aria-label="Add to cart"
-      >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M3 4h2.4l2 10.1a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 1.9-1.5L20 8H6.2M10 20h.01M17 20h.01" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-    </div>
-  </article>
-);
+const keyed = (scope, item, index) => `${scope}-${index}-${String(item?._id || item?.id || item?.label || item?.name || "item")}`;
 
 const normalizeSearchText = (value = "") => (
   value
@@ -438,7 +349,7 @@ const MobileCategorySection = ({ tile, products, experience, index, formatCurren
       <div className="mt-2 grid grid-cols-2 gap-2 min-[520px]:grid-cols-4">
         {displayProducts.map((product, productIndex) => (
           <MobileCategoryProductCard
-            key={`${tile.label}-${product?._id || productIndex}`}
+            key={keyed(`mobile-section-${tile.label}`, product || { name: tile.label }, productIndex)}
             product={product?._placeholder ? null : product}
             formatCurrency={formatCurrency}
             navigate={navigate}
@@ -707,11 +618,6 @@ function AllProductsInner() {
     return filtered.map(({ product }) => product);
   };
 
-  const handlePriceRangeChange = (nextIndex) => {
-    const normalizedIndex = Math.max(0, Math.min(priceRanges.length - 1, Number(nextIndex) || 0));
-    setSelectedPriceRange(normalizedIndex);
-  };
-
   const filteredProducts = filterAndSort();
   const pageSize = 24;
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
@@ -882,169 +788,137 @@ function AllProductsInner() {
   );
 
   const SelectedFilterPanel = () => (
-    <aside className="hidden w-[17.5rem] shrink-0 self-start lg:block">
-      <div className="sticky top-24 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
-          <h2 className="text-xs font-extrabold text-gray-950">Filters</h2>
-          <button type="button" onClick={resetFilters} className="text-[10px] font-bold text-gray-700">Clear</button>
+    <aside className="hidden w-[14.7rem] shrink-0 self-start lg:block">
+      <div className="sticky top-[8.25rem] overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200/80">
+        <div className="space-y-0.5 p-3">
+          {marketplaceFilterCategories.slice(0, 10).map((category) => {
+            const meta = getCategoryMeta(category);
+            const active = selectedCategoryMeta?.value === meta.value;
+
+            return (
+              <button
+                key={`desktop-menu-${category}`}
+                type="button"
+                onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
+                className={`group flex min-h-12 w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left transition ${
+                  active ? "bg-orange-50 text-gray-950" : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ring-1 ${
+                    active ? "bg-white text-orange-600 ring-orange-100" : "bg-gray-50 text-gray-600 ring-gray-100"
+                  }`}>
+                    <CategoryGlyph category={meta.label} className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[12px] font-extrabold">{meta.label}</span>
+                    <span className="block truncate text-[10px] font-medium text-gray-500">{meta.description.split(".")[0]}</span>
+                  </span>
+                </span>
+                <span className="text-gray-300 transition group-hover:text-orange-500">›</span>
+              </button>
+            );
+          })}
         </div>
-
-        <section className="border-b border-gray-100 px-3 py-3">
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-[11px] font-extrabold text-gray-950">Category</h3>
-            <span className="text-gray-400 text-xs">⌃</span>
-          </div>
-          <div className="space-y-1.5">
-            <button
-              type="button"
-              onClick={() => setSelectedCategory("All")}
-              className="flex w-full items-center justify-between gap-2 text-left text-[10px] text-gray-700"
-            >
-              <span className="flex min-w-0 items-center gap-1.5">
-                <span className={`h-3 w-3 rounded-full border ${selectedCategory === "All" ? "border-orange-600 bg-orange-600 ring-1 ring-orange-100" : "border-gray-300"}`} />
-                <span className="truncate">{`All ${selectedCategoryExperience.meta.label}`}</span>
-              </span>
-              <span className="text-[9px] text-gray-500">{formatCount(selectedCategoryPool.length)}</span>
-            </button>
-            {selectedCategoryExperience.tiles.slice(0, 6).map((tile) => (
-              <button
-                key={`filter-${tile.label}`}
-                type="button"
-                onClick={() => setSelectedCategory(tile.categories[0] || selectedCategoryExperience.meta.value)}
-                className="flex w-full items-center justify-between gap-2 text-left text-[10px] text-gray-700"
-              >
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <span className={`h-3 w-3 rounded-full border ${selectedCategory === (tile.categories[0] || selectedCategoryExperience.meta.value) ? "border-orange-600 bg-orange-600 ring-1 ring-orange-100" : "border-gray-300"}`} />
-                  <span className="truncate">{tile.label}</span>
-                </span>
-                <span className="text-[9px] text-gray-500">{formatCount(tile.count)}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="border-b border-gray-100 px-3 py-3">
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-[11px] font-extrabold text-gray-950">Price (UGX)</h3>
-            <span className="text-gray-400 text-xs">⌃</span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            <button
-              type="button"
-              onClick={() => handlePriceRangeChange(Math.max(0, selectedPriceRange - 1))}
-              className="min-w-0 rounded-md border border-gray-200 px-2 py-1.5 text-left text-[10px] text-gray-600 transition hover:border-orange-200 hover:bg-orange-50"
-            >
-              <span className="block text-[9px] uppercase tracking-wide text-gray-400">Lower</span>
-              <span className="block truncate font-semibold text-gray-800">{formatPriceRangeLabel(priceRanges[Math.max(0, selectedPriceRange - 1)])}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePriceRangeChange(Math.min(priceRanges.length - 1, selectedPriceRange + 1))}
-              className="min-w-0 rounded-md border border-gray-200 px-2 py-1.5 text-left text-[10px] text-gray-600 transition hover:border-orange-200 hover:bg-orange-50"
-            >
-              <span className="block text-[9px] uppercase tracking-wide text-gray-400">Selected</span>
-              <span className="block truncate font-semibold text-gray-800">{formatPriceRangeLabel(priceRanges[selectedPriceRange])}</span>
-            </button>
-          </div>
-          <div className="mt-3">
-            <input
-              type="range"
-              min="0"
-              max={priceRanges.length - 1}
-              step="1"
-              value={selectedPriceRange}
-              onChange={(event) => handlePriceRangeChange(event.target.value)}
-              className="w-full accent-orange-600"
-              aria-label="Price range slider"
-            />
-          </div>
-          <div className="mt-3 space-y-0.5 rounded-2xl border border-gray-100 bg-gray-50 p-1.5 text-[10px]">
-            {priceRanges.map((range, index) => (
-              <button
-                key={range.label}
-                type="button"
-                onClick={() => handlePriceRangeChange(index)}
-                className={`w-full rounded-xl px-2 py-1.5 text-left transition ${selectedPriceRange === index ? "bg-orange-600 text-white" : "text-gray-600 hover:bg-orange-50"}`}
-              >
-                {formatPriceRangeLabel(range)}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="border-b border-gray-100 px-3 py-3">
-          <h3 className="mb-2 text-[11px] font-extrabold text-gray-950">Brands</h3>
-          <div className="mb-2 flex items-center gap-1.5 rounded-full bg-gray-50 px-2 py-1.5 text-[10px] text-gray-400">
-            <span>⌕</span>
-            <span>Search brands</span>
-          </div>
-          <div className="space-y-1.5">
-            {brandOptions.slice(0, 5).map((brand) => (
-              <button key={brand.value} type="button" onClick={() => setSelectedBrand(brand.value)} className="flex w-full items-center justify-between text-[10px] text-gray-700">
-                <span className="flex items-center gap-1.5">
-                  <span className={`h-3 w-3 rounded border ${selectedBrand === brand.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
-                  {brand.label}
-                </span>
-                <span className="text-[9px] text-gray-500">{brand.count}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="border-b border-gray-100 px-3 py-3">
-          <h3 className="mb-2 text-[11px] font-extrabold text-gray-950">Condition</h3>
-          <div className="space-y-1.5">
-            {conditionOptions.slice(1, 3).map((condition) => (
-              <button key={condition.value} type="button" onClick={() => setSelectedCondition(condition.value)} className="flex w-full items-center justify-between text-[10px] text-gray-700">
-                <span className="flex items-center gap-1.5">
-                  <span className={`h-3 w-3 rounded border ${selectedCondition === condition.value ? "border-orange-600 bg-orange-600" : "border-gray-300"}`} />
-                  {condition.value === "new" ? "Brand New" : "Used"}
-                </span>
-                <span className="text-[9px] text-gray-500">{condition.value === "new" ? "3,124" : "1,112"}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="px-3 py-3">
-          <h3 className="mb-2 text-[11px] font-extrabold text-gray-950">Ratings</h3>
-          <div className="space-y-1.5">
-            {ratingOptions.slice(1).map((rating) => (
-              <button key={rating.value} type="button" onClick={() => setSelectedRating(rating.value)} className="flex w-full items-center justify-between text-[10px] text-gray-700">
-                <span className="text-orange-500">★★★★★ <span className="text-gray-500">& up</span></span>
-                <span className="text-[9px] text-gray-500">{formatCount(Math.round(rating.value * 900))}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        <button type="button" onClick={() => navigate("/categories")} className="w-full border-t border-gray-100 px-4 py-3 text-center text-[12px] font-extrabold text-orange-600">
+          View all categories
+        </button>
       </div>
     </aside>
   );
 
   if (selectedCategoryMode) {
-    const promoCards = [
+    const desktopProducts = filteredProducts.length ? filteredProducts : selectedCategoryPool;
+    const desktopHeroProducts = selectedCategoryExperience.heroProducts.length
+      ? selectedCategoryExperience.heroProducts
+      : desktopProducts.slice(0, 4);
+    const desktopPromoCards = [
       {
-        title: "Limited-time offers",
-        description: `Hand-picked savings in ${selectedCategoryExperience.meta.label.toLowerCase()}.`,
-        tone: "from-orange-500 to-red-500",
+        eyebrow: "BUY 2 GET 1 FREE",
+        title: `${selectedCategoryExperience.meta.label} accessories`,
+        tone: "from-[#fff0e6] to-[#ffd6bf]",
+        button: "bg-orange-600",
+        product: desktopProducts[8] || desktopHeroProducts[0],
       },
       {
-        title: "Bundle savings",
-        description: "Pair related items and save more at checkout.",
-        tone: "from-blue-600 to-cyan-500",
+        eyebrow: "BACK TO SCHOOL",
+        title: "Up to 40% OFF",
+        tone: "from-[#eaf2ff] to-[#d5e6ff]",
+        button: "bg-blue-700",
+        product: desktopProducts[9] || desktopHeroProducts[1],
       },
       {
-        title: "Top-rated picks",
-        description: "Popular products from trusted sellers and stores.",
-        tone: "from-violet-600 to-fuchsia-500",
+        eyebrow: "BEAUTY SALE",
+        title: "Up to 50% OFF",
+        tone: "from-[#fff0f4] to-[#ffd9e2]",
+        button: "bg-rose-600",
+        product: desktopProducts[10] || desktopHeroProducts[2],
       },
+    ];
+    const brandStrip = brandOptions.length
+      ? brandOptions.slice(0, 10).map((brand) => brand.label)
+      : ["Samsung", "Apple", "HP", "Dell", "Lenovo", "Mi", "Oraimo", "Sony", "JBL", "Canon"];
+    const serviceItems = [
+      ["100% Original", "Genuine products"],
+      ["Easy Returns", "7-day return policy"],
+      ["Secure Payments", "Pay safely"],
+      ["Fast Delivery", "Across Uganda"],
     ];
 
-    const compactGroups = [
-      ["TRENDING NOW", filteredProducts.slice(0, 4)],
-      ["BEST SELLERS", filteredProducts.slice(4, 8)],
-      ["NEW ARRIVALS", filteredProducts.slice(8, 12)],
-    ];
+    const DesktopSectionHeader = ({ title, subtitle }) => (
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div className="flex min-w-0 items-baseline gap-2">
+          <h2 className="text-xl font-black leading-none text-gray-950">{title}</h2>
+          {subtitle ? <span className="text-[12px] font-medium text-gray-500">{subtitle}</span> : null}
+        </div>
+        <button type="button" onClick={() => setSelectedCondition("flash")} className="flex shrink-0 items-center gap-1 text-[12px] font-extrabold text-gray-900 hover:text-orange-600">
+          View All <span aria-hidden="true">›</span>
+        </button>
+      </div>
+    );
+
+    const DesktopProductCard = ({ product, index, ranked = false, compact = false }) => {
+      if (!product) return null;
+
+      const rating = getRatingValue(product);
+      const activity = getProductActivitySnapshot(product);
+      const price = getProductPrice(product);
+      const originalPrice = Number(product.price) || 0;
+      const discount = getDiscountPercent(product, 12 + (index % 5) * 4);
+
+      return (
+        <button
+          type="button"
+          onClick={() => navigate(`/product/${product._id}`)}
+          onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
+          onFocus={() => prefetchRoute(`/product/${product._id}`)}
+          className="group relative min-w-0 rounded-lg bg-white p-3 text-left shadow-sm ring-1 ring-gray-200/80 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-orange-200"
+        >
+          {ranked ? (
+            <span className={`absolute left-3 top-3 z-10 flex h-5 min-w-5 items-center justify-center rounded px-1.5 text-[11px] font-black text-white ${index < 3 ? "bg-orange-500" : "bg-gray-400"}`}>
+              {index + 1}
+            </span>
+          ) : (
+            <span className="absolute left-3 top-3 z-10 rounded-md bg-orange-600 px-2 py-1 text-[11px] font-black text-white">
+              -{discount}%
+            </span>
+          )}
+          <span className={`flex items-center justify-center ${compact ? "h-28" : "h-36"}`}>
+            <Image src={getProductImage(product)} alt={product.name} width={220} height={180} className="h-full w-full object-contain p-2 transition group-hover:scale-[1.03]" />
+          </span>
+          <h3 className="mt-2 line-clamp-2 min-h-9 text-[13px] font-bold leading-[18px] text-gray-950">{product.name}</h3>
+          <div className="mt-1.5 flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span className="text-[10px] font-black text-orange-600">UGX</span>
+            <span className="text-[15px] font-black text-gray-950">{formatCurrency(price).replace(/^UGX\s*/i, "")}</span>
+            {originalPrice > price ? <span className="text-[11px] font-medium text-gray-400 line-through">{formatCurrency(originalPrice)}</span> : null}
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-gray-500">
+            <span><span className="text-amber-400">★</span> {rating ? rating.toFixed(1) : "New"} {activity.reviewCount ? `(${activity.reviewCount})` : ""}</span>
+            <span>{Math.max(30, Number(product.soldCount) || 90 + index * 30)}+ sold</span>
+          </div>
+        </button>
+      );
+    };
 
     return (
       <>
@@ -1157,7 +1031,7 @@ function AllProductsInner() {
 
                           return (
                             <MobileCategoryProductCard
-                              key={`mobile-picks-${product._id || index}`}
+                              key={keyed("mobile-picks", product, index)}
                               product={product}
                               formatCurrency={formatCurrency}
                               navigate={navigate}
@@ -1184,189 +1058,166 @@ function AllProductsInner() {
                   )}
                 </div>
 
-                <div className="hidden lg:block">
-                  <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,34rem)] lg:items-center">
-                    <div className="rounded-[2.2rem] border border-gray-100 bg-white p-8 shadow-sm">
-                      <div className="inline-flex rounded-full bg-orange-50 px-3 py-1 text-[11px] font-semibold text-orange-700">
-                        {selectedCategoryExperience.heroBadge}
-                      </div>
-                      <h1 className="mt-4 text-4xl font-black tracking-tight text-gray-950">
-                        {selectedCategoryExperience.meta.label}
-                      </h1>
-                      <p className="mt-3 max-w-xl text-sm leading-6 text-gray-500">
-                        {selectedCategoryExperience.heroSubtitle}
-                      </p>
-                      <div className="mt-5 flex flex-wrap gap-3">
-                        <button type="button" onClick={() => setSelectedCondition("flash")} className="rounded-full bg-orange-600 px-5 py-3 text-sm font-semibold text-white shadow-sm">
-                          View hot deals
-                        </button>
-                        <button type="button" onClick={() => setSelectedCategory("All")} className="rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700">
-                          Reset category
-                        </button>
-                      </div>
+                <div className="hidden space-y-6 lg:block">
+                  <section className="relative overflow-hidden rounded-lg bg-[#14110f] px-11 py-10 text-white shadow-sm">
+                    <div className="relative z-10 max-w-xl">
+                      <p className="text-[15px] font-black uppercase tracking-wide text-orange-500">Mega July Sale</p>
+                      <h1 className="mt-4 text-[3.15rem] font-black leading-none tracking-tight">Up to 70% OFF</h1>
+                      <p className="mt-3 text-3xl font-medium">On {selectedCategoryExperience.meta.label}</p>
+                      <p className="mt-3 text-base text-white/70">Top brands. Best prices.</p>
+                      <button type="button" onClick={() => setSelectedCondition("flash")} className="mt-7 inline-flex items-center gap-2 rounded-md bg-white px-5 py-3 text-[13px] font-black text-gray-950 shadow-sm">
+                        Shop Now <span aria-hidden="true">→</span>
+                      </button>
                     </div>
-
-                    <div className={`overflow-hidden rounded-[2.2rem] bg-gradient-to-br ${selectedCategoryExperience.heroTint} p-6 text-white shadow-sm`}>
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">Featured category</p>
-                          <p className="mt-1 text-3xl font-black">{selectedCategoryExperience.meta.label}</p>
-                        </div>
-                        <div className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">
-                          {formatCount(filteredProducts.length)} items
-                        </div>
-                      </div>
-                      <div className="mt-4 flex items-end justify-end gap-3">
-                        {selectedCategoryExperience.heroProducts.slice(0, 4).map((product, index) => (
-                          <Image
-                            key={`${product?._id || index}-${index}`}
-                            src={getProductImage(product)}
-                            alt={product?.name || selectedCategoryExperience.meta.label}
-                            width={120}
-                            height={120}
-                            className={`h-28 w-28 object-contain drop-shadow-2xl ${index === 0 ? "rotate-[-10deg]" : ""}`}
-                          />
-                        ))}
-                      </div>
+                    <div className="absolute inset-y-0 right-6 flex w-[54%] items-center justify-end gap-4">
+                      {desktopHeroProducts.slice(0, 3).map((product, index) => (
+                        <Image
+                          key={keyed("hero-product", product, index)}
+                          src={getProductImage(product)}
+                          alt={product?.name || selectedCategoryExperience.meta.label}
+                          width={280}
+                          height={240}
+                          className={`${index === 1 ? "h-72 w-52" : "h-56 w-48"} object-contain drop-shadow-2xl`}
+                          priority={index === 0}
+                        />
+                      ))}
                     </div>
-                  </div>
+                    <button type="button" aria-label="Previous offer" className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white text-gray-950 shadow-sm">‹</button>
+                    <button type="button" aria-label="Next offer" className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white text-gray-950 shadow-sm">›</button>
+                    <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+                      <span className="h-2 w-5 rounded-full bg-orange-600" />
+                      <span className="h-2 w-2 rounded-full bg-white/45" />
+                      <span className="h-2 w-2 rounded-full bg-white/45" />
+                    </div>
+                  </section>
 
-                  <div className="mt-5 flex gap-3 overflow-x-auto pb-1">
-                    {selectedCategoryExperience.tiles.map((tile) => (
+                  <div className="grid grid-cols-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200/80">
+                    {selectedCategoryExperience.tiles.slice(0, 9).map((tile) => (
                       <button
                         key={`desktop-chip-${tile.label}`}
                         type="button"
                         onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
-                        className="flex min-h-[5rem] min-w-[7.5rem] flex-col items-center justify-center gap-1 rounded-2xl border border-gray-100 bg-white px-3 text-center shadow-sm transition hover:border-orange-200 hover:bg-orange-50"
+                        className="group flex h-[7.1rem] min-w-0 flex-col items-center justify-center gap-2 border-r border-gray-100 px-2 text-center transition hover:bg-orange-50"
                       >
-                        <span className="text-[11px] font-semibold text-gray-900">{tile.label}</span>
-                        <span className="text-[10px] text-gray-500">{formatCount(tile.count)} items</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {selectedCategoryExperience.tiles.slice(0, 6).map((tile) => (
-                      <button
-                        key={`desktop-tile-${tile.label}`}
-                        type="button"
-                        onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
-                        className="group rounded-[1.6rem] border border-gray-100 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md"
-                      >
-                        <span className="flex items-center justify-end">
-                          <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-semibold text-orange-700">
-                            {tile.count ? `${tile.count} items` : "Browse"}
-                          </span>
+                        <span className="flex h-12 w-full items-center justify-center">
+                          {tile.product ? <Image src={getProductImage(tile.product)} alt={tile.label} width={72} height={58} className="h-full w-full object-contain transition group-hover:scale-105" /> : <CategoryGlyph category={tile.categories[0]} className="h-8 w-8 text-gray-500" />}
                         </span>
-                        <span className="mt-2 flex h-28 items-center justify-center">
-                          {tile.product ? (
-                            <Image src={getProductImage(tile.product)} alt={tile.label} width={160} height={140} className="h-full w-full object-contain transition group-hover:scale-105" />
-                          ) : null}
-                        </span>
-                        <p className="mt-2 text-base font-bold text-gray-950">{tile.label}</p>
-                        <p className="mt-1 text-sm leading-6 text-gray-500">{tile.description || "Tap to explore"}</p>
+                        <span className="line-clamp-1 text-[12px] font-extrabold text-gray-950">{tile.label}</span>
                       </button>
                     ))}
+                    <button type="button" onClick={() => navigate("/categories")} className="flex h-[7.1rem] min-w-0 flex-col items-center justify-center gap-2 px-2 text-center text-gray-950 transition hover:bg-orange-50">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-2xl">›</span>
+                      <span className="text-[12px] font-extrabold">View All</span>
+                    </button>
                   </div>
 
-                  <div className="mt-6 grid gap-4 xl:grid-cols-3">
-                    {promoCards.map((card) => (
-                      <button
-                        key={`promo-${card.title}`}
-                        type="button"
-                        onClick={() => setSelectedCondition("flash")}
-                        className={`rounded-[1.6rem] bg-gradient-to-br ${card.tone} p-5 text-left text-white shadow-sm`}
-                      >
-                        <p className="text-sm font-black uppercase tracking-[0.14em]">{card.title}</p>
-                        <p className="mt-2 text-sm leading-6 text-white/85">{card.description}</p>
-                        <span className="mt-4 inline-flex rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold">Shop now →</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
-                    <section className="overflow-hidden rounded-[2rem] border border-gray-100 bg-white shadow-sm">
-                      <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-                        <div>
-                          <p className="text-sm font-bold text-gray-950">Flash deals</p>
-                          <p className="text-xs text-gray-500">High-converting products for this category.</p>
-                        </div>
-                        <button type="button" onClick={() => setSelectedCondition("flash")} className="text-sm font-semibold text-orange-600">
-                          View all →
-                        </button>
+                  <section>
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-baseline gap-2">
+                        <h2 className="text-xl font-black text-gray-950">⚡ Flash Deals</h2>
+                        <span className="text-[13px] font-bold text-orange-600">Limited time offers</span>
                       </div>
-                      <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-5">
-                        {filteredProducts.slice(0, 5).map((product, index) => (
-                          <button key={`desktop-flash-${product._id}`} type="button" onClick={() => navigate(`/product/${product._id}`)} className="rounded-[1.2rem] border border-gray-100 bg-white p-3 text-left shadow-sm transition hover:border-orange-200">
-                            <span className="inline-flex rounded-full bg-orange-600 px-2 py-0.5 text-[9px] font-bold text-white">
-                              -{Math.max(5, 9 + index * 4)}%
-                            </span>
-                            <Image src={getProductImage(product)} alt={product.name} width={140} height={110} className="mt-2 h-24 w-full object-contain" />
-                            <p className="mt-2 line-clamp-2 text-[12px] font-semibold leading-4 text-gray-900">{product.name}</p>
-                            <p className="mt-1 text-[12px] font-black text-orange-600">{formatCurrency(product.offerPrice || product.price)}</p>
-                          </button>
+                      <div className="flex items-center gap-4">
+                        <span className="text-[13px] text-gray-500">Ends in</span>
+                        <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black text-white">04</span>
+                        <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black text-white">12</span>
+                        <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black text-white">28</span>
+                        <button type="button" onClick={() => setSelectedCondition("flash")} className="text-[12px] font-extrabold text-gray-900">View All ›</button>
+                      </div>
+                    </div>
+                    {loadingProducts ? (
+                      <ProductsGridSkeleton showHeader={false} />
+                    ) : (
+                      <div className="grid grid-cols-5 gap-5">
+                        {desktopProducts.slice(0, 5).map((product, index) => (
+                          <DesktopProductCard key={keyed("flash", product, index)} product={product} index={index} />
                         ))}
                       </div>
-                    </section>
+                    )}
+                  </section>
 
-                    <section className="space-y-3">
-                      {[
-                        selectedCategoryExperience.tiles.slice(0, 2),
-                        selectedCategoryExperience.tiles.slice(2, 4),
-                        selectedCategoryExperience.tiles.slice(4, 6),
-                      ].map((row, index) => (
-                        <div key={`brand-row-${index}`} className="overflow-hidden rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-sm">
-                          <div className="mb-3 flex items-center justify-between">
-                            <p className="text-sm font-bold text-gray-950">
-                              {["Featured", "Popular", "Latest"][index]}
-                            </p>
-                            <span className="text-xs text-gray-400">View all</span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            {row.map((tile) => (
-                              <button
-                                key={`side-${tile.label}`}
-                                type="button"
-                                onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
-                                className="rounded-[1.15rem] border border-gray-100 bg-gray-50 p-3 text-left"
-                              >
-                                <p className="line-clamp-1 text-sm font-semibold text-gray-950">{tile.label}</p>
-                                <p className="mt-1 text-[11px] text-gray-500">{formatCount(tile.count)} items</p>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </section>
+                  <div className="grid grid-cols-3 gap-5">
+                    {desktopPromoCards.map((card, index) => (
+                      <button key={`desktop-promo-${card.eyebrow}`} type="button" onClick={() => setSelectedCondition("flash")} className={`relative min-h-[9.5rem] overflow-hidden rounded-lg bg-gradient-to-r ${card.tone} p-6 text-left shadow-sm`}>
+                        <p className="text-lg font-black uppercase text-orange-700">{card.eyebrow}</p>
+                        <p className="mt-1 text-2xl font-black text-gray-950">{card.title}</p>
+                        <span className={`mt-5 inline-flex rounded px-4 py-2 text-[12px] font-black text-white ${card.button}`}>Shop Now</span>
+                        {card.product ? <Image src={getProductImage(card.product)} alt={card.title} width={190} height={140} className="absolute bottom-2 right-3 h-32 w-44 object-contain" /> : null}
+                      </button>
+                    ))}
                   </div>
 
-                  <div className="mt-6 space-y-6">
-                    {compactGroups.map(([title, items]) => items.length ? (
-                      <section key={`desktop-${title}`}>
-                        <div className="mb-3 flex items-center justify-between">
-                          <h2 className="text-sm font-bold text-gray-950">{title}</h2>
-                          <button type="button" onClick={() => setSelectedCondition("flash")} className="text-sm font-semibold text-orange-600">
-                            View all →
-                          </button>
-                        </div>
-                        {loadingProducts ? (
-                          <ProductsGridSkeleton showHeader={false} />
-                        ) : (
-                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-                            {items.map((product) => (
-                              <SelectedProductCard
-                                key={product._id}
-                                product={product}
-                                formatCurrency={formatCurrency}
-                                navigate={navigate}
-                                prefetchRoute={prefetchRoute}
-                                addToCart={addToCart}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </section>
-                    ) : null)}
+                  <section>
+                    <DesktopSectionHeader title="Featured Categories" subtitle="Shop by category" />
+                    <div className="grid grid-cols-6 gap-5">
+                      {selectedCategoryExperience.tiles.slice(0, 6).map((tile) => (
+                        <button
+                          key={`featured-${tile.label}`}
+                          type="button"
+                          onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
+                          className="group rounded-lg bg-white p-4 text-center shadow-sm ring-1 ring-gray-200/80 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-orange-200"
+                        >
+                          <span className="flex h-28 items-center justify-center">
+                            {tile.product ? <Image src={getProductImage(tile.product)} alt={tile.label} width={170} height={125} className="h-full w-full object-contain transition group-hover:scale-105" /> : null}
+                          </span>
+                          <p className="mt-3 text-[14px] font-black text-gray-950">{tile.label}</p>
+                          <p className="text-[12px] font-medium text-gray-500">{formatCount(tile.count || 20)}+ Products</p>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section>
+                    <DesktopSectionHeader title="Best Sellers" subtitle="Top products this week" />
+                    {loadingProducts ? (
+                      <ProductsGridSkeleton showHeader={false} />
+                    ) : (
+                      <div className="grid grid-cols-6 gap-5">
+                        {desktopProducts.slice(5, 11).map((product, index) => (
+                          <DesktopProductCard key={keyed("best", product, index)} product={product} index={index} ranked compact />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
+                  <section>
+                    <DesktopSectionHeader title="Top Brands" subtitle="Shop from top brands" />
+                    <div className="grid grid-cols-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200/80">
+                      {brandStrip.map((brand, index) => (
+                        <button key={`brand-${index}-${brand}`} type="button" onClick={() => setSelectedBrand(brand)} className="flex h-16 min-w-0 items-center justify-center border-r border-gray-100 px-3 text-center text-xl font-black text-gray-900 transition hover:bg-gray-50">
+                          <span className="truncate">{brand}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section>
+                    <DesktopSectionHeader title="New Arrivals" subtitle="Explore latest products" />
+                    {loadingProducts ? (
+                      <ProductsGridSkeleton showHeader={false} />
+                    ) : (
+                      <div className="grid grid-cols-6 gap-5">
+                        {desktopProducts.slice(11, 17).map((product, index) => (
+                          <DesktopProductCard key={keyed("arrival", product, index)} product={product} index={index} compact />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+
+                  <div className="grid grid-cols-4 rounded-lg bg-white shadow-sm ring-1 ring-gray-200/80">
+                    {serviceItems.map(([title, subtitle]) => (
+                      <div key={title} className="flex items-center justify-center gap-3 border-r border-gray-100 px-5 py-4">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-500">
+                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 3 19 6v5c0 4.4-2.9 8.4-7 10-4.1-1.6-7-5.6-7-10V6l7-3Zm-3 9 2 2 4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                        <span>
+                          <span className="block text-[13px] font-black text-gray-950">{title}</span>
+                          <span className="block text-[11px] text-gray-500">{subtitle}</span>
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </section>

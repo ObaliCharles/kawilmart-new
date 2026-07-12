@@ -19,6 +19,7 @@ import { sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 
 const PRODUCT_BATCH_SIZE = 10;
 const HOME_PRODUCT_LIMIT = 30;
+const productKey = (scope, product, index) => `${scope}-${index}-${String(product?._id || product?.name || "product")}`;
 
 const CategoryEditorialPanel = ({ section, quickCategories, reverse, navigate, prefetchRoute, formatCurrency }) => {
   const panelHref = buildCategoryHref(section.value);
@@ -116,7 +117,7 @@ const CategoryEditorialPanel = ({ section, quickCategories, reverse, navigate, p
 
               return (
                 <button
-                  key={product._id}
+                  key={productKey(`editorial-${section.value}`, product, index)}
                   type="button"
                   onClick={() => navigate(productHref)}
                   onMouseEnter={() => prefetchRoute(productHref)}
@@ -242,8 +243,8 @@ const HomeProducts = () => {
 
           return (
             <React.Fragment key={`chunk-${chunkIndex}`}>
-              {chunkProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
+              {chunkProducts.map((product, productIndex) => (
+                <ProductCard key={productKey(`chunk-${chunkIndex}`, product, productIndex)} product={product} />
               ))}
 
               {section ? (

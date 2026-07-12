@@ -555,19 +555,44 @@ const StorePage = () => {
   const DealCard = () => {
     const { formatCurrency } = useAppContext();
     const activity = selectedDealProduct ? getProductActivitySnapshot(selectedDealProduct) : null;
-    const countdown = activity?.flashDealCountdownLabel || "24h 00m";
     const dealImage = selectedDealProduct ? getImage(selectedDealProduct) : assets.jbl_soundbox_image.src;
+    const [now, setNow] = useState(Date.now());
+
+    useEffect(() => {
+      const timer = window.setInterval(() => setNow(Date.now()), 1000);
+      return () => window.clearInterval(timer);
+    }, []);
+
+    const hasDeadline = activity?.hasFlashDealDeadline && activity.flashDealEndsAt > 0;
+    const isExpired = hasDeadline && activity.flashDealEndsAt <= now;
+    const timeLeftMs = hasDeadline ? Math.max(0, activity.flashDealEndsAt - now) : 0;
+    const totalSeconds = Math.floor(timeLeftMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (value) => String(value).padStart(2, "0");
+    const countdown = hasDeadline ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` : (activity?.flashDealCountdownLabel || "24h 00m");
 
     return (
-      <div className="rounded-[0.9rem] border border-gray-200 bg-white p-3 shadow-sm">
+      <div className={`rounded-[0.9rem] border p-3 shadow-sm ${isExpired ? "border-gray-200 bg-gray-50" : "border-red-200 bg-gradient-to-br from-red-50 to-orange-50"}`}>
         <div className="mb-2.5 flex items-center justify-between">
           <div>
             <p className="text-[12.5px] font-semibold text-gray-950">Deals of the Day</p>
             <p className="text-[10.5px] text-gray-500">Featured products from this store</p>
           </div>
-          <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
-            {countdown}
-          </span>
+          {isExpired ? (
+            <span className="rounded-full border-2 border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700">
+              Ended
+            </span>
+          ) : hasDeadline ? (
+            <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+              {countdown}
+            </span>
+          ) : (
+            <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
+              {countdown}
+            </span>
+          )}
         </div>
         {selectedDealProduct ? (
           <button
@@ -956,8 +981,8 @@ const StorePage = () => {
                       </button>
                     </div>
                     <div className="grid grid-cols-1 gap-2.5 min-[340px]:grid-cols-2 xl:grid-cols-4">
-                      {sellerProducts.slice(0, 4).map((product) => (
-                        <StoreProductCard key={product._id} product={product} />
+                      {sellerProducts.slice(0, 4).map((product, index) => (
+                        <StoreProductCard key={`featured-${index}-${product._id || product.name}`} product={product} />
                       ))}
                     </div>
                   </div>
@@ -1063,8 +1088,8 @@ const StorePage = () => {
                   </div>
 
                   <div className={viewMode === "list" ? "space-y-2.5 pb-5" : "grid grid-cols-1 gap-2.5 pb-5 min-[340px]:grid-cols-2 xl:grid-cols-4"}>
-                    {filteredProducts.map((product) => (
-                      <StoreProductCard key={product._id} product={product} layout={viewMode} />
+                    {filteredProducts.map((product, index) => (
+                      <StoreProductCard key={`store-${viewMode}-${index}-${product._id || product.name}`} product={product} layout={viewMode} />
                     ))}
                   </div>
                 </section>
