@@ -356,17 +356,17 @@ const supermarketTileIcons = {
 const MobileCategoryProductCard = ({ product, formatCurrency, navigate, addToCart, theme, discount, fallbackLabel = "Browse item" }) => (
   <article
     onClick={() => product?._id ? navigate(`/product/${product._id}`) : undefined}
-    className={`relative min-w-0 overflow-hidden rounded-xl border border-black/5 bg-white p-1.5 shadow-[0_8px_18px_rgba(15,23,42,0.08)] min-[390px]:rounded-2xl min-[390px]:p-2 ${product?._id ? "cursor-pointer" : ""}`}
+    className={`relative min-w-0 overflow-hidden rounded-[10px] border border-black/5 bg-white shadow-[0_4px_12px_rgba(15,23,42,0.06)] ${product?._id ? "cursor-pointer active:scale-[0.98]" : ""}`}
   >
-    <span className={`absolute left-1.5 top-1.5 z-10 rounded-md px-1.5 py-0.5 text-[9px] font-black text-white min-[390px]:left-2 min-[390px]:top-2 min-[390px]:px-2 min-[390px]:text-[10px] ${theme.iconBg}`}>
+    <span className={`absolute left-1 top-1 z-10 rounded px-1.5 py-0.5 text-[8px] font-black text-white ${theme.iconBg}`}>
       -{discount}%
     </span>
-    <span className="flex h-[4.75rem] items-center justify-center min-[390px]:h-[5.8rem]">
-      <Image src={getProductImage(product)} alt={product?.name || fallbackLabel} width={150} height={120} className="h-full w-full object-contain p-1" />
+    <span className="flex h-[3.8rem] items-center justify-center">
+      <Image src={getProductImage(product)} alt={product?.name || fallbackLabel} width={100} height={80} className="h-full w-full object-contain p-1" />
     </span>
-    <h3 className="mt-1 line-clamp-2 min-h-8 text-[10px] font-semibold leading-4 text-gray-950 min-[390px]:text-[11px]">{product?.name || fallbackLabel}</h3>
-    <div className="mt-1 flex items-end justify-between gap-1">
-      <p className="min-w-0 text-[10px] font-black leading-3 text-gray-950 [overflow-wrap:anywhere] min-[390px]:text-[12px]">
+    <h3 className="line-clamp-2 min-h-7 px-1 text-[9px] font-semibold leading-[12px] text-gray-950">{product?.name || fallbackLabel}</h3>
+    <div className="flex items-center justify-between gap-0.5 px-1 pb-1.5 pt-0.5">
+      <p className="min-w-0 text-[8px] font-black leading-3 text-orange-600 whitespace-nowrap overflow-visible">
         {product ? formatCurrency(product.offerPrice || product.price) : "Browse"}
       </p>
       <button
@@ -375,11 +375,11 @@ const MobileCategoryProductCard = ({ product, formatCurrency, navigate, addToCar
           event.stopPropagation();
           if (product?._id) void addToCart(product._id);
         }}
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full min-[390px]:h-8 min-[390px]:w-8 ${theme.addBg} ${theme.addText}`}
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${theme.addBg} ${theme.addText}`}
         aria-label={product?._id ? "Add to cart" : "Browse category"}
       >
-        <svg className="h-4 w-4 min-[390px]:h-5 min-[390px]:w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
         </svg>
       </button>
     </div>
@@ -1045,38 +1045,38 @@ function AllProductsInner() {
 
               <section className="min-w-0">
                 <div className="lg:hidden">
-                  <div className="rounded-full border border-gray-200 bg-white px-4 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.08)]">
-                    <div className="flex items-center gap-3">
-                      <svg className="h-6 w-6 shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="m21 21-4.2-4.2m1.2-5.3a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  {/* Ultra compact search bar */}
+                  <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 shadow-sm">
+                    <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="m21 21-4.2-4.2m1.2-5.3a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                    </svg>
+                    <input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search..."
+                      className="min-w-0 flex-1 bg-transparent text-[12px] outline-none placeholder:text-gray-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowMobileFilters(true)}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white"
+                      aria-label="Open filters"
+                    >
+                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M5 7h8m3 0h3M5 17h3m3 0h8M11 5v4m0 6v4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
                       </svg>
-                      <input
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search for products, brands..."
-                        className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-gray-400"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowMobileFilters(true)}
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white shadow-sm"
-                        aria-label="Open filters"
-                      >
-                        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path d="M5 7h8m3 0h3M5 17h3m3 0h8M11 5v4m0 6v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                        </svg>
-                      </button>
-                    </div>
+                    </button>
                   </div>
 
-                  <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+                  {/* Ultra compact category rail */}
+                  <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
                     <button
                       type="button"
                       onClick={() => navigate("/all-products")}
-                      className="flex h-[6.1rem] min-w-[5.9rem] flex-col items-center justify-center gap-2 rounded-2xl border border-orange-500 bg-white px-2 text-center text-[12px] font-black text-orange-700 shadow-sm"
+                      className="flex h-[3.6rem] min-w-[3.6rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-orange-500 bg-white px-1 text-center text-[10px] font-bold text-orange-700 shadow-sm"
                     >
-                      <span className="text-3xl" aria-hidden="true">🛒</span>
-                      <span>All</span>
+                      <span className="text-xl leading-none" aria-hidden="true">🛒</span>
+                      <span className="leading-tight">All</span>
                     </button>
                     {useSupermarketMobileDisplay ? (
                       supermarketRailTiles.map((tile) => (
@@ -1084,10 +1084,10 @@ function AllProductsInner() {
                           key={`mobile-supermarket-rail-${tile.label}`}
                           type="button"
                           onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories?.[0] || selectedCategory)}`)}
-                          className="flex h-[6.1rem] min-w-[6.7rem] flex-col items-center justify-center gap-1.5 rounded-2xl border border-gray-100 bg-white px-2 text-center text-gray-900 shadow-sm"
+                          className="flex h-[3.6rem] min-w-[4rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-100 bg-white px-1 text-center text-gray-900 shadow-sm"
                         >
-                          <span className="text-3xl leading-none" aria-hidden="true">{supermarketTileIcons[tile.label] || "🛍️"}</span>
-                          <span className="line-clamp-2 text-[12px] font-black leading-4">{tile.label}</span>
+                          <span className="text-xl leading-none" aria-hidden="true">{supermarketTileIcons[tile.label] || "🛍️"}</span>
+                          <span className="line-clamp-2 text-[10px] font-bold leading-tight">{tile.label}</span>
                         </button>
                       ))
                     ) : (
@@ -1100,12 +1100,12 @@ function AllProductsInner() {
                             key={`mobile-selected-rail-${category}`}
                             type="button"
                             onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
-                            className={`flex h-[6.1rem] min-w-[6.7rem] flex-col items-center justify-center gap-1.5 rounded-2xl border bg-white px-2 text-center shadow-sm ${
+                            className={`flex h-[3.6rem] min-w-[4rem] flex-col items-center justify-center gap-0.5 rounded-lg border bg-white px-1 text-center shadow-sm ${
                               active ? "border-orange-500 text-orange-700" : "border-gray-100 text-gray-900"
                             }`}
                           >
-                            <span className="text-3xl leading-none" aria-hidden="true">{meta.icon}</span>
-                            <span className="line-clamp-2 text-[12px] font-black leading-4">{meta.label}</span>
+                            <span className="text-xl leading-none" aria-hidden="true">{meta.icon}</span>
+                            <span className="line-clamp-2 text-[10px] font-bold leading-tight">{meta.label}</span>
                           </button>
                         );
                       })
@@ -1370,25 +1370,31 @@ function AllProductsInner() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-white px-4 py-6 pb-24 sm:px-6 md:px-8 md:py-8 lg:px-10 xl:px-12">
-        <div className="mb-4 text-xs text-gray-500">
+      <div className="min-h-screen bg-[#f8fafc] pb-24">
+        <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 md:px-6 md:py-5 lg:px-8">
+          <div className="mb-3 flex items-center gap-1.5 text-[11px] text-gray-500">
           {hasActiveSearch ? (
-            <span><span className="font-semibold text-gray-950">Search results</span></span>
+            <span className="font-semibold text-gray-950">Search results</span>
           ) : (
-            <span>Home <span className="mx-2 text-gray-400">&gt;</span> Electronics <span className="mx-2 text-gray-400">&gt;</span> <span className="font-semibold text-gray-950">{selectedCategoryMeta?.label || "All Products"}</span></span>
+            <>
+              <button type="button" onClick={() => navigate("/")} className="hover:text-orange-600">Home</button>
+              <span className="text-gray-300">/</span>
+              <span className="font-semibold text-gray-950">{selectedCategoryMeta?.label || "All Products"}</span>
+            </>
           )}
         </div>
 
-        <section className="mb-4 overflow-x-auto">
-          <div className="flex min-w-max gap-2 pb-1">
+        {/* Category chips - compact */}
+        <section className="mb-3 overflow-x-auto">
+          <div className="flex min-w-max gap-1.5 pb-1">
             <button
               type="button"
               onClick={() => setSelectedCategory("All")}
-              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition ${
+              className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold transition ${
                 selectedCategory === "All" ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
               }`}
             >
-              <CategoryGlyph category="all" className="h-3.5 w-3.5 shrink-0" />
+              <CategoryGlyph category="all" className="h-3 w-3 shrink-0" />
               <span>All products</span>
             </button>
             {filterCategoryHighlights.map((category) => {
@@ -1398,11 +1404,11 @@ function AllProductsInner() {
                   key={category}
                   type="button"
                   onClick={() => setSelectedCategory(category)}
-                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition ${
+                  className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold transition ${
                     selectedCategory === category ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
                   }`}
                 >
-                  <CategoryGlyph category={meta.label} className="h-3.5 w-3.5 shrink-0" />
+                  <CategoryGlyph category={meta.label} className="h-3 w-3 shrink-0" />
                   <span>{meta.label}</span>
                 </button>
               );
@@ -1410,22 +1416,21 @@ function AllProductsInner() {
           </div>
         </section>
 
-        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xl font-bold text-gray-950">{compactHeading ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
+            <p className="text-base font-bold text-gray-950">{compactHeading ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
             {!compactHeading ? (
-              <p className="mt-0.5 text-xs text-gray-500">
+              <p className="text-[11px] text-gray-500">
                 {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''} found
                 {selectedSeller ? ` from ${sellerFilterLabel}` : ""}
               </p>
             ) : null}
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <label className="hidden text-xs font-medium text-gray-700 sm:block">Sort:</label>
+          <div className="flex items-center gap-2">
             <select
               value={effectiveSortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs outline-none focus:border-orange-500 sm:w-auto"
+              className="rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] outline-none focus:border-orange-500"
             >
               {sortOptions.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1433,14 +1438,15 @@ function AllProductsInner() {
             </select>
             <button
               onClick={() => setShowMobileFilters(true)}
-              className="flex items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs md:hidden"
+              className="flex items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] md:hidden"
             >
               Filters
             </button>
           </div>
         </div>
 
-        <div className="mb-3 flex flex-col gap-1.5 border-y border-gray-200 bg-gray-50 px-2 py-2 lg:flex-row lg:items-center lg:justify-between">
+        {/* Filter bar - compact */}
+        <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-gray-200 pb-2">
           <div className="flex flex-wrap gap-1.5">
             <DropdownFilter
               label="Condition"
@@ -1648,6 +1654,7 @@ function AllProductsInner() {
             ) : null}
           </div>
         </div>
+      </div>
       </div>
       <Footer />
     </>
