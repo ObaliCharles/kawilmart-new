@@ -250,39 +250,28 @@ const departments = [
 
 const categoryHref = (category) => `/all-products?category=${encodeURIComponent(category)}`;
 
-const sectionBackgrounds = [
-  "bg-orange-50",
-  "bg-blue-50",
-  "bg-green-50",
-  "bg-purple-50",
-  "bg-pink-50",
-  "bg-cyan-50",
-  "bg-amber-50",
-  "bg-rose-50",
-];
-
 const CategoryTile = ({ tile, product, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className="flex min-w-0 flex-col items-center justify-center rounded-lg bg-gray-50 text-center transition-all duration-150 hover:bg-orange-100 hover:shadow-sm active:scale-[0.98]"
+    className="flex min-w-0 flex-col items-center justify-center rounded-lg bg-white text-center ring-1 ring-gray-100/80 transition-all duration-150 hover:shadow-md active:scale-[0.97]"
   >
-    <span className="flex w-full items-center justify-center h-[3.4rem] p-1.5">
+    <span className="flex w-full items-center justify-center h-[3.2rem] p-1.5">
       {product ? (
         <Image
           src={getProductImage(product)}
           alt={tile.label}
-          width={65}
-          height={55}
+          width={60}
+          height={50}
           className="h-full w-full object-contain"
         />
       ) : (
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-400 shadow-sm">
-          <CategoryIcon type="basket" className="h-3.5 w-3.5" />
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-50 text-gray-400">
+          <CategoryIcon type="basket" className="h-3 w-3" />
         </span>
       )}
     </span>
-    <span className="line-clamp-2 min-h-5 px-1 pb-1.5 text-center font-medium text-gray-800 text-[9px] leading-[12px]">
+    <span className="line-clamp-2 min-h-[18px] px-1 pb-1.5 text-center font-medium text-gray-800 text-[9px] leading-[11px]">
       {tile.label}
     </span>
   </button>
@@ -308,9 +297,8 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
         <MegaStoreHome siteContent={siteContent} initialProducts={initialProducts} />
       </div>
 
-      <main className="flex min-h-screen bg-[#f8fafc] pb-24 lg:hidden">
-        {/* Left panel - scrollable */}
-        <aside className="w-[5.2rem] shrink-0 overflow-y-auto border-r border-gray-100 bg-white min-[390px]:w-[5.6rem]">
+      <main className="flex h-[calc(100dvh-4.75rem)] min-h-0 overflow-hidden bg-[#f5f7fb] lg:hidden">
+        <aside className="category-rail-scroll h-full w-[5.45rem] shrink-0 overflow-y-auto border-r border-gray-100 bg-white shadow-[4px_0_18px_rgba(15,23,42,0.04)] min-[390px]:w-[5.85rem]">
           <div className="flex flex-col">
             {departments.map((department) => {
               const active = department.label === currentDepartment.label;
@@ -319,12 +307,12 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
                   key={department.label}
                   type="button"
                   onClick={() => setSelectedDepartment(department.label)}
-                  className={`relative flex w-full flex-col items-center gap-0.5 border-b border-gray-100 py-2 text-center transition min-[390px]:py-2.5 ${
-                    active ? "bg-white text-gray-950 shadow-sm" : "text-gray-500 active:bg-gray-50"
+                  className={`relative flex w-full flex-col items-center gap-1 border-b border-gray-100 px-1.5 py-2.5 text-center transition ${
+                    active ? "bg-orange-50/70 text-gray-950" : "text-gray-500 active:bg-gray-50"
                   }`}
                 >
-                  {active ? <span className="absolute left-0 top-0 h-full w-[3px] bg-orange-600" /> : null}
-                  <span className={`flex h-5 w-5 items-center justify-center ${active ? "text-orange-600" : "text-gray-400"}`}>
+                  {active ? <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-orange-600" /> : null}
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${active ? "bg-white text-orange-600 shadow-sm" : "text-gray-400"}`}>
                     <CategoryIcon type={department.icon} className="h-[14px] w-[14px] min-[390px]:h-4 min-[390px]:w-4" />
                   </span>
                   <span className={`leading-tight ${active ? "font-semibold text-gray-950" : "font-medium text-gray-500"} text-[8px] min-[390px]:text-[9px]`}>
@@ -336,16 +324,19 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
           </div>
         </aside>
 
-        <section className="min-w-0 flex-1 overflow-y-auto px-2 py-3 min-[390px]:px-2.5">
-          <h1 className="mb-2.5 text-sm font-bold text-gray-900">
-            {currentDepartment.sections[0].title}
-          </h1>
+        <section className="scrollbar-none h-full min-w-0 flex-1 overflow-y-auto px-2.5 py-3 min-[390px]:px-3">
+          <div className="sticky top-0 z-10 -mx-2.5 mb-3 bg-[#f5f7fb]/95 px-2.5 pb-2 backdrop-blur min-[390px]:-mx-3 min-[390px]:px-3">
+            <h1 className="text-base font-black text-gray-950">
+              {currentDepartment.sections[0].title}
+            </h1>
+            <p className="text-[11px] font-medium text-gray-500">Browse departments and quick picks</p>
+          </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {currentDepartment.sections.map((section, sectionIndex) => (
               <section key={section.title}>
                 <div className="flex items-center justify-between mb-1.5 px-0.5">
-                  <h2 className="text-[12px] font-semibold text-gray-700">
+                  <h2 className="text-[12px] font-bold text-gray-800">
                     {sectionIndex === 0 ? "All categories" : section.title}
                   </h2>
                   <button type="button" onClick={() => goToCategory(section.seeAll)} className="flex items-center gap-0.5 text-[10px] font-medium text-orange-600">
@@ -354,9 +345,8 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
                   </button>
                 </div>
 
-                {/* Section card with tinted background like cart's ring */}
-                <div className="rounded-xl bg-white p-2 shadow-sm">
-                  <div className="grid grid-cols-3 gap-1.5">
+                <div className="rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-100">
+                  <div className="grid grid-cols-3 gap-2">
                     {section.tiles.map((tile) => {
                       const product = findProduct(storefrontProducts, tile.categories, tile.keywords);
                       const targetCategory = currentDepartment.label === "Supermarket"

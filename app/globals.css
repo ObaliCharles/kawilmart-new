@@ -295,3 +295,31 @@ body {
 .filter-scroll::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.category-rail-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.category-rail-scroll::-webkit-scrollbar {
+  display: block;
+  width: 4px;
+}
+
+.category-rail-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.category-rail-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #cbd5e1;
+}

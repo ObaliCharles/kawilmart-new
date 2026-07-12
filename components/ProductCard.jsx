@@ -7,6 +7,13 @@ import { useAppContext } from '@/context/AppContext';
 import { getProductStockSnapshot } from '@/lib/productStock';
 import { getProductRatingSnapshot } from '@/lib/productRating';
 
+const getProductImage = (product) => {
+    const image = Array.isArray(product?.image) ? product.image[0] : product?.image;
+    if (typeof image === "string" && image.trim()) return image.trim();
+    if (image && typeof image === "object" && typeof image.src === "string") return image.src;
+    return assets.upload_area;
+};
+
 const ProductCard = ({ product }) => {
     const { addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike } = useAppContext();
     const productHref = `/product/${product._id}`;
@@ -95,7 +102,7 @@ const ProductCard = ({ product }) => {
         >
             <div className="relative flex aspect-[1.12/1] items-center justify-center overflow-hidden rounded-md bg-white">
                 <Image
-                    src={product.image[0]}
+                    src={getProductImage(product)}
                     alt={product.name}
                     className="h-full w-full object-contain p-3 transition duration-200 ease-snappy group-hover:scale-[1.03]"
                     width={360}
@@ -167,9 +174,9 @@ const ProductCard = ({ product }) => {
             </div>
 
             <div className="mt-auto pt-1.5">
-                <p className="text-sm font-bold text-orange-600">{formatCurrency(product.offerPrice)}</p>
+                <p className="text-[15px] font-black leading-tight text-gray-950">{formatCurrency(product.offerPrice || product.price)}</p>
                 {product.price > product.offerPrice && (
-                    <p className="text-[10px] text-gray-400 line-through">{formatCurrency(product.price)}</p>
+                    <p className="text-[11px] font-medium text-gray-400 line-through">{formatCurrency(product.price)}</p>
                 )}
             </div>
 

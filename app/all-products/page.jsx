@@ -265,6 +265,14 @@ const getDiscountPercent = (product, fallback = 6) => {
   return fallback;
 };
 
+const getProductPrice = (product) => {
+  const offerPrice = Number(product?.offerPrice);
+  const price = Number(product?.price);
+  if (Number.isFinite(offerPrice) && offerPrice > 0) return offerPrice;
+  if (Number.isFinite(price) && price > 0) return price;
+  return 0;
+};
+
 const mobileSectionThemes = [
   {
     surface: "bg-[#eef9ea]",
@@ -356,17 +364,17 @@ const supermarketTileIcons = {
 const MobileCategoryProductCard = ({ product, formatCurrency, navigate, addToCart, theme, discount, fallbackLabel = "Browse item" }) => (
   <article
     onClick={() => product?._id ? navigate(`/product/${product._id}`) : undefined}
-    className={`relative min-w-0 overflow-hidden rounded-[10px] border border-black/5 bg-white shadow-[0_4px_12px_rgba(15,23,42,0.06)] ${product?._id ? "cursor-pointer active:scale-[0.98]" : ""}`}
+    className={`relative min-w-0 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-100 ${product?._id ? "cursor-pointer active:scale-[0.98]" : ""}`}
   >
     <span className={`absolute left-1 top-1 z-10 rounded px-1.5 py-0.5 text-[8px] font-black text-white ${theme.iconBg}`}>
       -{discount}%
     </span>
-    <span className="flex h-[3.8rem] items-center justify-center">
-      <Image src={getProductImage(product)} alt={product?.name || fallbackLabel} width={100} height={80} className="h-full w-full object-contain p-1" />
+    <span className="flex h-20 items-center justify-center min-[390px]:h-24">
+      <Image src={getProductImage(product)} alt={product?.name || fallbackLabel} width={130} height={105} className="h-full w-full object-contain p-1.5" />
     </span>
-    <h3 className="line-clamp-2 min-h-7 px-1 text-[9px] font-semibold leading-[12px] text-gray-950">{product?.name || fallbackLabel}</h3>
-    <div className="flex items-center justify-between gap-0.5 px-1 pb-1.5 pt-0.5">
-      <p className="min-w-0 text-[8px] font-black leading-3 text-orange-600 whitespace-nowrap overflow-visible">
+    <h3 className="line-clamp-2 min-h-8 px-2 text-[11px] font-semibold leading-4 text-gray-950">{product?.name || fallbackLabel}</h3>
+    <div className="flex items-center justify-between gap-1 px-2 pb-2 pt-1">
+      <p className="min-w-0 text-[12px] font-black leading-4 text-gray-950 [overflow-wrap:anywhere]">
         {product ? formatCurrency(product.offerPrice || product.price) : "Browse"}
       </p>
       <button
@@ -375,7 +383,7 @@ const MobileCategoryProductCard = ({ product, formatCurrency, navigate, addToCar
           event.stopPropagation();
           if (product?._id) void addToCart(product._id);
         }}
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${theme.addBg} ${theme.addText}`}
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${theme.addBg} ${theme.addText}`}
         aria-label={product?._id ? "Add to cart" : "Browse category"}
       >
         <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -427,7 +435,7 @@ const MobileCategorySection = ({ tile, products, experience, index, formatCurren
         </div>
       </div>
 
-      <div className="mt-2 grid grid-cols-4 gap-1.5 min-[390px]:gap-2">
+      <div className="mt-2 grid grid-cols-2 gap-2 min-[520px]:grid-cols-4">
         {displayProducts.map((product, productIndex) => (
           <MobileCategoryProductCard
             key={`${tile.label}-${product?._id || productIndex}`}
@@ -646,7 +654,10 @@ function AllProductsInner() {
     }
 
     const range = priceRanges[selectedPriceRange];
-    filtered = filtered.filter(({ product }) => product.offerPrice >= range.min && product.offerPrice <= range.max);
+    filtered = filtered.filter(({ product }) => {
+      const price = getProductPrice(product);
+      return price >= range.min && price <= range.max;
+    });
 
     if (selectedCondition !== "all") {
       filtered = filtered.filter(({ product }) => {
@@ -673,18 +684,18 @@ function AllProductsInner() {
       filtered.sort((a, b) => (
         b.searchScore - a.searchScore ||
         (b.product.date || 0) - (a.product.date || 0) ||
-        a.product.offerPrice - b.product.offerPrice
+        getProductPrice(a.product) - getProductPrice(b.product)
       ));
     } else if (effectiveSortBy === "price_asc") {
-      filtered.sort((a, b) => a.product.offerPrice - b.product.offerPrice);
+      filtered.sort((a, b) => getProductPrice(a.product) - getProductPrice(b.product));
     } else if (effectiveSortBy === "price_desc") {
-      filtered.sort((a, b) => b.product.offerPrice - a.product.offerPrice);
+      filtered.sort((a, b) => getProductPrice(b.product) - getProductPrice(a.product));
     } else if (effectiveSortBy === "newest") {
       filtered.sort((a, b) => (b.product.date || 0) - (a.product.date || 0));
     } else if (effectiveSortBy === "discount") {
       filtered.sort((a, b) => {
-        const da = a.product.price > 0 ? (a.product.price - a.product.offerPrice) / a.product.price : 0;
-        const db = b.product.price > 0 ? (b.product.price - b.product.offerPrice) / b.product.price : 0;
+        const da = a.product.price > 0 ? (a.product.price - getProductPrice(a.product)) / a.product.price : 0;
+        const db = b.product.price > 0 ? (b.product.price - getProductPrice(b.product)) / b.product.price : 0;
         return db - da;
       });
     } else if (effectiveSortBy === "rating") {
@@ -720,7 +731,7 @@ function AllProductsInner() {
   const selectedCategoryExperience = useMemo(() => (
     getCategoryExperience(selectedCategoryPool.length ? selectedCategoryPool : products, selectedCategory)
   ), [selectedCategoryPool, products, selectedCategory]);
-  const useSupermarketMobileDisplay = selectedCategory === "Home & Living";
+  const useSupermarketMobileDisplay = selectedCategoryMeta?.value === "Home & Living";
   const mobileDisplayTiles = useSupermarketMobileDisplay
     ? supermarketMobileTiles
     : selectedCategoryExperience.tiles;
@@ -1069,11 +1080,11 @@ function AllProductsInner() {
                   </div>
 
                   {/* Ultra compact category rail */}
-                  <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+                  <div className="scrollbar-none mt-2 flex gap-1.5 overflow-x-auto pb-1">
                     <button
                       type="button"
                       onClick={() => navigate("/all-products")}
-                      className="flex h-[3.6rem] min-w-[3.6rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-orange-500 bg-white px-1 text-center text-[10px] font-bold text-orange-700 shadow-sm"
+                      className="flex h-[3.6rem] min-w-[3.6rem] flex-col items-center justify-center gap-0.5 rounded-lg bg-white px-1 text-center text-[10px] font-bold text-gray-900 shadow-sm ring-1 ring-gray-100"
                     >
                       <span className="text-xl leading-none" aria-hidden="true">🛒</span>
                       <span className="leading-tight">All</span>
@@ -1084,7 +1095,7 @@ function AllProductsInner() {
                           key={`mobile-supermarket-rail-${tile.label}`}
                           type="button"
                           onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories?.[0] || selectedCategory)}`)}
-                          className="flex h-[3.6rem] min-w-[4rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-gray-100 bg-white px-1 text-center text-gray-900 shadow-sm"
+                          className="flex h-[3.6rem] min-w-[4rem] flex-col items-center justify-center gap-0.5 rounded-lg bg-white px-1 text-center text-gray-900 shadow-sm ring-1 ring-gray-100"
                         >
                           <span className="text-xl leading-none" aria-hidden="true">{supermarketTileIcons[tile.label] || "🛍️"}</span>
                           <span className="line-clamp-2 text-[10px] font-bold leading-tight">{tile.label}</span>
@@ -1100,8 +1111,8 @@ function AllProductsInner() {
                             key={`mobile-selected-rail-${category}`}
                             type="button"
                             onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
-                            className={`flex h-[3.6rem] min-w-[4rem] flex-col items-center justify-center gap-0.5 rounded-lg border bg-white px-1 text-center shadow-sm ${
-                              active ? "border-orange-500 text-orange-700" : "border-gray-100 text-gray-900"
+                            className={`flex h-[3.6rem] min-w-[4rem] flex-col items-center justify-center gap-0.5 rounded-lg bg-white px-1 text-center shadow-sm ring-1 ${
+                              active ? "text-orange-700 ring-orange-100" : "text-gray-900 ring-gray-100"
                             }`}
                           >
                             <span className="text-xl leading-none" aria-hidden="true">{meta.icon}</span>
@@ -1140,7 +1151,7 @@ function AllProductsInner() {
                     {loadingProducts ? (
                       <ProductsGridSkeleton showHeader={false} />
                     ) : (
-                      <div className="grid grid-cols-4 gap-1.5 min-[390px]:gap-2">
+                      <div className="grid grid-cols-2 gap-2 min-[520px]:grid-cols-4">
                         {filteredProducts.slice(0, 8).map((product, index) => {
                           const theme = mobileSectionThemes[index % mobileSectionThemes.length];
 
