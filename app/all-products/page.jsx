@@ -9,8 +9,9 @@ import { useAppContext } from "@/context/AppContext";
 import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { categoryMatchesSelection, getCategoryMeta, marketplaceFilterCategories } from "@/lib/marketplaceCategories";
-import { getProductActivitySnapshot } from "@/lib/liveCommerce";
+import { getProductActivitySnapshot, resolveProductTagSlugs, SYSTEM_TAG_DEFINITIONS } from "@/lib/liveCommerce";
 import { getCategoryExperience } from "@/lib/categoryExperiences";
+import axios from "axios";
 
 const categories = ["All", ...marketplaceFilterCategories];
 
@@ -495,6 +496,7 @@ function AllProductsInner() {
   const initialBrand = searchParams.get("brand") || "all";
   const initialFilter = searchParams.get("filter");
   const initialSort = searchParams.get("sort");
+  const initialTags = (searchParams.get("tags") || "").split(",").filter(Boolean);
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedPriceRange, setSelectedPriceRange] = useState(0);
@@ -504,8 +506,29 @@ function AllProductsInner() {
   const [selectedCondition, setSelectedCondition] = useState(initialFilter === "flash" ? "flash" : "all");
   const [selectedBrand, setSelectedBrand] = useState(initialBrand);
   const [selectedRating, setSelectedRating] = useState(0);
+  const [selectedTags, setSelectedTags] = useState(initialTags);
+  const [manualTagOptions, setManualTagOptions] = useState([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    let isMounted = true;
+    axios.get("/api/tags").then(({ data }) => {
+      if (isMounted && data.success) {
+        setManualTagOptions(data.tags);
+      }
+    }).catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const tagOptions = useMemo(() => {
+    const manual = manualTagOptions.map((tag) => ({ slug: tag.slug, name: tag.name, color: tag.color }));
+    const manualSlugs = new Set(manual.map((tag) => tag.slug));
+    const system = SYSTEM_TAG_DEFINITIONS.filter((tag) => !manualSlugs.has(tag.slug));
+    return [...manual, ...system];
+  }, [manualTagOptions]);
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const hasActiveSearch = deferredSearchQuery.trim().length > 0;
   const effectiveSortBy = hasActiveSearch
@@ -519,6 +542,7 @@ function AllProductsInner() {
     const brand = searchParams.get("brand");
     const filter = searchParams.get("filter");
     const sort = searchParams.get("sort");
+    const tags = (searchParams.get("tags") || "").split(",").filter(Boolean);
 
     setSelectedCategory(cat || "All");
     setSearchQuery(search || "");
@@ -526,12 +550,13 @@ function AllProductsInner() {
     setSelectedBrand(brand || "all");
     setSelectedCondition(filter === "flash" ? "flash" : "all");
     setSortBy(filter === "flash" ? "discount" : sortOptions.some((option) => option.value === sort) ? sort : "default");
+    setSelectedTags(tags);
     setCurrentPage(1);
   }, [searchParams]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, selectedPriceRange, selectedCondition, selectedBrand, selectedRating, searchQuery, selectedSeller, effectiveSortBy]);
+  }, [selectedCategory, selectedPriceRange, selectedCondition, selectedBrand, selectedRating, selectedTags, searchQuery, selectedSeller, effectiveSortBy]);
 
   const brandOptions = useMemo(() => {
     const counts = products.reduce((acc, product) => {
@@ -591,6 +616,13 @@ function AllProductsInner() {
       filtered = filtered.filter(({ product }) => getRatingValue(product) >= selectedRating);
     }
 
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(({ product }) => {
+        const productTagSlugs = resolveProductTagSlugs(product);
+        return selectedTags.every((tag) => productTagSlugs.includes(tag));
+      });
+    }
+
     if (effectiveSortBy === "relevance") {
       filtered.sort((a, b) => (
         b.searchScore - a.searchScore ||
@@ -627,7 +659,7 @@ function AllProductsInner() {
   const sellerFilterLabel = sellerReferenceProduct?.sellerProfile?.name || sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
   const resultsLabel = `${filteredProducts.length} result${filteredProducts.length === 1 ? "" : "s"}`;
-  const compactHeading = hasActiveSearch || selectedBrand !== "all" || selectedSeller || selectedCondition !== "all" || selectedPriceRange !== 0 || selectedRating > 0;
+  const compactHeading = hasActiveSearch || selectedBrand !== "all" || selectedSeller || selectedCondition !== "all" || selectedPriceRange !== 0 || selectedRating > 0 || selectedTags.length > 0;
   const selectedCategoryMode = selectedCategory !== "All" && !hasActiveSearch && !selectedSeller;
   const selectedCategoryPool = useMemo(() => (
     selectedCategory === "All"
@@ -650,6 +682,11 @@ function AllProductsInner() {
     setSelectedCondition("all");
     setSelectedBrand("all");
     setSelectedRating(0);
+    setSelectedTags([]);
+  };
+
+  const toggleTag = (slug) => {
+    setSelectedTags((prev) => (prev.includes(slug) ? prev.filter((tag) => tag !== slug) : [...prev, slug]));
   };
 
   const DropdownFilter = ({ label, valueLabel, children }) => (
@@ -778,6 +815,26 @@ function AllProductsInner() {
           ))}
         </div>
       </div>
+      {tagOptions.length > 0 ? (
+        <div>
+          <p className="mb-2 border-t border-gray-200 pt-3 text-xs font-bold text-gray-950">Tags</p>
+          <div className="flex flex-wrap gap-1.5">
+            {tagOptions.map((tag) => (
+              <button
+                key={tag.slug}
+                onClick={() => toggleTag(tag.slug)}
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                  selectedTags.includes(tag.slug)
+                    ? "border-orange-600 bg-orange-600 text-white"
+                    : "border-gray-200 text-gray-600 hover:border-orange-300"
+                }`}
+              >
+                {tag.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <button
         onClick={resetFilters}
         className="w-full rounded-md border border-orange-500 py-1.5 text-xs font-semibold text-orange-600 transition hover:bg-orange-50"
@@ -1365,6 +1422,22 @@ function AllProductsInner() {
                 </FilterOption>
               ))}
             </DropdownFilter>
+            {tagOptions.length > 0 ? (
+              <DropdownFilter
+                label="Tags"
+                valueLabel={selectedTags.length ? `${selectedTags.length} selected` : ""}
+              >
+                {tagOptions.map((tag) => (
+                  <FilterOption
+                    key={tag.slug}
+                    active={selectedTags.includes(tag.slug)}
+                    onClick={() => toggleTag(tag.slug)}
+                  >
+                    {tag.name}
+                  </FilterOption>
+                ))}
+              </DropdownFilter>
+            ) : null}
             {hasActiveSearch ? (
               <button
                 type="button"
@@ -1392,7 +1465,7 @@ function AllProductsInner() {
         </div>
 
         {/* Active tags */}
-        {(selectedCategory !== "All" || selectedPriceRange !== 0 || searchQuery || selectedSeller || selectedCondition !== "all" || selectedBrand !== "all" || selectedRating > 0) && (
+        {(selectedCategory !== "All" || selectedPriceRange !== 0 || searchQuery || selectedSeller || selectedCondition !== "all" || selectedBrand !== "all" || selectedRating > 0 || selectedTags.length > 0) && (
           <div className="mb-5 flex flex-wrap gap-2">
             {selectedCategory !== "All" && (
               <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
@@ -1424,6 +1497,12 @@ function AllProductsInner() {
                 <button onClick={() => setSelectedRating(0)} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
+            {selectedTags.map((tagSlug) => (
+              <span key={tagSlug} className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+                {tagOptions.find((option) => option.slug === tagSlug)?.name || tagSlug}
+                <button onClick={() => toggleTag(tagSlug)} className="ml-1 font-bold hover:text-orange-900">x</button>
+              </span>
+            ))}
             {searchQuery && (
               <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
                 &quot;{searchQuery}&quot;

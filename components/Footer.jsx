@@ -1,9 +1,12 @@
 'use client'
 
-import React from "react";
+import React, { useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import Link from "next/link";
+import { buildCategoryHref, marketplaceFilterCategories } from "@/lib/marketplaceCategories";
 
 const footerColumns = [
   {
@@ -44,7 +47,81 @@ const footerColumns = [
       ["Vendor Support", "/about"],
     ],
   },
+  {
+    title: "Categories",
+    links: marketplaceFilterCategories
+      .slice(0, 6)
+      .map((category) => [category, buildCategoryHref(category)]),
+  },
 ];
+
+const socialLinks = [
+  { key: "facebook", icon: "facebook_icon", label: "Facebook", href: "#" },
+  { key: "instagram", icon: "instagram_icon", label: "Instagram", href: "#" },
+  { key: "twitter", icon: "twitter_icon", label: "X (Twitter)", href: "#" },
+  { key: "youtube", icon: "youtube_icon", label: "YouTube", href: "#" },
+];
+
+const SocialIconRow = ({ className = "" }) => (
+  <div className={`flex items-center gap-2.5 ${className}`}>
+    {socialLinks.map(({ key, icon, label, href }) => (
+      <a
+        key={key}
+        href={href}
+        aria-label={label}
+        className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/10 transition hover:bg-white/20"
+      >
+        <Image src={assets[icon]} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
+      </a>
+    ))}
+  </div>
+);
+
+const NewsletterForm = ({ idPrefix = "" }) => {
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (submitting || !email.trim()) return;
+
+    setSubmitting(true);
+    try {
+      const { data } = await axios.post("/api/newsletter", { email: email.trim() });
+      if (data.success) {
+        toast.success(data.message || "Subscribed successfully");
+        setEmail("");
+      } else {
+        toast.error(data.message || "Could not subscribe right now");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Could not subscribe right now");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-5 flex overflow-hidden rounded-full border border-white/10 bg-white shadow-sm">
+      <input
+        id={`${idPrefix}newsletter-email`}
+        type="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Enter your email"
+        className="min-w-0 flex-1 px-4 py-2.5 text-[13px] text-gray-700 outline-none"
+      />
+      <button
+        type="submit"
+        disabled={submitting}
+        className="bg-orange-600 px-4 text-[13px] font-semibold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        {submitting ? "..." : "Subscribe"}
+      </button>
+    </form>
+  );
+};
 
 const FooterLink = ({ href, children }) => {
   const isExternal = href.startsWith("mailto:");
@@ -87,13 +164,7 @@ const Footer = () => {
               Discover verified shopping, fast delivery, and everyday value across fashion, electronics, home essentials, and more.
             </p>
 
-            <div className="mt-5 flex items-center gap-2.5">
-              {['f', 'IG', 'X', 'YT'].map((item) => (
-                <span key={item} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/10 text-xs font-semibold text-white/90">
-                  {item}
-                </span>
-              ))}
-            </div>
+            <SocialIconRow className="mt-5" />
 
             <div className="mt-6 divide-y divide-white/10 border-y border-white/10">
               {footerColumns.map((column) => (
@@ -123,7 +194,7 @@ const Footer = () => {
       </footer>
 
       <footer className="hidden bg-[linear-gradient(135deg,#0f172a_0%,#111827_100%)] text-slate-300 md:block">
-        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-10 sm:px-6 lg:grid-cols-[1.35fr_repeat(4,1fr)_1.2fr] lg:px-5">
+        <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-10 sm:px-6 lg:grid-cols-[1.35fr_repeat(5,1fr)_1.2fr] lg:px-5">
           <div className="max-w-sm">
             <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-2.5 shadow-sm">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 p-1.5">
@@ -137,13 +208,7 @@ const Footer = () => {
             <p className="mt-4 text-[13px] leading-6 text-slate-300">
               Your trusted place for modern shopping, top brands, and everyday convenience.
             </p>
-            <div className="mt-5 flex items-center gap-2.5">
-              {['f', 'IG', 'X', 'YT'].map((item) => (
-                <span key={item} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/10 text-xs font-semibold text-white/90">
-                  {item}
-                </span>
-              ))}
-            </div>
+            <SocialIconRow className="mt-5" />
           </div>
 
           {footerColumns.map((column) => (
@@ -164,16 +229,7 @@ const Footer = () => {
             <p className="mt-4 text-[13px] leading-6 text-slate-300">
               Subscribe to get updates on new arrivals and exclusive offers.
             </p>
-            <form className="mt-5 flex overflow-hidden rounded-full border border-white/10 bg-white shadow-sm">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="min-w-0 flex-1 px-4 py-2.5 text-[13px] text-gray-700 outline-none"
-              />
-              <button type="submit" className="bg-orange-600 px-4 text-[13px] font-semibold text-white transition hover:bg-orange-700">
-                Subscribe
-              </button>
-            </form>
+            <NewsletterForm idPrefix="desktop-" />
             <div className="mt-6">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Payment</p>
               <div className="mt-2 flex flex-wrap gap-2">

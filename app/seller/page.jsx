@@ -426,7 +426,7 @@ const SellerOverviewSkeleton = () => (
 );
 
 const AddProductInner = () => {
-  const { getToken, router, authReady, user, formatCurrency, formatCompactCurrency, isSeller, resolvedRole, refreshAccessState } = useAppContext();
+  const { getToken, router, authReady, user, formatCurrency, formatCompactCurrency, isSeller, isAdmin, resolvedRole, refreshAccessState } = useAppContext();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
   const isEditMode = Boolean(editId);
@@ -442,6 +442,8 @@ const AddProductInner = () => {
   const [location, setLocation] = useState('');
   const [sellerContact, setSellerContact] = useState('');
   const [sellerLocation, setSellerLocation] = useState('');
+  const [tags, setTags] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -469,7 +471,31 @@ const AddProductInner = () => {
     setLocation('');
     setSellerContact('');
     setSellerLocation('');
+    setTags([]);
   };
+
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    let isMounted = true;
+    (async () => {
+      try {
+        const token = await getToken();
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const { data } = await axios.get('/api/admin/tags', { headers });
+        if (isMounted && data.success) {
+          setAvailableTags(data.tags);
+        }
+      } catch {
+        // Non-fatal: tag assignment simply won't be available for this session.
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
   const fetchProductDetails = async () => {
     if (!editId) {
@@ -496,6 +522,7 @@ const AddProductInner = () => {
         setLocation(product.location || '');
         setSellerContact(product.sellerContact || '');
         setSellerLocation(product.sellerLocation || '');
+        setTags(Array.isArray(product.tags) ? product.tags : []);
       } else {
         toast.error(data.message || 'Failed to load product details');
       }
@@ -575,6 +602,9 @@ const AddProductInner = () => {
     formData.append('location', location);
     formData.append('sellerContact', sellerContact);
     formData.append('sellerLocation', sellerLocation);
+    if (isAdmin) {
+      formData.append('tags', JSON.stringify(tags));
+    }
 
     if (isEditMode) {
       formData.append('productId', editId);
@@ -1306,6 +1336,33 @@ const AddProductInner = () => {
                     ))}
                   </select>
                 </div>
+
+                {isAdmin && availableTags.length > 0 ? (
+                  <div className="flex flex-col gap-1 lg:col-span-2">
+                    <span className="text-base font-medium text-gray-900">Tags</span>
+                    <div className="flex flex-wrap gap-2">
+                      {availableTags.map((tag) => {
+                        const selected = tags.includes(tag.slug);
+                        return (
+                          <button
+                            type="button"
+                            key={tag._id}
+                            onClick={() => setTags((prev) => (
+                              selected ? prev.filter((slug) => slug !== tag.slug) : [...prev, tag.slug]
+                            ))}
+                            className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                              selected
+                                ? 'border-orange-500 bg-orange-50 text-orange-700'
+                                : 'border-gray-200 text-gray-600 hover:border-orange-200'
+                            }`}
+                          >
+                            {tag.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="flex flex-col gap-1 lg:col-span-2">
                   <label className="text-base font-medium text-gray-900" htmlFor="product-description">

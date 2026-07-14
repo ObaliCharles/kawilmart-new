@@ -3,6 +3,7 @@ import {
   createMonthlySellerInvoices,
   createUserOrder,
   inngest,
+  syncBannerStatuses,
   syncUserCreation,
   syncUserDeletion,
   syncUserUpdation,
@@ -17,5 +18,6 @@ export const { GET, POST, PUT } = serve({
     syncUserDeletion,
     createUserOrder,
     createMonthlySellerInvoices,
+    syncBannerStatuses,
   ],
 });

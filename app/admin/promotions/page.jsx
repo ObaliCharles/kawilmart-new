@@ -8,70 +8,7 @@ import { useAppContext } from '@/context/AppContext';
 import { defaultSiteContent, resolveSiteContent } from '@/lib/defaultSiteContent';
 import { homeCategoryValues, getCategoryMeta } from '@/lib/marketplaceCategories';
 import { PromotionsPageSkeleton } from '@/components/dashboard/DashboardSkeletons';
-
-const emptyHeroForm = {
-    title: '',
-    offer: '',
-    primaryButtonText: 'Shop Now',
-    secondaryButtonText: 'Explore Deals',
-    linkType: 'category',
-    category: '',
-    storeId: '',
-    productId: '',
-    primaryHref: '',
-    secondaryHref: '/all-products?filter=flash',
-    imageUrl: '',
-    imageFile: null,
-};
-
-const emptyFeaturedForm = {
-    title: '',
-    description: '',
-    buttonText: 'Buy now',
-    linkType: 'category',
-    category: '',
-    storeId: '',
-    productId: '',
-    href: '',
-    imageUrl: '',
-    imageFile: null,
-};
-
-const emptyPromoForm = {
-    title: '',
-    description: '',
-    buttonText: 'Get offer',
-    linkType: 'category',
-    category: '',
-    storeId: '',
-    productId: '',
-    href: '/all-products?filter=flash',
-    imageUrl: '',
-    imageFile: null,
-};
-
-const emptyCategoryBannerForm = {
-    title: '',
-    description: '',
-    buttonText: 'Shop now',
-    placementCategory: '',
-    linkType: 'category',
-    category: '',
-    storeId: '',
-    productId: '',
-    href: '',
-    imageUrl: '',
-    imageFile: null,
-};
-
-const emptyBrandShowcaseForm = {
-    title: '',
-    brand: '',
-    description: '',
-    placementCategory: '',
-    imageUrl: '',
-    imageFile: null,
-};
+import BannerImageUploader from '@/components/admin/BannerImageUploader';
 
 const linkTypeOptions = [
     { value: 'category', label: 'Category' },
@@ -80,7 +17,36 @@ const linkTypeOptions = [
     { value: 'custom', label: 'Custom URL' },
 ];
 
-const getTargetHref = (form, hrefKey = 'href') => {
+const bannerTypeConfigs = [
+    { type: 'hero', label: 'Hero Slides', description: 'Large homepage slides linked to a product, category, store, or URL.', aspect: 21 / 9, hasSecondaryCta: true, hasDescription: false, hasOffer: true, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Primary button text', defaultCta: 'Shop Now' },
+    { type: 'featured', label: 'Featured Cards', description: 'Cards shown beneath popular products.', aspect: 4 / 3, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'Buy now' },
+    { type: 'promo', label: 'Homepage Promo Offers', description: 'Right-side hero promotion images that rotate on the storefront.', aspect: 4 / 3, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'Get offer' },
+    { type: 'sidebarPromo', label: 'Sidebar Promo Banners', description: 'Small promo banners shown in sidebar placements.', aspect: 1, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'View offer' },
+    { type: 'category', label: 'Category Page Banners', description: 'Banner shown on category pages, plus what it opens.', aspect: 16 / 9, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: true, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'Shop now' },
+    { type: 'brandShowcase', label: 'Brand Showcases', description: 'Brand cards that open the matching brand products list.', aspect: 1, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: true, hasBrand: true, hasTarget: false, ctaLabel: null, defaultCta: '' },
+];
+
+const configByType = Object.fromEntries(bannerTypeConfigs.map((config) => [config.type, config]));
+
+const emptyBannerForm = (type) => ({
+    title: '',
+    subtitle: '',
+    ctaText: configByType[type]?.defaultCta || '',
+    secondaryCtaText: 'Explore Deals',
+    linkType: 'category',
+    category: '',
+    storeId: '',
+    productId: '',
+    href: '',
+    secondaryHref: '/all-products?filter=flash',
+    brand: '',
+    placementCategory: '',
+    startDate: '',
+    endDate: '',
+    isDraft: false,
+});
+
+const getTargetHref = (form) => {
     if (form.linkType === 'category' && form.category) {
         return `/all-products?category=${encodeURIComponent(form.category)}`;
     }
@@ -90,33 +56,19 @@ const getTargetHref = (form, hrefKey = 'href') => {
     if (form.linkType === 'product') {
         return '';
     }
-    return form[hrefKey] || '';
+    return form.href || '';
 };
 
-const inferLinkType = (item, hrefKey = 'href') => {
-    if (item.linkType) return item.linkType;
-    if (item.productId) return 'product';
-    const href = item[hrefKey] || '';
+const inferLinkType = (banner) => {
+    if (banner.linkType) return banner.linkType;
+    if (banner.productId) return 'product';
+    const href = banner.href || '';
     if (href.startsWith('/store/')) return 'store';
     if (href.includes('category=')) return 'category';
     return 'custom';
 };
 
-const decodeCategoryFromHref = (href = '') => {
-    try {
-        const search = href.includes('?') ? href.slice(href.indexOf('?')) : '';
-        return new URLSearchParams(search).get('category') || '';
-    } catch {
-        return '';
-    }
-};
-
-const decodeStoreFromHref = (href = '') => {
-    if (!href.startsWith('/store/')) return '';
-    return decodeURIComponent(href.replace('/store/', '').split('?')[0] || '');
-};
-
-const TargetSelector = ({ label = 'Click target', form, setForm, hrefKey = 'href', products, stores }) => {
+const TargetSelector = ({ label = 'Click target', form, setForm, products, stores }) => {
     const linkType = form.linkType || 'custom';
     const setLinkType = (nextType) => {
         setForm((prev) => ({
@@ -125,7 +77,7 @@ const TargetSelector = ({ label = 'Click target', form, setForm, hrefKey = 'href
             productId: nextType === 'product' ? prev.productId : '',
             category: nextType === 'category' ? prev.category : '',
             storeId: nextType === 'store' ? prev.storeId : '',
-            [hrefKey]: nextType === 'custom' ? prev[hrefKey] : getTargetHref({ ...prev, linkType: nextType }, hrefKey),
+            href: nextType === 'custom' ? prev.href : getTargetHref({ ...prev, linkType: nextType }),
         }));
     };
 
@@ -151,7 +103,7 @@ const TargetSelector = ({ label = 'Click target', form, setForm, hrefKey = 'href
                         category: e.target.value,
                         productId: '',
                         storeId: '',
-                        [hrefKey]: e.target.value ? `/all-products?category=${encodeURIComponent(e.target.value)}` : '',
+                        href: e.target.value ? `/all-products?category=${encodeURIComponent(e.target.value)}` : '',
                     }))}
                     className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
                 >
@@ -169,7 +121,7 @@ const TargetSelector = ({ label = 'Click target', form, setForm, hrefKey = 'href
                         storeId: e.target.value,
                         productId: '',
                         category: '',
-                        [hrefKey]: e.target.value ? `/store/${encodeURIComponent(e.target.value)}` : '',
+                        href: e.target.value ? `/store/${encodeURIComponent(e.target.value)}` : '',
                     }))}
                     className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
                 >
@@ -187,7 +139,7 @@ const TargetSelector = ({ label = 'Click target', form, setForm, hrefKey = 'href
                         productId: e.target.value,
                         category: '',
                         storeId: '',
-                        [hrefKey]: '',
+                        href: '',
                     }))}
                     className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
                 >
@@ -201,13 +153,13 @@ const TargetSelector = ({ label = 'Click target', form, setForm, hrefKey = 'href
                 <input
                     type="text"
                     placeholder="Custom URL"
-                    value={form[hrefKey]}
+                    value={form.href}
                     onChange={(e) => setForm((prev) => ({
                         ...prev,
                         productId: '',
                         category: '',
                         storeId: '',
-                        [hrefKey]: e.target.value,
+                        href: e.target.value,
                     }))}
                     className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
                 />
@@ -246,31 +198,6 @@ const FormInput = ({ placeholder, value, onChange, type = 'text', textarea = fal
     );
 };
 
-const ImageUpload = ({ imageUrl, imageFile, onUrlChange, onFileChange, previewHeight = 'h-40' }) => (
-    <div className="space-y-3">
-        <div className="flex items-center gap-3">
-            <div className="flex-1">
-                <FormInput placeholder="Image URL" value={imageUrl} onChange={onUrlChange} />
-            </div>
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-2.5 text-xs font-medium text-gray-600 transition hover:border-orange-300 hover:bg-orange-50">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                </svg>
-                Upload
-                <input type="file" accept="image/*" onChange={onFileChange} className="hidden" />
-            </label>
-        </div>
-        {imageFile && (
-            <p className="text-xs text-gray-500">Selected: {imageFile.name}</p>
-        )}
-        {!imageFile && imageUrl && (
-            <div className={`relative ${previewHeight} w-full overflow-hidden rounded-lg bg-gray-50`}>
-                <Image src={imageUrl} alt="Preview" width={640} height={360} className="h-full w-full object-cover" />
-            </div>
-        )}
-    </div>
-);
-
 const SectionCard = ({ title, description, children, className = '' }) => (
     <div className={`rounded-xl border border-gray-200 bg-white shadow-sm ${className}`}>
         <div className="border-b border-gray-100 px-5 py-4">
@@ -283,7 +210,7 @@ const SectionCard = ({ title, description, children, className = '' }) => (
     </div>
 );
 
-const ActionButton = ({ onClick, variant = 'primary', children, disabled }) => {
+const ActionButton = ({ onClick, variant = 'primary', children, disabled, className = '' }) => {
     const base = "inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50";
     const styles = {
         primary: "bg-orange-600 text-white hover:bg-orange-700 shadow-sm",
@@ -292,7 +219,7 @@ const ActionButton = ({ onClick, variant = 'primary', children, disabled }) => {
         edit: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200",
     };
     return (
-        <button type="button" onClick={onClick} disabled={disabled} className={`${base} ${styles[variant]}`}>
+        <button type="button" onClick={onClick} disabled={disabled} className={`${base} ${styles[variant]} ${className}`}>
             {children}
         </button>
     );
@@ -304,37 +231,54 @@ const ContentCard = ({ children, className = '' }) => (
     </div>
 );
 
+const statusBadgeStyles = {
+    draft: 'bg-gray-100 text-gray-600',
+    scheduled: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
+    active: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+    expired: 'bg-gray-100 text-gray-500 ring-1 ring-gray-200',
+};
+
+const computeBannerLifecycleStatus = (banner, now = new Date()) => {
+    if (banner.status === 'draft') return 'draft';
+    if (banner.startDate && now < new Date(banner.startDate)) return 'scheduled';
+    if (banner.endDate && now > new Date(banner.endDate)) return 'expired';
+    return 'active';
+};
+
+const StatusBadge = ({ banner }) => {
+    const status = computeBannerLifecycleStatus(banner);
+    return (
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${statusBadgeStyles[status]}`}>
+            {status}
+        </span>
+    );
+};
+
 export default function AdminPromotions() {
     const { getToken, user, authReady, formatCurrency } = useAppContext();
     const [products, setProducts] = useState([]);
+    const [banners, setBanners] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [promotionData, setPromotionData] = useState({
         flashDealEndDate: '',
         promotionType: 'none'
     });
-    const [siteContent, setSiteContent] = useState(resolveSiteContent(null));
-    const [editingHeroId, setEditingHeroId] = useState(null);
-    const [heroForm, setHeroForm] = useState(emptyHeroForm);
-    const [editingFeaturedId, setEditingFeaturedId] = useState(null);
-    const [featuredForm, setFeaturedForm] = useState(emptyFeaturedForm);
-    const [editingBannerId, setEditingBannerId] = useState(null);
-    const [bannerForm, setBannerForm] = useState({
-        ...defaultSiteContent.promoBanner,
-        imageFile: null,
-    });
-    const [editingCategoryBannerId, setEditingCategoryBannerId] = useState(null);
-    const [categoryBannerForm, setCategoryBannerForm] = useState({
-        ...emptyCategoryBannerForm,
-    });
-    const [editingBrandShowcaseId, setEditingBrandShowcaseId] = useState(null);
-    const [brandShowcaseForm, setBrandShowcaseForm] = useState({
-        ...emptyBrandShowcaseForm,
-    });
     const [newsletterForm, setNewsletterForm] = useState(defaultSiteContent.newsletter);
     const [savingContent, setSavingContent] = useState(false);
-    const featuredCards = Array.isArray(siteContent?.featuredCards) ? siteContent.featuredCards : [];
-    const promoBanners = Array.isArray(siteContent?.promoBanners) ? siteContent.promoBanners : [];
+    const [activeBannerType, setActiveBannerType] = useState('hero');
+    const [editingBannerId, setEditingBannerId] = useState(null);
+    const [bannerForm, setBannerForm] = useState(emptyBannerForm('hero'));
+    const [bannerImageFile, setBannerImageFile] = useState(null);
+    const [bannerImagePreview, setBannerImagePreview] = useState('');
+    const [existingBannerImageUrl, setExistingBannerImageUrl] = useState('');
+
+    const activeConfig = configByType[activeBannerType];
+    const bannersForActiveType = useMemo(
+        () => banners.filter((banner) => banner.type === activeBannerType).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)),
+        [banners, activeBannerType]
+    );
+
     const stores = useMemo(() => {
         const storeMap = new Map();
         products.forEach((product) => {
@@ -348,13 +292,12 @@ export default function AdminPromotions() {
         return Array.from(storeMap.values()).sort((left, right) => left.name.localeCompare(right.name));
     }, [products]);
 
-    const applySiteContent = (content) => {
-        const resolved = resolveSiteContent(content);
-        setSiteContent(resolved);
-        setBannerForm({ ...emptyPromoForm, imageFile: null });
-        setCategoryBannerForm({ ...emptyCategoryBannerForm, imageFile: null });
-        setBrandShowcaseForm({ ...emptyBrandShowcaseForm, imageFile: null });
-        setNewsletterForm(resolved.newsletter);
+    const resetBannerForm = () => {
+        setEditingBannerId(null);
+        setBannerForm(emptyBannerForm(activeBannerType));
+        setBannerImageFile(null);
+        setBannerImagePreview('');
+        setExistingBannerImageUrl('');
     };
 
     const fetchAdminData = async () => {
@@ -362,14 +305,17 @@ export default function AdminPromotions() {
             setLoading(true);
             const token = await getToken();
             const headers = { Authorization: `Bearer ${token}` };
-            const [{ data: productsData }, { data: contentData }] = await Promise.all([
+            const [{ data: productsData }, { data: contentData }, { data: bannersData }] = await Promise.all([
                 axios.get('/api/product/list?limit=100', { headers }),
                 axios.get('/api/admin/site-content', { headers }),
+                axios.get('/api/admin/banners', { headers }),
             ]);
             if (productsData.success) setProducts(productsData.products || []);
             else toast.error(productsData.message || 'Failed to fetch products');
-            if (contentData.success) applySiteContent(contentData.content);
+            if (contentData.success) setNewsletterForm(resolveSiteContent(contentData.content).newsletter);
             else toast.error(contentData.message || 'Failed to fetch homepage content');
+            if (bannersData.success) setBanners(bannersData.banners || []);
+            else toast.error(bannersData.message || 'Failed to fetch banners');
         } catch (error) {
             toast.error(error?.response?.data?.message || error.message || 'Failed to load admin content');
         } finally {
@@ -381,6 +327,12 @@ export default function AdminPromotions() {
         if (authReady && user) void fetchAdminData();
     }, [authReady, user]);
 
+    useEffect(() => {
+        resetBannerForm();
+        // Switching tabs should clear any in-progress edit for the previous type.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeBannerType]);
+
     const productName = (productId) => {
         const product = products.find((item) => item._id === productId);
         return product?.name || 'No product linked';
@@ -391,11 +343,11 @@ export default function AdminPromotions() {
         return store?.name || 'No store linked';
     };
 
-    const targetLabel = (item, hrefKey = 'href') => {
-        if (item.linkType === 'category' && item.category) return `Category: ${getCategoryMeta(item.category).label}`;
-        if (item.linkType === 'store' && item.storeId) return `Store: ${storeName(item.storeId)}`;
-        if (item.productId) return `Product: ${productName(item.productId)}`;
-        return item[hrefKey] || 'None';
+    const targetLabel = (banner) => {
+        if (banner.linkType === 'category' && banner.category) return `Category: ${getCategoryMeta(banner.category).label}`;
+        if (banner.linkType === 'store' && banner.storeId) return `Store: ${storeName(banner.storeId)}`;
+        if (banner.productId) return `Product: ${productName(banner.productId)}`;
+        return banner.href || 'None';
     };
 
     const updatePromotion = async () => {
@@ -444,157 +396,19 @@ export default function AdminPromotions() {
         }
     };
 
-    const postSiteContent = async (action, values, imageFile) => {
+    const postSiteContent = async (action, values) => {
         const token = await getToken();
         const formData = new FormData();
         formData.append('action', action);
         Object.entries(values).forEach(([key, value]) => {
             if (value !== undefined && value !== null) formData.append(key, value);
         });
-        if (imageFile) formData.append('image', imageFile);
         const { data } = await axios.post('/api/admin/site-content', formData, {
             headers: { Authorization: `Bearer ${token}` }
         });
         if (!data.success) throw new Error(data.message || 'Failed to save content');
-        applySiteContent(data.content);
+        setNewsletterForm(resolveSiteContent(data.content).newsletter);
         return data;
-    };
-
-    const saveHeroSlide = async () => {
-        if (!heroForm.title.trim()) { toast.error('Please add a hero title'); return; }
-        try {
-            setSavingContent(true);
-            await postSiteContent('upsertHeroSlide', {
-                itemId: editingHeroId || '', title: heroForm.title, offer: heroForm.offer,
-                primaryButtonText: heroForm.primaryButtonText, secondaryButtonText: heroForm.secondaryButtonText,
-                linkType: heroForm.linkType, category: heroForm.category, storeId: heroForm.storeId,
-                productId: heroForm.productId, primaryHref: heroForm.primaryHref, secondaryHref: heroForm.secondaryHref,
-                imageUrl: heroForm.imageUrl,
-            }, heroForm.imageFile);
-            toast.success(editingHeroId ? 'Hero slide updated' : 'Hero slide added');
-            setEditingHeroId(null);
-            setHeroForm(emptyHeroForm);
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
-    };
-
-    const deleteHeroSlide = async (itemId) => {
-        try {
-            setSavingContent(true);
-            await postSiteContent('deleteHeroSlide', { itemId });
-            toast.success('Hero slide deleted');
-            if (editingHeroId === itemId) { setEditingHeroId(null); setHeroForm(emptyHeroForm); }
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
-    };
-
-    const saveFeaturedCard = async () => {
-        if (!featuredForm.title.trim()) { toast.error('Please add a featured card title'); return; }
-        try {
-            setSavingContent(true);
-            await postSiteContent('upsertFeaturedCard', {
-                itemId: editingFeaturedId || '', title: featuredForm.title, description: featuredForm.description,
-                buttonText: featuredForm.buttonText, linkType: featuredForm.linkType, category: featuredForm.category,
-                storeId: featuredForm.storeId, productId: featuredForm.productId, href: featuredForm.href,
-                imageUrl: featuredForm.imageUrl,
-            }, featuredForm.imageFile);
-            toast.success(editingFeaturedId ? 'Featured card updated' : 'Featured card added');
-            setEditingFeaturedId(null);
-            setFeaturedForm(emptyFeaturedForm);
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
-    };
-
-    const deleteFeaturedCard = async (itemId) => {
-        try {
-            setSavingContent(true);
-            await postSiteContent('deleteFeaturedCard', { itemId });
-            toast.success('Featured card deleted');
-            if (editingFeaturedId === itemId) { setEditingFeaturedId(null); setFeaturedForm(emptyFeaturedForm); }
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
-    };
-
-    const saveBanner = async () => {
-        if (!bannerForm.title.trim()) { toast.error('Please add a promo offer title'); return; }
-        try {
-            setSavingContent(true);
-            await postSiteContent('upsertPromoBanner', {
-                itemId: editingBannerId || '', title: bannerForm.title, description: bannerForm.description,
-                buttonText: bannerForm.buttonText, linkType: bannerForm.linkType, category: bannerForm.category,
-                storeId: bannerForm.storeId, productId: bannerForm.productId, href: bannerForm.href,
-                imageUrl: bannerForm.imageUrl,
-            }, bannerForm.imageFile);
-            toast.success(editingBannerId ? 'Promo offer updated' : 'Promo offer added');
-            setEditingBannerId(null);
-            setBannerForm(emptyPromoForm);
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
-    };
-
-    const saveCategoryBanner = async () => {
-        if (!categoryBannerForm.title.trim()) { toast.error('Please add a category banner title'); return; }
-        if (!categoryBannerForm.placementCategory) { toast.error('Please choose where this banner appears'); return; }
-        try {
-            setSavingContent(true);
-            await postSiteContent('upsertCategoryBanner', {
-                itemId: editingCategoryBannerId || '', title: categoryBannerForm.title, description: categoryBannerForm.description,
-                buttonText: categoryBannerForm.buttonText, placementCategory: categoryBannerForm.placementCategory,
-                linkType: categoryBannerForm.linkType, category: categoryBannerForm.category, storeId: categoryBannerForm.storeId,
-                productId: categoryBannerForm.productId, href: categoryBannerForm.href, imageUrl: categoryBannerForm.imageUrl,
-            }, categoryBannerForm.imageFile);
-            toast.success(editingCategoryBannerId ? 'Category banner updated' : 'Category banner added');
-            setEditingCategoryBannerId(null);
-            setCategoryBannerForm(emptyCategoryBannerForm);
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
-    };
-
-    const saveBrandShowcase = async () => {
-        if (!brandShowcaseForm.brand.trim()) { toast.error('Please add a brand name'); return; }
-        if (!brandShowcaseForm.placementCategory) { toast.error('Please choose where this brand card appears'); return; }
-        try {
-            setSavingContent(true);
-            await postSiteContent('upsertBrandShowcase', {
-                itemId: editingBrandShowcaseId || '', title: brandShowcaseForm.title, brand: brandShowcaseForm.brand,
-                description: brandShowcaseForm.description, placementCategory: brandShowcaseForm.placementCategory,
-                imageUrl: brandShowcaseForm.imageUrl,
-            }, brandShowcaseForm.imageFile);
-            toast.success(editingBrandShowcaseId ? 'Brand showcase updated' : 'Brand showcase added');
-            setEditingBrandShowcaseId(null);
-            setBrandShowcaseForm(emptyBrandShowcaseForm);
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
-    };
-
-    const deleteBrandShowcase = async (itemId) => {
-        try {
-            setSavingContent(true);
-            await postSiteContent('deleteBrandShowcase', { itemId });
-            toast.success('Brand showcase deleted');
-            if (editingBrandShowcaseId === itemId) { setEditingBrandShowcaseId(null); setBrandShowcaseForm(emptyBrandShowcaseForm); }
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
-    };
-
-    const deleteCategoryBanner = async (itemId) => {
-        try {
-            setSavingContent(true);
-            await postSiteContent('deleteCategoryBanner', { itemId });
-            toast.success('Category banner deleted');
-            if (editingCategoryBannerId === itemId) { setEditingCategoryBannerId(null); setCategoryBannerForm(emptyCategoryBannerForm); }
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
-    };
-
-    const deleteBanner = async (itemId) => {
-        try {
-            setSavingContent(true);
-            await postSiteContent('deletePromoBanner', { itemId });
-            toast.success('Promo offer deleted');
-            if (editingBannerId === itemId) { setEditingBannerId(null); setBannerForm(emptyPromoForm); }
-        } catch (error) { toast.error(error.message); }
-        finally { setSavingContent(false); }
     };
 
     const saveNewsletter = async () => {
@@ -607,53 +421,113 @@ export default function AdminPromotions() {
         finally { setSavingContent(false); }
     };
 
-    const startEditingHero = (slide) => {
-        setEditingHeroId(slide._id);
-        setHeroForm({
-            title: slide.title || '', offer: slide.offer || '',
-            primaryButtonText: slide.primaryButtonText || 'Shop Now', secondaryButtonText: slide.secondaryButtonText || 'Explore Deals',
-            linkType: slide.linkType || inferLinkType(slide, 'primaryHref'),
-            category: slide.category || decodeCategoryFromHref(slide.primaryHref),
-            storeId: slide.storeId || decodeStoreFromHref(slide.primaryHref),
-            productId: slide.productId || '', primaryHref: slide.primaryHref || '',
-            secondaryHref: slide.secondaryHref || '/all-products?filter=flash',
-            imageUrl: slide.imageUrl || '', imageFile: null,
-        });
+    const saveBanner = async () => {
+        if (!bannerForm.title.trim() && activeBannerType !== 'brandShowcase') {
+            toast.error('Please add a title');
+            return;
+        }
+        if (activeBannerType === 'brandShowcase' && !bannerForm.brand.trim()) {
+            toast.error('Please add a brand name');
+            return;
+        }
+        if (activeConfig.hasPlacement && !bannerForm.placementCategory) {
+            toast.error('Please choose where this banner appears');
+            return;
+        }
+
+        try {
+            setSavingContent(true);
+            const token = await getToken();
+            const formData = new FormData();
+            formData.append('type', activeBannerType);
+            formData.append('title', bannerForm.title);
+            formData.append('subtitle', bannerForm.subtitle);
+            formData.append('linkType', bannerForm.linkType);
+            formData.append('category', bannerForm.category);
+            formData.append('storeId', bannerForm.storeId);
+            formData.append('productId', bannerForm.productId);
+
+            if (activeBannerType === 'brandShowcase') {
+                formData.append('brand', bannerForm.brand);
+                formData.append('href', bannerForm.brand ? `/all-products?brand=${encodeURIComponent(bannerForm.brand)}` : '');
+            } else {
+                formData.append('href', bannerForm.href);
+                formData.append('ctaText', bannerForm.ctaText);
+            }
+
+            if (activeConfig.hasSecondaryCta) {
+                formData.append('secondaryCtaText', bannerForm.secondaryCtaText);
+                formData.append('secondaryHref', bannerForm.secondaryHref);
+            }
+            if (activeConfig.hasPlacement) {
+                formData.append('placementCategory', bannerForm.placementCategory);
+            }
+
+            formData.append('status', bannerForm.isDraft ? 'draft' : 'active');
+            formData.append('startDate', bannerForm.startDate ? new Date(bannerForm.startDate).toISOString() : '');
+            formData.append('endDate', bannerForm.endDate ? new Date(bannerForm.endDate).toISOString() : '');
+
+            if (bannerImageFile) {
+                formData.append('image', bannerImageFile);
+            }
+
+            const headers = { Authorization: `Bearer ${token}` };
+            const { data } = editingBannerId
+                ? await axios.patch(`/api/admin/banners/${editingBannerId}`, formData, { headers })
+                : await axios.post('/api/admin/banners', formData, { headers });
+
+            if (!data.success) throw new Error(data.message || 'Failed to save banner');
+
+            toast.success(editingBannerId ? 'Banner updated' : 'Banner added');
+            resetBannerForm();
+            await fetchAdminData();
+        } catch (error) {
+            toast.error(error?.response?.data?.message || error.message || 'Failed to save banner');
+        } finally {
+            setSavingContent(false);
+        }
     };
 
-    const startEditingFeatured = (card) => {
-        if (!card?._id) return;
-        setEditingFeaturedId(card._id);
-        setFeaturedForm({
-            title: card.title || '', description: card.description || '', buttonText: card.buttonText || 'Buy now',
-            linkType: card.linkType || inferLinkType(card, 'href'),
-            category: card.category || decodeCategoryFromHref(card.href),
-            storeId: card.storeId || decodeStoreFromHref(card.href),
-            productId: card.productId || '', href: card.href || '', imageUrl: card.imageUrl || '', imageFile: null,
-        });
+    const deleteBannerItem = async (id) => {
+        try {
+            setSavingContent(true);
+            const token = await getToken();
+            const { data } = await axios.delete(`/api/admin/banners/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!data.success) throw new Error(data.message || 'Failed to delete banner');
+            toast.success('Banner deleted');
+            if (editingBannerId === id) resetBannerForm();
+            setBanners((prev) => prev.filter((banner) => banner._id !== id));
+        } catch (error) {
+            toast.error(error?.response?.data?.message || error.message || 'Failed to delete banner');
+        } finally {
+            setSavingContent(false);
+        }
     };
 
     const startEditingBanner = (banner) => {
-        if (!banner?._id) return;
         setEditingBannerId(banner._id);
         setBannerForm({
-            title: banner.title || '', description: banner.description || '', buttonText: banner.buttonText || 'Get offer',
-            linkType: banner.linkType || inferLinkType(banner, 'href'),
-            category: banner.category || decodeCategoryFromHref(banner.href),
-            storeId: banner.storeId || decodeStoreFromHref(banner.href),
-            productId: banner.productId || '', href: banner.href || '/all-products?filter=flash',
-            imageUrl: banner.imageUrl || '', imageFile: null,
+            title: banner.title || '',
+            subtitle: banner.subtitle || '',
+            ctaText: banner.ctaText || activeConfig.defaultCta,
+            secondaryCtaText: banner.secondaryCtaText || 'Explore Deals',
+            linkType: banner.linkType || inferLinkType(banner),
+            category: banner.category || '',
+            storeId: banner.storeId || '',
+            productId: banner.productId || '',
+            href: banner.href || '',
+            secondaryHref: banner.secondaryHref || '/all-products?filter=flash',
+            brand: banner.brand || '',
+            placementCategory: banner.placementCategory || '',
+            startDate: toDateTimeLocal(banner.startDate),
+            endDate: toDateTimeLocal(banner.endDate),
+            isDraft: banner.status === 'draft',
         });
-    };
-
-    const startEditingCategoryBanner = (banner) => {
-        setEditingCategoryBannerId(banner._id);
-        setCategoryBannerForm({
-            title: banner.title || '', description: banner.description || '', buttonText: banner.buttonText || 'Shop now',
-            placementCategory: banner.placementCategory || '', linkType: banner.linkType || 'category',
-            category: banner.category || '', storeId: banner.storeId || '', productId: banner.productId || '',
-            href: banner.href || '', imageUrl: banner.imageUrl || '', imageFile: null,
-        });
+        setBannerImageFile(null);
+        setBannerImagePreview('');
+        setExistingBannerImageUrl(banner.imageUrl || '');
     };
 
     if (loading) return <PromotionsPageSkeleton />;
@@ -664,7 +538,7 @@ export default function AdminPromotions() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Promotions & Content</h1>
-                    <p className="mt-1 text-sm text-gray-500">Manage flash deals, hero slides, banners, and homepage content.</p>
+                    <p className="mt-1 text-sm text-gray-500">Manage flash deals, banners, and homepage content.</p>
                 </div>
             </div>
 
@@ -708,285 +582,140 @@ export default function AdminPromotions() {
                 </div>
             </SectionCard>
 
-            {/* Hero Slides */}
-            <SectionCard title="Hero Slides" description="Add, edit, or remove the large homepage slides and link them to a product or fallback URL.">
-                <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {siteContent.heroSlides.map((slide) => (
-                            <ContentCard key={slide._id}>
-                                {slide.imageUrl && (
-                                    <div className="mb-3 h-40 w-full overflow-hidden rounded-lg bg-gray-50">
-                                        <Image src={slide.imageUrl} alt={slide.title} width={640} height={360} className="h-full w-full object-cover" />
-                                    </div>
-                                )}
-                                <div className="mb-3">
-                                    {slide.offer && <p className="text-[11px] font-semibold uppercase tracking-wider text-orange-600">{slide.offer}</p>}
-                                    <h3 className="mt-0.5 font-semibold text-gray-900">{slide.title}</h3>
-                                    <p className="mt-1 text-xs text-gray-500">Primary: {slide.productId ? productName(slide.productId) : (slide.primaryHref || 'None')}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <ActionButton variant="edit" onClick={() => startEditingHero(slide)}>Edit</ActionButton>
-                                    <ActionButton variant="danger" onClick={() => void deleteHeroSlide(slide._id)}>Delete</ActionButton>
-                                </div>
-                            </ContentCard>
-                        ))}
-                    </div>
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h3 className="font-bold text-gray-900">{editingHeroId ? 'Edit Hero Slide' : 'Add Hero Slide'}</h3>
-                            {editingHeroId && (
-                                <button onClick={() => { setEditingHeroId(null); setHeroForm(emptyHeroForm); }} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
-                            )}
-                        </div>
-                        <div className="space-y-3">
-                            <FormInput placeholder="Offer badge text" value={heroForm.offer} onChange={(e) => setHeroForm((prev) => ({ ...prev, offer: e.target.value }))} />
-                            <FormInput placeholder="Hero title" value={heroForm.title} onChange={(e) => setHeroForm((prev) => ({ ...prev, title: e.target.value }))} textarea />
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                <FormInput placeholder="Primary button text" value={heroForm.primaryButtonText} onChange={(e) => setHeroForm((prev) => ({ ...prev, primaryButtonText: e.target.value }))} />
-                                <FormInput placeholder="Secondary button text" value={heroForm.secondaryButtonText} onChange={(e) => setHeroForm((prev) => ({ ...prev, secondaryButtonText: e.target.value }))} />
-                            </div>
-                            <select value={heroForm.productId} onChange={(e) => setHeroForm((prev) => ({ ...prev, productId: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200">
-                                <option value="">Link primary CTA to fallback URL</option>
-                                {products.map((product) => (
-                                    <option key={product._id} value={product._id}>{product.name}</option>
-                                ))}
-                            </select>
-                            <TargetSelector label="Primary CTA target" form={heroForm} setForm={setHeroForm} hrefKey="primaryHref" products={products} stores={stores} />
-                            <FormInput placeholder="Secondary URL" value={heroForm.secondaryHref} onChange={(e) => setHeroForm((prev) => ({ ...prev, secondaryHref: e.target.value }))} />
-                            <ImageUpload
-                                imageUrl={heroForm.imageUrl}
-                                imageFile={heroForm.imageFile}
-                                onUrlChange={(e) => setHeroForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                                onFileChange={(e) => setHeroForm((prev) => ({ ...prev, imageFile: e.target.files?.[0] || null }))}
-                            />
-                            <ActionButton onClick={() => void saveHeroSlide()} disabled={savingContent} variant="primary" className="w-full">
-                                {savingContent ? 'Saving...' : (editingHeroId ? 'Update Hero Slide' : 'Add Hero Slide')}
-                            </ActionButton>
-                        </div>
-                    </div>
+            {/* Banners */}
+            <SectionCard title="Banners" description="Manage every homepage and category banner from one place — with scheduling and drafts.">
+                <div className="mb-5 flex flex-wrap gap-2 border-b border-gray-100 pb-4">
+                    {bannerTypeConfigs.map((config) => (
+                        <button
+                            key={config.type}
+                            type="button"
+                            onClick={() => setActiveBannerType(config.type)}
+                            className={`rounded-full px-3.5 py-2 text-xs font-semibold transition ${
+                                activeBannerType === config.type
+                                    ? 'bg-orange-600 text-white shadow-sm'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                        >
+                            {config.label}
+                        </button>
+                    ))}
                 </div>
-            </SectionCard>
+                <p className="mb-4 text-sm text-gray-500">{activeConfig.description}</p>
 
-            {/* Featured Cards */}
-            <SectionCard title="Featured Cards" description="Control the three featured cards shown beneath popular products.">
                 <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
                     <div className="grid gap-4 sm:grid-cols-2">
-                        {featuredCards.map((card, index) => (
-                            <ContentCard key={card?._id || `featured-card-${index}`}>
-                                {card?.imageUrl && (
-                                    <div className="mb-3 h-44 w-full overflow-hidden rounded-lg bg-gray-50">
-                                        <Image src={card.imageUrl} alt={card?.title || 'Featured card'} width={640} height={640} className="h-full w-full object-cover" />
-                                    </div>
-                                )}
-                                <h3 className="font-semibold text-gray-900">{card?.title || 'Featured card'}</h3>
-                                <p className="mt-1 text-sm text-gray-500">{card?.description || ''}</p>
-                                <p className="mt-2 text-xs text-gray-500">CTA: {card?.productId ? productName(card.productId) : (card?.href || 'None')}</p>
-                                <div className="mt-3 flex gap-2">
-                                    <ActionButton variant="edit" onClick={() => startEditingFeatured(card)}>Edit</ActionButton>
-                                    <ActionButton variant="danger" onClick={() => void deleteFeaturedCard(card?._id)}>Delete</ActionButton>
-                                </div>
-                            </ContentCard>
-                        ))}
-                    </div>
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
-                        <div className="mb-4 flex items-center justify-between">
-                            <h3 className="font-bold text-gray-900">{editingFeaturedId ? 'Edit Featured Card' : 'Add Featured Card'}</h3>
-                            {editingFeaturedId && (
-                                <button onClick={() => { setEditingFeaturedId(null); setFeaturedForm(emptyFeaturedForm); }} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
-                            )}
-                        </div>
-                        <div className="space-y-3">
-                            <FormInput placeholder="Card title" value={featuredForm.title} onChange={(e) => setFeaturedForm((prev) => ({ ...prev, title: e.target.value }))} />
-                            <FormInput placeholder="Description" value={featuredForm.description} onChange={(e) => setFeaturedForm((prev) => ({ ...prev, description: e.target.value }))} textarea />
-                            <FormInput placeholder="Button text" value={featuredForm.buttonText} onChange={(e) => setFeaturedForm((prev) => ({ ...prev, buttonText: e.target.value }))} />
-                            <select value={featuredForm.productId} onChange={(e) => setFeaturedForm((prev) => ({ ...prev, productId: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200">
-                                <option value="">Link CTA to fallback URL</option>
-                                {products.map((product) => (
-                                    <option key={product._id} value={product._id}>{product.name}</option>
-                                ))}
-                            </select>
-                            <TargetSelector label="Featured card target" form={featuredForm} setForm={setFeaturedForm} hrefKey="href" products={products} stores={stores} />
-                            <ImageUpload
-                                imageUrl={featuredForm.imageUrl}
-                                imageFile={featuredForm.imageFile}
-                                onUrlChange={(e) => setFeaturedForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                                onFileChange={(e) => setFeaturedForm((prev) => ({ ...prev, imageFile: e.target.files?.[0] || null }))}
-                            />
-                            <ActionButton onClick={() => void saveFeaturedCard()} disabled={savingContent} variant="primary" className="w-full">
-                                {savingContent ? 'Saving...' : (editingFeaturedId ? 'Update Featured Card' : 'Add Featured Card')}
-                            </ActionButton>
-                        </div>
-                    </div>
-                </div>
-            </SectionCard>
-
-            {/* Homepage Promo Offers */}
-            <SectionCard title="Homepage Promo Offers" description="Add the right-side hero promotion images that rotate on the storefront.">
-                <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {promoBanners.map((banner, index) => (
-                            <ContentCard key={banner?._id || `promo-banner-${index}`}>
-                                {banner?.imageUrl && (
-                                    <div className="mb-3 h-36 w-full overflow-hidden rounded-lg bg-gray-50">
-                                        <Image src={banner.imageUrl} alt={banner?.title || 'Promo banner'} width={480} height={480} className="h-full w-full object-cover" />
-                                    </div>
-                                )}
-                                <h3 className="font-semibold text-gray-900">{banner?.title || 'Promo banner'}</h3>
-                                <p className="mt-1 line-clamp-2 text-sm text-gray-500">{banner?.description || ''}</p>
-                                <p className="mt-2 text-xs text-gray-500">CTA: {banner?.productId ? productName(banner.productId) : (banner?.href || 'None')}</p>
-                                <div className="mt-3 flex gap-2">
-                                    <ActionButton variant="edit" onClick={() => startEditingBanner(banner)}>Edit</ActionButton>
-                                    <ActionButton variant="danger" onClick={() => void deleteBanner(banner?._id)}>Delete</ActionButton>
-                                </div>
-                            </ContentCard>
-                        ))}
-                    </div>
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
-                        <div className="mb-4 flex items-center justify-between">
-                            <div>
-                                <h3 className="font-bold text-gray-900">{editingBannerId ? 'Edit Promo Offer' : 'Add Promo Offer'}</h3>
-                                <p className="text-sm text-gray-500">Upload the image and CTA used by the right hero panel.</p>
-                            </div>
-                            {editingBannerId && (
-                                <button onClick={() => { setEditingBannerId(null); setBannerForm(emptyPromoForm); }} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
-                            )}
-                        </div>
-                        <div className="space-y-3">
-                            <FormInput placeholder="Promo offer title" value={bannerForm.title} onChange={(e) => setBannerForm((prev) => ({ ...prev, title: e.target.value }))} />
-                            <FormInput placeholder="Banner description" value={bannerForm.description} onChange={(e) => setBannerForm((prev) => ({ ...prev, description: e.target.value }))} textarea />
-                            <FormInput placeholder="Button text" value={bannerForm.buttonText} onChange={(e) => setBannerForm((prev) => ({ ...prev, buttonText: e.target.value }))} />
-                            <select value={bannerForm.productId} onChange={(e) => setBannerForm((prev) => ({ ...prev, productId: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200">
-                                <option value="">Link banner CTA to fallback URL</option>
-                                {products.map((product) => (
-                                    <option key={product._id} value={product._id}>{product.name}</option>
-                                ))}
-                            </select>
-                            <TargetSelector label="Promo offer target" form={bannerForm} setForm={setBannerForm} hrefKey="href" products={products} stores={stores} />
-                            <ImageUpload
-                                imageUrl={bannerForm.imageUrl}
-                                imageFile={bannerForm.imageFile}
-                                onUrlChange={(e) => setBannerForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                                onFileChange={(e) => setBannerForm((prev) => ({ ...prev, imageFile: e.target.files?.[0] || null }))}
-                            />
-                            <ActionButton onClick={() => void saveBanner()} disabled={savingContent} variant="primary" className="w-full">
-                                {savingContent ? 'Saving...' : (editingBannerId ? 'Update Promo Offer' : 'Add Promo Offer')}
-                            </ActionButton>
-                        </div>
-                    </div>
-                </div>
-            </SectionCard>
-
-            {/* Category Page Banners */}
-            <SectionCard title="Category Page Banners" description="Upload the banner image shown on category pages and choose what it opens.">
-                <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {siteContent.categoryBanners.map((banner) => (
+                        {bannersForActiveType.length === 0 ? (
+                            <p className="text-sm text-gray-400">No {activeConfig.label.toLowerCase()} yet.</p>
+                        ) : bannersForActiveType.map((banner) => (
                             <ContentCard key={banner._id}>
                                 {banner.imageUrl && (
                                     <div className="mb-3 h-36 w-full overflow-hidden rounded-lg bg-gray-50">
-                                        <Image src={banner.imageUrl} alt={banner.title} width={720} height={360} className="h-full w-full object-cover" />
+                                        <Image src={banner.imageUrl} alt={banner.title || banner.brand || 'Banner'} width={640} height={360} className="h-full w-full object-cover" />
                                     </div>
                                 )}
-                                <p className="text-[11px] font-semibold uppercase tracking-wider text-orange-600">{banner.placementCategory || 'Unassigned'}</p>
-                                <h3 className="mt-0.5 font-semibold text-gray-900">{banner.title}</h3>
-                                <p className="mt-1 text-xs text-gray-500">Clicks to: {targetLabel(banner)}</p>
+                                <div className="flex items-center gap-2">
+                                    <StatusBadge banner={banner} />
+                                    {activeConfig.hasPlacement && banner.placementCategory && (
+                                        <span className="text-[11px] font-semibold uppercase tracking-wider text-orange-600">{banner.placementCategory}</span>
+                                    )}
+                                </div>
+                                <h3 className="mt-1.5 font-semibold text-gray-900">{banner.title || banner.brand || 'Untitled'}</h3>
+                                {banner.subtitle && <p className="mt-1 line-clamp-2 text-sm text-gray-500">{banner.subtitle}</p>}
+                                {activeConfig.hasTarget && (
+                                    <p className="mt-2 text-xs text-gray-500">Clicks to: {targetLabel(banner)}</p>
+                                )}
                                 <div className="mt-3 flex gap-2">
-                                    <ActionButton variant="edit" onClick={() => startEditingCategoryBanner(banner)}>Edit</ActionButton>
-                                    <ActionButton variant="danger" onClick={() => void deleteCategoryBanner(banner._id)}>Delete</ActionButton>
+                                    <ActionButton variant="edit" onClick={() => startEditingBanner(banner)}>Edit</ActionButton>
+                                    <ActionButton variant="danger" onClick={() => void deleteBannerItem(banner._id)}>Delete</ActionButton>
                                 </div>
                             </ContentCard>
                         ))}
                     </div>
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
-                        <div className="mb-4 flex items-center justify-between">
-                            <div>
-                                <h3 className="font-bold text-gray-900">{editingCategoryBannerId ? 'Edit Category Banner' : 'Add Category Banner'}</h3>
-                                <p className="text-sm text-gray-500">Use upload plus a clear target so the banner always opens the right place.</p>
-                            </div>
-                            {editingCategoryBannerId && (
-                                <button onClick={() => { setEditingCategoryBannerId(null); setCategoryBannerForm(emptyCategoryBannerForm); }} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
-                            )}
-                        </div>
-                        <div className="space-y-3">
-                            <FormInput placeholder="Banner title" value={categoryBannerForm.title} onChange={(e) => setCategoryBannerForm((prev) => ({ ...prev, title: e.target.value }))} />
-                            <FormInput placeholder="Banner description" value={categoryBannerForm.description} onChange={(e) => setCategoryBannerForm((prev) => ({ ...prev, description: e.target.value }))} textarea />
-                            <FormInput placeholder="Button text" value={categoryBannerForm.buttonText} onChange={(e) => setCategoryBannerForm((prev) => ({ ...prev, buttonText: e.target.value }))} />
-                            <select value={categoryBannerForm.placementCategory} onChange={(e) => setCategoryBannerForm((prev) => ({ ...prev, placementCategory: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200">
-                                <option value="">Choose category page</option>
-                                {homeCategoryValues.map((category) => (
-                                    <option key={category} value={category}>{getCategoryMeta(category).label}</option>
-                                ))}
-                            </select>
-                            <TargetSelector label="Banner click target" form={categoryBannerForm} setForm={setCategoryBannerForm} hrefKey="href" products={products} stores={stores} />
-                            <ImageUpload
-                                imageUrl={categoryBannerForm.imageUrl}
-                                imageFile={categoryBannerForm.imageFile}
-                                onUrlChange={(e) => setCategoryBannerForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                                onFileChange={(e) => setCategoryBannerForm((prev) => ({ ...prev, imageFile: e.target.files?.[0] || null }))}
-                            />
-                            <ActionButton onClick={() => void saveCategoryBanner()} disabled={savingContent} variant="primary" className="w-full">
-                                {savingContent ? 'Saving...' : (editingCategoryBannerId ? 'Update Category Banner' : 'Add Category Banner')}
-                            </ActionButton>
-                        </div>
-                    </div>
-                </div>
-            </SectionCard>
 
-            {/* Brand Showcases */}
-            <SectionCard title="Brand Showcases" description="Upload brand cards that open the matching brand products list.">
-                <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {siteContent.brandShowcases.map((item) => (
-                            <ContentCard key={item._id}>
-                                {item.imageUrl && (
-                                    <div className="mb-3 h-32 w-full overflow-hidden rounded-lg bg-gray-50">
-                                        <Image src={item.imageUrl} alt={item.brand || item.title} width={720} height={360} className="h-full w-full object-cover" />
-                                    </div>
-                                )}
-                                <p className="text-[11px] font-semibold uppercase tracking-wider text-orange-600">{item.placementCategory || 'Unassigned'}</p>
-                                <h3 className="mt-0.5 font-semibold text-gray-900">{item.brand || item.title}</h3>
-                                <p className="mt-1 text-xs text-gray-500">Brand collection for {item.brand || 'brand'}</p>
-                                <div className="mt-3 flex gap-2">
-                                    <ActionButton variant="edit" onClick={() => {
-                                        setEditingBrandShowcaseId(item._id);
-                                        setBrandShowcaseForm({
-                                            title: item.title || '', brand: item.brand || '', description: item.description || '',
-                                            placementCategory: item.placementCategory || '', imageUrl: item.imageUrl || '', imageFile: null,
-                                        });
-                                    }}>Edit</ActionButton>
-                                    <ActionButton variant="danger" onClick={() => void deleteBrandShowcase(item._id)}>Delete</ActionButton>
-                                </div>
-                            </ContentCard>
-                        ))}
-                    </div>
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
                         <div className="mb-4 flex items-center justify-between">
-                            <div>
-                                <h3 className="font-bold text-gray-900">{editingBrandShowcaseId ? 'Edit Brand Showcase' : 'Add Brand Showcase'}</h3>
-                                <p className="text-sm text-gray-500">Pick the brand name and where it should appear.</p>
-                            </div>
-                            {editingBrandShowcaseId && (
-                                <button onClick={() => { setEditingBrandShowcaseId(null); setBrandShowcaseForm(emptyBrandShowcaseForm); }} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
+                            <h3 className="font-bold text-gray-900">{editingBannerId ? `Edit ${activeConfig.label.replace(/s$/, '')}` : `Add ${activeConfig.label.replace(/s$/, '')}`}</h3>
+                            {editingBannerId && (
+                                <button onClick={resetBannerForm} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
                             )}
                         </div>
                         <div className="space-y-3">
-                            <FormInput placeholder="Brand name" value={brandShowcaseForm.brand} onChange={(e) => setBrandShowcaseForm((prev) => ({ ...prev, brand: e.target.value }))} />
-                            <FormInput placeholder="Card title" value={brandShowcaseForm.title} onChange={(e) => setBrandShowcaseForm((prev) => ({ ...prev, title: e.target.value }))} />
-                            <FormInput placeholder="Short description" value={brandShowcaseForm.description} onChange={(e) => setBrandShowcaseForm((prev) => ({ ...prev, description: e.target.value }))} textarea />
-                            <select value={brandShowcaseForm.placementCategory} onChange={(e) => setBrandShowcaseForm((prev) => ({ ...prev, placementCategory: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200">
-                                <option value="">Choose category page</option>
-                                {homeCategoryValues.map((category) => (
-                                    <option key={category} value={category}>{getCategoryMeta(category).label}</option>
-                                ))}
-                            </select>
-                            <ImageUpload
-                                imageUrl={brandShowcaseForm.imageUrl}
-                                imageFile={brandShowcaseForm.imageFile}
-                                onUrlChange={(e) => setBrandShowcaseForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                                onFileChange={(e) => setBrandShowcaseForm((prev) => ({ ...prev, imageFile: e.target.files?.[0] || null }))}
+                            {activeConfig.hasBrand && (
+                                <FormInput placeholder="Brand name" value={bannerForm.brand} onChange={(e) => setBannerForm((prev) => ({ ...prev, brand: e.target.value }))} />
+                            )}
+                            {activeConfig.hasOffer && (
+                                <FormInput placeholder="Offer badge text" value={bannerForm.subtitle} onChange={(e) => setBannerForm((prev) => ({ ...prev, subtitle: e.target.value }))} />
+                            )}
+                            <FormInput placeholder={activeConfig.hasBrand ? 'Card title (optional)' : 'Title'} value={bannerForm.title} onChange={(e) => setBannerForm((prev) => ({ ...prev, title: e.target.value }))} />
+                            {activeConfig.hasDescription && (
+                                <FormInput placeholder="Description" value={bannerForm.subtitle} onChange={(e) => setBannerForm((prev) => ({ ...prev, subtitle: e.target.value }))} textarea />
+                            )}
+                            {activeConfig.ctaLabel && (
+                                <FormInput placeholder={activeConfig.ctaLabel} value={bannerForm.ctaText} onChange={(e) => setBannerForm((prev) => ({ ...prev, ctaText: e.target.value }))} />
+                            )}
+                            {activeConfig.hasSecondaryCta && (
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <FormInput placeholder="Secondary button text" value={bannerForm.secondaryCtaText} onChange={(e) => setBannerForm((prev) => ({ ...prev, secondaryCtaText: e.target.value }))} />
+                                    <FormInput placeholder="Secondary URL" value={bannerForm.secondaryHref} onChange={(e) => setBannerForm((prev) => ({ ...prev, secondaryHref: e.target.value }))} />
+                                </div>
+                            )}
+                            {activeConfig.hasPlacement && (
+                                <select
+                                    value={bannerForm.placementCategory}
+                                    onChange={(e) => setBannerForm((prev) => ({ ...prev, placementCategory: e.target.value }))}
+                                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                                >
+                                    <option value="">Choose category page</option>
+                                    {homeCategoryValues.map((category) => (
+                                        <option key={category} value={category}>{getCategoryMeta(category).label}</option>
+                                    ))}
+                                </select>
+                            )}
+                            {activeConfig.hasTarget && (
+                                <TargetSelector label="Click target" form={bannerForm} setForm={setBannerForm} products={products} stores={stores} />
+                            )}
+
+                            <BannerImageUploader
+                                imageUrl={bannerImagePreview || existingBannerImageUrl}
+                                aspect={activeConfig.aspect}
+                                label={activeConfig.label}
+                                onImageReady={(file, previewUrl) => {
+                                    setBannerImageFile(file);
+                                    setBannerImagePreview(previewUrl);
+                                }}
                             />
-                            <ActionButton onClick={() => void saveBrandShowcase()} disabled={savingContent} variant="primary" className="w-full">
-                                {savingContent ? 'Saving...' : (editingBrandShowcaseId ? 'Update Brand Showcase' : 'Add Brand Showcase')}
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <label className="mb-1 block text-xs font-semibold text-gray-600">Start date (optional)</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={bannerForm.startDate}
+                                        onChange={(e) => setBannerForm((prev) => ({ ...prev, startDate: e.target.value }))}
+                                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-semibold text-gray-600">End date (optional)</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={bannerForm.endDate}
+                                        onChange={(e) => setBannerForm((prev) => ({ ...prev, endDate: e.target.value }))}
+                                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                                    />
+                                </div>
+                            </div>
+                            <label className="flex items-center gap-2 text-sm text-gray-700">
+                                <input
+                                    type="checkbox"
+                                    checked={bannerForm.isDraft}
+                                    onChange={(e) => setBannerForm((prev) => ({ ...prev, isDraft: e.target.checked }))}
+                                />
+                                Save as draft (hidden from the storefront regardless of dates)
+                            </label>
+
+                            <ActionButton onClick={() => void saveBanner()} disabled={savingContent} variant="primary" className="w-full">
+                                {savingContent ? 'Saving...' : (editingBannerId ? 'Update Banner' : 'Add Banner')}
                             </ActionButton>
                         </div>
                     </div>

@@ -6,6 +6,16 @@ import Image from 'next/image';
 import { useAppContext } from '@/context/AppContext';
 import { getProductStockSnapshot } from '@/lib/productStock';
 import { getProductRatingSnapshot } from '@/lib/productRating';
+import { getProductActivitySnapshot, getSystemTags } from '@/lib/liveCommerce';
+
+const tagToneClasses = {
+    orange: "bg-orange-50 text-orange-700 border-orange-200",
+    green: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    blue: "bg-sky-50 text-sky-700 border-sky-200",
+    red: "bg-rose-50 text-rose-700 border-rose-200",
+    purple: "bg-violet-50 text-violet-700 border-violet-200",
+    gray: "bg-gray-50 text-gray-700 border-gray-200",
+};
 
 const getProductImage = (product) => {
     const image = Array.isArray(product?.image) ? product.image[0] : product?.image;
@@ -15,7 +25,7 @@ const getProductImage = (product) => {
 };
 
 const ProductCard = ({ product }) => {
-    const { addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike } = useAppContext();
+    const { addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike, tagsBySlug } = useAppContext();
     const productHref = `/product/${product._id}`;
     const [liking, setLiking] = useState(false);
     const [liked, setLiked] = useState(Boolean(product.likedByCurrentUser));
@@ -30,6 +40,14 @@ const ProductCard = ({ product }) => {
     const isOutOfStock = stockSnapshot.status === 'out';
     const { rating, reviewCount, hasRating, filledStars } = getProductRatingSnapshot(product);
     const soldCount = Math.max(0, Number(product.soldCount) || 0);
+    const activity = getProductActivitySnapshot(product);
+    const showCountdown = activity.flashDealActive && activity.flashDealCountdownLabel;
+    const manualTags = Array.isArray(product.tags)
+      ? product.tags.map((slug) => tagsBySlug.get(slug)).filter(Boolean)
+      : [];
+    const manualTagSlugs = new Set(manualTags.map((tag) => tag.slug));
+    const systemTags = getSystemTags(product).filter((tag) => !manualTagSlugs.has(tag.slug));
+    const badgeTags = [...manualTags, ...systemTags].slice(0, 3);
     const stockBarWidth = stockSnapshot.status === "out"
       ? 0
       : stockSnapshot.status === "low"
@@ -117,6 +135,11 @@ const ProductCard = ({ product }) => {
                 }`}>
                     {discountPercent ? `-${discountPercent}%` : "NEW"}
                 </span>
+                {showCountdown ? (
+                    <span className="absolute bottom-1.5 left-1.5 right-1.5 rounded-md bg-gray-950/80 px-2 py-1 text-center text-[10px] font-semibold text-white backdrop-blur-sm">
+                        Ends in {activity.flashDealCountdownLabel}
+                    </span>
+                ) : null}
                 <button
                   onClick={handleLikeClick}
                   className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border transition ${
@@ -135,6 +158,19 @@ const ProductCard = ({ product }) => {
             <h3 className="mt-2 min-h-[2rem] line-clamp-2 text-[12px] font-semibold leading-4 text-gray-950">
                 {product.name}
             </h3>
+
+            {badgeTags.length ? (
+                <div className="mt-1 flex flex-wrap gap-1">
+                    {badgeTags.map((tag) => (
+                        <span
+                            key={tag.slug}
+                            className={`rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${tagToneClasses[tag.color] || tagToneClasses.gray}`}
+                        >
+                            {tag.name}
+                        </span>
+                    ))}
+                </div>
+            ) : null}
 
             <div className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-500">
                 <span className="flex items-center gap-0.5">

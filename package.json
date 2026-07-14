@@ -13,6 +13,7 @@
     "@clerk/nextjs": "^6.34.0",
     "africastalking": "^0.7.9",
     "axios": "^1.13.1",
+    "browser-image-compression": "^2.0.2",
     "clerk": "^0.8.3",
     "cloudinary": "^2.8.0",
     "dotenv": "^17.4.0",
@@ -22,6 +23,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.6.0",
+    "react-image-crop": "^11.1.2",
     "svix": "^1.90.0"
   },
   "devDependencies": {

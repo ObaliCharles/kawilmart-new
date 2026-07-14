@@ -1,7 +1,9 @@
 import { Inngest } from "inngest";
 import connectDB from "./db";
 import User from "@/models/User";
+import Banner from "@/models/Banner";
 import { generateSellerInvoicesForPeriod } from "@/lib/sellerInvoiceGeneration";
+import { computeBannerLifecycleStatus } from "@/lib/bannerStatus";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "kawilmart-next" });
@@ -100,5 +102,35 @@ export const createMonthlySellerInvoices = inngest.createFunction(
             updatedCount: generation.updatedCount,
             skippedCount: generation.skippedCount,
         };
+    }
+);
+
+// Keeps the stored `status` field on Banner documents in sync with their
+// computed lifecycle (scheduled/active/expired) so the admin list reflects
+// reality without recomputation. Not load-bearing for correctness — public
+// reads always recompute status at request time — this just keeps the
+// admin UI's stored badge fresh between edits.
+export const syncBannerStatuses = inngest.createFunction(
+    {
+        id: "sync-banner-statuses",
+    },
+    { cron: "*/15 * * * *" },
+    async () => {
+        await connectDB();
+
+        const banners = await Banner.find({ status: { $ne: "draft" } });
+        const now = new Date();
+        let updatedCount = 0;
+
+        for (const banner of banners) {
+            const nextStatus = computeBannerLifecycleStatus(banner, now);
+            if (nextStatus !== banner.status && nextStatus !== "draft") {
+                banner.status = nextStatus;
+                await banner.save();
+                updatedCount += 1;
+            }
+        }
+
+        return { success: true, checked: banners.length, updatedCount };
     }
 );

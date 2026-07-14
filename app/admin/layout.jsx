@@ -24,6 +24,7 @@ const menuItems = [
     { name: 'Management', path: '/admin/management', icon: '⚙️' },
     { name: 'Billing', path: '/admin/billing', icon: '🧾' },
     { name: 'Promotions & Content', path: '/admin/promotions', icon: '🎯' },
+    { name: 'Tags', path: '/admin/tags', icon: '🏷️' },
     { name: 'Analytics', path: '/admin/analytics', icon: '📈' },
 ];
 

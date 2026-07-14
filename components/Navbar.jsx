@@ -863,8 +863,8 @@ const Navbar = ({ hideMobileHeader = false }) => {
               </div>
               <button type="button" onClick={() => navigate('/all-products?filter=flash')} className="transition hover:text-orange-600">Hot offers</button>
               <button type="button" onClick={() => navigate('/all-products')} className="transition hover:text-orange-600">Recommendations</button>
-              <button type="button" onClick={() => navigate('/all-products?sort=newest')} className="transition hover:text-orange-600">New Arrivals</button>
-              <button type="button" onClick={() => navigate('/all-products?filter=flash')} className="transition hover:text-orange-600">Bestsellers</button>
+              <button type="button" onClick={() => navigate('/all-products?tags=new-arrival')} className="transition hover:text-orange-600">New Arrivals</button>
+              <button type="button" onClick={() => navigate('/all-products?tags=trending')} className="transition hover:text-orange-600">Bestsellers</button>
               <button type="button" onClick={() => navigate('/all-products')} className="transition hover:text-orange-600">Gift boxes</button>
               <div className="relative" onMouseLeave={() => openDropdown === 'help' ? closeDropdown() : undefined}>
                 <button type="button" onMouseEnter={() => setOpenDropdown('help')} onClick={() => toggleDropdown('help')} className="inline-flex items-center gap-1 transition hover:text-orange-600">Help <ChevronDown /></button>

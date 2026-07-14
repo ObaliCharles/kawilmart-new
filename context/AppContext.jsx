@@ -52,6 +52,8 @@ const defaultAppContextValue = {
     fetchUserData: noop,
     products: [],
     fetchProductData: noop,
+    tags: [],
+    tagsBySlug: new Map(),
     toggleProductLike: async () => ({ success: false, message: 'App context is not ready' }),
     cartItems: {},
     resolvedCartItems: {},
@@ -101,6 +103,7 @@ export const AppContextProvider = (props) => {
     const authReady = isUserLoaded && isAuthLoaded
 
     const [products, setProducts] = useState([])
+    const [tags, setTags] = useState([])
     const [userData, setUserData] = useState(false)
     const [isSeller, setIsSeller] = useState(false)
     const [isAdmin, setIsAdmin] = useState(false)
@@ -644,6 +647,24 @@ export const AppContextProvider = (props) => {
     }, [])
 
     useEffect(() => {
+        let isMounted = true
+        axios.get('/api/tags').then(({ data }) => {
+            if (isMounted && data.success) {
+                setTags(data.tags)
+            }
+        }).catch(() => {})
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
+    const tagsBySlug = useMemo(() => {
+        const map = new Map()
+        tags.forEach((tag) => map.set(tag.slug, tag))
+        return map
+    }, [tags])
+
+    useEffect(() => {
         if (!authReady) {
             return
         }
@@ -765,6 +786,7 @@ export const AppContextProvider = (props) => {
         isRider, setIsRider,
         userData, fetchUserData,
         products, fetchProductData,
+        tags, tagsBySlug,
         toggleProductLike,
         cartItems, resolvedCartItems, setCartItems,
         addToCart, updateCartQuantity,

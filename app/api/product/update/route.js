@@ -4,39 +4,11 @@ import authSeller from "@/lib/authSeller";
 import { parseProductStockInput } from "@/lib/productStock";
 import { getSellerAccessState } from "@/lib/sellerBilling";
 import { getRequestUserId } from "@/lib/requestAuth";
-import { v2 as cloudinary } from "cloudinary";
+import { isUploadedFile, uploadFileToCloudinary } from "@/lib/cloudinary";
+import { parseTagsInput } from "@/lib/parseTagsInput";
 import { NextResponse } from "next/server";
 import Product from "@/models/Product";
 import User from "@/models/User";
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const isUploadedFile = (file) =>
-    file && typeof file.arrayBuffer === "function" && typeof file.size === "number" && file.size > 0;
-
-const uploadFileToCloudinary = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-            { resource_type: "auto" },
-            (error, result) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(result);
-                }
-            }
-        );
-
-        stream.end(buffer);
-    });
-};
 
 export async function POST(request) {
     try {
@@ -116,6 +88,9 @@ export async function POST(request) {
         existingProduct.sellerContact = formData.get("sellerContact");
         existingProduct.sellerLocation = formData.get("sellerLocation");
         existingProduct.image = image;
+        if (isAdmin) {
+            existingProduct.tags = await parseTagsInput(formData);
+        }
 
         await existingProduct.save();
 
