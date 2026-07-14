@@ -54,6 +54,9 @@ const defaultAppContextValue = {
     fetchProductData: noop,
     tags: [],
     tagsBySlug: new Map(),
+    categories: [],
+    subcategoriesByParent: new Map(),
+    customTopCategories: [],
     toggleProductLike: async () => ({ success: false, message: 'App context is not ready' }),
     cartItems: {},
     resolvedCartItems: {},
@@ -105,6 +108,7 @@ export const AppContextProvider = (props) => {
 
     const [products, setProducts] = useState([])
     const [tags, setTags] = useState([])
+    const [categories, setCategories] = useState([])
     const [userData, setUserData] = useState(false)
     const [isSeller, setIsSeller] = useState(false)
     const [isAdmin, setIsAdmin] = useState(false)
@@ -757,6 +761,37 @@ export const AppContextProvider = (props) => {
     }, [tags])
 
     useEffect(() => {
+        let isMounted = true
+        axios.get('/api/categories').then(({ data }) => {
+            if (isMounted && data.success) {
+                setCategories(data.categories)
+            }
+        }).catch(() => {})
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
+    // Subcategories (parentValue set) grouped under their parent category
+    // value, plus the list of admin-added top-level categories (parentValue
+    // null) that supplement the static list in lib/marketplaceCategories.js.
+    const subcategoriesByParent = useMemo(() => {
+        const map = new Map()
+        categories.forEach((category) => {
+            if (!category.parentValue) return
+            const list = map.get(category.parentValue) || []
+            list.push(category)
+            map.set(category.parentValue, list)
+        })
+        return map
+    }, [categories])
+
+    const customTopCategories = useMemo(
+        () => categories.filter((category) => !category.parentValue),
+        [categories]
+    )
+
+    useEffect(() => {
         if (!authReady) {
             return
         }
@@ -879,6 +914,7 @@ export const AppContextProvider = (props) => {
         userData, fetchUserData,
         products, fetchProductData,
         tags, tagsBySlug,
+        categories, subcategoriesByParent, customTopCategories,
         toggleProductLike,
         cartItems, resolvedCartItems, cartMutatingItemIds, setCartItems,
         addToCart, updateCartQuantity,

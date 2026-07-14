@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema({
     stock: { type: Number, default: null, min: 0 },
     image: { type: Array, required: true },
     category: { type: String, required: true },
+    subcategory: { type: String, default: "" },
     location: { type: String, required: true },
     sellerContact: { type: String, required: true },
     sellerLocation: { type: String, required: true },
@@ -32,6 +33,7 @@ const productSchema = new mongoose.Schema({
 
 // Add indexes for better performance
 productSchema.index({ category: 1 });
+productSchema.index({ category: 1, subcategory: 1 });
 productSchema.index({ date: -1 });
 productSchema.index({ offerPrice: 1 });
 productSchema.index({ isFlashDeal: 1 });

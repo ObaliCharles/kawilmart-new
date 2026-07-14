@@ -81,6 +81,7 @@ export async function POST(request) {
         existingProduct.name = formData.get("name");
         existingProduct.description = formData.get("description");
         existingProduct.category = formData.get("category");
+        existingProduct.subcategory = formData.get("subcategory") || "";
         existingProduct.price = Number(formData.get("price"));
         existingProduct.offerPrice = Number(formData.get("offerPrice"));
         existingProduct.stock = parseProductStockInput(formData.get("stock"));

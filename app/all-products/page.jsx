@@ -148,6 +148,16 @@ const getBrandLabel = (product) => {
 };
 
 const getTileProducts = (products, tile, fallbackCategory, count = 4) => {
+  // A real DB subcategory tile matches exactly (category + subcategory) —
+  // no keyword guessing, no fallback to unrelated products in this category.
+  if (tile?.subcategory) {
+    const exactMatches = products.filter((product) => (
+      categoryMatchesSelection(product?.category, fallbackCategory)
+      && product?.subcategory === tile.subcategory
+    ));
+    return exactMatches.slice(0, count);
+  }
+
   const categoriesToMatch = Array.isArray(tile?.categories) ? tile.categories : [];
   const keywordsToMatch = Array.isArray(tile?.keywords) ? tile.keywords.map(normalizeSearchText).filter(Boolean) : [];
 
@@ -215,63 +225,6 @@ const mobileSectionThemes = [
     addText: "text-[#db2777]",
   },
 ];
-
-const supermarketMobileTiles = [
-  {
-    label: "Fresh Foods",
-    categories: ["Home & Living"],
-    keywords: ["fresh", "vegetable", "fruit", "tomato", "onion", "avocado", "spinach", "meat"],
-    description: "Fresh vegetables, fruits, meat & more",
-  },
-  {
-    label: "Food Cupboard",
-    categories: ["Home & Living", "Appliances"],
-    keywords: ["rice", "sugar", "oil", "coffee", "pasta", "flour", "cereal"],
-    description: "Staples to keep your kitchen full",
-  },
-  {
-    label: "Beverages",
-    categories: ["Home & Living", "Appliances"],
-    keywords: ["drink", "juice", "water", "soda", "coffee", "tea", "beverage"],
-    description: "Refreshing drinks for every moment",
-  },
-  {
-    label: "Household",
-    categories: ["Home & Living", "Appliances"],
-    keywords: ["detergent", "clean", "mop", "broom", "household", "soap"],
-    description: "Cleaning and home essentials",
-  },
-  {
-    label: "Personal Care",
-    categories: ["Health & Personal Care", "Beauty & Cosmetics"],
-    keywords: ["lotion", "soap", "shampoo", "deodorant", "care"],
-    description: "Daily care for the family",
-  },
-  {
-    label: "Baby Care",
-    categories: ["Baby Products"],
-    keywords: ["baby", "diaper", "nappy", "feeding"],
-    description: "Baby care and feeding essentials",
-  },
-];
-
-const supermarketRailTiles = [
-  supermarketMobileTiles[1],
-  supermarketMobileTiles[0],
-  supermarketMobileTiles[2],
-  supermarketMobileTiles[3],
-  supermarketMobileTiles[4],
-  supermarketMobileTiles[5],
-].filter(Boolean);
-
-const supermarketTileIcons = {
-  "Food Cupboard": "🫙",
-  "Fresh Foods": "🥬",
-  Beverages: "🍹",
-  Household: "🧴",
-  "Personal Care": "🧼",
-  "Baby Care": "🍼",
-};
 
 const MobileCategoryProductCard = ({ product, formatCurrency, navigate, addToCart, theme, discount, fallbackLabel = "Browse item" }) => (
   <article
@@ -488,9 +441,10 @@ const getProductSearchScore = (product, query) => {
 };
 
 function AllProductsInner() {
-  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, addToCart } = useAppContext();
+  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, addToCart, subcategoriesByParent } = useAppContext();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "All";
+  const initialSubcategory = searchParams.get("subcategory") || "";
   const initialSearch = searchParams.get("search") || "";
   const initialSeller = searchParams.get("seller") || "";
   const initialBrand = searchParams.get("brand") || "all";
@@ -499,6 +453,7 @@ function AllProductsInner() {
   const initialTags = (searchParams.get("tags") || "").split(",").filter(Boolean);
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(initialSubcategory);
   const [selectedPriceRange, setSelectedPriceRange] = useState(0);
   const [sortBy, setSortBy] = useState(initialFilter === "flash" ? "discount" : sortOptions.some((option) => option.value === initialSort) ? initialSort : "default");
   const [searchQuery, setSearchQuery] = useState(initialSearch);
@@ -537,6 +492,7 @@ function AllProductsInner() {
 
   useEffect(() => {
     const cat = searchParams.get("category");
+    const subcategory = searchParams.get("subcategory");
     const search = searchParams.get("search");
     const seller = searchParams.get("seller");
     const brand = searchParams.get("brand");
@@ -545,6 +501,7 @@ function AllProductsInner() {
     const tags = (searchParams.get("tags") || "").split(",").filter(Boolean);
 
     setSelectedCategory(cat || "All");
+    setSelectedSubcategory(subcategory || "");
     setSearchQuery(search || "");
     setSelectedSeller(seller || "");
     setSelectedBrand(brand || "all");
@@ -556,7 +513,7 @@ function AllProductsInner() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, selectedPriceRange, selectedCondition, selectedBrand, selectedRating, selectedTags, searchQuery, selectedSeller, effectiveSortBy]);
+  }, [selectedCategory, selectedSubcategory, selectedPriceRange, selectedCondition, selectedBrand, selectedRating, selectedTags, searchQuery, selectedSeller, effectiveSortBy]);
 
   const brandOptions = useMemo(() => {
     const counts = products.reduce((acc, product) => {
@@ -583,6 +540,10 @@ function AllProductsInner() {
 
     if (selectedCategory !== "All") {
       filtered = filtered.filter(({ product }) => categoryMatchesSelection(product.category, selectedCategory));
+    }
+
+    if (selectedSubcategory) {
+      filtered = filtered.filter(({ product }) => product.subcategory === selectedSubcategory);
     }
 
     if (selectedSeller) {
@@ -669,12 +630,27 @@ function AllProductsInner() {
   const selectedCategoryExperience = useMemo(() => (
     getCategoryExperience(selectedCategoryPool.length ? selectedCategoryPool : products, selectedCategory)
   ), [selectedCategoryPool, products, selectedCategory]);
-  const useSupermarketMobileDisplay = selectedCategoryMeta?.value === "Home & Living";
+  const realSubcategoryTiles = useMemo(() => {
+    if (!selectedCategoryMeta) return [];
+    const subcategories = (subcategoriesByParent.get(selectedCategoryMeta.value) || [])
+      .filter((subcategory) => subcategory.isActive !== false)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+    return subcategories.map((subcategory) => ({
+      label: subcategory.name,
+      subcategory: subcategory.name,
+      icon: subcategory.icon,
+      categories: [selectedCategoryMeta.value],
+      description: "",
+    }));
+  }, [subcategoriesByParent, selectedCategoryMeta]);
+  const useSupermarketMobileDisplay = realSubcategoryTiles.length > 0;
   const mobileDisplayTiles = useSupermarketMobileDisplay
-    ? supermarketMobileTiles
+    ? realSubcategoryTiles
     : selectedCategoryExperience.tiles;
   const resetFilters = () => {
     setSelectedCategory("All");
+    setSelectedSubcategory("");
     setSelectedPriceRange(0);
     setSortBy("default");
     setSearchQuery("");
@@ -732,7 +708,7 @@ function AllProductsInner() {
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => { setSelectedCategory(cat); setSelectedSubcategory(""); }}
               className={`w-full border-l-2 px-2 py-1.5 text-left text-xs transition ${
                 selectedCategory === cat ? "border-orange-600 bg-orange-50 font-semibold text-orange-600" : "border-transparent text-gray-600 hover:bg-gray-50"
               }`}
@@ -1021,14 +997,14 @@ function AllProductsInner() {
                       <span className="leading-tight">All</span>
                     </button>
                     {useSupermarketMobileDisplay ? (
-                      supermarketRailTiles.map((tile) => (
+                      realSubcategoryTiles.map((tile) => (
                         <button
-                          key={`mobile-supermarket-rail-${tile.label}`}
+                          key={`mobile-subcategory-rail-${tile.label}`}
                           type="button"
-                          onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories?.[0] || selectedCategory)}`)}
+                          onClick={() => navigate(`/all-products?category=${encodeURIComponent(selectedCategory)}&subcategory=${encodeURIComponent(tile.subcategory)}`)}
                           className="flex h-[3.6rem] min-w-[4rem] flex-col items-center justify-center gap-0.5 rounded-lg bg-white px-1 text-center text-gray-900 shadow-sm ring-1 ring-gray-100"
                         >
-                          <span className="text-xl leading-none" aria-hidden="true">{supermarketTileIcons[tile.label] || "🛍️"}</span>
+                          <span className="text-xl leading-none" aria-hidden="true">{tile.icon || "🏷️"}</span>
                           <span className="line-clamp-2 text-[10px] font-bold leading-tight">{tile.label}</span>
                         </button>
                       ))
@@ -1072,7 +1048,7 @@ function AllProductsInner() {
                   <section className="mt-5 overflow-hidden rounded-[1.35rem] bg-white p-3 shadow-sm">
                     <div className="mb-3 flex items-center justify-between">
                       <div>
-                        <h2 className="text-base font-black text-gray-950">{useSupermarketMobileDisplay ? "Supermarket Picks" : `${selectedCategoryExperience.meta.label} Picks`}</h2>
+                        <h2 className="text-base font-black text-gray-950">{selectedCategoryExperience.meta.label} Picks</h2>
                         <p className="text-[11px] font-semibold text-gray-500">{formatCount(filteredProducts.length)} products available</p>
                       </div>
                       <button type="button" onClick={() => setSelectedCondition("flash")} className="text-[12px] font-black text-orange-600">
@@ -1308,7 +1284,7 @@ function AllProductsInner() {
           <div className="flex min-w-max gap-1.5 pb-1">
             <button
               type="button"
-              onClick={() => setSelectedCategory("All")}
+              onClick={() => { setSelectedCategory("All"); setSelectedSubcategory(""); }}
               className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold transition ${
                 selectedCategory === "All" ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
               }`}
@@ -1322,7 +1298,7 @@ function AllProductsInner() {
                 <button
                   key={category}
                   type="button"
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => { setSelectedCategory(category); setSelectedSubcategory(""); }}
                   className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold transition ${
                     selectedCategory === category ? "border-orange-600 bg-orange-600 text-white" : "border-gray-200 bg-white text-gray-700 hover:border-orange-300"
                   }`}
@@ -1465,12 +1441,18 @@ function AllProductsInner() {
         </div>
 
         {/* Active tags */}
-        {(selectedCategory !== "All" || selectedPriceRange !== 0 || searchQuery || selectedSeller || selectedCondition !== "all" || selectedBrand !== "all" || selectedRating > 0 || selectedTags.length > 0) && (
+        {(selectedCategory !== "All" || selectedSubcategory || selectedPriceRange !== 0 || searchQuery || selectedSeller || selectedCondition !== "all" || selectedBrand !== "all" || selectedRating > 0 || selectedTags.length > 0) && (
           <div className="mb-5 flex flex-wrap gap-2">
             {selectedCategory !== "All" && (
               <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
                 {selectedCategoryMeta?.label || selectedCategory}
-                <button onClick={() => setSelectedCategory("All")} className="ml-1 font-bold hover:text-orange-900">x</button>
+                <button onClick={() => { setSelectedCategory("All"); setSelectedSubcategory(""); }} className="ml-1 font-bold hover:text-orange-900">x</button>
+              </span>
+            )}
+            {selectedSubcategory && (
+              <span className="flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+                {selectedSubcategory}
+                <button onClick={() => setSelectedSubcategory("")} className="ml-1 font-bold hover:text-orange-900">x</button>
               </span>
             )}
             {selectedPriceRange !== 0 && (

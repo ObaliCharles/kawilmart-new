@@ -1,6 +1,6 @@
 "use client"
 
-import React, { startTransition, useEffect, useRef, useState } from "react";
+import React, { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { assets, BagIcon, BoxIcon, CartIcon, HomeIcon } from "@/assets/assets";
 import Link from "next/link"
 import { useAppContext } from "@/context/AppContext";
@@ -377,6 +377,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
     recentNotifications,
     refreshUnreadNotifications,
     markAllNotificationsAsRead,
+    products,
   } = appContext;
   const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded: isAuthLoaded } = useAuth();
@@ -397,6 +398,28 @@ const Navbar = ({ hideMobileHeader = false }) => {
   const showAdmin = isAdmin || userRole === 'admin';
   const showRider = isRider || userRole === 'rider';
   const showSeller = isSeller || userRole === 'seller' || userRole === 'admin';
+
+  // Smart search placeholder — cycles through real product names instead of
+  // static text, so the search bar hints at what's actually in the catalog.
+  const searchPlaceholderNames = useMemo(() => {
+    const names = products.map((product) => product?.name).filter(Boolean);
+    return [...new Set(names)].slice(0, 15);
+  }, [products]);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+  useEffect(() => {
+    if (searchPlaceholderNames.length < 2) return undefined;
+
+    const interval = window.setInterval(() => {
+      setPlaceholderIndex((current) => (current + 1) % searchPlaceholderNames.length);
+    }, 2600);
+
+    return () => window.clearInterval(interval);
+  }, [searchPlaceholderNames]);
+
+  const searchPlaceholder = searchPlaceholderNames.length
+    ? `Search "${searchPlaceholderNames[placeholderIndex % searchPlaceholderNames.length]}"`
+    : "Search for products, brands...";
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -719,7 +742,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
               <SearchIcon />
               <input
                 type="text"
-                placeholder="Find product"
+                placeholder={searchPlaceholder}
                 value={searchQuery}
                 onFocus={() => openDropdown === 'search-categories' ? closeDropdown() : undefined}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -761,7 +784,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
             <SearchIcon />
             <input
               type="text"
-              placeholder="Search product"
+              placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="min-w-0 flex-1 px-2 py-2.5 text-xs outline-none placeholder:text-gray-400"
@@ -799,7 +822,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
                   <input
                     ref={mobileSearchInputRef}
                     type="text"
-                    placeholder="Find product"
+                    placeholder={searchPlaceholder}
                     value={searchQuery}
                     onFocus={closeDropdown}
                     onChange={e => setSearchQuery(e.target.value)}

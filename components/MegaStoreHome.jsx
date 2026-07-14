@@ -3,6 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
@@ -542,12 +544,72 @@ const MobileProductCard = ({ product, navigate, prefetchRoute, formatCurrency, t
   );
 };
 
+const NewsletterSection = () => {
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (submitting || !email.trim()) return;
+
+    setSubmitting(true);
+    try {
+      const { data } = await axios.post("/api/newsletter", { email: email.trim() });
+      if (data.success) {
+        toast.success(data.message || "Subscribed successfully");
+        setEmail("");
+      } else {
+        toast.error(data.message || "Could not subscribe right now");
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Could not subscribe right now");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <section className="mt-6 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50 to-white p-5 shadow-sm ring-1 ring-orange-100">
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-amber-400 text-white shadow-md">
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 6h16v12H4V6Zm0 0 8 7 8-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <div>
+          <h2 className="text-sm font-extrabold text-gray-950">Subscribe to our newsletter</h2>
+          <p className="mt-0.5 text-[12px] leading-5 text-gray-600">Get updates on new arrivals and exclusive offers.</p>
+        </div>
+      </div>
+      <form onSubmit={handleSubmit} className="mt-4 flex overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-orange-100">
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="Enter your email"
+          className="min-w-0 flex-1 px-4 py-3 text-[12px] outline-none"
+        />
+        <button
+          type="submit"
+          disabled={submitting}
+          className="rounded-full bg-gradient-to-r from-orange-600 to-amber-500 px-5 text-[12px] font-bold text-white transition disabled:opacity-70"
+        >
+          {submitting ? "..." : "Subscribe"}
+        </button>
+      </form>
+    </section>
+  );
+};
+
 const MobileHome = ({
   heroSlides,
   activeHeroIndex,
   setActiveHeroIndex,
   activePromo,
   marketingBanners,
+  sidebarBanners = [],
+  dealOfDayBanners = [],
   dealProducts,
   recommendedProducts,
   sortedProducts,
@@ -561,10 +623,18 @@ const MobileHome = ({
   toggleProductLike,
 }) => {
   const heroFallback = sortedProducts[0];
-  const dealOfDay = dealProducts[activePromo?._activeDealIndex || 0] || dealProducts[0] || sortedProducts[0];
+  const activeDealIndex = activePromo?._activeDealIndex || 0;
+  // No fallback to an arbitrary product — Deal of the Day only shows when a
+  // real active flash deal exists, otherwise the section is hidden.
+  const activeDealOfDayBanner = dealOfDayBanners.length
+    ? dealOfDayBanners[activeDealIndex % dealOfDayBanners.length]
+    : null;
+  const dealOfDay = activeDealOfDayBanner
+    ? sortedProducts.find((product) => product._id === activeDealOfDayBanner.productId) || null
+    : (dealProducts[activeDealIndex % Math.max(dealProducts.length, 1)] || null);
+  const dealOfDayActivity = dealOfDay ? getProductActivitySnapshot(dealOfDay) : null;
   const topStoreCards = storeCards;
   const promoProduct = sortedProducts[1] || heroFallback;
-  const secondPromoProduct = sortedProducts[2] || heroFallback;
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
   const mobileHeroSlides = heroSlides.length
     ? heroSlides
@@ -663,20 +733,19 @@ const MobileHome = ({
         <ContentImage src={activePromo.imageUrl || getImage(promoProduct)} alt={activePromo.title || "New arrivals"} width={720} height={346} className="h-full w-full transition-opacity duration-500" />
       </button>
 
-      <section className="mt-5 grid grid-cols-2 gap-3">
-        <div className="relative min-h-40 overflow-hidden rounded-lg bg-orange-50 p-4">
-          <h3 className="text-lg font-extrabold leading-6 text-gray-950">Bank Offers Up to 20% Off</h3>
-          <p className="mt-2 text-[12px] leading-5 text-gray-600">Exclusive discounts on select cards.</p>
-          <button type="button" onClick={() => navigate(getContentHref(activePromo, "/all-products?filter=flash"))} className="mt-4 text-[12px] font-bold text-orange-600">Shop Now -&gt;</button>
-          <ProductImage product={secondPromoProduct} alt="Bank offer" width={120} height={100} className="absolute bottom-2 right-1 h-20 w-24 object-contain" />
-        </div>
-        <div className="relative min-h-40 overflow-hidden rounded-lg bg-orange-50 p-4">
-          <h3 className="text-lg font-extrabold leading-6 text-gray-950">Refer & Earn UGX 10,000</h3>
-          <p className="mt-2 text-[12px] leading-5 text-gray-600">Invite friends and get rewarded.</p>
-          <button type="button" onClick={() => navigate("/about")} className="mt-4 text-[12px] font-bold text-orange-600">Refer Now -&gt;</button>
-          <span className="absolute bottom-4 right-4 text-orange-500"><UtilityIcon type="gift" /></span>
-        </div>
-      </section>
+      {sidebarBanners.length ? (
+        <section className="mt-5 grid grid-cols-2 gap-3">
+          {sidebarBanners.slice(0, 2).map((banner, index) => (
+            <MarketingBannerTile
+              key={banner._id || `sidebar-banner-${index}`}
+              item={banner}
+              navigate={navigate}
+              prefetchRoute={prefetchRoute}
+              className="aspect-square rounded-lg"
+            />
+          ))}
+        </section>
+      ) : null}
 
       {mobileMarketingBanners.length ? (
         <section className="mt-6 grid gap-2">
@@ -692,24 +761,42 @@ const MobileHome = ({
         </section>
       ) : null}
 
-      {dealOfDay ? (
-        <section onClick={() => navigate(`/product/${dealOfDay._id}`)} className="relative mt-6 cursor-pointer overflow-hidden rounded-lg bg-[#101923] px-6 py-7 text-white shadow-sm">
-          <div className="relative z-10 max-w-[58%]">
-            <h2 className="text-xl font-extrabold">Deal of the Day</h2>
-            {hasCountdown ? (
+      {dealOfDay && dealOfDayActivity?.flashDealActive ? (
+        <section
+          onClick={() => navigate(`/product/${dealOfDay._id}`)}
+          className="relative mt-6 flex min-h-[11rem] cursor-pointer overflow-hidden rounded-lg bg-[#101923] text-white shadow-sm"
+        >
+          {activeDealOfDayBanner ? (
+            <>
+              <ContentImage
+                src={activeDealOfDayBanner.imageUrl}
+                alt={dealOfDay.name}
+                width={720}
+                height={360}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            </>
+          ) : (
+            <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="absolute bottom-5 right-2 h-40 w-40 object-contain" />
+          )}
+          <div className="relative z-10 max-w-[58%] px-6 py-7">
+            {dealOfDayActivity.flashDealCountdownLabel ? (
               <div className="mt-4">
-                <FlashCountdown timeLeft={timeLeft} size="sm" />
+                <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
               </div>
             ) : null}
-            <p className="mt-4 line-clamp-2 text-sm font-bold">{dealOfDay.name}</p>
-            <p className="mt-3 text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
-            <p className="mt-3 text-sm font-extrabold text-orange-500">{Math.max(getProductActivitySnapshot(dealOfDay).priceDropPercent, 15)}% OFF</p>
-            <span className="mt-3 block h-1.5 w-40 rounded-full bg-white/30">
-              <span className="block h-full w-3/5 rounded-full bg-orange-600" />
-            </span>
-            <span className="mt-2 block text-[11px] text-white/75">{getProductStockSnapshot(dealOfDay).label}</span>
+            {!activeDealOfDayBanner ? (
+              <>
+                <p className="mt-4 line-clamp-2 text-sm font-bold">{dealOfDay.name}</p>
+                <p className="mt-3 text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
+                {dealOfDayActivity.hasDiscount ? (
+                  <p className="mt-3 text-sm font-extrabold text-orange-500">{dealOfDayActivity.priceDropPercent}% OFF</p>
+                ) : null}
+                <span className="mt-2 block text-[11px] text-white/75">{getProductStockSnapshot(dealOfDay).label}</span>
+              </>
+            ) : null}
           </div>
-          <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="absolute bottom-5 right-2 h-40 w-40 object-contain" />
         </section>
       ) : null}
 
@@ -741,19 +828,7 @@ const MobileHome = ({
         <div ref={storeLoadMoreRef} className="h-1 w-full" aria-hidden="true" />
       </section>
 
-      <section className="mt-6 rounded-lg bg-orange-50 p-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md border border-orange-200 text-orange-600"><UtilityIcon type="mail" /></span>
-          <div>
-            <h2 className="text-sm font-extrabold text-gray-950">Subscribe to our newsletter</h2>
-            <p className="mt-1 text-[12px] leading-5 text-gray-600">Get updates on new arrivals and exclusive offers.</p>
-          </div>
-        </div>
-        <form className="mt-4 flex overflow-hidden rounded-md bg-white">
-          <input type="email" placeholder="Enter your email" className="min-w-0 flex-1 px-4 py-3 text-[12px] outline-none" />
-          <button type="submit" className="bg-orange-600 px-4 text-[12px] font-bold text-white">Subscribe</button>
-        </form>
-      </section>
+      <NewsletterSection />
 
       <section className="mt-5 grid grid-cols-3 gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
         <MobileServiceCard title="Free Delivery" text="On orders over UGX 100,000" icon={<UtilityIcon type="delivery" />} />
@@ -939,7 +1014,7 @@ const HomeStorefrontSkeleton = () => (
             </div>
           </aside>
 
-          <Skeleton className="h-[238px] rounded-md xl:h-[252px]" />
+          <Skeleton className="aspect-[15/4] rounded-md" />
           <Skeleton className="min-h-[238px] rounded-md xl:min-h-[252px]" />
 
           <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
@@ -1086,26 +1161,6 @@ const FlashCountdown = ({ timeLeft, size = "md" }) => {
   );
 };
 
-const getPromotionRank = (product) => {
-  const activity = getProductActivitySnapshot(product);
-
-  if (activity.flashDealActive) {
-    return 0;
-  }
-
-  if (product?.promotionType === "discount") {
-    return 1;
-  }
-
-  if (product?.promotionType === "featured") {
-    return 2;
-  }
-
-  return 99;
-};
-
-const isPromotedProduct = (product) => getPromotionRank(product) < 99;
-
 const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike } = useAppContext();
   const resolvedContent = useMemo(() => resolveSiteContent(siteContent), [siteContent]);
@@ -1116,22 +1171,15 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       : [];
   const sortedProducts = sortProductsForLiveShowcase(storefrontProducts);
   const heroProduct = sortedProducts[0];
+  // Flash Deals only ever shows products that are genuinely flagged as an
+  // active flash deal (real discount, within its start/end window — see
+  // getProductActivitySnapshot). Products merely marked "featured" or
+  // "discount" promotionType are a different concept and must not appear
+  // here, or the countdown has nothing real to count down to.
   const flashDealProducts = sortedProducts.filter((product) => getProductActivitySnapshot(product).flashDealActive);
-  const offerProducts = sortedProducts.filter((product) => {
-    return product.promotionType === "discount" || product.promotionType === "featured";
-  });
   const dealProducts = takeProducts(
-    uniqueById([...flashDealProducts, ...offerProducts])
-      .filter(isPromotedProduct)
-      .sort((leftProduct, rightProduct) => {
-        const rankDifference = getPromotionRank(leftProduct) - getPromotionRank(rightProduct);
-
-        if (rankDifference !== 0) {
-          return rankDifference;
-        }
-
-        return (Number(rightProduct.date) || 0) - (Number(leftProduct.date) || 0);
-      }),
+    uniqueById(flashDealProducts)
+      .sort((leftProduct, rightProduct) => (Number(rightProduct.date) || 0) - (Number(leftProduct.date) || 0)),
     5
   );
   const homeProducts = productsInCategories(sortedProducts, ["Home & Living", "Appliances", "Construction & Tools"], 10);
@@ -1140,6 +1188,16 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const heroSlides = resolvedContent.heroSlides.filter((slide) => slide.imageUrl);
   const promoSlides = resolvedContent.promoBanners.filter((banner) => banner.imageUrl);
   const featuredCards = resolvedContent.featuredCards.filter((card) => card.imageUrl);
+  const sidebarBanners = resolvedContent.sidebarPromoBanners.filter((banner) => banner.imageUrl);
+  // A "Deal of the Day" banner is any admin-uploaded promo/sidebar banner
+  // pointed at a product (via productId) that currently has a genuinely
+  // active flash deal — the countdown shown for it is that specific
+  // product's own deal, not a generic site-wide timer.
+  const dealOfDayBanners = [...promoSlides, ...sidebarBanners].filter((banner) => {
+    if (!banner.productId) return false;
+    const linkedProduct = sortedProducts.find((product) => product._id === banner.productId);
+    return linkedProduct ? getProductActivitySnapshot(linkedProduct).flashDealActive : false;
+  });
   const storeCards = Object.entries(
     sortedProducts.reduce((acc, product) => {
       const storeId = product.userId || product.sellerProfile?.id || product.sellerProfile?._id;
@@ -1294,6 +1352,8 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       setActiveHeroIndex={setActiveHeroIndex}
       activePromo={activePromo}
       marketingBanners={marketingBanners}
+      sidebarBanners={sidebarBanners}
+      dealOfDayBanners={dealOfDayBanners}
       dealProducts={dealProducts}
       recommendedProducts={recommendedProducts}
       sortedProducts={sortedProducts}
@@ -1341,7 +1401,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             onSelect={setActiveHeroIndex}
             navigate={navigate}
             priority
-            className="h-[238px] rounded-md bg-gray-100 xl:h-[252px]"
+            className="aspect-[15/4] rounded-md bg-gray-100"
           />
 
           <button

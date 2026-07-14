@@ -42,6 +42,7 @@ export async function POST(request) {
         const name = formData.get('name');
         const description = formData.get('description');
         const category = formData.get('category');
+        const subcategory = formData.get('subcategory') || '';
         const price = formData.get('price');
         const offerPrice = formData.get('offerPrice');
         const stock = parseProductStockInput(formData.get('stock'));
@@ -67,6 +68,7 @@ export async function POST(request) {
             name,
             description,
             category,
+            subcategory,
             price: Number(price),
             offerPrice: Number(offerPrice),
             stock,

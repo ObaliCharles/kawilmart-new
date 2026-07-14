@@ -20,6 +20,7 @@ const menuItems = [
     { name: 'Dashboard', path: '/admin', icon: '📊' },
     { name: 'All Orders', path: '/admin/orders', icon: '📦' },
     { name: 'Products', path: '/admin/products', icon: '🛍️' },
+    { name: 'Categories', path: '/admin/categories', icon: '🗂️' },
     { name: 'Users & Roles', path: '/admin/users', icon: '👥' },
     { name: 'Management', path: '/admin/management', icon: '⚙️' },
     { name: 'Billing', path: '/admin/billing', icon: '🧾' },

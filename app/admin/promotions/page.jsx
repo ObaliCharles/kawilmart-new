@@ -18,7 +18,7 @@ const linkTypeOptions = [
 ];
 
 const bannerTypeConfigs = [
-    { type: 'hero', label: 'Hero Slides', description: 'Large homepage slides linked to a product, category, store, or URL.', aspect: 21 / 9, hasSecondaryCta: true, hasDescription: false, hasOffer: true, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Primary button text', defaultCta: 'Shop Now' },
+    { type: 'hero', label: 'Hero Slides', description: 'Large homepage slides linked to a product, category, store, or URL. Crop to match the homepage hero exactly (wide banner, ~15:4) so it never gets zoomed or cropped oddly on the live site.', aspect: 15 / 4, hasSecondaryCta: true, hasDescription: false, hasOffer: true, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Primary button text', defaultCta: 'Shop Now' },
     { type: 'featured', label: 'Featured Cards', description: 'Cards shown beneath popular products.', aspect: 4 / 3, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'Buy now' },
     { type: 'promo', label: 'Homepage Promo Offers', description: 'Right-side hero promotion images that rotate on the storefront.', aspect: 4 / 3, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'Get offer' },
     { type: 'sidebarPromo', label: 'Sidebar Promo Banners', description: 'Small promo banners shown in sidebar placements.', aspect: 1, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'View offer' },

@@ -426,7 +426,7 @@ const SellerOverviewSkeleton = () => (
 );
 
 const AddProductInner = () => {
-  const { getToken, router, authReady, user, formatCurrency, formatCompactCurrency, isSeller, isAdmin, resolvedRole, refreshAccessState } = useAppContext();
+  const { getToken, router, authReady, user, formatCurrency, formatCompactCurrency, isSeller, isAdmin, resolvedRole, refreshAccessState, subcategoriesByParent, customTopCategories } = useAppContext();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
   const isEditMode = Boolean(editId);
@@ -436,6 +436,7 @@ const AddProductInner = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(defaultSellerCategory);
+  const [subcategory, setSubcategory] = useState('');
   const [price, setPrice] = useState('');
   const [offerPrice, setOfferPrice] = useState('');
   const [stock, setStock] = useState('');
@@ -465,6 +466,7 @@ const AddProductInner = () => {
     setName('');
     setDescription('');
     setCategory(defaultSellerCategory);
+    setSubcategory('');
     setPrice('');
     setOfferPrice('');
     setStock('');
@@ -516,6 +518,7 @@ const AddProductInner = () => {
         setName(product.name || '');
         setDescription(product.description || '');
         setCategory(product.category || defaultSellerCategory);
+        setSubcategory(product.subcategory || '');
         setPrice(product.price?.toString() || '');
         setOfferPrice(product.offerPrice?.toString() || '');
         setStock(product.stock?.toString() || '');
@@ -596,6 +599,7 @@ const AddProductInner = () => {
     formData.append('name', name);
     formData.append('description', description);
     formData.append('category', category);
+    formData.append('subcategory', subcategory);
     formData.append('price', price);
     formData.append('offerPrice', offerPrice);
     formData.append('stock', stock);
@@ -1322,7 +1326,7 @@ const AddProductInner = () => {
                   <select
                     id="category"
                     className="rounded-xl border border-gray-200 px-3 py-3 outline-none transition focus:border-orange-400"
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={(e) => { setCategory(e.target.value); setSubcategory(''); }}
                     value={category}
                   >
                     {sellerCategoryGroups.map((group) => (
@@ -1334,8 +1338,38 @@ const AddProductInner = () => {
                         ))}
                       </optgroup>
                     ))}
+                    {customTopCategories.length > 0 ? (
+                      <optgroup label="Other categories">
+                        {customTopCategories.map((option) => (
+                          <option key={option._id} value={option.name}>
+                            {option.icon ? `${option.icon} ` : ''}{option.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ) : null}
                   </select>
                 </div>
+
+                {(subcategoriesByParent.get(category) || []).length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    <label className="text-base font-medium text-gray-900" htmlFor="subcategory">
+                      Subcategory
+                    </label>
+                    <select
+                      id="subcategory"
+                      className="rounded-xl border border-gray-200 px-3 py-3 outline-none transition focus:border-orange-400"
+                      onChange={(e) => setSubcategory(e.target.value)}
+                      value={subcategory}
+                    >
+                      <option value="">No subcategory</option>
+                      {(subcategoriesByParent.get(category) || []).map((option) => (
+                        <option key={option._id} value={option.name}>
+                          {option.icon ? `${option.icon} ` : ''}{option.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
 
                 {isAdmin && availableTags.length > 0 ? (
                   <div className="flex flex-col gap-1 lg:col-span-2">
