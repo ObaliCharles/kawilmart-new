@@ -1,4 +1,4 @@
-'use client'
+uch'use client'
 
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
@@ -38,8 +38,9 @@ const FlashDeals = () => {
         const leftActivity = left.activity;
         const rightActivity = right.activity;
 
+        // Sort by time remaining - longest time first
         if (leftActivity.hasFlashDealDeadline && rightActivity.hasFlashDealDeadline) {
-          return leftActivity.flashDealEndsAt - rightActivity.flashDealEndsAt;
+          return rightActivity.flashDealEndsAt - leftActivity.flashDealEndsAt;
         }
 
         if (leftActivity.hasFlashDealDeadline) {
@@ -55,6 +56,18 @@ const FlashDeals = () => {
       .slice(0, 6);
   }, [products]);
 
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    setNow(Date.now());
+    const timer = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  // Calculate the earliest deadline from current flash deals
   const earliestDeadline = useMemo(() => {
     const now = Date.now();
     const deadlines = flashDeals
@@ -63,21 +76,6 @@ const FlashDeals = () => {
 
     return deadlines.length ? Math.min(...deadlines) : 0;
   }, [flashDeals]);
-
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    if (!earliestDeadline) {
-      return undefined;
-    }
-
-    setNow(Date.now());
-    const timer = window.setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [earliestDeadline]);
 
   if (!flashDeals.length) {
     return null;
@@ -104,13 +102,13 @@ const FlashDeals = () => {
               Deal ended
             </div>
           ) : hasCountdown ? (
-            <div className="inline-flex w-fit items-center gap-1 rounded-2xl bg-red-600 px-3 py-2 text-sm font-bold text-white shadow-lg">
+            <div className="inline-flex w-fit items-center gap-1 rounded-2xl bg-red-600 px-4 py-3 text-base font-bold text-white shadow-lg">
               <span className="pr-1 text-xs font-semibold uppercase tracking-[0.14em] text-red-100">Ends in</span>
-              <span className="rounded-md bg-white px-1.5 py-0.5 text-red-600">{pad(timeLeft.hours)}</span>
-              <span>:</span>
-              <span className="rounded-md bg-white px-1.5 py-0.5 text-red-600">{pad(timeLeft.minutes)}</span>
-              <span>:</span>
-              <span className="rounded-md bg-white px-1.5 py-0.5 text-red-600">{pad(timeLeft.seconds)}</span>
+              <span className="rounded-md bg-white px-2 py-1 text-red-600">{pad(timeLeft.hours)}</span>
+              <span className="text-lg">:</span>
+              <span className="rounded-md bg-white px-2 py-1 text-red-600">{pad(timeLeft.minutes)}</span>
+              <span className="text-lg">:</span>
+              <span className="rounded-md bg-white px-2 py-1 text-red-600">{pad(timeLeft.seconds)}</span>
             </div>
           ) : (
             <div className="inline-flex w-fit rounded-full border-2 border-orange-300 bg-orange-100 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-orange-800">
