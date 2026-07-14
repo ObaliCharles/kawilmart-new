@@ -10,26 +10,9 @@ import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
 import Skeleton from "@/components/Skeleton";
 import { resolveSiteContent } from "@/lib/defaultSiteContent";
-import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
+import { categoryMatchesSelection, homeCategoryValues, getCategoryMeta } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 import { getProductStockSnapshot } from "@/lib/productStock";
-
-const compactCategories = [
-  ["Automobiles", "car", "/all-products?category=Automotive"],
-  ["Home appliance", "home", "/all-products?category=Appliances"],
-  ["Tools & Equipment", "tools", "/all-products?category=Construction%20%26%20Tools"],
-  ["Books & Magazines", "book", "/all-products?category=Books%20%26%20Learning"],
-  ["Electronic gadgets", "phone", "/all-products?category=Computers%20%26%20Electronics"],
-  ["Clothing", "shirt", "/all-products?category=Fashion"],
-  ["Sports & Outdoor", "ball", "/all-products?category=Sports%20%26%20Outdoors"],
-];
-
-const mobileFeaturedCategories = [
-  ["Phones", "Phones & Tablets"],
-  ["Laptops", "Computers & Electronics"],
-  ["Audio", "Audio"],
-  ["TV sets", "Computers & Electronics"],
-];
 
 const mobileTopCategories = [
   ["T-Shirt", "Fashion"],
@@ -189,24 +172,6 @@ const ChevronRight = () => (
   </svg>
 );
 
-const CategoryIcon = ({ type }) => {
-  const paths = {
-    car: "M5 17h14l-1.2-5.2A3 3 0 0 0 14.9 9H9.1a3 3 0 0 0-2.9 2.8L5 17Zm2 0v2m10-2v2M7.5 13h9M8 17a1.5 1.5 0 1 0 0 .1m8-.1a1.5 1.5 0 1 0 0 .1",
-    home: "M4 11.5 12 5l8 6.5M6.5 10v9h11v-9M10 19v-5h4v5",
-    tools: "m14 6 4 4M4 20l8.5-8.5m2-6.5 4.5 4.5-3 3-4.5-4.5 3-3ZM5 7l4 4",
-    book: "M5 5.5A2.5 2.5 0 0 1 7.5 3H20v16H7.5A2.5 2.5 0 0 0 5 21V5.5Zm0 0A2.5 2.5 0 0 0 7.5 8H20",
-    phone: "M8 3h8a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm3 15h2",
-    shirt: "M8 4 5 6.5 3 11l3 1.5V20h12v-7.5l3-1.5-2-4.5L16 4l-2 2h-4L8 4Z",
-    ball: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-18v18M4.5 8h15M4.5 16h15",
-  };
-
-  return (
-    <svg className="h-5 w-5 text-gray-700" aria-hidden="true" viewBox="0 0 24 24" fill="none">
-      <path d={paths[type] || paths.phone} stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-};
-
 const Price = ({ product, className = "" }) => {
   const { formatCurrency } = useAppContext();
   const price = getPriceValue(product.offerPrice || product.price);
@@ -353,12 +318,37 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
   );
 };
 
-const productForCategory = (products, category) => (
-  products.find((product) => categoryMatchesSelection(product.category, category)) || products[0]
+// A neutral, branded empty-state for banner slots that have no admin-uploaded
+// banner yet. This deliberately does NOT fall back to a product photo — that
+// was the cause of the "same picture in every container" bug, since every
+// empty slot reused the first product image. Renders the same regardless of
+// catalog, keeps the layout intact, and stays clickable.
+const PromoPlaceholder = ({ navigate, href = "/all-products", className = "", label = "Explore the marketplace" }) => (
+  <button
+    type="button"
+    onClick={() => navigate(href)}
+    className={`relative flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-orange-500 via-orange-500 to-amber-400 text-left ${className}`}
+  >
+    <span className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" aria-hidden="true" />
+    <span className="absolute -bottom-12 -left-6 h-28 w-28 rounded-full bg-white/10" aria-hidden="true" />
+    <span className="relative z-10 flex flex-col items-center gap-2 px-4 text-center">
+      <Image src={assets.logo} alt="KawilMart" width={40} height={40} className="h-8 w-auto brightness-0 invert" />
+      <span className="text-xs font-bold text-white sm:text-sm">{label}</span>
+    </span>
+  </button>
 );
 
-const MobileRoundCategory = ({ label, category, products, navigate }) => {
-  const product = productForCategory(products, category);
+// No products[0] fallback — an unmatched category returns null so its tile
+// shows an icon instead of an unrelated product's photo.
+const productForCategory = (products, category) => (
+  products.find((product) => categoryMatchesSelection(product.category, category)) || null
+);
+
+const MobileRoundCategory = ({ label, category, icon, products, navigate }) => {
+  // Prefer the admin-set category icon (emoji); only fall back to a product
+  // photo or line icon when no icon is set. This is why category tiles no
+  // longer all show the same first-product image.
+  const product = icon ? null : productForCategory(products, category);
 
   return (
     <button
@@ -366,8 +356,10 @@ const MobileRoundCategory = ({ label, category, products, navigate }) => {
       onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
       className="flex min-w-0 flex-col items-center gap-1.5 text-center"
     >
-      <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-gray-100">
-        {product ? (
+      <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center overflow-hidden rounded-full bg-white text-2xl shadow-sm ring-1 ring-gray-100">
+        {icon ? (
+          <span aria-hidden="true">{icon}</span>
+        ) : product ? (
           <ProductImage product={product} alt={label} width={76} height={76} className="h-full w-full object-contain p-1" />
         ) : (
           <CategoryLineIcon category={category} className="h-5 w-5 text-gray-700" />
@@ -617,6 +609,7 @@ const MobileHome = ({
   storeLoadMoreRef,
   timeLeft,
   hasCountdown,
+  homeCategoryRail = [],
   navigate,
   prefetchRoute,
   formatCurrency,
@@ -634,29 +627,30 @@ const MobileHome = ({
     : (dealProducts[activeDealIndex % Math.max(dealProducts.length, 1)] || null);
   const dealOfDayActivity = dealOfDay ? getProductActivitySnapshot(dealOfDay) : null;
   const topStoreCards = storeCards;
-  const promoProduct = sortedProducts[1] || heroFallback;
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
-  const mobileHeroSlides = heroSlides.length
-    ? heroSlides
-    : (heroFallback ? [{ _id: "hero-fallback", imageUrl: getImage(heroFallback), href: `/product/${heroFallback._id}` }] : []);
+  const hasRealPromo = Boolean(activePromo?.imageUrl);
   const mobileMarketingBanners = (Array.isArray(marketingBanners) ? marketingBanners : [])
     .filter((item) => item?.imageUrl)
     .slice(0, 3);
 
   return (
     <main className="bg-[#fbfbfb] px-3 pb-8 pt-3 md:hidden">
-      <HeroImageSlider
-        slides={mobileHeroSlides}
-        currentIndex={activeHeroIndex % Math.max(mobileHeroSlides.length, 1)}
-        onSelect={setActiveHeroIndex}
-        navigate={navigate}
-        priority
-        className="aspect-[2.08/1] rounded-xl bg-gray-100 shadow-sm"
-      />
+      {heroSlides.length ? (
+        <HeroImageSlider
+          slides={heroSlides}
+          currentIndex={activeHeroIndex % Math.max(heroSlides.length, 1)}
+          onSelect={setActiveHeroIndex}
+          navigate={navigate}
+          priority
+          className="aspect-[2.08/1] rounded-xl bg-gray-100 shadow-sm"
+        />
+      ) : (
+        <PromoPlaceholder navigate={navigate} className="aspect-[2.08/1] w-full rounded-xl shadow-sm" />
+      )}
 
       <section className="mt-4 grid grid-cols-5 gap-x-2 gap-y-3">
-        {mobileFeaturedCategories.map(([label, category]) => (
-          <MobileRoundCategory key={label} label={label} category={category} products={sortedProducts} navigate={navigate} />
+        {homeCategoryRail.slice(0, 9).map((category) => (
+          <MobileRoundCategory key={category.value} label={category.label} category={category.value} icon={category.icon} products={sortedProducts} navigate={navigate} />
         ))}
         <button type="button" onClick={() => navigate("/categories")} className="flex min-w-0 flex-col items-center gap-2 text-center">
           <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm"><UtilityIcon type="grid" /></span>
@@ -725,13 +719,15 @@ const MobileHome = ({
         </div>
       </section>
 
-      <button
-        type="button"
-        onClick={() => navigate(promoHref)}
-        className="relative mt-6 block aspect-[2.08/1] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm"
-      >
-        <ContentImage src={activePromo.imageUrl || getImage(promoProduct)} alt={activePromo.title || "New arrivals"} width={720} height={346} className="h-full w-full transition-opacity duration-500" />
-      </button>
+      {hasRealPromo ? (
+        <button
+          type="button"
+          onClick={() => navigate(promoHref)}
+          className="relative mt-6 block aspect-[2.08/1] w-full overflow-hidden rounded-lg bg-gray-100 shadow-sm"
+        >
+          <ContentImage src={activePromo.imageUrl} alt={activePromo.title || "Promotion"} width={720} height={346} className="h-full w-full transition-opacity duration-500" />
+        </button>
+      ) : null}
 
       {sidebarBanners.length ? (
         <section className="mt-5 grid grid-cols-2 gap-3">
@@ -1162,8 +1158,23 @@ const FlashCountdown = ({ timeLeft, size = "md" }) => {
 };
 
 const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
-  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike } = useAppContext();
+  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike, customTopCategories } = useAppContext();
   const resolvedContent = useMemo(() => resolveSiteContent(siteContent), [siteContent]);
+  // Real top-level categories (the static marketplace list plus any the admin
+  // added), each with its icon — replaces the old hardcoded category rails so
+  // what shows is always real, admin-manageable categories.
+  const homeCategoryRail = useMemo(() => {
+    const staticRail = homeCategoryValues.map((value) => {
+      const meta = getCategoryMeta(value);
+      return { label: meta.label, value, icon: meta.icon };
+    });
+    const customRail = (customTopCategories || []).map((category) => ({
+      label: category.name,
+      value: category.name,
+      icon: category.icon || "📦",
+    }));
+    return [...staticRail, ...customRail];
+  }, [customTopCategories]);
   const storefrontProducts = products.length
     ? products
     : initialProducts.length
@@ -1361,6 +1372,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       storeLoadMoreRef={storeLoadMoreRef}
       timeLeft={timeLeft}
       hasCountdown={earliestDealDeadline > now}
+      homeCategoryRail={homeCategoryRail}
       navigate={navigate}
       prefetchRoute={prefetchRoute}
       formatCurrency={formatCurrency}
@@ -1371,46 +1383,57 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
         <section className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)_245px]">
           <aside className="rounded-md border border-gray-200 bg-white p-2.5 lg:row-span-2">
             <div className="space-y-1">
-              {compactCategories.map(([label, icon, href]) => (
-                <div
-                  key={label}
-                  className="group relative"
-                >
-                  <button
-                    type="button"
-                    onClick={() => navigate(href)}
-                    className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[12px] text-gray-800 transition hover:bg-orange-50 hover:text-orange-600 group-hover:bg-orange-50 group-hover:text-orange-600"
+              {homeCategoryRail.slice(0, 12).map((category) => {
+                const href = `/all-products?category=${encodeURIComponent(category.value)}`;
+                return (
+                  <div
+                    key={category.value}
+                    className="group relative"
                   >
-                    <span className="flex items-center gap-2.5"><CategoryIcon type={icon} />{label}</span>
-                    <span className="text-gray-400 group-hover:text-orange-500"><ChevronRight /></span>
-                  </button>
-                  <div className="absolute left-full top-0 z-30 hidden min-w-52 rounded-md border border-gray-200 bg-white p-2 text-[12px] text-gray-700 shadow-lg group-hover:block group-focus-within:block">
-                    <button type="button" onClick={() => navigate(`${href}&filter=flash`)} className="block w-full rounded px-3 py-2 text-left hover:bg-orange-50 hover:text-orange-600">{label} deals</button>
-                    <button type="button" onClick={() => navigate(`${href}&sort=newest`)} className="block w-full rounded px-3 py-2 text-left hover:bg-orange-50 hover:text-orange-600">New arrivals</button>
-                    <button type="button" onClick={() => navigate(`${href}&sort=popular`)} className="block w-full rounded px-3 py-2 text-left hover:bg-orange-50 hover:text-orange-600">Best sellers</button>
+                    <button
+                      type="button"
+                      onClick={() => navigate(href)}
+                      className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[12px] text-gray-800 transition hover:bg-orange-50 hover:text-orange-600 group-hover:bg-orange-50 group-hover:text-orange-600"
+                    >
+                      <span className="flex items-center gap-2.5"><span className="text-base" aria-hidden="true">{category.icon}</span>{category.label}</span>
+                      <span className="text-gray-400 group-hover:text-orange-500"><ChevronRight /></span>
+                    </button>
+                    <div className="absolute left-full top-0 z-30 hidden min-w-52 rounded-md border border-gray-200 bg-white p-2 text-[12px] text-gray-700 shadow-lg group-hover:block group-focus-within:block">
+                      <button type="button" onClick={() => navigate(`${href}&filter=flash`)} className="block w-full rounded px-3 py-2 text-left hover:bg-orange-50 hover:text-orange-600">{category.label} deals</button>
+                      <button type="button" onClick={() => navigate(`${href}&sort=newest`)} className="block w-full rounded px-3 py-2 text-left hover:bg-orange-50 hover:text-orange-600">New arrivals</button>
+                      <button type="button" onClick={() => navigate(`${href}&sort=popular`)} className="block w-full rounded px-3 py-2 text-left hover:bg-orange-50 hover:text-orange-600">Best sellers</button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <button type="button" onClick={() => navigate("/categories")} className="px-2.5 py-2 text-[12px] font-semibold text-orange-600">+ More categories</button>
             </div>
           </aside>
 
-          <HeroImageSlider
-            slides={heroSlides}
-            currentIndex={activeHeroIndex % Math.max(heroSlides.length || 1, 1)}
-            onSelect={setActiveHeroIndex}
-            navigate={navigate}
-            priority
-            className="aspect-[15/4] rounded-md bg-gray-100"
-          />
+          {heroSlides.length ? (
+            <HeroImageSlider
+              slides={heroSlides}
+              currentIndex={activeHeroIndex % Math.max(heroSlides.length || 1, 1)}
+              onSelect={setActiveHeroIndex}
+              navigate={navigate}
+              priority
+              className="aspect-[15/4] rounded-md bg-gray-100"
+            />
+          ) : (
+            <PromoPlaceholder navigate={navigate} className="aspect-[15/4] w-full rounded-md" label="Shop the KawilMart marketplace" />
+          )}
 
-          <button
-            type="button"
-            onClick={() => navigate(getContentHref(activePromo, "/all-products?filter=flash"))}
-            className="relative block min-h-[238px] overflow-hidden rounded-md bg-gray-100 text-left xl:min-h-[252px]"
-          >
-            <Image src={activePromo.imageUrl || getImage(heroProduct)} alt={activePromo.title || "Promotional offer"} width={420} height={520} className="absolute inset-0 h-full w-full object-cover" />
-          </button>
+          {activePromo?.imageUrl ? (
+            <button
+              type="button"
+              onClick={() => navigate(getContentHref(activePromo, "/all-products?filter=flash"))}
+              className="relative block min-h-[238px] overflow-hidden rounded-md bg-gray-100 text-left xl:min-h-[252px]"
+            >
+              <Image src={activePromo.imageUrl} alt={activePromo.title || "Promotional offer"} width={420} height={520} className="absolute inset-0 h-full w-full object-cover" />
+            </button>
+          ) : (
+            <PromoPlaceholder navigate={navigate} href="/all-products?filter=flash" className="min-h-[238px] xl:min-h-[252px]" label="See today's offers" />
+          )}
 
           <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
             {featuredCards.slice(0, 3).map((card, index) => (
