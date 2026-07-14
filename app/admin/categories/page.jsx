@@ -4,13 +4,26 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { homeCategoryValues, getCategoryMeta } from '@/lib/marketplaceCategories';
 
-const emptyForm = { name: '', icon: '', parentValue: '', sortOrder: 0, isActive: true };
+const emptyForm = { name: '', icon: '', parentValue: '', sortOrder: 0, isActive: true, imageUrl: '', heroImage: '' };
+
+const CategoryThumb = ({ category, fallback = '🏷️' }) => (
+    category.imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={category.imageUrl} alt="" className="mr-2 inline-block h-7 w-7 rounded-md object-contain align-middle" />
+    ) : (
+        <span className="mr-2 align-middle">{category.icon || fallback}</span>
+    )
+);
 
 export default function AdminCategoriesPage() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState(null);
     const [form, setForm] = useState(emptyForm);
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState('');
+    const [heroFile, setHeroFile] = useState(null);
+    const [heroPreview, setHeroPreview] = useState('');
     const [saving, setSaving] = useState(false);
 
     const loadCategories = async () => {
@@ -58,6 +71,10 @@ export default function AdminCategoriesPage() {
     const resetForm = () => {
         setEditingId(null);
         setForm(emptyForm);
+        setImageFile(null);
+        setImagePreview('');
+        setHeroFile(null);
+        setHeroPreview('');
     };
 
     const handleEdit = (category) => {
@@ -68,7 +85,39 @@ export default function AdminCategoriesPage() {
             parentValue: category.parentValue || '',
             sortOrder: category.sortOrder || 0,
             isActive: category.isActive !== false,
+            imageUrl: category.imageUrl || '',
+            heroImage: category.heroImage || '',
         });
+        setImageFile(null);
+        setImagePreview('');
+        setHeroFile(null);
+        setHeroPreview('');
+    };
+
+    const validateImageFile = (file, maxMb) => {
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            toast.error('Please choose a JPEG, PNG, or WebP image');
+            return false;
+        }
+        if (file.size > maxMb * 1024 * 1024) {
+            toast.error(`Image must be under ${maxMb}MB`);
+            return false;
+        }
+        return true;
+    };
+
+    const handleImageChange = (event) => {
+        const file = event.target.files?.[0];
+        if (!file || !validateImageFile(file, 3)) return;
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    };
+
+    const handleHeroChange = (event) => {
+        const file = event.target.files?.[0];
+        if (!file || !validateImageFile(file, 5)) return;
+        setHeroFile(file);
+        setHeroPreview(URL.createObjectURL(file));
     };
 
     const handleSubmit = async (e) => {
@@ -77,16 +126,18 @@ export default function AdminCategoriesPage() {
 
         setSaving(true);
         try {
-            const payload = {
-                name: form.name,
-                icon: form.icon,
-                parentValue: form.parentValue || null,
-                sortOrder: form.sortOrder,
-                isActive: form.isActive,
-            };
+            const formData = new FormData();
+            formData.append('name', form.name);
+            formData.append('icon', form.icon);
+            if (form.parentValue) formData.append('parentValue', form.parentValue);
+            formData.append('sortOrder', String(form.sortOrder));
+            formData.append('isActive', form.isActive ? 'true' : 'false');
+            if (imageFile) formData.append('image', imageFile);
+            if (heroFile) formData.append('heroImage', heroFile);
+
             const data = editingId
-                ? (await axios.patch(`/api/admin/categories/${editingId}`, payload)).data
-                : (await axios.post('/api/admin/categories', payload)).data;
+                ? (await axios.patch(`/api/admin/categories/${editingId}`, formData)).data
+                : (await axios.post('/api/admin/categories', formData)).data;
 
             if (data.success) {
                 toast.success(editingId ? 'Category updated' : 'Category added');
@@ -99,6 +150,29 @@ export default function AdminCategoriesPage() {
             toast.error(error?.response?.data?.message || 'Could not save category');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleRemoveImage = async () => {
+        if (!editingId) {
+            setImageFile(null);
+            setImagePreview('');
+            setForm((prev) => ({ ...prev, imageUrl: '' }));
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append('removeImage', 'true');
+            const { data } = await axios.patch(`/api/admin/categories/${editingId}`, formData);
+            if (data.success) {
+                toast.success('Image removed');
+                setImageFile(null);
+                setImagePreview('');
+                setForm((prev) => ({ ...prev, imageUrl: '' }));
+                await loadCategories();
+            }
+        } catch (error) {
+            toast.error(error?.response?.data?.message || 'Could not remove image');
         }
     };
 
@@ -147,7 +221,7 @@ export default function AdminCategoriesPage() {
                     />
                 </div>
                 <div>
-                    <label className="text-xs font-semibold text-gray-600">Icon (emoji)</label>
+                    <label className="text-xs font-semibold text-gray-600">Emoji (fallback only)</label>
                     <input
                         type="text"
                         value={form.icon}
@@ -155,6 +229,46 @@ export default function AdminCategoriesPage() {
                         placeholder="🍫"
                         className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
                     />
+                    <p className="mt-1 text-[11px] text-gray-400">Only shown if no image is uploaded.</p>
+                </div>
+                <div className="sm:col-span-2">
+                    <label className="text-xs font-semibold text-gray-600">Category image (PNG of a representative product)</label>
+                    <div className="mt-1 flex items-center gap-3">
+                        {(imagePreview || form.imageUrl) ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={imagePreview || form.imageUrl} alt="" className="h-16 w-16 rounded-lg border border-gray-200 object-contain p-1" />
+                        ) : (
+                            <span className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-gray-300 text-2xl text-gray-400">{form.icon || '🖼️'}</span>
+                        )}
+                        <div className="flex flex-col gap-1.5">
+                            <label className="cursor-pointer rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:bg-orange-50">
+                                {(imagePreview || form.imageUrl) ? 'Change image' : 'Upload image'}
+                                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} />
+                            </label>
+                            {(imagePreview || form.imageUrl) ? (
+                                <button type="button" onClick={handleRemoveImage} className="text-left text-[11px] font-medium text-rose-600 hover:underline">
+                                    Remove image
+                                </button>
+                            ) : null}
+                        </div>
+                    </div>
+                    <p className="mt-1 text-[11px] text-gray-400">Shown on the mobile home category rail. PNG with transparent background works best. Max 3MB.</p>
+                </div>
+                <div className="sm:col-span-2">
+                    <label className="text-xs font-semibold text-gray-600">Category banner / background image (wide)</label>
+                    <div className="mt-1 flex items-center gap-3">
+                        {(heroPreview || form.heroImage) ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={heroPreview || form.heroImage} alt="" className="h-16 w-28 rounded-lg border border-gray-200 object-cover" />
+                        ) : (
+                            <span className="flex h-16 w-28 items-center justify-center rounded-lg border border-dashed border-gray-300 text-xl text-gray-400">🖼️</span>
+                        )}
+                        <label className="cursor-pointer rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:bg-orange-50">
+                            {(heroPreview || form.heroImage) ? 'Change banner' : 'Upload banner'}
+                            <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleHeroChange} />
+                        </label>
+                    </div>
+                    <p className="mt-1 text-[11px] text-gray-400">Wide background shown at the top of this category/subcategory&apos;s product page. Max 5MB.</p>
                 </div>
                 <div className="sm:col-span-2">
                     <label className="text-xs font-semibold text-gray-600">Belongs under</label>
@@ -222,8 +336,8 @@ export default function AdminCategoriesPage() {
                                     {customTopCategories.map((category) => (
                                         <tr key={category._id} className="border-b border-gray-50 last:border-0">
                                             <td className="px-4 py-3">
-                                                <span className="mr-2">{category.icon || '📦'}</span>
-                                                <span className="font-medium text-gray-900">{category.name}</span>
+                                                <CategoryThumb category={category} fallback="📦" />
+                                                <span className="font-medium text-gray-900 align-middle">{category.name}</span>
                                             </td>
                                             <td className="px-4 py-3 text-right">
                                                 <button onClick={() => handleEdit(category)} className="mr-3 text-orange-600 hover:underline">Edit</button>
@@ -250,8 +364,8 @@ export default function AdminCategoriesPage() {
                                         {children.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)).map((category) => (
                                             <tr key={category._id} className="border-b border-gray-50 last:border-0">
                                                 <td className="px-4 py-3">
-                                                    <span className="mr-2">{category.icon || '🏷️'}</span>
-                                                    <span className="font-medium text-gray-900">{category.name}</span>
+                                                    <CategoryThumb category={category} />
+                                                    <span className="font-medium text-gray-900 align-middle">{category.name}</span>
                                                     {!category.isActive && (
                                                         <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">Inactive</span>
                                                     )}

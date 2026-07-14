@@ -344,12 +344,10 @@ const productForCategory = (products, category) => (
   products.find((product) => categoryMatchesSelection(product.category, category)) || null
 );
 
-const MobileRoundCategory = ({ label, category, icon, products, navigate }) => {
-  // Prefer the admin-set category icon (emoji); only fall back to a product
-  // photo or line icon when no icon is set. This is why category tiles no
-  // longer all show the same first-product image.
-  const product = icon ? null : productForCategory(products, category);
-
+const MobileRoundCategory = ({ label, category, icon, imageUrl, navigate }) => {
+  // Prefer the admin-uploaded category PNG, then the emoji, then a line icon.
+  // Never falls back to a product photo, which is why category tiles no longer
+  // all show the same first-product image.
   return (
     <button
       type="button"
@@ -357,10 +355,11 @@ const MobileRoundCategory = ({ label, category, icon, products, navigate }) => {
       className="flex min-w-0 flex-col items-center gap-1.5 text-center"
     >
       <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center overflow-hidden rounded-full bg-white text-2xl shadow-sm ring-1 ring-gray-100">
-        {icon ? (
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={label} className="h-full w-full object-contain p-1.5" />
+        ) : icon ? (
           <span aria-hidden="true">{icon}</span>
-        ) : product ? (
-          <ProductImage product={product} alt={label} width={76} height={76} className="h-full w-full object-contain p-1" />
         ) : (
           <CategoryLineIcon category={category} className="h-5 w-5 text-gray-700" />
         )}
@@ -650,7 +649,7 @@ const MobileHome = ({
 
       <section className="mt-4 grid grid-cols-5 gap-x-2 gap-y-3">
         {homeCategoryRail.slice(0, 9).map((category) => (
-          <MobileRoundCategory key={category.value} label={category.label} category={category.value} icon={category.icon} products={sortedProducts} navigate={navigate} />
+          <MobileRoundCategory key={category.value} label={category.label} category={category.value} icon={category.icon} imageUrl={category.imageUrl} navigate={navigate} />
         ))}
         <button type="button" onClick={() => navigate("/categories")} className="flex min-w-0 flex-col items-center gap-2 text-center">
           <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm"><UtilityIcon type="grid" /></span>
@@ -1002,22 +1001,22 @@ const HomeStorefrontSkeleton = () => (
     <main className="hidden bg-white px-4 pb-16 pt-4 md:block" aria-hidden="true">
       <div className="mx-auto max-w-[1420px]">
         <section className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)_245px]">
-          <aside className="rounded-md border border-gray-200 bg-white p-2.5 lg:row-span-2">
+          <aside className="h-[260px] rounded-md border border-gray-200 bg-white p-2.5">
             <div className="space-y-2">
-              {Array.from({ length: 8 }).map((_, index) => (
+              {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton key={`side-category-${index}`} className="h-9 w-full rounded-md" />
               ))}
             </div>
           </aside>
 
-          <Skeleton className="aspect-[15/4] rounded-md" />
-          <Skeleton className="min-h-[238px] rounded-md xl:min-h-[252px]" />
+          <Skeleton className="h-[260px] rounded-md" />
+          <Skeleton className="h-[260px] rounded-md" />
+        </section>
 
-          <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={`feature-banner-${index}`} className="aspect-[2.15/1] rounded-md" />
-            ))}
-          </div>
+        <section className="mt-3 grid gap-3 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={`feature-banner-${index}`} className="h-[132px] rounded-md" />
+          ))}
         </section>
 
         <section className="mt-7">
@@ -1161,18 +1160,27 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike, customTopCategories } = useAppContext();
   const resolvedContent = useMemo(() => resolveSiteContent(siteContent), [siteContent]);
   // Real top-level categories (the static marketplace list plus any the admin
-  // added), each with its icon — replaces the old hardcoded category rails so
-  // what shows is always real, admin-manageable categories.
+  // added), each with its icon/image — replaces the old hardcoded category
+  // rails so what shows is always real, admin-manageable categories. Admins
+  // attach an uploaded PNG to any static category by creating a top-level
+  // Category record of the same name with an image; it's merged in here.
   const homeCategoryRail = useMemo(() => {
+    const dbByName = new Map((customTopCategories || []).map((category) => [category.name, category]));
+    const usedNames = new Set();
     const staticRail = homeCategoryValues.map((value) => {
       const meta = getCategoryMeta(value);
-      return { label: meta.label, value, icon: meta.icon };
+      const dbMatch = dbByName.get(value);
+      if (dbMatch) usedNames.add(value);
+      return { label: meta.label, value, icon: dbMatch?.icon || meta.icon, imageUrl: dbMatch?.imageUrl || "" };
     });
-    const customRail = (customTopCategories || []).map((category) => ({
-      label: category.name,
-      value: category.name,
-      icon: category.icon || "📦",
-    }));
+    const customRail = (customTopCategories || [])
+      .filter((category) => !usedNames.has(category.name))
+      .map((category) => ({
+        label: category.name,
+        value: category.name,
+        icon: category.icon || "📦",
+        imageUrl: category.imageUrl || "",
+      }));
     return [...staticRail, ...customRail];
   }, [customTopCategories]);
   const storefrontProducts = products.length
@@ -1381,32 +1389,20 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     <main className="hidden bg-white px-4 pb-16 pt-4 md:block">
       <div className="mx-auto max-w-[1420px]">
         <section className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)_245px]">
-          <aside className="rounded-md border border-gray-200 bg-white p-2.5 lg:row-span-2">
-            <div className="space-y-1">
-              {homeCategoryRail.slice(0, 12).map((category) => {
-                const href = `/all-products?category=${encodeURIComponent(category.value)}`;
-                return (
-                  <div
-                    key={category.value}
-                    className="group relative"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => navigate(href)}
-                      className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[12px] text-gray-800 transition hover:bg-orange-50 hover:text-orange-600 group-hover:bg-orange-50 group-hover:text-orange-600"
-                    >
-                      <span className="flex items-center gap-2.5"><span className="text-base" aria-hidden="true">{category.icon}</span>{category.label}</span>
-                      <span className="text-gray-400 group-hover:text-orange-500"><ChevronRight /></span>
-                    </button>
-                    <div className="absolute left-full top-0 z-30 hidden min-w-52 rounded-md border border-gray-200 bg-white p-2 text-[12px] text-gray-700 shadow-lg group-hover:block group-focus-within:block">
-                      <button type="button" onClick={() => navigate(`${href}&filter=flash`)} className="block w-full rounded px-3 py-2 text-left hover:bg-orange-50 hover:text-orange-600">{category.label} deals</button>
-                      <button type="button" onClick={() => navigate(`${href}&sort=newest`)} className="block w-full rounded px-3 py-2 text-left hover:bg-orange-50 hover:text-orange-600">New arrivals</button>
-                      <button type="button" onClick={() => navigate(`${href}&sort=popular`)} className="block w-full rounded px-3 py-2 text-left hover:bg-orange-50 hover:text-orange-600">Best sellers</button>
-                    </div>
-                  </div>
-                );
-              })}
-              <button type="button" onClick={() => navigate("/categories")} className="px-2.5 py-2 text-[12px] font-semibold text-orange-600">+ More categories</button>
+          <aside className="h-[260px] overflow-hidden rounded-md border border-gray-200 bg-white">
+            <div className="flex h-full flex-col gap-0.5 overflow-y-auto p-2">
+              {homeCategoryRail.map((category) => (
+                <button
+                  key={category.value}
+                  type="button"
+                  onClick={() => navigate(`/all-products?category=${encodeURIComponent(category.value)}`)}
+                  className="flex w-full shrink-0 items-center justify-between rounded-md px-2.5 py-2 text-left text-[12px] font-medium text-gray-800 transition hover:bg-orange-50 hover:text-orange-600"
+                >
+                  <span className="truncate">{category.label}</span>
+                  <span className="text-gray-400"><ChevronRight /></span>
+                </button>
+              ))}
+              <button type="button" onClick={() => navigate("/categories")} className="shrink-0 px-2.5 py-2 text-left text-[12px] font-semibold text-orange-600">+ More categories</button>
             </div>
           </aside>
 
@@ -1417,36 +1413,38 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
               onSelect={setActiveHeroIndex}
               navigate={navigate}
               priority
-              className="aspect-[15/4] rounded-md bg-gray-100"
+              className="h-[260px] rounded-md bg-gray-100"
             />
           ) : (
-            <PromoPlaceholder navigate={navigate} className="aspect-[15/4] w-full rounded-md" label="Shop the KawilMart marketplace" />
+            <PromoPlaceholder navigate={navigate} className="h-[260px] w-full rounded-md" label="Shop the KawilMart marketplace" />
           )}
 
           {activePromo?.imageUrl ? (
             <button
               type="button"
               onClick={() => navigate(getContentHref(activePromo, "/all-products?filter=flash"))}
-              className="relative block min-h-[238px] overflow-hidden rounded-md bg-gray-100 text-left xl:min-h-[252px]"
+              className="relative block h-[260px] overflow-hidden rounded-md bg-gray-100 text-left"
             >
               <Image src={activePromo.imageUrl} alt={activePromo.title || "Promotional offer"} width={420} height={520} className="absolute inset-0 h-full w-full object-cover" />
             </button>
           ) : (
-            <PromoPlaceholder navigate={navigate} href="/all-products?filter=flash" className="min-h-[238px] xl:min-h-[252px]" label="See today's offers" />
+            <PromoPlaceholder navigate={navigate} href="/all-products?filter=flash" className="h-[260px]" label="See today's offers" />
           )}
+        </section>
 
-          <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
+        {featuredCards.length ? (
+          <section className="mt-3 grid gap-3 md:grid-cols-3">
             {featuredCards.slice(0, 3).map((card, index) => (
               <MarketingBannerTile
                 key={card._id || `hero-feature-${index}`}
                 item={card}
                 navigate={navigate}
                 prefetchRoute={prefetchRoute}
-                className="aspect-[2.15/1] rounded-md"
+                className="h-[132px] rounded-md"
               />
             ))}
-          </div>
-        </section>
+          </section>
+        ) : null}
 
         {dealProducts.length ? (
           <section className="mt-6 rounded-xl bg-gradient-to-br from-orange-100/80 via-rose-100/70 to-amber-50/90 px-4 py-4">

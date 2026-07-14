@@ -23,23 +23,27 @@ const centerAspectCrop = (mediaWidth, mediaHeight, aspect) => (
 
 const getCroppedFile = (image, crop, fileName) => {
     const canvas = document.createElement('canvas');
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-    canvas.width = crop.width * scaleX;
-    canvas.height = crop.height * scaleY;
-    const ctx = canvas.getContext('2d');
+    const naturalW = image.naturalWidth;
+    const naturalH = image.naturalHeight;
 
-    ctx.drawImage(
-        image,
-        crop.x * scaleX,
-        crop.y * scaleY,
-        crop.width * scaleX,
-        crop.height * scaleY,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-    );
+    // The crop is stored in PERCENT units (0–100). Convert straight to the
+    // source image's NATURAL pixels — do NOT multiply percent values by the
+    // display scale, which produced a tiny ~300px crop that then looked
+    // zoomed/blurry when displayed. Falls back to pixel math if a px crop is
+    // ever passed in.
+    const usePercent = crop.unit === '%';
+    const sx = usePercent ? (crop.x / 100) * naturalW : crop.x * (naturalW / image.width);
+    const sy = usePercent ? (crop.y / 100) * naturalH : crop.y * (naturalH / image.height);
+    const sw = usePercent ? (crop.width / 100) * naturalW : crop.width * (naturalW / image.width);
+    const sh = usePercent ? (crop.height / 100) * naturalH : crop.height * (naturalH / image.height);
+
+    canvas.width = Math.max(1, Math.round(sw));
+    canvas.height = Math.max(1, Math.round(sh));
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    ctx.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
     return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => {
@@ -48,7 +52,7 @@ const getCroppedFile = (image, crop, fileName) => {
                 return;
             }
             resolve(new File([blob], fileName, { type: blob.type }));
-        }, 'image/jpeg', 0.92);
+        }, 'image/jpeg', 0.95);
     });
 };
 

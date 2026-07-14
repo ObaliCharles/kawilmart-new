@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
+import axios from "axios";
 import toast from "react-hot-toast";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
@@ -286,7 +287,10 @@ const StoreSidebar = ({
 
 const StorePage = () => {
   const { sellerId } = useParams();
-  const { products, loadingProducts, navigate, userData, fetchUserData } = useAppContext();
+  const { products, loadingProducts, navigate, userData, fetchUserData, fetchProductData, getToken } = useAppContext();
+  const [coverOverride, setCoverOverride] = useState("");
+  const [avatarOverride, setAvatarOverride] = useState("");
+  const [uploadingStoreImage, setUploadingStoreImage] = useState("");
   const [selectedTab, setSelectedTab] = useState("products");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedBrand, setSelectedBrand] = useState("all");
@@ -370,7 +374,43 @@ const StorePage = () => {
     })[0] || null;
   }, [sellerProducts]);
   const storeCategories = categories.slice(0, 6);
-  const heroImage = selectedDealProduct ? getImage(selectedDealProduct) : assets.header_macbook_image.src;
+  const isStoreOwner = Boolean(userData?._id) && String(userData._id) === String(sellerId);
+  const storeCoverImage = coverOverride || seller?.coverImage || "";
+  const storeAvatarImage = avatarOverride || seller?.avatarUrl || "";
+  const heroImage = storeCoverImage || (selectedDealProduct ? getImage(selectedDealProduct) : assets.header_macbook_image.src);
+
+  const uploadStoreImage = async (kind, file) => {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Please choose a JPEG, PNG, or WebP image');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      return;
+    }
+
+    setUploadingStoreImage(kind);
+    try {
+      const token = await getToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const formData = new FormData();
+      formData.append(kind === 'cover' ? 'cover' : 'avatar', file);
+      const { data } = await axios.post('/api/seller/store-images', formData, { headers });
+      if (data.success) {
+        toast.success('Store image updated');
+        if (kind === 'cover' && data.storeCoverImage) setCoverOverride(data.storeCoverImage);
+        if (kind === 'avatar' && data.storeAvatar) setAvatarOverride(data.storeAvatar);
+        void fetchProductData({ background: true });
+      } else {
+        toast.error(data.message || 'Could not update image');
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Could not update image');
+    } finally {
+      setUploadingStoreImage("");
+    }
+  };
   const heroTags = categories.slice(0, 3).map((category) => getCategoryMeta(category.label).label);
   const otherStores = useMemo(() => {
     const storeMap = new Map();
@@ -788,14 +828,27 @@ const StorePage = () => {
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
+                  {isStoreOwner ? (
+                    <label className="absolute right-3 top-3 z-10 flex cursor-pointer items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-gray-800 shadow-sm transition hover:bg-white">
+                      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3v12H4V7Zm8 3.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      {uploadingStoreImage === 'cover' ? 'Uploading...' : 'Change cover'}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={Boolean(uploadingStoreImage)} onChange={(e) => uploadStoreImage('cover', e.target.files?.[0])} />
+                    </label>
+                  ) : null}
                   <div className="relative flex min-h-[176px] flex-col justify-between gap-4 lg:flex-row lg:items-end">
                     <div className="flex min-w-0 items-start gap-3">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white/20 bg-white">
-                        {seller?.avatarUrl ? (
-                          <Image src={seller.avatarUrl} alt={seller?.name || "Store avatar"} width={72} height={72} className="h-full w-full object-cover" />
+                      <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white/20 bg-white">
+                        {storeAvatarImage ? (
+                          <Image src={storeAvatarImage} alt={seller?.name || "Store avatar"} width={72} height={72} className="h-full w-full object-cover" />
                         ) : (
                           <span className="text-xl font-black text-gray-900">{(seller?.name || "S").slice(0, 1)}</span>
                         )}
+                        {isStoreOwner ? (
+                          <label className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/45 text-white opacity-0 transition hover:opacity-100" title="Change profile image">
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3v12H4V7Zm8 3.5a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={Boolean(uploadingStoreImage)} onChange={(e) => uploadStoreImage('avatar', e.target.files?.[0])} />
+                          </label>
+                        ) : null}
                       </span>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">

@@ -1,10 +1,8 @@
 'use client'
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import MegaStoreHome from "@/components/MegaStoreHome";
 import { useAppContext } from "@/context/AppContext";
-import { getProductImage } from "@/lib/categoryExperiences";
 import { homeCategoryValues, getCategoryMeta, categoryMatchesSelection, buildCategoryHref } from "@/lib/marketplaceCategories";
 
 const categoryHref = (category, subcategory) => {
@@ -12,31 +10,19 @@ const categoryHref = (category, subcategory) => {
   return `/all-products?category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}`;
 };
 
-// Finds a real product for this exact category/subcategory pair — no
-// keyword guessing, no fallback to an unrelated product. If nothing
-// matches yet, the tile just shows its icon instead of a wrong photo.
-const findExactProduct = (products, category, subcategory) => (
-  products.find((product) => (
-    categoryMatchesSelection(product?.category, category)
-    && (!subcategory || product?.subcategory === subcategory)
-  )) || null
-);
-
-const CategoryTile = ({ label, icon, product, onClick }) => (
+// Subcategory tile: shows the admin-uploaded PNG, then emoji, then a generic
+// glyph. Never a product photo — that caused the "one product's image shows on
+// every tile" repetition.
+const CategoryTile = ({ label, icon, imageUrl, onClick }) => (
   <button
     type="button"
     onClick={onClick}
     className="flex min-w-0 flex-col items-center justify-center rounded-lg bg-white text-center ring-1 ring-gray-100/80 transition-all duration-150 hover:shadow-md active:scale-[0.97]"
   >
     <span className="flex w-full items-center justify-center h-[3.2rem] p-1.5">
-      {product ? (
-        <Image
-          src={getProductImage(product)}
-          alt={label}
-          width={60}
-          height={50}
-          className="h-full w-full object-contain"
-        />
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt={label} className="h-full w-full object-contain" />
       ) : (
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-base text-gray-400">
           {icon || "🏷️"}
@@ -97,15 +83,12 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
                   key={department.value}
                   type="button"
                   onClick={() => setSelectedDepartmentValue(department.value)}
-                  className={`relative flex w-full flex-col items-center gap-1 border-b border-gray-100 px-1.5 py-2.5 text-center transition ${
-                    active ? "bg-orange-50/70 text-gray-950" : "text-gray-500 active:bg-gray-50"
+                  className={`relative flex w-full items-center justify-center border-b border-gray-100 px-1.5 py-3.5 text-center transition ${
+                    active ? "bg-orange-50/70" : "active:bg-gray-50"
                   }`}
                 >
                   {active ? <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-orange-600" /> : null}
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-base ${active ? "bg-white text-orange-600 shadow-sm" : "text-gray-400"}`}>
-                    {department.icon}
-                  </span>
-                  <span className={`leading-tight ${active ? "font-semibold text-gray-950" : "font-medium text-gray-500"} text-[8px] min-[390px]:text-[9px]`}>
+                  <span className={`leading-tight ${active ? "font-bold text-gray-950" : "font-medium text-gray-500"} text-[9px] min-[390px]:text-[10px]`}>
                     {department.label}
                   </span>
                 </button>
@@ -133,18 +116,15 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
 
                 <div className="rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-100">
                   <div className="grid grid-cols-3 gap-2">
-                    {currentSubcategories.map((subcategory) => {
-                      const product = findExactProduct(storefrontProducts, currentDepartment.value, subcategory.name);
-                      return (
-                        <CategoryTile
-                          key={subcategory._id}
-                          label={subcategory.name}
-                          icon={subcategory.icon}
-                          product={product}
-                          onClick={() => goToCategory(currentDepartment.value, subcategory.name)}
-                        />
-                      );
-                    })}
+                    {currentSubcategories.map((subcategory) => (
+                      <CategoryTile
+                        key={subcategory._id}
+                        label={subcategory.name}
+                        icon={subcategory.icon}
+                        imageUrl={subcategory.imageUrl}
+                        onClick={() => goToCategory(currentDepartment.value, subcategory.name)}
+                      />
+                    ))}
                   </div>
                 </div>
               </section>

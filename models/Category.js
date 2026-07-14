@@ -15,6 +15,10 @@ const categorySchema = new mongoose.Schema({
     name: { type: String, required: true },
     slug: { type: String, required: true },
     icon: { type: String, default: "" },
+    imageUrl: { type: String, default: "" },
+    imagePublicId: { type: String, default: "" },
+    heroImage: { type: String, default: "" },
+    heroImageId: { type: String, default: "" },
     sortOrder: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });

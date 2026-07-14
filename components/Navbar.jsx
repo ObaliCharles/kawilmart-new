@@ -84,6 +84,19 @@ const SearchIcon = () => (
   </svg>
 );
 
+// Animated placeholder overlay: shows "Search "<product name>"" where the
+// name rotates and each new name rolls up + fades in (via .animate-search-hint,
+// re-mounted by the `key`). Rendered only when the input is empty and unfocused.
+const AnimatedSearchHint = ({ visible, word, textSize = "text-[13px]" }) => {
+  if (!visible || !word) return null;
+  return (
+    <span className={`pointer-events-none absolute inset-y-0 left-0 flex items-center overflow-hidden whitespace-nowrap text-gray-400 ${textSize}`} aria-hidden="true">
+      <span>Search </span>
+      <span key={word} className="animate-search-hint ml-1 inline-block font-medium text-gray-500">&ldquo;{word}&rdquo;</span>
+    </span>
+  );
+};
+
 const ChevronDown = () => (
   <svg className="h-4 w-4" aria-hidden="true" viewBox="0 0 24 24" fill="none">
     <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
@@ -384,6 +397,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
   const { openSignIn, openUserProfile, signOut } = useClerk();
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [isDesktopViewport, setIsDesktopViewport] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [activeCategory, setActiveCategory] = useState(homeCategoryValues[0]);
@@ -417,9 +431,13 @@ const Navbar = ({ hideMobileHeader = false }) => {
     return () => window.clearInterval(interval);
   }, [searchPlaceholderNames]);
 
-  const searchPlaceholder = searchPlaceholderNames.length
-    ? `Search "${searchPlaceholderNames[placeholderIndex % searchPlaceholderNames.length]}"`
-    : "Search for products, brands...";
+  const currentPlaceholderWord = searchPlaceholderNames.length
+    ? searchPlaceholderNames[placeholderIndex % searchPlaceholderNames.length]
+    : "";
+  const showSearchHint = !searchQuery && !searchFocused && Boolean(currentPlaceholderWord);
+  // Static fallback placeholder kept on the input for accessibility; the
+  // animated overlay covers it when visible.
+  const searchInputPlaceholder = showSearchHint ? "" : "Search for products, brands...";
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -740,14 +758,18 @@ const Navbar = ({ hideMobileHeader = false }) => {
             </div>
             <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
               <SearchIcon />
-              <input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onFocus={() => openDropdown === 'search-categories' ? closeDropdown() : undefined}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="min-w-0 flex-1 py-2.5 text-[13px] outline-none placeholder:text-gray-400"
-              />
+              <div className="relative min-w-0 flex-1">
+                <AnimatedSearchHint visible={showSearchHint} word={currentPlaceholderWord} textSize="text-[13px]" />
+                <input
+                  type="text"
+                  placeholder={searchInputPlaceholder}
+                  value={searchQuery}
+                  onFocus={() => { setSearchFocused(true); if (openDropdown === 'search-categories') closeDropdown(); }}
+                  onBlur={() => setSearchFocused(false)}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="min-w-0 w-full py-2.5 text-[13px] outline-none placeholder:text-gray-400"
+                />
+              </div>
             </div>
             <button type="submit" className="self-stretch bg-orange-600 px-6 text-[13px] font-semibold text-white transition hover:bg-orange-700">
               Search
@@ -782,13 +804,18 @@ const Navbar = ({ hideMobileHeader = false }) => {
 
           <form onSubmit={handleSearch} className="flex min-w-0 flex-[1_1_0%] items-center rounded-lg border border-gray-200 bg-white px-3 md:hidden">
             <SearchIcon />
-            <input
-              type="text"
-              placeholder={searchPlaceholder}
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="min-w-0 flex-1 px-2 py-2.5 text-xs outline-none placeholder:text-gray-400"
-            />
+            <div className="relative min-w-0 flex-1 px-2">
+              <AnimatedSearchHint visible={showSearchHint} word={currentPlaceholderWord} textSize="text-xs" />
+              <input
+                type="text"
+                placeholder={searchInputPlaceholder}
+                value={searchQuery}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="min-w-0 w-full py-2.5 text-xs outline-none placeholder:text-gray-400"
+              />
+            </div>
           </form>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 md:hidden">
@@ -819,15 +846,19 @@ const Navbar = ({ hideMobileHeader = false }) => {
               <form onSubmit={handleSearch} className="flex overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
                 <div className="flex min-w-0 flex-1 items-center gap-2 px-3">
                   <SearchIcon />
-                  <input
-                    ref={mobileSearchInputRef}
-                    type="text"
-                    placeholder={searchPlaceholder}
-                    value={searchQuery}
-                    onFocus={closeDropdown}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="min-w-0 flex-1 py-3 text-sm outline-none placeholder:text-gray-400"
-                  />
+                  <div className="relative min-w-0 flex-1">
+                    <AnimatedSearchHint visible={showSearchHint} word={currentPlaceholderWord} textSize="text-sm" />
+                    <input
+                      ref={mobileSearchInputRef}
+                      type="text"
+                      placeholder={searchInputPlaceholder}
+                      value={searchQuery}
+                      onFocus={() => { setSearchFocused(true); closeDropdown(); }}
+                      onBlur={() => setSearchFocused(false)}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="min-w-0 w-full py-3 text-sm outline-none placeholder:text-gray-400"
+                    />
+                  </div>
                 </div>
                 <button type="button" onClick={() => toggleDropdown('mobile-categories')} className="border-l border-gray-200 px-3 text-xs font-semibold text-gray-900">
                   All category

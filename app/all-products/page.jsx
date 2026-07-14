@@ -619,9 +619,16 @@ function AllProductsInner() {
   const sellerReferenceProduct = selectedSeller ? products.find((product) => product.userId === selectedSeller) : null;
   const sellerFilterLabel = sellerReferenceProduct?.sellerProfile?.name || sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
+  const selectedSubcategoryRecord = selectedSubcategory && selectedCategoryMeta
+    ? (subcategoriesByParent.get(selectedCategoryMeta.value) || []).find((sub) => sub.name === selectedSubcategory)
+    : null;
   const resultsLabel = `${filteredProducts.length} result${filteredProducts.length === 1 ? "" : "s"}`;
   const compactHeading = hasActiveSearch || selectedBrand !== "all" || selectedSeller || selectedCondition !== "all" || selectedPriceRange !== 0 || selectedRating > 0 || selectedTags.length > 0;
-  const selectedCategoryMode = selectedCategory !== "All" && !hasActiveSearch && !selectedSeller;
+  // When a subcategory is chosen we show the plain filtered product grid, not
+  // the category-experience tile layout (which repeated one representative
+  // product across tiles). The category landing view is only for a top-level
+  // category with no subcategory filter.
+  const selectedCategoryMode = selectedCategory !== "All" && !selectedSubcategory && !hasActiveSearch && !selectedSeller;
   const selectedCategoryPool = useMemo(() => (
     selectedCategory === "All"
       ? products
@@ -1274,10 +1281,36 @@ function AllProductsInner() {
             <>
               <button type="button" onClick={() => navigate("/")} className="hover:text-orange-600">Home</button>
               <span className="text-gray-300">/</span>
-              <span className="font-semibold text-gray-950">{selectedCategoryMeta?.label || "All Products"}</span>
+              {selectedSubcategory ? (
+                <>
+                  <button type="button" onClick={() => setSelectedSubcategory("")} className="hover:text-orange-600">{selectedCategoryMeta?.label}</button>
+                  <span className="text-gray-300">/</span>
+                  <span className="font-semibold text-gray-950">{selectedSubcategory}</span>
+                </>
+              ) : (
+                <span className="font-semibold text-gray-950">{selectedCategoryMeta?.label || "All Products"}</span>
+              )}
             </>
           )}
         </div>
+
+        {/* Subcategory hero — admin-uploaded background + name */}
+        {selectedSubcategory ? (
+          <section className="relative mb-3 flex min-h-[110px] items-end overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 p-4 text-white sm:min-h-[150px]">
+            {selectedSubcategoryRecord?.heroImage ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={selectedSubcategoryRecord.heroImage} alt={selectedSubcategory} className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              </>
+            ) : null}
+            <div className="relative">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-white/80">{selectedCategoryMeta?.label}</p>
+              <h1 className="text-xl font-black leading-tight sm:text-2xl">{selectedSubcategory}</h1>
+              <p className="mt-0.5 text-[12px] text-white/85">{filteredProducts.length} item{filteredProducts.length === 1 ? "" : "s"}</p>
+            </div>
+          </section>
+        ) : null}
 
         {/* Category chips - compact */}
         <section className="mb-3 overflow-x-auto">
