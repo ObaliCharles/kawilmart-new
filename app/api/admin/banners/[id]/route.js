@@ -65,6 +65,9 @@ export async function PATCH(request, { params }) {
         if (formData.has("sortOrder")) {
             banner.sortOrder = Number(formData.get("sortOrder")) || 0;
         }
+        if (formData.has("showOverlay")) {
+            banner.showOverlay = formData.get("showOverlay") === "true";
+        }
 
         const file = formData.get("image");
         if (isUploadedFile(file)) {

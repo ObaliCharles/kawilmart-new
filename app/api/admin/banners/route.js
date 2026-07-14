@@ -91,6 +91,7 @@ export async function POST(request) {
             brand: readField(formData, "brand"),
             placementCategory: readField(formData, "placementCategory"),
             bannerSubtype: readField(formData, "bannerSubtype", "promo"),
+            showOverlay: formData.get("showOverlay") === "true",
             startDate: readDateField(formData, "startDate"),
             endDate: readDateField(formData, "endDate"),
             status: readField(formData, "status", "draft"),

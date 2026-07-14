@@ -2,6 +2,7 @@ import { serve } from "inngest/next";
 import {
   createMonthlySellerInvoices,
   createUserOrder,
+  expireFlashDeals,
   inngest,
   syncBannerStatuses,
   syncUserCreation,
@@ -19,5 +20,6 @@ export const { GET, POST, PUT } = serve({
     createUserOrder,
     createMonthlySellerInvoices,
     syncBannerStatuses,
+    expireFlashDeals,
   ],
 });

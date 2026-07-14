@@ -7,7 +7,7 @@ import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
 import Skeleton from "@/components/Skeleton";
-import { defaultSiteContent, resolveSiteContent } from "@/lib/defaultSiteContent";
+import { resolveSiteContent } from "@/lib/defaultSiteContent";
 import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 import { getProductStockSnapshot } from "@/lib/productStock";
@@ -315,6 +315,17 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
                 priority={priority && index === 0}
                 className="absolute inset-0 h-full w-full"
               />
+              {slide.showOverlay && (slide.title || slide.primaryButtonText) ? (
+                <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/60 via-black/10 to-transparent p-4 text-white sm:p-6">
+                  {slide.offer ? <p className="text-xs font-semibold uppercase tracking-wide text-orange-300">{slide.offer}</p> : null}
+                  {slide.title ? <p className="mt-1 max-w-md text-lg font-bold leading-snug sm:text-2xl">{slide.title}</p> : null}
+                  {slide.primaryButtonText ? (
+                    <span className="mt-3 inline-flex w-fit items-center rounded-full bg-white px-4 py-2 text-xs font-semibold text-gray-950">
+                      {slide.primaryButtonText}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
             </button>
           );
         })}
@@ -555,7 +566,9 @@ const MobileHome = ({
   const promoProduct = sortedProducts[1] || heroFallback;
   const secondPromoProduct = sortedProducts[2] || heroFallback;
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
-  const mobileHeroSlides = heroSlides.length ? heroSlides : [{ ...defaultSiteContent.heroSlides[0], imageUrl: getImage(heroFallback) }];
+  const mobileHeroSlides = heroSlides.length
+    ? heroSlides
+    : (heroFallback ? [{ _id: "hero-fallback", imageUrl: getImage(heroFallback), href: `/product/${heroFallback._id}` }] : []);
   const mobileMarketingBanners = (Array.isArray(marketingBanners) ? marketingBanners : [])
     .filter((item) => item?.imageUrl)
     .slice(0, 3);
@@ -830,6 +843,16 @@ function MarketingBannerTile({ item, navigate, prefetchRoute, className = "", pr
         priority={priority}
         className="h-full w-full transition duration-500 group-hover:scale-[1.02]"
       />
+      {item.showOverlay && (item.title || item.buttonText) ? (
+        <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/55 via-black/5 to-transparent p-3 text-white">
+          {item.title ? <p className="line-clamp-2 text-sm font-bold leading-snug">{item.title}</p> : null}
+          {item.buttonText ? (
+            <span className="mt-2 inline-flex w-fit items-center rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-gray-950">
+              {item.buttonText}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
     </button>
   );
 }
@@ -1085,7 +1108,7 @@ const isPromotedProduct = (product) => getPromotionRank(product) < 99;
 
 const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike } = useAppContext();
-  const resolvedContent = useMemo(() => resolveSiteContent(siteContent || defaultSiteContent), [siteContent]);
+  const resolvedContent = useMemo(() => resolveSiteContent(siteContent), [siteContent]);
   const storefrontProducts = products.length
     ? products
     : initialProducts.length
@@ -1211,7 +1234,6 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     return () => window.clearInterval(interval);
   }, [earliestDealDeadline]);
 
-  const activeHero = heroSlides[activeHeroIndex % Math.max(heroSlides.length, 1)] || defaultSiteContent.heroSlides[0];
   const activePromo = {
     ...(promoSlides[activePromoIndex % Math.max(promoSlides.length, 1)] || resolvedContent.promoBanner),
     _activeDealIndex: activeDealIndex,
@@ -1271,7 +1293,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       activeHeroIndex={activeHeroIndex}
       setActiveHeroIndex={setActiveHeroIndex}
       activePromo={activePromo}
-      marketingBanners={marketingBanners.length ? marketingBanners : [...defaultSiteContent.heroSlides, ...defaultSiteContent.featuredCards]}
+      marketingBanners={marketingBanners}
       dealProducts={dealProducts}
       recommendedProducts={recommendedProducts}
       sortedProducts={sortedProducts}
@@ -1314,7 +1336,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
           </aside>
 
           <HeroImageSlider
-            slides={heroSlides.length ? heroSlides : [activeHero]}
+            slides={heroSlides}
             currentIndex={activeHeroIndex % Math.max(heroSlides.length || 1, 1)}
             onSelect={setActiveHeroIndex}
             navigate={navigate}
@@ -1331,7 +1353,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
           </button>
 
           <div className="grid gap-3 lg:col-span-2 md:grid-cols-3">
-            {(featuredCards.length ? featuredCards : defaultSiteContent.featuredCards).slice(0, 3).map((card, index) => (
+            {featuredCards.slice(0, 3).map((card, index) => (
               <MarketingBannerTile
                 key={card._id || `hero-feature-${index}`}
                 item={card}
@@ -1398,7 +1420,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
         ) : null}
 
         <MarketingBannerGrid
-          items={marketingBanners.length ? marketingBanners : [...defaultSiteContent.heroSlides, ...defaultSiteContent.featuredCards]}
+          items={marketingBanners}
           navigate={navigate}
           prefetchRoute={prefetchRoute}
           className="mt-8"

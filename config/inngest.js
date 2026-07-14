@@ -2,6 +2,7 @@ import { Inngest } from "inngest";
 import connectDB from "./db";
 import User from "@/models/User";
 import Banner from "@/models/Banner";
+import Product from "@/models/Product";
 import { generateSellerInvoicesForPeriod } from "@/lib/sellerInvoiceGeneration";
 import { computeBannerLifecycleStatus } from "@/lib/bannerStatus";
 
@@ -132,5 +133,29 @@ export const syncBannerStatuses = inngest.createFunction(
         }
 
         return { success: true, checked: banners.length, updatedCount };
+    }
+);
+
+// Flips isFlashDeal/promotionType back off on Product documents whose flash
+// deal has passed its end date. The client already computes flash-deal
+// activity live from the dates (lib/liveCommerce.js getFlashDealSnapshot),
+// so shoppers never see an expired deal — this cron just makes the stored
+// record match reality for anything reading the raw field directly (admin
+// list, other future consumers) and keeps expired flags from lingering
+// forever.
+export const expireFlashDeals = inngest.createFunction(
+    {
+        id: "expire-flash-deals",
+    },
+    { cron: "*/5 * * * *" },
+    async () => {
+        await connectDB();
+
+        const result = await Product.updateMany(
+            { isFlashDeal: true, flashDealEndDate: { $lte: new Date() } },
+            { $set: { isFlashDeal: false, promotionType: "none" } }
+        );
+
+        return { success: true, expiredCount: result.modifiedCount || 0 };
     }
 );

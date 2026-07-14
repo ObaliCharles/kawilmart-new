@@ -21,6 +21,7 @@ const bannerSchema = new mongoose.Schema({
     brand: { type: String, default: "" },
     placementCategory: { type: String, default: "" },
     bannerSubtype: { type: String, default: "promo" },
+    showOverlay: { type: Boolean, default: false },
     startDate: { type: Date, default: null },
     endDate: { type: Date, default: null },
     status: { type: String, enum: ["draft", "scheduled", "active", "expired"], default: "draft" },

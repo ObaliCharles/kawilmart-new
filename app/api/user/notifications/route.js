@@ -12,7 +12,7 @@ export async function GET(request) {
             return NextResponse.json({ success: false, message: "Not authenticated" })
         }
 
-        const user = await getOrSyncDatabaseUser(userId)
+        const user = await getOrSyncDatabaseUser(userId, { select: "notifications", lean: true })
 
         if (!user) {
             return NextResponse.json({ success: false, message: "User not found" })

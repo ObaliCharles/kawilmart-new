@@ -42,9 +42,10 @@ const Cart = () => {
     getCartCount,
     formatCurrency,
     resolvedCartItems,
+    cartMutatingItemIds,
     loadingProducts,
     loadingUser,
-  } = useContext(AppContext);
+  } = useAppContext();
   const visibleCartItemIds = Object.keys(resolvedCartItems).filter((itemId) => resolvedCartItems[itemId] > 0);
   const isCartHydrating = loadingUser || (loadingProducts && visibleCartItemIds.length > 0);
   const cartCount = getCartCount();
@@ -86,9 +87,10 @@ const Cart = () => {
                 const product = products.find((entry) => entry._id === itemId);
                 const quantity = resolvedCartItems[itemId];
                 if (quantity <= 0 || !product) return null;
+                const isMutating = cartMutatingItemIds.has(itemId);
 
                 return (
-                  <article key={itemId} className="flex items-center gap-2 rounded-lg bg-white p-2 ring-1 ring-gray-100">
+                  <article key={itemId} className={`flex items-center gap-2 rounded-lg bg-white p-2 ring-1 ring-gray-100 transition-opacity ${isMutating ? "opacity-60" : ""}`}>
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gray-50">
                       <CartProductImage product={product} />
                     </div>
@@ -97,13 +99,13 @@ const Cart = () => {
                       <p className="text-[10px] text-gray-500">{formatCurrency(product.offerPrice)} · Qty {quantity}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
-                      <button type="button" onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100 text-orange-600" aria-label="Decrease">
+                      <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100 text-orange-600 disabled:cursor-not-allowed disabled:opacity-50" aria-label="Decrease">
                         <Image src={assets.decrease_arrow} alt="" className="h-2 w-2" />
                       </button>
-                      <button type="button" onClick={() => addToCart(product._id)} className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100 text-orange-600" aria-label="Increase">
+                      <button type="button" disabled={isMutating} onClick={() => addToCart(product._id)} className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100 text-orange-600 disabled:cursor-not-allowed disabled:opacity-50" aria-label="Increase">
                         <Image src={assets.increase_arrow} alt="" className="h-2 w-2" />
                       </button>
-                      <button type="button" onClick={() => updateCartQuantity(product._id, 0)} className="ml-0.5 flex h-6 w-6 items-center justify-center text-gray-400 hover:text-red-500" aria-label="Remove">
+                      <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, 0)} className="ml-0.5 flex h-6 w-6 items-center justify-center text-gray-400 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50" aria-label="Remove">
                         <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
                       </button>
                     </div>

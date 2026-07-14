@@ -13,6 +13,7 @@ const productSchema = new mongoose.Schema({
     sellerContact: { type: String, required: true },
     sellerLocation: { type: String, required: true },
     isFlashDeal: { type: Boolean, default: false },
+    flashDealStartDate: { type: Date, default: null },
     flashDealEndDate: { type: Date },
     promotionType: { type: String, enum: ['none', 'flash_deal', 'featured', 'discount'], default: 'none' },
     tags: { type: [String], default: [] },

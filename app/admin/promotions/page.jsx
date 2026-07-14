@@ -44,6 +44,7 @@ const emptyBannerForm = (type) => ({
     startDate: '',
     endDate: '',
     isDraft: false,
+    showOverlay: false,
 });
 
 const getTargetHref = (form) => {
@@ -261,6 +262,7 @@ export default function AdminPromotions() {
     const [loading, setLoading] = useState(true);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [promotionData, setPromotionData] = useState({
+        flashDealStartDate: '',
         flashDealEndDate: '',
         promotionType: 'none'
     });
@@ -359,6 +361,8 @@ export default function AdminPromotions() {
                     productId: selectedProduct._id,
                     promotionType: promotionData.promotionType,
                     isFlashDeal: promotionData.promotionType === 'flash_deal',
+                    flashDealStartDate: promotionData.promotionType === 'flash_deal' && promotionData.flashDealStartDate
+                        ? new Date(promotionData.flashDealStartDate) : null,
                     flashDealEndDate: promotionData.promotionType === 'flash_deal' && promotionData.flashDealEndDate
                         ? new Date(promotionData.flashDealEndDate) : null,
                 },
@@ -368,7 +372,13 @@ export default function AdminPromotions() {
                 toast.success('Promotion updated successfully');
                 setProducts((prev) => prev.map((product) =>
                     product._id === selectedProduct._id
-                        ? { ...product, promotionType: promotionData.promotionType, isFlashDeal: promotionData.promotionType === 'flash_deal', flashDealEndDate: promotionData.promotionType === 'flash_deal' && promotionData.flashDealEndDate ? new Date(promotionData.flashDealEndDate) : null }
+                        ? {
+                            ...product,
+                            promotionType: data.product.promotionType,
+                            isFlashDeal: data.product.isFlashDeal,
+                            flashDealStartDate: data.product.flashDealStartDate,
+                            flashDealEndDate: data.product.flashDealEndDate,
+                        }
                         : product
                 ));
                 setSelectedProduct(null);
@@ -464,6 +474,7 @@ export default function AdminPromotions() {
             }
 
             formData.append('status', bannerForm.isDraft ? 'draft' : 'active');
+            formData.append('showOverlay', bannerForm.showOverlay ? 'true' : 'false');
             formData.append('startDate', bannerForm.startDate ? new Date(bannerForm.startDate).toISOString() : '');
             formData.append('endDate', bannerForm.endDate ? new Date(bannerForm.endDate).toISOString() : '');
 
@@ -524,6 +535,7 @@ export default function AdminPromotions() {
             startDate: toDateTimeLocal(banner.startDate),
             endDate: toDateTimeLocal(banner.endDate),
             isDraft: banner.status === 'draft',
+            showOverlay: Boolean(banner.showOverlay),
         });
         setBannerImageFile(null);
         setBannerImagePreview('');
@@ -565,6 +577,7 @@ export default function AdminPromotions() {
                                     setSelectedProduct(product);
                                     setPromotionData({
                                         promotionType: product.isFlashDeal ? 'flash_deal' : (product.promotionType || 'none'),
+                                        flashDealStartDate: toDateTimeLocal(product.flashDealStartDate),
                                         flashDealEndDate: toDateTimeLocal(product.flashDealEndDate),
                                     });
                                 }}>
@@ -713,6 +726,14 @@ export default function AdminPromotions() {
                                 />
                                 Save as draft (hidden from the storefront regardless of dates)
                             </label>
+                            <label className="flex items-center gap-2 text-sm text-gray-700">
+                                <input
+                                    type="checkbox"
+                                    checked={bannerForm.showOverlay}
+                                    onChange={(e) => setBannerForm((prev) => ({ ...prev, showOverlay: e.target.checked }))}
+                                />
+                                Show title/CTA text over the image (off by default — banners are pure clickable images)
+                            </label>
 
                             <ActionButton onClick={() => void saveBanner()} disabled={savingContent} variant="primary" className="w-full">
                                 {savingContent ? 'Saving...' : (editingBannerId ? 'Update Banner' : 'Add Banner')}
@@ -753,9 +774,20 @@ export default function AdminPromotions() {
                                 </select>
                             </div>
                             {promotionData.promotionType === 'flash_deal' && (
-                                <div>
-                                    <label className="mb-1.5 block text-xs font-semibold text-gray-700 uppercase tracking-wider">Flash Deal End Date</label>
-                                    <input type="datetime-local" value={promotionData.flashDealEndDate} onChange={(e) => setPromotionData((prev) => ({ ...prev, flashDealEndDate: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200" />
+                                <div className="space-y-4">
+                                    {selectedProduct.price <= selectedProduct.offerPrice && (
+                                        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                                            This product has no discount (price is not higher than the offer price), so it won&apos;t appear as an active flash deal until you lower the offer price below the regular price.
+                                        </p>
+                                    )}
+                                    <div>
+                                        <label className="mb-1.5 block text-xs font-semibold text-gray-700 uppercase tracking-wider">Start Date (optional)</label>
+                                        <input type="datetime-local" value={promotionData.flashDealStartDate} onChange={(e) => setPromotionData((prev) => ({ ...prev, flashDealStartDate: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200" />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1.5 block text-xs font-semibold text-gray-700 uppercase tracking-wider">Flash Deal End Date</label>
+                                        <input type="datetime-local" value={promotionData.flashDealEndDate} onChange={(e) => setPromotionData((prev) => ({ ...prev, flashDealEndDate: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200" />
+                                    </div>
                                 </div>
                             )}
                         </div>

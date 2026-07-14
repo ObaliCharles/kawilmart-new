@@ -57,6 +57,7 @@ const defaultAppContextValue = {
     toggleProductLike: async () => ({ success: false, message: 'App context is not ready' }),
     cartItems: {},
     resolvedCartItems: {},
+    cartMutatingItemIds: new Set(),
     setCartItems: noop,
     addToCart: async () => ({ success: false, message: 'App context is not ready' }),
     updateCartQuantity: noop,
@@ -111,6 +112,9 @@ export const AppContextProvider = (props) => {
     const [resolvedRole, setResolvedRole] = useState(null)
     const [accessLoaded, setAccessLoaded] = useState(false)
     const [cartItems, setCartItems] = useState({})
+    const cartItemsRef = useRef(cartItems)
+    const cartRequestSeqRef = useRef(0)
+    const [cartMutatingItemIds, setCartMutatingItemIds] = useState(() => new Set())
     const [loadingProducts, setLoadingProducts] = useState(true)
     const [loadingUser, setLoadingUser] = useState(false)
     const [isRouteLoading, setIsRouteLoading] = useState(false)
@@ -235,7 +239,37 @@ export const AppContextProvider = (props) => {
 
             if (userResponse.data.success) {
                 setUserData(userResponse.data.user)
-                setCartItems(normalizeCartItems(userResponse.data.user.cartItems))
+
+                const serverCartItems = normalizeCartItems(userResponse.data.user.cartItems)
+                const guestCartItems = normalizeCartItems(cartItemsRef.current)
+                const hasGuestItems = Object.keys(guestCartItems).length > 0
+
+                if (hasGuestItems) {
+                    // Merge instead of overwrite: quantities for items in both carts
+                    // add together, items unique to either side are kept, so items
+                    // added while browsing signed-out aren't silently dropped on login.
+                    const mergedCartItems = { ...serverCartItems }
+                    Object.entries(guestCartItems).forEach(([productId, quantity]) => {
+                        mergedCartItems[productId] = (mergedCartItems[productId] || 0) + quantity
+                    })
+
+                    cartItemsRef.current = mergedCartItems
+                    setCartItems(mergedCartItems)
+
+                    try {
+                        const result = await persistCartData(mergedCartItems)
+                        if (result.success) {
+                            const persisted = normalizeCartItems(result.cartItems || mergedCartItems)
+                            cartItemsRef.current = persisted
+                            setCartItems(persisted)
+                        }
+                    } catch {
+                        // Keep the optimistic merge locally; the next cart mutation will persist it.
+                    }
+                } else {
+                    cartItemsRef.current = serverCartItems
+                    setCartItems(serverCartItems)
+                }
             } else {
                 toast.error(sanitizeApiErrorMessage(userResponse.data.message, "Unable to load account profile"))
             }
@@ -443,6 +477,10 @@ export const AppContextProvider = (props) => {
         }
     }
 
+    useEffect(() => {
+        cartItemsRef.current = cartItems
+    }, [cartItems])
+
     const persistCartData = useCallback(async (nextCartData) => {
         const normalizedNextCartData = normalizeCartItems(nextCartData)
 
@@ -465,6 +503,22 @@ export const AppContextProvider = (props) => {
         }
     }, [getToken, user])
 
+    const markCartItemMutating = (itemId, isMutating) => {
+        setCartMutatingItemIds((prev) => {
+            const next = new Set(prev)
+            if (isMutating) next.add(itemId)
+            else next.delete(itemId)
+            return next
+        })
+    }
+
+    // Reads/writes cartItemsRef (not the cartItems state closure) so two
+    // rapid calls in the same tick each build on the other's optimistic
+    // update instead of both computing from the same stale snapshot. Each
+    // call also captures a sequence number and only applies its server
+    // response if no newer cart request has been issued since — otherwise
+    // a slow response can overwrite a faster, more recent one ("last
+    // response wins" instead of "last request wins").
     const addToCart = async (itemId) => {
         if (!itemId) {
             return {
@@ -481,20 +535,28 @@ export const AppContextProvider = (props) => {
             }
         }
 
-        const previousCartData = normalizeCartItems(cartItems);
+        const previousCartData = normalizeCartItems(cartItemsRef.current);
         const cartData = normalizeCartItems({
             ...previousCartData,
             [itemId]: (previousCartData[itemId] || 0) + 1,
         });
+        cartItemsRef.current = cartData
         setCartItems(cartData);
+
+        const requestSeq = ++cartRequestSeqRef.current
+        markCartItemMutating(itemId, true)
 
         if (user) {
             try {
                 const data = await persistCartData(cartData)
+                const isStale = requestSeq !== cartRequestSeqRef.current
 
                 if (!data.success) {
-                    setCartItems(previousCartData)
-                    toast.error(data.message)
+                    if (!isStale) {
+                        cartItemsRef.current = previousCartData
+                        setCartItems(previousCartData)
+                        toast.error(data.message)
+                    }
                     return {
                         success: false,
                         message: data.message,
@@ -502,10 +564,15 @@ export const AppContextProvider = (props) => {
                 }
 
                 const persistedCartItems = data.cartItems || cartData
-                setCartItems(persistedCartItems)
+                if (!isStale) {
+                    cartItemsRef.current = persistedCartItems
+                    setCartItems(persistedCartItems)
+                }
 
                 if (!areCartItemsEqual(persistedCartItems, cartData)) {
-                    toast.error("That item is no longer available and was removed from your cart")
+                    if (!isStale) {
+                        toast.error("That item is no longer available and was removed from your cart")
+                    }
                     return {
                         success: false,
                         message: data.message || "Item unavailable",
@@ -513,46 +580,71 @@ export const AppContextProvider = (props) => {
                     }
                 }
 
-                toast.success("Item added to cart")
+                if (!isStale) toast.success("Item added to cart")
                 return { success: true, cartData: persistedCartItems }
             } catch (error) {
-                setCartItems(previousCartData)
-                toast.error(error.message)
+                if (requestSeq === cartRequestSeqRef.current) {
+                    cartItemsRef.current = previousCartData
+                    setCartItems(previousCartData)
+                    toast.error(error.message)
+                }
                 return {
                     success: false,
                     message: error.message,
                 }
+            } finally {
+                markCartItemMutating(itemId, false)
             }
         }
 
+        markCartItemMutating(itemId, false)
         toast.success("Item added to cart")
         return { success: true, cartData }
     }
 
     const updateCartQuantity = async (itemId, quantity) => {
-        const previousCartData = normalizeCartItems(cartItems);
+        const previousCartData = normalizeCartItems(cartItemsRef.current);
         const cartData = normalizeCartItems({
             ...previousCartData,
             [itemId]: quantity,
         });
+        cartItemsRef.current = cartData
         setCartItems(cartData)
+
+        const requestSeq = ++cartRequestSeqRef.current
+        markCartItemMutating(itemId, true)
 
         if (user) {
             try {
                 const data = await persistCartData(cartData)
+                const isStale = requestSeq !== cartRequestSeqRef.current
 
                 if (!data.success) {
-                    setCartItems(previousCartData)
-                    toast.error(data.message)
+                    if (!isStale) {
+                        cartItemsRef.current = previousCartData
+                        setCartItems(previousCartData)
+                        toast.error(data.message)
+                    }
                     return
                 }
 
-                setCartItems(data.cartItems || cartData)
-                toast.success("Cart Updated")
+                if (!isStale) {
+                    const persistedCartItems = data.cartItems || cartData
+                    cartItemsRef.current = persistedCartItems
+                    setCartItems(persistedCartItems)
+                    toast.success("Cart Updated")
+                }
             } catch (error) {
-                setCartItems(previousCartData)
-                toast.error(error.message)
+                if (requestSeq === cartRequestSeqRef.current) {
+                    cartItemsRef.current = previousCartData
+                    setCartItems(previousCartData)
+                    toast.error(error.message)
+                }
+            } finally {
+                markCartItemMutating(itemId, false)
             }
+        } else {
+            markCartItemMutating(itemId, false)
         }
     }
 
@@ -788,7 +880,7 @@ export const AppContextProvider = (props) => {
         products, fetchProductData,
         tags, tagsBySlug,
         toggleProductLike,
-        cartItems, resolvedCartItems, setCartItems,
+        cartItems, resolvedCartItems, cartMutatingItemIds, setCartItems,
         addToCart, updateCartQuantity,
         getCartCount, getCartAmount,
         unreadNotificationsCount, recentNotifications, setUnreadNotificationsCount,

@@ -28,9 +28,21 @@ export async function GET(request) {
             ...order.toObject(),
             status: normalizeOrderStatus(order.status),
         }));
-        const totalRevenue = normalizedOrders
-            .filter((order) => order.status === ORDER_STATUSES.COMPLETED)
-            .reduce((sum, order) => sum + (Number(order.subtotal) || 0), 0);
+        const completedOrdersList = normalizedOrders.filter((order) => order.status === ORDER_STATUSES.COMPLETED);
+        const totalRevenue = completedOrdersList.reduce((sum, order) => sum + (Number(order.subtotal) || 0), 0);
+        const totalCommissionRevenue = completedOrdersList.reduce((sum, order) => sum + (Number(order.commissionAmount) || 0), 0);
+
+        const activeSellerSubscriptions = users.filter((user) => user.sellerSubscriptionStatus === "active").length;
+        const activeRiderSubscriptions = users.filter((user) => user.riderSubscriptionStatus === "active").length;
+        const expiredOrOverdueSubscriptions = users.filter((user) => (
+            ["overdue", "cancelled", "paused"].includes(user.sellerSubscriptionStatus)
+            || ["overdue", "cancelled", "paused"].includes(user.riderSubscriptionStatus)
+        )).length;
+        const monthlyRecurringRevenue = users.reduce((sum, user) => {
+            const sellerFee = user.sellerSubscriptionStatus === "active" ? (Number(user.sellerSubscriptionFee) || 0) : 0;
+            const riderFee = user.riderSubscriptionStatus === "active" ? (Number(user.riderSubscriptionFee) || 0) : 0;
+            return sum + sellerFee + riderFee;
+        }, 0);
 
         // Orders by status
         const statusCounts = normalizedOrders.reduce((acc, o) => {
@@ -78,6 +90,12 @@ export async function GET(request) {
             success: true,
             stats: {
                 totalRevenue,
+                totalGMV: totalRevenue,
+                totalCommissionRevenue,
+                monthlyRecurringRevenue,
+                activeSellerSubscriptions,
+                activeRiderSubscriptions,
+                expiredOrOverdueSubscriptions,
                 totalOrders: orders.length,
                 totalProducts: products.length,
                 totalUsers: users.length,

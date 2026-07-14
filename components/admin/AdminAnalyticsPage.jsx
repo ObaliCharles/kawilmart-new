@@ -65,6 +65,27 @@ export default function AdminAnalyticsPage() {
                 ))}
             </div>
 
+            <div className="rounded-2xl border border-orange-100 bg-orange-50/50 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                    <h2 className="font-semibold text-gray-900">Platform Revenue</h2>
+                    <p className="text-xs text-gray-500">What KawilMart earns — separate from GMV (total sales passing through sellers)</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    {[
+                        { label: 'Commission Earned (completed orders)', value: formatCurrency(stats.totalCommissionRevenue || 0), icon: '🧾' },
+                        { label: 'Monthly Recurring Revenue', value: formatCurrency(stats.monthlyRecurringRevenue || 0), icon: '🔁' },
+                        { label: 'Active Subscriptions', value: (stats.activeSellerSubscriptions || 0) + (stats.activeRiderSubscriptions || 0), icon: '✅' },
+                        { label: 'Overdue / Cancelled Subscriptions', value: stats.expiredOrOverdueSubscriptions || 0, icon: '⚠️' },
+                    ].map((kpi) => (
+                        <div key={kpi.label} className="rounded-xl bg-white p-4 shadow-sm">
+                            <p className="mb-1 text-xl">{kpi.icon}</p>
+                            <p className="text-lg font-bold text-gray-900">{kpi.value}</p>
+                            <p className="mt-0.5 text-xs text-gray-500">{kpi.label}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                     <h2 className="mb-2 font-semibold text-gray-900">Daily Revenue (Last 7 Days)</h2>
@@ -137,14 +158,14 @@ export default function AdminAnalyticsPage() {
                     <h2 className="mb-4 font-semibold text-gray-900">Platform Summary</h2>
                     <div className="grid grid-cols-2 gap-4">
                         {[
-                            { label: 'Total Revenue', value: formatCurrency(stats.totalRevenue), icon: '💰', bg: 'bg-green-50' },
+                            { label: 'Total GMV (gross sales)', value: formatCurrency(stats.totalGMV), icon: '💰', bg: 'bg-green-50' },
                             { label: 'Total Orders', value: stats.totalOrders, icon: '📦', bg: 'bg-blue-50' },
                             { label: 'Total Products', value: stats.totalProducts, icon: '🛍️', bg: 'bg-purple-50' },
                             { label: 'Total Users', value: stats.totalUsers, icon: '👥', bg: 'bg-orange-50' },
                         ].map((item) => (
                             <div key={item.label} className={`${item.bg} rounded-xl p-4`}>
                                 <span className="text-2xl">{item.icon}</span>
-                                <p className={`mt-1 font-bold leading-tight text-gray-900 ${item.label === 'Total Revenue' ? 'break-words text-[15px] sm:text-2xl' : 'text-xl sm:text-2xl'}`}>{item.value}</p>
+                                <p className={`mt-1 font-bold leading-tight text-gray-900 ${item.label.startsWith('Total GMV') ? 'break-words text-[15px] sm:text-2xl' : 'text-xl sm:text-2xl'}`}>{item.value}</p>
                                 <p className="text-xs text-gray-500">{item.label}</p>
                             </div>
                         ))}
