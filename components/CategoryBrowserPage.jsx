@@ -83,12 +83,12 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
                   key={department.value}
                   type="button"
                   onClick={() => setSelectedDepartmentValue(department.value)}
-                  className={`relative flex w-full items-center justify-center border-b border-gray-100 px-1.5 py-3.5 text-center transition ${
+                  className={`relative flex h-[4.6rem] w-full items-center justify-center border-b border-gray-100 px-1.5 text-center transition ${
                     active ? "bg-orange-50/70" : "active:bg-gray-50"
                   }`}
                 >
                   {active ? <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-orange-600" /> : null}
-                  <span className={`leading-tight ${active ? "font-bold text-gray-950" : "font-medium text-gray-500"} text-[9px] min-[390px]:text-[10px]`}>
+                  <span className={`line-clamp-2 leading-tight ${active ? "font-bold text-gray-950" : "font-medium text-gray-500"} text-[9px] min-[390px]:text-[10px]`}>
                     {department.label}
                   </span>
                 </button>
