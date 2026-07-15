@@ -57,6 +57,7 @@ const defaultAppContextValue = {
     categories: [],
     subcategoriesByParent: new Map(),
     customTopCategories: [],
+    brands: [],
     toggleProductLike: async () => ({ success: false, message: 'App context is not ready' }),
     cartItems: {},
     resolvedCartItems: {},
@@ -109,6 +110,7 @@ export const AppContextProvider = (props) => {
     const [products, setProducts] = useState([])
     const [tags, setTags] = useState([])
     const [categories, setCategories] = useState([])
+    const [brands, setBrands] = useState([])
     const [userData, setUserData] = useState(false)
     const [isSeller, setIsSeller] = useState(false)
     const [isAdmin, setIsAdmin] = useState(false)
@@ -772,6 +774,18 @@ export const AppContextProvider = (props) => {
         }
     }, [])
 
+    useEffect(() => {
+        let isMounted = true
+        axios.get('/api/brands').then(({ data }) => {
+            if (isMounted && data.success) {
+                setBrands(data.brands)
+            }
+        }).catch(() => {})
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
     // Subcategories (parentValue set) grouped under their parent category
     // value, plus the list of admin-added top-level categories (parentValue
     // null) that supplement the static list in lib/marketplaceCategories.js.
@@ -914,7 +928,7 @@ export const AppContextProvider = (props) => {
         userData, fetchUserData,
         products, fetchProductData,
         tags, tagsBySlug,
-        categories, subcategoriesByParent, customTopCategories,
+        categories, subcategoriesByParent, customTopCategories, brands,
         toggleProductLike,
         cartItems, resolvedCartItems, cartMutatingItemIds, setCartItems,
         addToCart, updateCartQuantity,

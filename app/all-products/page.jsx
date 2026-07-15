@@ -9,7 +9,7 @@ import { useAppContext } from "@/context/AppContext";
 import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { categoryMatchesSelection, getCategoryMeta, marketplaceFilterCategories } from "@/lib/marketplaceCategories";
-import { getProductActivitySnapshot, resolveProductTagSlugs, SYSTEM_TAG_DEFINITIONS } from "@/lib/liveCommerce";
+import { getProductActivitySnapshot, getFlashDealTimeParts, resolveProductTagSlugs, SYSTEM_TAG_DEFINITIONS } from "@/lib/liveCommerce";
 import { getCategoryExperience } from "@/lib/categoryExperiences";
 import axios from "axios";
 
@@ -441,7 +441,7 @@ const getProductSearchScore = (product, query) => {
 };
 
 function AllProductsInner() {
-  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, addToCart, subcategoriesByParent } = useAppContext();
+  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, addToCart, subcategoriesByParent, customTopCategories, brands } = useAppContext();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "All";
   const initialSubcategory = searchParams.get("subcategory") || "";
@@ -463,8 +463,10 @@ function AllProductsInner() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState(initialTags);
   const [manualTagOptions, setManualTagOptions] = useState([]);
+  const [promoBanners, setPromoBanners] = useState([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
     let isMounted = true;
@@ -476,6 +478,27 @@ function AllProductsInner() {
     return () => {
       isMounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    // Mid-page promotional banners come from the admin banner system
+    // (promo + featured types), so they're no longer hardcoded.
+    axios.get("/api/banners").then(({ data }) => {
+      if (isMounted && data.success) {
+        const promos = (data.banners || []).filter((banner) => banner.type === "promo" || banner.type === "featured");
+        setPromoBanners(promos);
+      }
+    }).catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // One-second ticker so the flash-deal countdown updates live.
+  useEffect(() => {
+    const interval = window.setInterval(() => setNowTick(Date.now()), 1000);
+    return () => window.clearInterval(interval);
   }, []);
 
   const tagOptions = useMemo(() => {
@@ -647,10 +670,38 @@ function AllProductsInner() {
       label: subcategory.name,
       subcategory: subcategory.name,
       icon: subcategory.icon,
+      imageUrl: subcategory.imageUrl || "",
+      count: selectedCategoryPool.filter((product) => product.subcategory === subcategory.name).length,
       categories: [selectedCategoryMeta.value],
       description: "",
     }));
-  }, [subcategoriesByParent, selectedCategoryMeta]);
+  }, [subcategoriesByParent, selectedCategoryMeta, selectedCategoryPool]);
+  // The admin-managed top-level Category record for the selected category (if
+  // one exists) — provides the hero/banner image so the hero shows real
+  // uploaded artwork instead of repeated product photos.
+  const selectedCategoryRecord = useMemo(() => (
+    selectedCategoryMeta
+      ? (customTopCategories || []).find((category) => category.name === selectedCategoryMeta.value)
+      : null
+  ), [customTopCategories, selectedCategoryMeta]);
+  // Only genuinely-active flash deals within this category, plus the soonest
+  // deadline to drive the live countdown.
+  const categoryFlashDeals = useMemo(() => (
+    selectedCategoryPool.filter((product) => getProductActivitySnapshot(product).flashDealActive)
+  ), [selectedCategoryPool]);
+  const earliestCategoryDealDeadline = useMemo(() => {
+    const deadlines = categoryFlashDeals
+      .map((product) => getProductActivitySnapshot(product).flashDealEndsAt)
+      .filter((value) => Number.isFinite(value) && value > Date.now());
+    return deadlines.length ? Math.min(...deadlines) : 0;
+  }, [categoryFlashDeals]);
+  const categoryBestSellers = useMemo(() => (
+    [...selectedCategoryPool].sort((a, b) => (Number(b.soldCount) || 0) - (Number(a.soldCount) || 0))
+  ), [selectedCategoryPool]);
+  const categoryNewArrivals = useMemo(() => (
+    [...selectedCategoryPool].sort((a, b) => (Number(b.date) || 0) - (Number(a.date) || 0))
+  ), [selectedCategoryPool]);
+  const activeBrands = useMemo(() => (brands || []).filter((brand) => brand.isActive !== false && brand.logoUrl), [brands]);
   const useSupermarketMobileDisplay = realSubcategoryTiles.length > 0;
   const mobileDisplayTiles = useSupermarketMobileDisplay
     ? realSubcategoryTiles
@@ -868,36 +919,22 @@ function AllProductsInner() {
   );
 
   if (selectedCategoryMode) {
-    const desktopProducts = filteredProducts.length ? filteredProducts : selectedCategoryPool;
-    const desktopHeroProducts = selectedCategoryExperience.heroProducts.length
-      ? selectedCategoryExperience.heroProducts
-      : desktopProducts.slice(0, 4);
-    const desktopPromoCards = [
-      {
-        eyebrow: "BUY 2 GET 1 FREE",
-        title: `${selectedCategoryExperience.meta.label} accessories`,
-        tone: "from-[#fff0e6] to-[#ffd6bf]",
-        button: "bg-orange-600",
-        product: desktopProducts[8] || desktopHeroProducts[0],
-      },
-      {
-        eyebrow: "BACK TO SCHOOL",
-        title: "Up to 40% OFF",
-        tone: "from-[#eaf2ff] to-[#d5e6ff]",
-        button: "bg-blue-700",
-        product: desktopProducts[9] || desktopHeroProducts[1],
-      },
-      {
-        eyebrow: "BEAUTY SALE",
-        title: "Up to 50% OFF",
-        tone: "from-[#fff0f4] to-[#ffd9e2]",
-        button: "bg-rose-600",
-        product: desktopProducts[10] || desktopHeroProducts[2],
-      },
-    ];
-    const brandStrip = brandOptions.length
-      ? brandOptions.slice(0, 10).map((brand) => brand.label)
-      : ["Samsung", "Apple", "HP", "Dell", "Lenovo", "Mi", "Oraimo", "Sony", "JBL", "Canon"];
+    // Hero shows the admin-uploaded category banner (real artwork). No product
+    // photos here — that was the "same picture everywhere" bug.
+    const heroImage = selectedCategoryRecord?.heroImage || "";
+    // Live countdown to the soonest flash-deal deadline in this category.
+    const dealCountdown = earliestCategoryDealDeadline
+      ? getFlashDealTimeParts(Math.max(0, earliestCategoryDealDeadline - nowTick))
+      : null;
+    const hasLiveCountdown = Boolean(dealCountdown) && earliestCategoryDealDeadline > nowTick;
+    // Promo cards come straight from the admin banner system.
+    const desktopPromoCards = promoBanners.slice(0, 3);
+    const bannerHref = (banner) => {
+      if (banner.linkType === "category" && banner.category) return `/all-products?category=${encodeURIComponent(banner.category)}`;
+      if (banner.linkType === "store" && banner.storeId) return `/store/${encodeURIComponent(banner.storeId)}`;
+      if (banner.productId) return `/product/${banner.productId}`;
+      return banner.href || "/all-products";
+    };
     const serviceItems = [
       ["100% Original", "Genuine products"],
       ["Easy Returns", "7-day return policy"],
@@ -1099,57 +1136,57 @@ function AllProductsInner() {
                 </div>
 
                 <div className="hidden space-y-6 lg:block">
-                  <section className="relative overflow-hidden rounded-lg bg-[#14110f] px-11 py-10 text-white shadow-sm">
-                    <div className="relative z-10 max-w-xl">
-                      <p className="text-[15px] font-black uppercase tracking-wide text-orange-500">Mega July Sale</p>
-                      <h1 className="mt-4 text-[3.15rem] font-black leading-none tracking-tight">Up to 70% OFF</h1>
-                      <p className="mt-3 text-3xl font-medium">On {selectedCategoryExperience.meta.label}</p>
-                      <p className="mt-3 text-base text-white/70">Top brands. Best prices.</p>
-                      <button type="button" onClick={() => setSelectedCondition("flash")} className="mt-7 inline-flex items-center gap-2 rounded-md bg-white px-5 py-3 text-[13px] font-black text-gray-950 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/all-products?category=${encodeURIComponent(selectedCategory)}&filter=flash`)}
+                    className="relative block aspect-[15/4] w-full overflow-hidden rounded-lg bg-[#14110f] text-left text-white shadow-sm"
+                  >
+                    {heroImage ? (
+                      <>
+                        <Image src={heroImage} alt={`${selectedCategoryExperience.meta.label} offers`} fill sizes="(min-width:1024px) 70vw, 100vw" className="object-cover" priority />
+                        <span className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/25 to-transparent" />
+                      </>
+                    ) : (
+                      <span className="absolute inset-0 bg-gradient-to-br from-[#1b1512] via-[#2a1d16] to-[#7a3b18]" />
+                    )}
+                    <div className="relative z-10 flex h-full max-w-xl flex-col justify-center px-11">
+                      <p className="text-[13px] font-black uppercase tracking-wide text-orange-400">{selectedCategoryExperience.meta.label}</p>
+                      <h1 className="mt-2 text-[2.6rem] font-black leading-none tracking-tight">Shop {selectedCategoryExperience.meta.label}</h1>
+                      <p className="mt-3 text-base text-white/75">Top brands. Best prices.</p>
+                      <span className="mt-6 inline-flex w-fit items-center gap-2 rounded-md bg-white px-5 py-3 text-[13px] font-black text-gray-950 shadow-sm">
                         Shop Now <span aria-hidden="true">→</span>
-                      </button>
+                      </span>
                     </div>
-                    <div className="absolute inset-y-0 right-6 flex w-[54%] items-center justify-end gap-4">
-                      {desktopHeroProducts.slice(0, 3).map((product, index) => (
-                        <Image
-                          key={keyed("hero-product", product, index)}
-                          src={getProductImage(product)}
-                          alt={product?.name || selectedCategoryExperience.meta.label}
-                          width={280}
-                          height={240}
-                          className={`${index === 1 ? "h-72 w-52" : "h-56 w-48"} object-contain drop-shadow-2xl`}
-                          priority={index === 0}
-                        />
-                      ))}
-                    </div>
-                    <button type="button" aria-label="Previous offer" className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white text-gray-950 shadow-sm">‹</button>
-                    <button type="button" aria-label="Next offer" className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white text-gray-950 shadow-sm">›</button>
-                    <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-                      <span className="h-2 w-5 rounded-full bg-orange-600" />
-                      <span className="h-2 w-2 rounded-full bg-white/45" />
-                      <span className="h-2 w-2 rounded-full bg-white/45" />
-                    </div>
-                  </section>
+                  </button>
 
-                  <div className="grid grid-cols-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200/80">
-                    {selectedCategoryExperience.tiles.slice(0, 9).map((tile) => (
-                      <button
-                        key={`desktop-chip-${tile.label}`}
-                        type="button"
-                        onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
-                        className="group flex h-[7.1rem] min-w-0 flex-col items-center justify-center gap-2 border-r border-gray-100 px-2 text-center transition hover:bg-orange-50"
-                      >
-                        <span className="flex h-12 w-full items-center justify-center">
-                          {tile.product ? <Image src={getProductImage(tile.product)} alt={tile.label} width={72} height={58} className="h-full w-full object-contain transition group-hover:scale-105" /> : <CategoryGlyph category={tile.categories[0]} className="h-8 w-8 text-gray-500" />}
-                        </span>
-                        <span className="line-clamp-1 text-[12px] font-extrabold text-gray-950">{tile.label}</span>
+                  {realSubcategoryTiles.length ? (
+                    <div className="grid grid-cols-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200/80">
+                      {realSubcategoryTiles.slice(0, 9).map((tile) => (
+                        <button
+                          key={`desktop-chip-${tile.label}`}
+                          type="button"
+                          onClick={() => navigate(`/all-products?category=${encodeURIComponent(selectedCategory)}&subcategory=${encodeURIComponent(tile.subcategory)}`)}
+                          className="group flex h-[7.1rem] min-w-0 flex-col items-center justify-center gap-2 border-r border-gray-100 px-2 text-center transition hover:bg-orange-50"
+                        >
+                          <span className="flex h-12 w-full items-center justify-center text-3xl">
+                            {tile.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={tile.imageUrl} alt={tile.label} className="h-full w-full object-contain transition group-hover:scale-105" />
+                            ) : tile.icon ? (
+                              <span aria-hidden="true">{tile.icon}</span>
+                            ) : (
+                              <CategoryGlyph category={selectedCategoryExperience.meta.value} className="h-8 w-8 text-gray-500" />
+                            )}
+                          </span>
+                          <span className="line-clamp-1 text-[12px] font-extrabold text-gray-950">{tile.label}</span>
+                        </button>
+                      ))}
+                      <button type="button" onClick={() => navigate("/categories")} className="flex h-[7.1rem] min-w-0 flex-col items-center justify-center gap-2 px-2 text-center text-gray-950 transition hover:bg-orange-50">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-2xl">›</span>
+                        <span className="text-[12px] font-extrabold">View All</span>
                       </button>
-                    ))}
-                    <button type="button" onClick={() => navigate("/categories")} className="flex h-[7.1rem] min-w-0 flex-col items-center justify-center gap-2 px-2 text-center text-gray-950 transition hover:bg-orange-50">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-2xl">›</span>
-                      <span className="text-[12px] font-extrabold">View All</span>
-                    </button>
-                  </div>
+                    </div>
+                  ) : null}
 
                   <section>
                     <div className="mb-3 flex items-center justify-between">
@@ -1158,91 +1195,128 @@ function AllProductsInner() {
                         <span className="text-[13px] font-bold text-orange-600">Limited time offers</span>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className="text-[13px] text-gray-500">Ends in</span>
-                        <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black text-white">04</span>
-                        <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black text-white">12</span>
-                        <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black text-white">28</span>
-                        <button type="button" onClick={() => setSelectedCondition("flash")} className="text-[12px] font-extrabold text-gray-900">View All ›</button>
+                        {hasLiveCountdown ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[13px] text-gray-500">Ends in</span>
+                            {dealCountdown.days > 0 ? <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black tabular-nums text-white">{String(dealCountdown.days).padStart(2, "0")}d</span> : null}
+                            <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black tabular-nums text-white">{String(dealCountdown.hours).padStart(2, "0")}</span>
+                            <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black tabular-nums text-white">{String(dealCountdown.minutes).padStart(2, "0")}</span>
+                            <span className="rounded bg-orange-600 px-2 py-1 text-[12px] font-black tabular-nums text-white">{String(dealCountdown.seconds).padStart(2, "0")}</span>
+                          </div>
+                        ) : null}
+                        <button type="button" onClick={() => navigate(`/all-products?category=${encodeURIComponent(selectedCategory)}&filter=flash`)} className="text-[12px] font-extrabold text-gray-900">View All ›</button>
                       </div>
                     </div>
                     {loadingProducts ? (
                       <ProductsGridSkeleton showHeader={false} />
-                    ) : (
+                    ) : categoryFlashDeals.length ? (
                       <div className="grid grid-cols-5 gap-5">
-                        {desktopProducts.slice(0, 5).map((product, index) => (
+                        {categoryFlashDeals.slice(0, 5).map((product, index) => (
                           <DesktopProductCard key={keyed("flash", product, index)} product={product} index={index} />
                         ))}
                       </div>
+                    ) : (
+                      <div className="rounded-lg bg-white px-6 py-10 text-center text-sm text-gray-500 shadow-sm ring-1 ring-gray-200/80">
+                        No active flash deals in {selectedCategoryExperience.meta.label} right now — check back soon.
+                      </div>
                     )}
                   </section>
 
-                  <div className="grid grid-cols-3 gap-5">
-                    {desktopPromoCards.map((card, index) => (
-                      <button key={`desktop-promo-${card.eyebrow}`} type="button" onClick={() => setSelectedCondition("flash")} className={`relative min-h-[9.5rem] overflow-hidden rounded-lg bg-gradient-to-r ${card.tone} p-6 text-left shadow-sm`}>
-                        <p className="text-lg font-black uppercase text-orange-700">{card.eyebrow}</p>
-                        <p className="mt-1 text-2xl font-black text-gray-950">{card.title}</p>
-                        <span className={`mt-5 inline-flex rounded px-4 py-2 text-[12px] font-black text-white ${card.button}`}>Shop Now</span>
-                        {card.product ? <Image src={getProductImage(card.product)} alt={card.title} width={190} height={140} className="absolute bottom-2 right-3 h-32 w-44 object-contain" /> : null}
-                      </button>
-                    ))}
-                  </div>
-
-                  <section>
-                    <DesktopSectionHeader title="Featured Categories" subtitle="Shop by category" />
-                    <div className="grid grid-cols-6 gap-5">
-                      {selectedCategoryExperience.tiles.slice(0, 6).map((tile) => (
+                  {desktopPromoCards.length ? (
+                    <div className="grid grid-cols-3 gap-5">
+                      {desktopPromoCards.map((card) => (
                         <button
-                          key={`featured-${tile.label}`}
+                          key={`desktop-promo-${card._id}`}
                           type="button"
-                          onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.categories[0] || selectedCategoryExperience.meta.value)}`)}
-                          className="group rounded-lg bg-white p-4 text-center shadow-sm ring-1 ring-gray-200/80 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-orange-200"
+                          onClick={() => navigate(bannerHref(card))}
+                          onMouseEnter={() => prefetchRoute(bannerHref(card))}
+                          className="relative block aspect-[2.6/1] overflow-hidden rounded-lg bg-gray-100 text-left shadow-sm"
                         >
-                          <span className="flex h-28 items-center justify-center">
-                            {tile.product ? <Image src={getProductImage(tile.product)} alt={tile.label} width={170} height={125} className="h-full w-full object-contain transition group-hover:scale-105" /> : null}
-                          </span>
-                          <p className="mt-3 text-[14px] font-black text-gray-950">{tile.label}</p>
-                          <p className="text-[12px] font-medium text-gray-500">{formatCount(tile.count || 20)}+ Products</p>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={card.imageUrl} alt={card.title || "Promotion"} className="absolute inset-0 h-full w-full object-cover" />
                         </button>
                       ))}
                     </div>
-                  </section>
+                  ) : null}
 
-                  <section>
-                    <DesktopSectionHeader title="Best Sellers" subtitle="Top products this week" />
-                    {loadingProducts ? (
-                      <ProductsGridSkeleton showHeader={false} />
-                    ) : (
+                  {realSubcategoryTiles.length ? (
+                    <section>
+                      <DesktopSectionHeader title="Featured Categories" subtitle="Shop by category" />
                       <div className="grid grid-cols-6 gap-5">
-                        {desktopProducts.slice(5, 11).map((product, index) => (
-                          <DesktopProductCard key={keyed("best", product, index)} product={product} index={index} ranked compact />
+                        {realSubcategoryTiles.slice(0, 6).map((tile) => (
+                          <button
+                            key={`featured-${tile.label}`}
+                            type="button"
+                            onClick={() => navigate(`/all-products?category=${encodeURIComponent(selectedCategory)}&subcategory=${encodeURIComponent(tile.subcategory)}`)}
+                            className="group rounded-lg bg-white p-4 text-center shadow-sm ring-1 ring-gray-200/80 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-orange-200"
+                          >
+                            <span className="flex h-28 items-center justify-center text-5xl">
+                              {tile.imageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={tile.imageUrl} alt={tile.label} className="h-full w-full object-contain transition group-hover:scale-105" />
+                              ) : tile.icon ? (
+                                <span aria-hidden="true">{tile.icon}</span>
+                              ) : (
+                                <CategoryGlyph category={selectedCategoryExperience.meta.value} className="h-10 w-10 text-gray-400" />
+                              )}
+                            </span>
+                            <p className="mt-3 text-[14px] font-black text-gray-950">{tile.label}</p>
+                            <p className="text-[12px] font-medium text-gray-500">{formatCount(tile.count)} Product{tile.count === 1 ? "" : "s"}</p>
+                          </button>
                         ))}
                       </div>
-                    )}
-                  </section>
+                    </section>
+                  ) : null}
 
-                  <section>
-                    <DesktopSectionHeader title="Top Brands" subtitle="Shop from top brands" />
-                    <div className="grid grid-cols-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200/80">
-                      {brandStrip.map((brand, index) => (
-                        <button key={`brand-${index}-${brand}`} type="button" onClick={() => setSelectedBrand(brand)} className="flex h-16 min-w-0 items-center justify-center border-r border-gray-100 px-3 text-center text-xl font-black text-gray-900 transition hover:bg-gray-50">
-                          <span className="truncate">{brand}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
+                  {categoryBestSellers.length ? (
+                    <section>
+                      <DesktopSectionHeader title="Best Sellers" subtitle="Top products this week" />
+                      {loadingProducts ? (
+                        <ProductsGridSkeleton showHeader={false} />
+                      ) : (
+                        <div className="grid grid-cols-6 gap-5">
+                          {categoryBestSellers.slice(0, 6).map((product, index) => (
+                            <DesktopProductCard key={keyed("best", product, index)} product={product} index={index} ranked compact />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  ) : null}
 
-                  <section>
-                    <DesktopSectionHeader title="New Arrivals" subtitle="Explore latest products" />
-                    {loadingProducts ? (
-                      <ProductsGridSkeleton showHeader={false} />
-                    ) : (
-                      <div className="grid grid-cols-6 gap-5">
-                        {desktopProducts.slice(11, 17).map((product, index) => (
-                          <DesktopProductCard key={keyed("arrival", product, index)} product={product} index={index} compact />
+                  {activeBrands.length ? (
+                    <section>
+                      <DesktopSectionHeader title="Top Brands" subtitle="Shop from top brands" />
+                      <div className="grid grid-cols-5 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200/80 md:grid-cols-10">
+                        {activeBrands.slice(0, 10).map((brand) => (
+                          <button
+                            key={brand._id}
+                            type="button"
+                            onClick={() => navigate(`/all-products?brand=${encodeURIComponent(brand.name)}`)}
+                            title={brand.name}
+                            className="flex h-16 min-w-0 items-center justify-center border-r border-gray-100 px-3 transition hover:bg-gray-50"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={brand.logoUrl} alt={brand.name} className="max-h-9 max-w-full object-contain" />
+                          </button>
                         ))}
                       </div>
-                    )}
-                  </section>
+                    </section>
+                  ) : null}
+
+                  {categoryNewArrivals.length ? (
+                    <section>
+                      <DesktopSectionHeader title="New Arrivals" subtitle="Explore latest products" />
+                      {loadingProducts ? (
+                        <ProductsGridSkeleton showHeader={false} />
+                      ) : (
+                        <div className="grid grid-cols-6 gap-5">
+                          {categoryNewArrivals.slice(0, 6).map((product, index) => (
+                            <DesktopProductCard key={keyed("arrival", product, index)} product={product} index={index} compact />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  ) : null}
 
                   <div className="grid grid-cols-4 rounded-lg bg-white shadow-sm ring-1 ring-gray-200/80">
                     {serviceItems.map(([title, subtitle]) => (

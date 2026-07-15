@@ -26,6 +26,7 @@ const menuItems = [
     { name: 'Billing', path: '/admin/billing', icon: '🧾' },
     { name: 'Promotions & Content', path: '/admin/promotions', icon: '🎯' },
     { name: 'Tags', path: '/admin/tags', icon: '🏷️' },
+    { name: 'Top Brands', path: '/admin/brands', icon: '🔖' },
     { name: 'Analytics', path: '/admin/analytics', icon: '📈' },
 ];
 
