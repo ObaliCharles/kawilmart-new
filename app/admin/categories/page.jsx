@@ -198,17 +198,17 @@ export default function AdminCategoriesPage() {
     };
 
     return (
-        <div className="max-w-5xl space-y-6">
+        <div className="max-w-5xl space-y-4">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <h1 className="text-lg font-semibold tracking-tight text-gray-950">Categories</h1>
+                <p className="mt-0.5 text-xs text-gray-500">
                     Manage subcategories (departments) shown under each top-level category, and add new top-level
                     categories when needed. This is the single source of truth for category browsing across the site —
                     products get tagged to a subcategory from here in the product form.
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 rounded-xl border border-gray-200 bg-white p-5 sm:grid-cols-2">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 rounded-xl bg-white ring-1 ring-gray-100 p-4 sm:grid-cols-2">
                 <div>
                     <label className="text-xs font-semibold text-gray-600">Name</label>
                     <input
@@ -216,7 +216,7 @@ export default function AdminCategoriesPage() {
                         value={form.name}
                         onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                         placeholder="e.g. Snacks, or a new top-level category"
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                        className="mt-1 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                         required
                     />
                 </div>
@@ -227,7 +227,7 @@ export default function AdminCategoriesPage() {
                         value={form.icon}
                         onChange={(e) => setForm((prev) => ({ ...prev, icon: e.target.value }))}
                         placeholder="🍫"
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                        className="mt-1 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                     />
                     <p className="mt-1 text-[11px] text-gray-400">Only shown if no image is uploaded.</p>
                 </div>
@@ -236,12 +236,12 @@ export default function AdminCategoriesPage() {
                     <div className="mt-1 flex items-center gap-3">
                         {(imagePreview || form.imageUrl) ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={imagePreview || form.imageUrl} alt="" className="h-16 w-16 rounded-lg border border-gray-200 object-contain p-1" />
+                            <img src={imagePreview || form.imageUrl} alt="" className="h-16 w-16 rounded-lg object-contain p-1 ring-1 ring-gray-100" />
                         ) : (
                             <span className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-gray-300 text-2xl text-gray-400">{form.icon || '🖼️'}</span>
                         )}
                         <div className="flex flex-col gap-1.5">
-                            <label className="cursor-pointer rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:bg-orange-50">
+                            <label className="cursor-pointer rounded-full bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-orange-50 hover:text-orange-700">
                                 {(imagePreview || form.imageUrl) ? 'Change image' : 'Upload image'}
                                 <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} />
                             </label>
@@ -259,11 +259,11 @@ export default function AdminCategoriesPage() {
                     <div className="mt-1 flex items-center gap-3">
                         {(heroPreview || form.heroImage) ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={heroPreview || form.heroImage} alt="" className="h-16 w-28 rounded-lg border border-gray-200 object-cover" />
+                            <img src={heroPreview || form.heroImage} alt="" className="h-16 w-28 rounded-lg object-cover ring-1 ring-gray-100" />
                         ) : (
                             <span className="flex h-16 w-28 items-center justify-center rounded-lg border border-dashed border-gray-300 text-xl text-gray-400">🖼️</span>
                         )}
-                        <label className="cursor-pointer rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:bg-orange-50">
+                        <label className="cursor-pointer rounded-full bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-orange-50 hover:text-orange-700">
                             {(heroPreview || form.heroImage) ? 'Change banner' : 'Upload banner'}
                             <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleHeroChange} />
                         </label>
@@ -275,7 +275,7 @@ export default function AdminCategoriesPage() {
                     <select
                         value={form.parentValue}
                         onChange={(e) => setForm((prev) => ({ ...prev, parentValue: e.target.value }))}
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                        className="mt-1 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                     >
                         <option value="">Top-level category (no parent)</option>
                         {parentOptions.map((option) => (
@@ -302,7 +302,7 @@ export default function AdminCategoriesPage() {
                             type="number"
                             value={form.sortOrder}
                             onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: e.target.value }))}
-                            className="mt-1 w-24 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                            className="mt-1 w-24 rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                         />
                     </div>
                 </div>
@@ -323,11 +323,11 @@ export default function AdminCategoriesPage() {
             </form>
 
             {loading ? (
-                <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500">Loading categories...</div>
+                <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 text-sm text-gray-500">Loading categories...</div>
             ) : (
                 <div className="space-y-4">
                     {customTopCategories.length > 0 && (
-                        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                        <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
                             <div className="border-b border-gray-100 px-4 py-3">
                                 <h2 className="text-sm font-bold text-gray-900">Admin-added top-level categories</h2>
                             </div>
@@ -355,7 +355,7 @@ export default function AdminCategoriesPage() {
                         if (children.length === 0) return null;
 
                         return (
-                            <div key={parent.value} className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                            <div key={parent.value} className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
                                 <div className="border-b border-gray-100 px-4 py-3">
                                     <h2 className="text-sm font-bold text-gray-900">{parent.label}</h2>
                                 </div>
@@ -383,7 +383,7 @@ export default function AdminCategoriesPage() {
                     })}
 
                     {categories.length === 0 && (
-                        <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500">
+                        <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 text-sm text-gray-500">
                             No subcategories yet. Add one above — pick a top-level category as its parent.
                         </div>
                     )}

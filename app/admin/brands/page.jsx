@@ -112,16 +112,16 @@ export default function AdminBrandsPage() {
     };
 
     return (
-        <div className="max-w-5xl space-y-6">
+        <div className="max-w-5xl space-y-4">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Top Brands</h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <h1 className="text-lg font-semibold tracking-tight text-gray-950">Top Brands</h1>
+                <p className="mt-0.5 text-xs text-gray-500">
                     Add brand logos for the &ldquo;Top Brands&rdquo; strip on category pages. The brand name must match how it
                     appears on products (e.g. &ldquo;Samsung&rdquo;) so its logo links to that brand&apos;s products.
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 rounded-xl border border-gray-200 bg-white p-5 sm:grid-cols-2">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 rounded-xl bg-white ring-1 ring-gray-100 p-4 sm:grid-cols-2">
                 <div>
                     <label className="text-xs font-semibold text-gray-600">Brand name</label>
                     <input
@@ -129,7 +129,7 @@ export default function AdminBrandsPage() {
                         value={form.name}
                         onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                         placeholder="e.g. Samsung"
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                        className="mt-1 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                         required
                     />
                 </div>
@@ -144,7 +144,7 @@ export default function AdminBrandsPage() {
                             type="number"
                             value={form.sortOrder}
                             onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: e.target.value }))}
-                            className="mt-1 w-24 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                            className="mt-1 w-24 rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                         />
                     </div>
                 </div>
@@ -153,11 +153,11 @@ export default function AdminBrandsPage() {
                     <div className="mt-1 flex items-center gap-3">
                         {(logoPreview || form.logoUrl) ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={logoPreview || form.logoUrl} alt="" className="h-14 w-24 rounded-lg border border-gray-200 object-contain p-1.5" />
+                            <img src={logoPreview || form.logoUrl} alt="" className="h-14 w-24 rounded-lg object-contain p-1.5 ring-1 ring-gray-100" />
                         ) : (
                             <span className="flex h-14 w-24 items-center justify-center rounded-lg border border-dashed border-gray-300 text-xs text-gray-400">No logo</span>
                         )}
-                        <label className="cursor-pointer rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-orange-300 hover:bg-orange-50">
+                        <label className="cursor-pointer rounded-full bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-orange-50 hover:text-orange-700">
                             {(logoPreview || form.logoUrl) ? 'Change logo' : 'Upload logo'}
                             <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="hidden" onChange={handleLogoChange} />
                         </label>
@@ -172,11 +172,11 @@ export default function AdminBrandsPage() {
                 </div>
             </form>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">Loading brands...</div>
+                    <div className="p-4 text-sm text-gray-500">Loading brands...</div>
                 ) : brands.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">No brands yet. Add one above.</div>
+                    <div className="p-4 text-sm text-gray-500">No brands yet. Add one above.</div>
                 ) : (
                     <table className="w-full text-sm">
                         <thead>

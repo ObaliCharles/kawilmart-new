@@ -68,6 +68,11 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Animated search placeholder: each rotating product name rolls up + fades in. */
 @keyframes search-hint-enter {
   from { opacity: 0; transform: translateY(0.85em); }
@@ -246,6 +251,13 @@ body {
 
   .animate-slide-up-stagger {
     animation: slide-up 250ms var(--motion-snappy) both;
+  }
+
+  /* Soft entrance for marketing/about sections: rises and fades in with a
+     per-element stagger via --reveal-delay. */
+  .reveal-up {
+    animation: reveal-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
   }
 
   .content-visible {

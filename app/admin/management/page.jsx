@@ -247,10 +247,10 @@ const buildUpdatesPayload = (activeTab, draft) => {
 };
 
 const MetricCard = ({ label, value, sub, tone = 'bg-white' }) => (
-    <div className={`rounded-2xl border border-gray-200 p-4 shadow-sm ${tone}`}>
+    <div className={`rounded-xl p-4 ring-1 ring-gray-100 ${tone}`}>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">{label}</p>
         <p className="mt-2 text-xl font-semibold text-gray-900">{value}</p>
-        {sub ? <p className="mt-1 text-sm text-gray-500">{sub}</p> : null}
+        {sub ? <p className="mt-0.5 text-xs text-gray-500">{sub}</p> : null}
     </div>
 );
 
@@ -593,11 +593,11 @@ export default function AdminManagement() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-gray-900">Operations Management</h1>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-0.5 text-xs text-gray-500">
                         Switch between seller and rider operations to manage profiles, verification, subscriptions, access, and support threads.
                     </p>
                 </div>
@@ -619,7 +619,7 @@ export default function AdminManagement() {
                     <button
                         type="button"
                         onClick={() => fetchUsers(selectedEntity?.id || '')}
-                        className="inline-flex items-center justify-center rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-gray-900 hover:text-gray-900"
+                        className="inline-flex items-center justify-center rounded-full bg-gray-100 px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-200"
                     >
                         Refresh
                     </button>
@@ -633,9 +633,9 @@ export default function AdminManagement() {
                 <MetricCard label="Overdue" value={tabSummary.overdue} sub="Needs billing follow-up" tone="bg-red-50" />
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+            <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
                 <aside className="space-y-4">
-                    <div className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
                         <label className="block">
                             <span className="mb-2 block text-sm font-medium text-gray-700">Find a {currentTabConfig.singular.toLowerCase()}</span>
                             <input
@@ -643,12 +643,12 @@ export default function AdminManagement() {
                                 value={searchQuery}
                                 onChange={(event) => setSearchQuery(event.target.value)}
                                 placeholder={currentTabConfig.searchPlaceholder}
-                                className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                             />
                         </label>
                     </div>
 
-                    <div className="rounded-3xl border border-gray-200 bg-white p-3 shadow-sm">
+                    <div className="rounded-xl bg-white ring-1 ring-gray-100 p-3 shadow-sm">
                         <div className="max-h-[72vh] space-y-2 overflow-y-auto pr-1">
                             {filteredEntities.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-gray-200 px-4 py-10 text-center text-sm text-gray-500">
@@ -721,15 +721,15 @@ export default function AdminManagement() {
                     </div>
                 </aside>
 
-                <section className="space-y-6">
+                <section className="space-y-4">
                     {!selectedEntity ? (
-                        <div className="rounded-3xl border border-dashed border-gray-200 bg-white px-6 py-16 text-center text-gray-500 shadow-sm">
+                        <div className="rounded-3xl border border-dashed border-gray-200 bg-white px-4 py-16 text-center text-gray-500 shadow-sm">
                             Select a {currentTabConfig.singular.toLowerCase()} to manage their account.
                         </div>
                     ) : (
                         <>
-                            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-                                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
+                                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                     <div className="flex items-start gap-4">
                                         <ClerkAvatarImage
                                             src={selectedEntity.imageUrl}
@@ -753,8 +753,8 @@ export default function AdminManagement() {
                                                     </StatusPill>
                                                 ) : null}
                                             </div>
-                                            <p className="mt-1 text-sm text-gray-500">{selectedEntity.email}</p>
-                                            <p className="mt-1 text-sm text-gray-500">
+                                            <p className="mt-0.5 text-xs text-gray-500">{selectedEntity.email}</p>
+                                            <p className="mt-0.5 text-xs text-gray-500">
                                                 {activeTab === 'seller'
                                                     ? (selectedEntity.businessLocation || 'Business location not set')
                                                     : (selectedEntity.riderBaseLocation || 'Base location not set')}
@@ -832,15 +832,15 @@ export default function AdminManagement() {
                                 </div>
                             </div>
 
-                            <div className="grid gap-6 2xl:grid-cols-[1.15fr_0.85fr]">
-                                <div className="space-y-6">
-                                    <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+                            <div className="grid gap-4 2xl:grid-cols-[1.15fr_0.85fr]">
+                                <div className="space-y-4">
+                                    <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <h3 className="text-lg font-semibold text-gray-900">
                                                     {activeTab === 'seller' ? 'Seller Profile' : 'Rider Profile'}
                                                 </h3>
-                                                <p className="mt-1 text-sm text-gray-500">
+                                                <p className="mt-0.5 text-xs text-gray-500">
                                                     {activeTab === 'seller'
                                                         ? 'Manage the public storefront identity, legal review, verification notes, and contact details.'
                                                         : 'Manage rider details, delivery identity, legal review, and availability information.'}
@@ -868,7 +868,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.businessName}
                                                             onChange={(event) => updateDraftField('businessName', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Business location">
@@ -876,7 +876,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.businessLocation}
                                                             onChange={(event) => updateDraftField('businessLocation', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="City">
@@ -884,7 +884,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.sellerLocationCity}
                                                             onChange={(event) => updateDraftField('sellerLocationCity', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Region / District">
@@ -892,7 +892,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.sellerLocationRegion}
                                                             onChange={(event) => updateDraftField('sellerLocationRegion', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Country">
@@ -900,7 +900,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.sellerLocationCountry}
                                                             onChange={(event) => updateDraftField('sellerLocationCountry', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Phone number">
@@ -908,7 +908,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.phoneNumber}
                                                             onChange={(event) => updateDraftField('phoneNumber', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Support email">
@@ -916,7 +916,7 @@ export default function AdminManagement() {
                                                             type="email"
                                                             value={entityDraft.sellerSupportEmail}
                                                             onChange={(event) => updateDraftField('sellerSupportEmail', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="WhatsApp / support line">
@@ -924,7 +924,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.sellerWhatsappNumber}
                                                             onChange={(event) => updateDraftField('sellerWhatsappNumber', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Business license">
@@ -932,7 +932,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.businessLicense}
                                                             onChange={(event) => updateDraftField('businessLicense', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Tax ID">
@@ -940,14 +940,14 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.taxId}
                                                             onChange={(event) => updateDraftField('taxId', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Account status">
                                                         <select
                                                             value={entityDraft.accountStatus}
                                                             onChange={(event) => updateDraftField('accountStatus', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         >
                                                             <option value="active">Active</option>
                                                             <option value="pending">Pending</option>
@@ -958,7 +958,7 @@ export default function AdminManagement() {
                                                         <select
                                                             value={entityDraft.legalStatus}
                                                             onChange={(event) => updateDraftField('legalStatus', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         >
                                                             <option value="pending">Pending</option>
                                                             <option value="approved">Approved</option>
@@ -970,14 +970,14 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.sellerBadgeLabel}
                                                             onChange={(event) => updateDraftField('sellerBadgeLabel', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Badge tone">
                                                         <select
                                                             value={entityDraft.sellerBadgeTone}
                                                             onChange={(event) => updateDraftField('sellerBadgeTone', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         >
                                                             <option value="emerald">Emerald</option>
                                                             <option value="sky">Sky</option>
@@ -990,7 +990,7 @@ export default function AdminManagement() {
                                                         <select
                                                             value={entityDraft.sellerSupportPriority}
                                                             onChange={(event) => updateDraftField('sellerSupportPriority', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         >
                                                             <option value="standard">Standard</option>
                                                             <option value="priority">Priority</option>
@@ -1016,21 +1016,21 @@ export default function AdminManagement() {
                                                         <textarea
                                                             value={entityDraft.sellerDescription}
                                                             onChange={(event) => updateDraftField('sellerDescription', event.target.value)}
-                                                            className="h-28 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="h-28 w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Legal notes">
                                                         <textarea
                                                             value={entityDraft.legalNotes}
                                                             onChange={(event) => updateDraftField('legalNotes', event.target.value)}
-                                                            className="h-24 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="h-24 w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Verification notes">
                                                         <textarea
                                                             value={entityDraft.verificationNotes}
                                                             onChange={(event) => updateDraftField('verificationNotes', event.target.value)}
-                                                            className="h-24 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="h-24 w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                 </div>
@@ -1043,7 +1043,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.phoneNumber}
                                                             onChange={(event) => updateDraftField('phoneNumber', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Base location">
@@ -1051,14 +1051,14 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.riderBaseLocation}
                                                             onChange={(event) => updateDraftField('riderBaseLocation', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Vehicle type">
                                                         <select
                                                             value={entityDraft.vehicleType}
                                                             onChange={(event) => updateDraftField('vehicleType', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         >
                                                             <option value="motorcycle">Motorcycle</option>
                                                             <option value="bicycle">Bicycle</option>
@@ -1069,7 +1069,7 @@ export default function AdminManagement() {
                                                         <select
                                                             value={entityDraft.riderAvailability}
                                                             onChange={(event) => updateDraftField('riderAvailability', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         >
                                                             <option value="available">Available</option>
                                                             <option value="busy">Busy</option>
@@ -1080,7 +1080,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.licensePlate}
                                                             onChange={(event) => updateDraftField('licensePlate', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Driver's license">
@@ -1088,7 +1088,7 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.driversLicense}
                                                             onChange={(event) => updateDraftField('driversLicense', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Government ID number">
@@ -1096,14 +1096,14 @@ export default function AdminManagement() {
                                                             type="text"
                                                             value={entityDraft.governmentIdNumber}
                                                             onChange={(event) => updateDraftField('governmentIdNumber', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Account status">
                                                         <select
                                                             value={entityDraft.accountStatus}
                                                             onChange={(event) => updateDraftField('accountStatus', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         >
                                                             <option value="active">Active</option>
                                                             <option value="pending">Pending</option>
@@ -1114,7 +1114,7 @@ export default function AdminManagement() {
                                                         <select
                                                             value={entityDraft.legalStatus}
                                                             onChange={(event) => updateDraftField('legalStatus', event.target.value)}
-                                                            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         >
                                                             <option value="pending">Pending</option>
                                                             <option value="approved">Approved</option>
@@ -1140,14 +1140,14 @@ export default function AdminManagement() {
                                                         <textarea
                                                             value={entityDraft.legalNotes}
                                                             onChange={(event) => updateDraftField('legalNotes', event.target.value)}
-                                                            className="h-24 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="h-24 w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                     <Field label="Verification notes">
                                                         <textarea
                                                             value={entityDraft.verificationNotes}
                                                             onChange={(event) => updateDraftField('verificationNotes', event.target.value)}
-                                                            className="h-24 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                            className="h-24 w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                         />
                                                     </Field>
                                                 </div>
@@ -1155,9 +1155,9 @@ export default function AdminManagement() {
                                         )}
                                     </div>
 
-                                    <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+                                    <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
                                         <h3 className="text-lg font-semibold text-gray-900">Subscription & Access</h3>
-                                        <p className="mt-1 text-sm text-gray-500">
+                                        <p className="mt-0.5 text-xs text-gray-500">
                                             Control billing, access windows, and monthly operations for this {currentTabConfig.singular.toLowerCase()}.
                                         </p>
 
@@ -1170,7 +1170,7 @@ export default function AdminManagement() {
                                                             <select
                                                                 value={entityDraft[fieldMap.plan]}
                                                                 onChange={(event) => updateDraftField(fieldMap.plan, event.target.value)}
-                                                                className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                                className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                             >
                                                                 <option value="standard">Standard</option>
                                                                 <option value="growth">Growth</option>
@@ -1182,7 +1182,7 @@ export default function AdminManagement() {
                                                             <select
                                                                 value={entityDraft[fieldMap.status]}
                                                                 onChange={(event) => updateDraftField(fieldMap.status, event.target.value)}
-                                                                className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                                className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                             >
                                                                 <option value="active">Active</option>
                                                                 <option value="trial">Trial</option>
@@ -1197,7 +1197,7 @@ export default function AdminManagement() {
                                                                 min="0"
                                                                 value={entityDraft[fieldMap.fee]}
                                                                 onChange={(event) => updateDraftField(fieldMap.fee, event.target.value)}
-                                                                className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                                className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                             />
                                                         </Field>
                                                         <Field label="Last payment date">
@@ -1205,7 +1205,7 @@ export default function AdminManagement() {
                                                                 type="date"
                                                                 value={entityDraft[fieldMap.lastPaidAt]}
                                                                 onChange={(event) => updateDraftField(fieldMap.lastPaidAt, event.target.value)}
-                                                                className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                                className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                             />
                                                         </Field>
                                                         <Field label="Next billing date">
@@ -1213,7 +1213,7 @@ export default function AdminManagement() {
                                                                 type="date"
                                                                 value={entityDraft[fieldMap.nextBillingDate]}
                                                                 onChange={(event) => updateDraftField(fieldMap.nextBillingDate, event.target.value)}
-                                                                className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                                className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                             />
                                                         </Field>
                                                         <Field label="Access valid until">
@@ -1221,7 +1221,7 @@ export default function AdminManagement() {
                                                                 type="date"
                                                                 value={entityDraft[fieldMap.accessUntil]}
                                                                 onChange={(event) => updateDraftField(fieldMap.accessUntil, event.target.value)}
-                                                                className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                                className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                             />
                                                         </Field>
                                                     </div>
@@ -1255,7 +1255,7 @@ export default function AdminManagement() {
                                                             <textarea
                                                                 value={entityDraft[fieldMap.notes]}
                                                                 onChange={(event) => updateDraftField(fieldMap.notes, event.target.value)}
-                                                                className="h-28 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                                className="h-28 w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                                             />
                                                         </Field>
                                                     </div>
@@ -1265,8 +1265,8 @@ export default function AdminManagement() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+                                <div className="space-y-4">
+                                    <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
                                         <h3 className="text-lg font-semibold text-gray-900">Operational Snapshot</h3>
                                         <div className="mt-5 space-y-3 text-sm">
                                             <div className="flex items-center justify-between">
@@ -1303,11 +1303,11 @@ export default function AdminManagement() {
                                         </div>
                                     </div>
 
-                                    <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+                                    <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <h3 className="text-lg font-semibold text-gray-900">Support Chat</h3>
-                                                <p className="mt-1 text-sm text-gray-500">
+                                                <p className="mt-0.5 text-xs text-gray-500">
                                                     Reply to {currentTabConfig.singular.toLowerCase()} support questions from the admin dashboard.
                                                 </p>
                                             </div>
@@ -1367,13 +1367,13 @@ export default function AdminManagement() {
                                                 value={supportDraft.subject}
                                                 onChange={(event) => setSupportDraft((current) => ({ ...current, subject: event.target.value }))}
                                                 placeholder={`Subject, for example: ${activeTab === 'seller' ? 'Subscription approved' : 'Delivery account update'}`}
-                                                className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                             />
                                             <textarea
                                                 value={supportDraft.content}
                                                 onChange={(event) => setSupportDraft((current) => ({ ...current, content: event.target.value }))}
                                                 placeholder={`Reply to this ${currentTabConfig.singular.toLowerCase()} here...`}
-                                                className="h-32 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+                                                className="h-32 w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                             />
                                             <button
                                                 type="button"

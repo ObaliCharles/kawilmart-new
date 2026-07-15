@@ -15,10 +15,10 @@ const statusClasses = {
 };
 
 const MetricCard = ({ label, value, sub, tone = 'bg-white' }) => (
-  <div className={`rounded-2xl border border-gray-200 p-4 shadow-sm ${tone}`}>
+  <div className={`rounded-xl p-4 ring-1 ring-gray-100 ${tone}`}>
     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">{label}</p>
     <p className="mt-2 text-xl font-semibold text-gray-900">{value}</p>
-    {sub ? <p className="mt-1 text-sm text-gray-500">{sub}</p> : null}
+    {sub ? <p className="mt-0.5 text-xs text-gray-500">{sub}</p> : null}
   </div>
 );
 
@@ -168,11 +168,11 @@ export default function AdminBillingPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Billing & Invoices</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-0.5 text-xs text-gray-500">
             Generate month-end seller invoices, track overdue balances, and confirm payments from one place.
           </p>
         </div>
@@ -212,7 +212,7 @@ export default function AdminBillingPage() {
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               downloadingMonthlyReport || !activeDownloadPeriod
                 ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                : 'border border-gray-200 bg-white text-gray-700 hover:border-gray-900 hover:text-gray-900'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             {downloadingMonthlyReport ? 'Preparing report...' : 'Download Selected Month'}
@@ -236,7 +236,7 @@ export default function AdminBillingPage() {
             onChange={(event) => setSearchQuery(event.target.value)}
             onBlur={() => void fetchInvoices({ searchQuery: searchQuery })}
             placeholder="Invoice number, shop, seller, email..."
-            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
           />
         </label>
 
@@ -249,7 +249,7 @@ export default function AdminBillingPage() {
               setStatusFilter(nextStatus);
               void fetchInvoices({ statusFilter: nextStatus });
             }}
-            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
           >
             <option value="all">All statuses</option>
             <option value="issued">Issued</option>
@@ -268,7 +268,7 @@ export default function AdminBillingPage() {
               setPeriodKey(nextPeriod);
               void fetchInvoices({ periodKey: nextPeriod });
             }}
-            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-orange-400"
+            className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
           >
             <option value="">All periods</option>
             {periodOptions.map((option) => (
@@ -278,33 +278,33 @@ export default function AdminBillingPage() {
         </label>
       </div>
 
-      <div className="rounded-3xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-5 py-4">
+      <div className="rounded-xl bg-white ring-1 ring-gray-100 shadow-sm">
+        <div className="border-b border-gray-100 px-4 py-3">
           <h2 className="text-lg font-semibold text-gray-900">Invoice Queue</h2>
         </div>
 
         {loading ? (
-          <div className="px-5 py-16 text-center text-sm text-gray-400">Loading billing records...</div>
+          <div className="px-4 py-16 text-center text-sm text-gray-400">Loading billing records...</div>
         ) : invoices.length === 0 ? (
-          <div className="px-5 py-16 text-center text-sm text-gray-400">No billing records matched your filters.</div>
+          <div className="px-4 py-16 text-center text-sm text-gray-400">No billing records matched your filters.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-[1040px] w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-5 py-3 text-left font-medium text-gray-500">Invoice</th>
-                  <th className="px-5 py-3 text-left font-medium text-gray-500">Seller</th>
-                  <th className="px-5 py-3 text-left font-medium text-gray-500">Period</th>
-                  <th className="px-5 py-3 text-left font-medium text-gray-500">Breakdown</th>
-                  <th className="px-5 py-3 text-left font-medium text-gray-500">Status</th>
-                  <th className="px-5 py-3 text-left font-medium text-gray-500">Due</th>
-                  <th className="px-5 py-3 text-left font-medium text-gray-500">Actions</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-gray-500">Invoice</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-gray-500">Seller</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-gray-500">Period</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-gray-500">Breakdown</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-gray-500">Status</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-gray-500">Due</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-gray-500">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {invoices.map((invoice) => (
                   <tr key={invoice.rowId || invoice.id || `${invoice.sellerId}-${invoice.periodKey}`} className="border-t border-gray-100 align-top">
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-semibold text-gray-900">{invoice.invoiceNumber}</p>
                         {invoice.isPreview ? (
@@ -317,22 +317,22 @@ export default function AdminBillingPage() {
                         {invoice.isPreview ? 'Live billing preview' : `Issued ${formatDateLabel(invoice.issuedAt)}`}
                       </p>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <p className="font-semibold text-gray-900">{invoice.sellerSnapshot?.businessName || invoice.sellerSnapshot?.name || 'Seller'}</p>
                       <p className="mt-1 text-xs text-gray-500">{invoice.sellerSnapshot?.email || 'No email'}</p>
                       <p className="mt-1 text-xs text-gray-400">{invoice.sellerSnapshot?.businessLocation || 'Location pending'}</p>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <p className="font-medium text-gray-900">{invoice.periodLabel}</p>
                       <p className="mt-1 text-xs text-gray-400">{invoice.periodKey}</p>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <p className="text-gray-700">Subscription: {formatCurrency(invoice.subscriptionFee)}</p>
                       <p className="mt-1 text-gray-700">Commission: {formatCurrency(invoice.commissionTotal)}</p>
                       <p className="mt-1 font-semibold text-gray-900">Total: {formatCurrency(invoice.totalDue)}</p>
                       <p className="mt-1 text-xs text-gray-400">{invoice.completedOrders} completed orders</p>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClasses[invoice.status] || statusClasses.issued}`}>
                         {invoice.status}
                       </span>
@@ -340,13 +340,13 @@ export default function AdminBillingPage() {
                         {invoice.paidAt ? `Paid ${formatDateLabel(invoice.paidAt)}` : invoice.lastReminderAt ? `Reminded ${formatDateLabel(invoice.lastReminderAt)}` : 'No reminder sent'}
                       </p>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <p className="font-medium text-gray-900">{formatDateLabel(invoice.dueAt)}</p>
                       <p className="mt-1 text-xs text-gray-400">
                         {invoice.paymentReference ? `Ref ${invoice.paymentReference}` : 'Awaiting payment'}
                       </p>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <div className="flex flex-col gap-2">
                         {invoice.isPreview ? (
                           <button
@@ -371,7 +371,7 @@ export default function AdminBillingPage() {
                                 { invoiceId: invoice.id }
                               )}
                               disabled={downloadingInvoiceId === invoice.id}
-                              className="rounded-full border border-orange-200 px-3 py-2 text-xs font-medium text-orange-700 transition hover:border-orange-500 hover:text-orange-800"
+                              className="rounded-full bg-orange-50 px-3 py-2 text-xs font-medium text-orange-700 transition hover:bg-orange-100"
                             >
                               {downloadingInvoiceId === invoice.id ? 'Preparing...' : 'Download invoice'}
                             </button>
@@ -379,7 +379,7 @@ export default function AdminBillingPage() {
                               type="button"
                               onClick={() => void runInvoiceAction('send_reminder', { invoiceId: invoice.id }, 'Reminder sent')}
                               disabled={actingId === invoice.id || downloadingInvoiceId === invoice.id}
-                              className="rounded-full border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-gray-900 hover:text-gray-900"
+                              className="rounded-full bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-200"
                             >
                               {actingId === invoice.id ? 'Working...' : 'Send reminder'}
                             </button>
@@ -416,7 +416,7 @@ export default function AdminBillingPage() {
       </div>
 
       {outstandingInvoices.length ? (
-        <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+        <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {outstandingInvoices.length} invoice{outstandingInvoices.length === 1 ? '' : 's'} still need action, totaling {formatCurrency(summary?.outstandingTotal || 0)}.
         </div>
       ) : null}

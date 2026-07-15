@@ -171,8 +171,8 @@ const Footer = () => {
 
   return (
     <>
-      <footer className="bg-white px-3 pb-24 pt-2 text-slate-300 md:hidden">
-        <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(135deg,#0f172a_0%,#111827_100%)] shadow-[0_20px_60px_rgba(15,23,42,0.2)]">
+      <footer className="pb-20 text-slate-300 md:hidden">
+        <div className="w-full bg-[linear-gradient(135deg,#0f172a_0%,#111827_100%)]">
           <div className="px-5 py-6">
             <span className="inline-flex items-center rounded-lg bg-white px-3 py-2">
               <Image className="h-7 w-auto object-contain" src={assets.logo} alt="KawilMart" width={112} height={30} />

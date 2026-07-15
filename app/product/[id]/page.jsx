@@ -23,6 +23,7 @@ const Product = () => {
 
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
+    const [showFullDescription, setShowFullDescription] = useState(false);
     const [liking, setLiking] = useState(false);
     const [cartAction, setCartAction] = useState(null);
     const [addedFeedback, setAddedFeedback] = useState(false);
@@ -103,7 +104,7 @@ const Product = () => {
     return productData ? (<>
         <Navbar />
         <div className="bg-white px-4 py-8 pb-24 sm:px-6 md:px-10 lg:px-12">
-            <div className="mx-auto max-w-7xl rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+            <div className="mx-auto max-w-7xl">
               <div className="mb-6 text-sm text-gray-500">
                 Home <span className="mx-2">/</span> {productData.category} <span className="mx-2">/</span> {productData.name}
               </div>
@@ -114,7 +115,7 @@ const Product = () => {
                             <div
                                 key={index}
                                 onClick={() => setMainImage(image)}
-                                className={`cursor-pointer overflow-hidden rounded-md border bg-white ${image === (mainImage || productData.image[0]) ? "border-2 border-orange-500" : "border-gray-200"}`}
+                                className={`cursor-pointer overflow-hidden rounded-lg bg-white transition ${image === (mainImage || productData.image[0]) ? "ring-2 ring-orange-500" : "ring-1 ring-gray-100 hover:ring-orange-200"}`}
                             >
                                 <Image
                                     src={image}
@@ -128,7 +129,7 @@ const Product = () => {
 
                         ))}
                     </div>
-                    <div className="relative order-1 overflow-hidden rounded-lg border border-gray-200 bg-white sm:order-2">
+                    <div className="relative order-1 overflow-hidden rounded-xl bg-white ring-1 ring-gray-100 sm:order-2">
                         <button type="button" className="absolute right-4 top-4 z-10 rounded-full bg-white p-2 text-gray-500 shadow-sm" aria-label="Zoom image">
                           <Image src={assets.search_icon} alt="" className="h-5 w-5" />
                         </button>
@@ -182,123 +183,88 @@ const Product = () => {
                           </span>
                         ) : null}
                     </p>
-                    <div className="mt-5">
-                      <p className="text-sm font-semibold text-gray-950">Color:</p>
-                      <div className="mt-3 flex gap-4">
-                        {["#d6b49d", "#111827", "#ffffff", "#6b7280", "#312e81"].map((color, index) => (
-                          <button
-                            key={color}
-                            type="button"
-                            className={`h-8 w-8 rounded-full border ${index === 0 ? "ring-2 ring-orange-600 ring-offset-2" : "border-gray-200"}`}
-                            style={{ backgroundColor: color }}
-                            aria-label={`Color ${index + 1}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="mt-5">
-                      <p className="text-sm font-semibold text-gray-950">Quantity:</p>
-                      <div className="mt-3 flex h-10 w-36 items-center justify-between rounded-md border border-gray-200 px-4">
-                        <span className="font-semibold text-orange-600">-</span>
-                        <span className="font-semibold text-gray-950">1</span>
-                        <span className="font-semibold text-orange-600">+</span>
-                      </div>
-                    </div>
-                    <hr className="my-6 border-gray-200" />
-                    <div className="overflow-x-auto rounded-lg border border-gray-200">
-                        <table className="w-full table-auto border-collapse text-sm">
-                            <tbody>
-                                <tr className="border-b border-gray-100">
-                                    <td className="bg-gray-50 px-4 py-3 font-medium text-gray-600">Store</td>
-                                    <td className="px-4 py-3 text-gray-700">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <span>{productData.sellerProfile?.name || 'Marketplace seller'}</span>
-                                            <SellerTrustBadge sellerProfile={productData.sellerProfile} />
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr className="border-b border-gray-100">
-                                    <td className="bg-gray-50 px-4 py-3 font-medium text-gray-600">Business area</td>
-                                    <td className="px-4 py-3 text-gray-700">
-                                        {productData.sellerProfile?.location || productData.sellerLocation || 'Location pending'}
-                                    </td>
-                                </tr>
-                                <tr className="border-b border-gray-100">
-                                    <td className="bg-gray-50 px-4 py-3 font-medium text-gray-600">Category</td>
-                                    <td className="px-4 py-3 text-gray-700">
-                                        {productData.category}
-                                    </td>
-                                </tr>
-                                <tr className="border-b border-gray-100">
-                                    <td className="bg-gray-50 px-4 py-3 font-medium text-gray-600">Item location</td>
-                                    <td className="px-4 py-3 text-gray-700">
-                                        {productData.location || productData.sellerLocation || 'Location pending'}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="bg-gray-50 px-4 py-3 font-medium text-gray-600">Availability</td>
-                                    <td className="px-4 py-3 text-gray-700">
-                                        {stockSnapshot?.label || 'Stock updates soon'}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    {productData.description ? (
+                        <div className="mt-5">
+                            <p className={`text-[13px] leading-6 text-gray-600 ${showFullDescription ? "" : "line-clamp-3"}`}>
+                                {productData.description}
+                            </p>
+                            {productData.description.length > 160 ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowFullDescription((current) => !current)}
+                                    className="mt-1 text-xs font-semibold text-orange-600 transition hover:text-orange-700"
+                                >
+                                    {showFullDescription ? "Show less" : "Read more"}
+                                </button>
+                            ) : null}
+                        </div>
+                    ) : null}
+
+                    {/* Compact product + seller facts — one soft panel, no tables */}
+                    <div className="mt-5 rounded-xl bg-gray-50/80 p-3.5">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[12px]">
+                            <div className="col-span-2 flex flex-wrap items-center gap-2">
+                                <span className="text-gray-400">Store</span>
+                                <span className="font-semibold text-gray-900">{productData.sellerProfile?.name || 'Marketplace seller'}</span>
+                                <SellerTrustBadge sellerProfile={productData.sellerProfile} />
+                                {productData.sellerProfile?.ratingSummary?.totalReviews ? (
+                                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                        ★ {productData.sellerProfile?.ratingSummary?.overall || 0}/5 ({productData.sellerProfile?.ratingSummary?.totalReviews})
+                                    </span>
+                                ) : null}
+                            </div>
+                            <div>
+                                <span className="block text-gray-400">Category</span>
+                                <span className="font-medium text-gray-800">{productData.category}</span>
+                            </div>
+                            <div>
+                                <span className="block text-gray-400">Availability</span>
+                                <span className="font-medium text-gray-800">{stockSnapshot?.label || 'Stock updates soon'}</span>
+                            </div>
+                            <div>
+                                <span className="block text-gray-400">Item location</span>
+                                <span className="font-medium text-gray-800">{productData.location || productData.sellerLocation || 'Location pending'}</span>
+                            </div>
+                            <div>
+                                <span className="block text-gray-400">Trending near</span>
+                                <span className="font-medium text-gray-800">{getLocationLabel(productData.sellerLocation || productData.location)}</span>
+                            </div>
+                        </div>
+                        <p className="mt-3 border-t border-gray-100 pt-2.5 text-[11px] text-gray-400">
+                            Seller contact unlocks after you place an order and the seller accepts it.
+                        </p>
                     </div>
 
                     {productActivity ? (
-                        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                            <div className="rounded-xl border border-orange-100 bg-orange-50 px-4 py-3">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-500">You save</p>
-                                <p className="mt-1 text-lg font-semibold text-gray-900">
-                                    {productActivity.hasDiscount ? formatCurrency(productActivity.savingsAmount) : 'Current best price'}
+                        <div className="mt-4 grid grid-cols-3 gap-2">
+                            <div className="rounded-xl bg-orange-50 px-3 py-2.5">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-orange-500">You save</p>
+                                <p className="mt-0.5 truncate text-sm font-bold text-gray-900">
+                                    {productActivity.hasDiscount ? formatCurrency(productActivity.savingsAmount) : 'Best price'}
                                 </p>
                             </div>
-                            <div className="rounded-xl border border-sky-100 bg-sky-50 px-4 py-3">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-600">Buyer feedback</p>
-                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                            <div className="rounded-xl bg-sky-50 px-3 py-2.5">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-600">Feedback</p>
+                                <p className="mt-0.5 truncate text-sm font-bold text-gray-900">
                                     {productActivity.hasRating
                                         ? `${productActivity.displayRating}/5`
                                         : `${productActivity.likesCount} like${productActivity.likesCount === 1 ? '' : 's'}`}
                                 </p>
                             </div>
-                            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-600">
-                                    {stockSnapshot?.hasTrackedStock ? 'Stock level' : productActivity.flashDealCountdownLabel ? 'Deal window' : 'Available in'}
+                            <div className="rounded-xl bg-emerald-50 px-3 py-2.5">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
+                                    {stockSnapshot?.hasTrackedStock ? 'Stock' : productActivity.flashDealCountdownLabel ? 'Deal ends' : 'Trend'}
                                 </p>
-                                <p className="mt-1 text-lg font-semibold text-gray-900">
+                                <p className="mt-0.5 truncate text-sm font-bold text-gray-900">
                                     {stockSnapshot?.hasTrackedStock
                                         ? stockSnapshot.label
                                         : productActivity.flashDealCountdownLabel
-                                        ? `Ends in ${productActivity.flashDealCountdownLabel}`
+                                        ? productActivity.flashDealCountdownLabel
                                         : productActivity.localTrend}
                                 </p>
                             </div>
                         </div>
                     ) : null}
-
-                    {/* Seller Information */}
-                    <div className="mt-8 rounded-xl border border-orange-200 bg-orange-50 p-4">
-                        <h3 className="text-lg font-medium text-gray-800 mb-3">Seller Information</h3>
-                        <div className="space-y-2 text-sm">
-                            <p>
-                                <strong>Store:</strong>{" "}
-                                {productData.sellerProfile?.name || 'Seller'}
-                            </p>
-                            <SellerTrustBadge sellerProfile={productData.sellerProfile} />
-                            <p><strong>Business Location:</strong> {productData.sellerProfile?.location || productData.sellerLocation || 'Location pending'}</p>
-                            <p><strong>Product Location:</strong> {productData.location || productData.sellerLocation || 'Location pending'}</p>
-                            <p>
-                                <strong>Seller Rating:</strong>{" "}
-                                {productData.sellerProfile?.ratingSummary?.totalReviews
-                                    ? `${productData.sellerProfile?.ratingSummary?.overall || 0} / 5 (${productData.sellerProfile?.ratingSummary?.totalReviews || 0} reviews)`
-                                    : 'No seller reviews yet'}
-                            </p>
-                            <p><strong>Trending near:</strong> {getLocationLabel(productData.sellerLocation || productData.location)}</p>
-                            <p className="rounded-md bg-white px-3 py-2 text-xs text-orange-800">
-                                Seller contact unlocks only after you place an order and the seller accepts it in KawilMart.
-                            </p>
-                        </div>
-                    </div>
 
                     {/* Reviews Section */}
                     {productData.reviews && productData.reviews.length > 0 && (
@@ -306,7 +272,7 @@ const Product = () => {
                             <h3 className="text-lg font-medium text-gray-800 mb-4">Customer Reviews ({productData.reviews.length})</h3>
                             <div className="space-y-4">
                                 {productData.reviews.map((review, index) => (
-                                    <div key={index} className="rounded-lg border border-gray-200 p-4">
+                                    <div key={index} className="rounded-xl bg-gray-50/80 p-3.5">
                                         <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                             <span className="font-medium">{review.userName}</span>
                                             <div className="flex items-center gap-1">
@@ -330,7 +296,7 @@ const Product = () => {
                         </div>
                     )}
 
-                    <div className="mt-10 flex flex-col gap-3">
+                    <div className="mt-6 flex flex-col gap-2.5">
                         <button
                             onClick={handleAddToCart}
                             disabled={!!cartAction || isOutOfStock}
@@ -370,10 +336,19 @@ const Product = () => {
                           {productData.likedByCurrentUser ? "Saved to wishlist" : "Add to wishlist"}
                         </button>
                     </div>
-                    <div className="mt-5 space-y-3 rounded-xl border border-orange-100 bg-orange-50 p-4 text-[13px] text-gray-700">
-                      <p>Sold by KawilMart Seller</p>
-                      <p>Free delivery by Tue, 28 May</p>
-                      <p>30-day returns</p>
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-gray-500">
+                      <span className="inline-flex items-center gap-1.5">
+                        <svg className="h-3.5 w-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none"><path d="M4 7 12 3l8 4-8 4-8-4Zm0 0v10l8 4 8-4V7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        Delivered by KawilMart riders
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <svg className="h-3.5 w-3.5 text-orange-600" viewBox="0 0 24 24" fill="none"><path d="M4 7v5h5M20 17v-5h-5M6.4 9A7 7 0 0 1 18 7.8M17.6 15A7 7 0 0 1 6 16.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        30-day returns
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <svg className="h-3.5 w-3.5 text-sky-600" viewBox="0 0 24 24" fill="none"><path d="M12 3 19 6v5c0 4.4-2.9 8.4-7 10-4.1-1.6-7-5.6-7-10V6l7-3Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        Buyer protection
+                      </span>
                     </div>
                 </div>
               </div>
@@ -390,7 +365,7 @@ const Product = () => {
                     onClick={() => navigate('/all-products')}
                     onMouseEnter={() => prefetchRoute('/all-products')}
                     onFocus={() => prefetchRoute('/all-products')}
-                    className="mb-16 w-full rounded border px-8 py-2 text-gray-500/70 transition hover:bg-slate-50/90 sm:w-auto"
+                    className="mb-16 w-full rounded-full bg-gray-100 px-8 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-200 sm:w-auto"
                 >
                     See more
                 </button>

@@ -84,21 +84,21 @@ export default function AdminUsers() {
     if (loading) return <AdminUsersPageSkeleton />;
 
     return (
-        <div className="space-y-6 max-w-7xl">
+        <div className="space-y-4 max-w-7xl">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Users & Roles</h1>
+                <h1 className="text-lg font-semibold tracking-tight text-gray-950">Users & Roles</h1>
                 <p className="text-sm text-gray-500 mt-1">Manage user accounts and assign roles</p>
             </div>
 
             {/* Role summary cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {['buyer', 'seller', 'rider', 'admin'].map(role => (
-                    <div key={role} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                    <div key={role} className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
                         <div className="flex items-center gap-2 mb-1">
                             <span className="text-xl">{roleIcons[role]}</span>
                             <span className="text-sm font-medium text-gray-600 capitalize">{role}s</span>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">
+                        <p className="text-lg font-semibold tracking-tight text-gray-950">
                             {users.filter(u => u.role === role).length}
                         </p>
                     </div>
@@ -112,17 +112,17 @@ export default function AdminUsers() {
                     placeholder="Search by name or email..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-orange-400 w-64 bg-white"
+                    className="w-64 rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                 />
                 <div className="flex gap-2">
                     {['All', 'buyer', 'seller', 'rider', 'admin'].map(role => (
                         <button
                             key={role}
                             onClick={() => setFilterRole(role)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition capitalize ${
+                            className={`rounded-full px-3 py-1.5 text-xs font-medium capitalize transition ${
                                 filterRole === role
-                                    ? 'bg-orange-600 text-white'
-                                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                    ? 'bg-gray-950 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                         >
                             {role === 'All' ? '👤 All' : `${roleIcons[role]} ${role}s`}
@@ -132,16 +132,16 @@ export default function AdminUsers() {
             </div>
 
             {/* Users Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
-                                <th className="text-left px-5 py-4 text-gray-500 font-medium">User</th>
-                                <th className="text-left px-5 py-4 text-gray-500 font-medium">Email</th>
-                                <th className="text-left px-5 py-4 text-gray-500 font-medium">Joined</th>
-                                <th className="text-left px-5 py-4 text-gray-500 font-medium">Current Role</th>
-                                <th className="text-left px-5 py-4 text-gray-500 font-medium">Change Role</th>
+                                <th className="text-left px-4 py-3 text-gray-500 font-medium">User</th>
+                                <th className="text-left px-4 py-3 text-gray-500 font-medium">Email</th>
+                                <th className="text-left px-4 py-3 text-gray-500 font-medium">Joined</th>
+                                <th className="text-left px-4 py-3 text-gray-500 font-medium">Current Role</th>
+                                <th className="text-left px-4 py-3 text-gray-500 font-medium">Change Role</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -154,7 +154,7 @@ export default function AdminUsers() {
                                 </tr>
                             ) : filtered.map(u => (
                                 <tr key={u.id} className="border-t border-gray-50 hover:bg-gray-50/50">
-                                    <td className="px-5 py-4">
+                                    <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
                                             {u.imageUrl ? (
                                                 <ClerkAvatarImage
@@ -175,21 +175,21 @@ export default function AdminUsers() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-4 text-gray-600">{u.email}</td>
-                                    <td className="px-5 py-4 text-gray-500 text-xs">
+                                    <td className="px-4 py-3 text-gray-600">{u.email}</td>
+                                    <td className="px-4 py-3 text-gray-500 text-xs">
                                         {new Date(u.createdAt).toLocaleDateString()}
                                     </td>
-                                    <td className="px-5 py-4">
+                                    <td className="px-4 py-3">
                                         <span className={`text-xs font-medium px-2.5 py-1.5 rounded-full capitalize ${roleColors[u.role] || 'bg-gray-100 text-gray-600'}`}>
                                             {roleIcons[u.role]} {u.role}
                                         </span>
                                     </td>
-                                    <td className="px-5 py-4">
+                                    <td className="px-4 py-3">
                                         <select
                                             value={u.role}
                                             disabled={updatingId === u.id}
                                             onChange={(e) => updateRole(u.id, e.target.value)}
-                                            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-orange-400 bg-white cursor-pointer disabled:opacity-50"
+                                            className="cursor-pointer rounded-lg bg-gray-50 px-3 py-1.5 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200 disabled:opacity-50"
                                         >
                                             <option value="buyer">🛒 Buyer</option>
                                             <option value="seller">🏪 Seller</option>

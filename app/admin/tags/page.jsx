@@ -102,16 +102,16 @@ export default function AdminTagsPage() {
     };
 
     return (
-        <div className="max-w-5xl space-y-6">
+        <div className="max-w-5xl space-y-4">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Tags</h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <h1 className="text-lg font-semibold tracking-tight text-gray-950">Tags</h1>
+                <p className="mt-0.5 text-xs text-gray-500">
                     Manage merchandising tags like Featured or Clearance. New Arrival, Trending, and Flash Deal badges
                     are computed automatically and don&apos;t need to be created here.
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 rounded-xl border border-gray-200 bg-white p-5 sm:grid-cols-2">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 rounded-xl bg-white ring-1 ring-gray-100 p-4 sm:grid-cols-2">
                 <div>
                     <label className="text-xs font-semibold text-gray-600">Name</label>
                     <input
@@ -119,7 +119,7 @@ export default function AdminTagsPage() {
                         value={form.name}
                         onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                         placeholder="e.g. Featured"
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                        className="mt-1 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                         required
                     />
                 </div>
@@ -130,7 +130,7 @@ export default function AdminTagsPage() {
                         value={form.slug}
                         onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
                         placeholder="featured"
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                        className="mt-1 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                     />
                 </div>
                 <div className="sm:col-span-2">
@@ -140,7 +140,7 @@ export default function AdminTagsPage() {
                         value={form.description}
                         onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
                         placeholder="Shown to admins only"
-                        className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                        className="mt-1 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                     />
                 </div>
                 <div>
@@ -176,7 +176,7 @@ export default function AdminTagsPage() {
                             type="number"
                             value={form.sortOrder}
                             onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: e.target.value }))}
-                            className="mt-1 w-24 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-orange-400"
+                            className="mt-1 w-24 rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                         />
                     </div>
                 </div>
@@ -196,11 +196,11 @@ export default function AdminTagsPage() {
                 </div>
             </form>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">Loading tags...</div>
+                    <div className="p-4 text-sm text-gray-500">Loading tags...</div>
                 ) : tags.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">No tags yet. Create one above.</div>
+                    <div className="p-4 text-sm text-gray-500">No tags yet. Create one above.</div>
                 ) : (
                     <table className="w-full text-sm">
                         <thead>

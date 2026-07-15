@@ -83,13 +83,13 @@ const TargetSelector = ({ label = 'Click target', form, setForm, products, store
     };
 
     return (
-        <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="space-y-3 rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
             <div>
                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 uppercase tracking-wider">{label}</label>
                 <select
                     value={linkType}
                     onChange={(e) => setLinkType(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                 >
                     {linkTypeOptions.map((option) => (
                         <option key={option.value} value={option.value}>{option.label}</option>
@@ -106,7 +106,7 @@ const TargetSelector = ({ label = 'Click target', form, setForm, products, store
                         storeId: '',
                         href: e.target.value ? `/all-products?category=${encodeURIComponent(e.target.value)}` : '',
                     }))}
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                 >
                     <option value="">Select a category</option>
                     {homeCategoryValues.map((category) => (
@@ -124,7 +124,7 @@ const TargetSelector = ({ label = 'Click target', form, setForm, products, store
                         category: '',
                         href: e.target.value ? `/store/${encodeURIComponent(e.target.value)}` : '',
                     }))}
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                 >
                     <option value="">Select a store</option>
                     {stores.map((store) => (
@@ -142,7 +142,7 @@ const TargetSelector = ({ label = 'Click target', form, setForm, products, store
                         storeId: '',
                         href: '',
                     }))}
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                 >
                     <option value="">Select a product</option>
                     {products.map((product) => (
@@ -162,7 +162,7 @@ const TargetSelector = ({ label = 'Click target', form, setForm, products, store
                         storeId: '',
                         href: e.target.value,
                     }))}
-                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                    className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                 />
             ) : null}
         </div>
@@ -177,7 +177,7 @@ const toDateTimeLocal = (value) => {
 };
 
 const FormInput = ({ placeholder, value, onChange, type = 'text', textarea = false }) => {
-    const classes = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200 placeholder:text-gray-400";
+    const classes = "w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200 placeholder:text-gray-400";
     if (textarea) {
         return (
             <textarea
@@ -200,12 +200,12 @@ const FormInput = ({ placeholder, value, onChange, type = 'text', textarea = fal
 };
 
 const SectionCard = ({ title, description, children, className = '' }) => (
-    <div className={`rounded-xl border border-gray-200 bg-white shadow-sm ${className}`}>
-        <div className="border-b border-gray-100 px-5 py-4">
+    <div className={`rounded-xl bg-white ring-1 ring-gray-100 shadow-sm ${className}`}>
+        <div className="border-b border-gray-100 px-4 py-3">
             <h2 className="text-base font-bold text-gray-900">{title}</h2>
             {description && <p className="mt-0.5 text-sm text-gray-500">{description}</p>}
         </div>
-        <div className="p-5">
+        <div className="p-4">
             {children}
         </div>
     </div>
@@ -215,7 +215,7 @@ const ActionButton = ({ onClick, variant = 'primary', children, disabled, classN
     const base = "inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50";
     const styles = {
         primary: "bg-orange-600 text-white hover:bg-orange-700 shadow-sm",
-        secondary: "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300",
+        secondary: "bg-gray-100 text-gray-700 hover:bg-gray-200",
         danger: "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200",
         edit: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200",
     };
@@ -227,7 +227,7 @@ const ActionButton = ({ onClick, variant = 'primary', children, disabled, classN
 };
 
 const ContentCard = ({ children, className = '' }) => (
-    <div className={`rounded-lg border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md ${className}`}>
+    <div className={`rounded-xl bg-white p-4 ring-1 ring-gray-100 transition hover:shadow-md ${className}`}>
         {children}
     </div>
 );
@@ -545,12 +545,12 @@ export default function AdminPromotions() {
     if (loading) return <PromotionsPageSkeleton />;
 
     return (
-        <div className="mx-auto max-w-7xl space-y-8">
+        <div className="mx-auto max-w-7xl space-y-4">
             {/* Page Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Promotions & Content</h1>
-                    <p className="mt-1 text-sm text-gray-500">Manage flash deals, banners, and homepage content.</p>
+                    <h1 className="text-lg font-semibold tracking-tight text-gray-950">Promotions & Content</h1>
+                    <p className="mt-0.5 text-xs text-gray-500">Manage flash deals, banners, and homepage content.</p>
                 </div>
             </div>
 
@@ -615,7 +615,7 @@ export default function AdminPromotions() {
                 </div>
                 <p className="mb-4 text-sm text-gray-500">{activeConfig.description}</p>
 
-                <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+                <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
                     <div className="grid gap-4 sm:grid-cols-2">
                         {bannersForActiveType.length === 0 ? (
                             <p className="text-sm text-gray-400">No {activeConfig.label.toLowerCase()} yet.</p>
@@ -645,7 +645,7 @@ export default function AdminPromotions() {
                         ))}
                     </div>
 
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
+                    <div className="rounded-lg bg-gray-50/80 p-4">
                         <div className="mb-4 flex items-center justify-between">
                             <h3 className="font-bold text-gray-900">{editingBannerId ? `Edit ${activeConfig.label.replace(/s$/, '')}` : `Add ${activeConfig.label.replace(/s$/, '')}`}</h3>
                             {editingBannerId && (
@@ -676,7 +676,7 @@ export default function AdminPromotions() {
                                 <select
                                     value={bannerForm.placementCategory}
                                     onChange={(e) => setBannerForm((prev) => ({ ...prev, placementCategory: e.target.value }))}
-                                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                                    className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                 >
                                     <option value="">Choose category page</option>
                                     {homeCategoryValues.map((category) => (
@@ -705,7 +705,7 @@ export default function AdminPromotions() {
                                         type="datetime-local"
                                         value={bannerForm.startDate}
                                         onChange={(e) => setBannerForm((prev) => ({ ...prev, startDate: e.target.value }))}
-                                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                                        className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                     />
                                 </div>
                                 <div>
@@ -714,7 +714,7 @@ export default function AdminPromotions() {
                                         type="datetime-local"
                                         value={bannerForm.endDate}
                                         onChange={(e) => setBannerForm((prev) => ({ ...prev, endDate: e.target.value }))}
-                                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200"
+                                        className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
                                     />
                                 </div>
                             </div>
@@ -745,7 +745,7 @@ export default function AdminPromotions() {
 
             {/* Newsletter Section */}
             <SectionCard title="Newsletter Section" description="Edit the heading and button label shown above the newsletter form.">
-                <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+                <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
                     <div className="space-y-3">
                         <FormInput placeholder="Newsletter title" value={newsletterForm.title} onChange={(e) => setNewsletterForm((prev) => ({ ...prev, title: e.target.value }))} />
                         <FormInput placeholder="Newsletter description" value={newsletterForm.description} onChange={(e) => setNewsletterForm((prev) => ({ ...prev, description: e.target.value }))} textarea />
@@ -760,13 +760,13 @@ export default function AdminPromotions() {
             {/* Promotion Modal */}
             {selectedProduct && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <div className="mx-4 w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+                    <div className="mx-4 w-full max-w-md rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-xl">
                         <h3 className="text-lg font-bold text-gray-900">Manage Promotion</h3>
-                        <p className="mt-1 text-sm text-gray-500">{selectedProduct.name}</p>
+                        <p className="mt-0.5 text-xs text-gray-500">{selectedProduct.name}</p>
                         <div className="mt-5 space-y-4">
                             <div>
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-700 uppercase tracking-wider">Promotion Type</label>
-                                <select value={promotionData.promotionType} onChange={(e) => setPromotionData((prev) => ({ ...prev, promotionType: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200">
+                                <select value={promotionData.promotionType} onChange={(e) => setPromotionData((prev) => ({ ...prev, promotionType: e.target.value }))} className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200">
                                     <option value="none">None</option>
                                     <option value="flash_deal">Flash Deal</option>
                                     <option value="featured">Featured</option>
@@ -782,11 +782,11 @@ export default function AdminPromotions() {
                                     )}
                                     <div>
                                         <label className="mb-1.5 block text-xs font-semibold text-gray-700 uppercase tracking-wider">Start Date (optional)</label>
-                                        <input type="datetime-local" value={promotionData.flashDealStartDate} onChange={(e) => setPromotionData((prev) => ({ ...prev, flashDealStartDate: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200" />
+                                        <input type="datetime-local" value={promotionData.flashDealStartDate} onChange={(e) => setPromotionData((prev) => ({ ...prev, flashDealStartDate: e.target.value }))} className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200" />
                                     </div>
                                     <div>
                                         <label className="mb-1.5 block text-xs font-semibold text-gray-700 uppercase tracking-wider">Flash Deal End Date</label>
-                                        <input type="datetime-local" value={promotionData.flashDealEndDate} onChange={(e) => setPromotionData((prev) => ({ ...prev, flashDealEndDate: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200" />
+                                        <input type="datetime-local" value={promotionData.flashDealEndDate} onChange={(e) => setPromotionData((prev) => ({ ...prev, flashDealEndDate: e.target.value }))} className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200" />
                                     </div>
                                 </div>
                             )}

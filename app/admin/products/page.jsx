@@ -44,10 +44,10 @@ export default function AdminProducts() {
     if (loading) return <ProductGridPageSkeleton />;
 
     return (
-        <div className="space-y-6 max-w-7xl">
+        <div className="space-y-4 max-w-7xl">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+                    <h1 className="text-lg font-semibold tracking-tight text-gray-950">Products</h1>
                     <p className="text-sm text-gray-500 mt-1">{filtered.length} of {products.length} products</p>
                 </div>
                 <button
@@ -65,7 +65,7 @@ export default function AdminProducts() {
                     placeholder="Search products..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-orange-400 w-56 bg-white"
+                    className="w-56 rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                 />
                 <div className="flex flex-wrap gap-2">
                     {categories.map(cat => (
@@ -75,7 +75,7 @@ export default function AdminProducts() {
                             className={`px-3 py-2 rounded-lg text-sm transition ${
                                 filterCat === cat
                                     ? 'bg-orange-600 text-white font-medium'
-                                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                         >
                             {cat}
@@ -93,7 +93,7 @@ export default function AdminProducts() {
                     return (
                         <div
                             key={product._id}
-                            className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition group"
+                            className="group overflow-hidden rounded-xl bg-white ring-1 ring-gray-100 transition hover:shadow-md"
                         >
                             <div className="relative h-40 bg-gray-50 flex items-center justify-center">
                                 {discount && (
@@ -120,7 +120,7 @@ export default function AdminProducts() {
                                 </div>
                                 <button
                                     onClick={() => router.push('/product/' + product._id)}
-                                    className="mt-2 w-full py-1.5 border border-orange-500 text-orange-600 rounded-lg text-xs hover:bg-orange-50 transition"
+                                    className="mt-2 w-full rounded-full bg-orange-50 py-1.5 text-xs font-medium text-orange-700 transition hover:bg-orange-100"
                                 >
                                     View Product
                                 </button>

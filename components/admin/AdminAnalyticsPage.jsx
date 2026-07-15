@@ -44,10 +44,10 @@ export default function AdminAnalyticsPage() {
     const totalCategoryProducts = Object.values(stats.categoryBreakdown).reduce((left, right) => left + right, 0);
 
     return (
-        <div className="max-w-7xl space-y-8">
+        <div className="max-w-7xl space-y-4">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-                <p className="mt-1 text-sm text-gray-500">Platform performance overview</p>
+                <h1 className="text-lg font-semibold tracking-tight text-gray-950">Analytics</h1>
+                <p className="mt-0.5 text-xs text-gray-500">Platform performance overview</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -57,7 +57,7 @@ export default function AdminAnalyticsPage() {
                     { label: 'Cancellation Rate', value: `${stats.totalOrders ? Math.round(((stats.cancelledOrders || 0) / stats.totalOrders) * 100) : 0}%`, icon: '❌' },
                     { label: 'Products/User Ratio', value: (stats.totalUsers ? (stats.totalProducts / stats.totalUsers).toFixed(1) : 0), icon: '📐' },
                 ].map((kpi) => (
-                    <div key={kpi.label} className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+                    <div key={kpi.label} className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
                         <p className="mb-1 text-2xl">{kpi.icon}</p>
                         <p className="text-xl font-bold text-gray-900">{kpi.value}</p>
                         <p className="mt-0.5 text-xs text-gray-500">{kpi.label}</p>
@@ -65,9 +65,9 @@ export default function AdminAnalyticsPage() {
                 ))}
             </div>
 
-            <div className="rounded-2xl border border-orange-100 bg-orange-50/50 p-6 shadow-sm">
+            <div className="rounded-xl bg-orange-50/60 p-4">
                 <div className="mb-4 flex items-center justify-between">
-                    <h2 className="font-semibold text-gray-900">Platform Revenue</h2>
+                    <h2 className="text-sm font-semibold text-gray-950">Platform Revenue</h2>
                     <p className="text-xs text-gray-500">What KawilMart earns — separate from GMV (total sales passing through sellers)</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -86,10 +86,10 @@ export default function AdminAnalyticsPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <h2 className="mb-2 font-semibold text-gray-900">Daily Revenue (Last 7 Days)</h2>
-                    <p className="mb-6 text-sm text-gray-400">Total: {formatCurrency(stats.totalRevenue)}</p>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
+                    <h2 className="mb-1 text-sm font-semibold text-gray-950">Daily Revenue (Last 7 Days)</h2>
+                    <p className="mb-4 text-xs text-gray-400">Total: {formatCurrency(stats.totalRevenue)}</p>
                     <div className="flex h-48 items-end gap-2">
                         {stats.revenueByDay.map((day, index) => (
                             <div key={index} className="flex flex-1 flex-col items-center gap-1">
@@ -109,8 +109,8 @@ export default function AdminAnalyticsPage() {
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <h2 className="mb-6 font-semibold text-gray-900">Products by Category</h2>
+                <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
+                    <h2 className="mb-3 text-sm font-semibold text-gray-950">Products by Category</h2>
                     <div className="space-y-3">
                         {Object.entries(stats.categoryBreakdown)
                             .sort((left, right) => right[1] - left[1])
@@ -131,8 +131,8 @@ export default function AdminAnalyticsPage() {
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <h2 className="mb-6 font-semibold text-gray-900">Order Status Distribution</h2>
+                <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
+                    <h2 className="mb-3 text-sm font-semibold text-gray-950">Order Status Distribution</h2>
                     <div className="space-y-3">
                         {Object.entries(stats.statusCounts).map(([status, count]) => {
                             const percentage = Math.round((count / stats.totalOrders) * 100);
@@ -154,8 +154,8 @@ export default function AdminAnalyticsPage() {
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <h2 className="mb-4 font-semibold text-gray-900">Platform Summary</h2>
+                <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
+                    <h2 className="mb-3 text-sm font-semibold text-gray-950">Platform Summary</h2>
                     <div className="grid grid-cols-2 gap-4">
                         {[
                             { label: 'Total GMV (gross sales)', value: formatCurrency(stats.totalGMV), icon: '💰', bg: 'bg-green-50' },

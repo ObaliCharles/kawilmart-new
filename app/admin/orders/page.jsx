@@ -237,7 +237,7 @@ export default function AdminOrders() {
                                             value={order.riderId || ''}
                                             disabled={updatingId === order._id || (!order.actions?.canAssignRider && !order.riderId)}
                                             onChange={(e) => updateOrder(order._id, { riderId: e.target.value })}
-                                            className="min-w-[150px] text-xs font-medium px-2 py-1.5 rounded-lg border border-gray-200 outline-none cursor-pointer bg-white md:min-w-[170px]"
+                                            className="min-w-[150px] cursor-pointer rounded-lg bg-gray-50 px-2 py-1.5 text-xs font-medium outline-none md:min-w-[170px]"
                                         >
                                             <option value="">Unassigned</option>
                                             {riders.map((rider) => (
@@ -260,7 +260,7 @@ export default function AdminOrders() {
                                                 value={order.status}
                                                 disabled={updatingId === order._id}
                                                 onChange={(e) => updateOrder(order._id, { status: e.target.value })}
-                                                className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium outline-none cursor-pointer"
+                                                className="w-full cursor-pointer rounded-lg bg-gray-50 px-2 py-1.5 text-xs font-medium outline-none"
                                             >
                                                 {[...new Set([order.status, ...(order.actions?.allowedNextStatuses || [])])].map((statusOption) => (
                                                     <option key={statusOption} value={statusOption}>
