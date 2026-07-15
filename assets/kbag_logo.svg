@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="148" viewBox="0 0 128 148" fill="none">
+  <defs>
+    <linearGradient id="kbag-top" x1="64" y1="34" x2="64" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8A2A"/>
+      <stop offset="1" stop-color="#FF5A12"/>
+    </linearGradient>
+    <linearGradient id="kbag-bottom" x1="64" y1="88" x2="64" y2="142" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FB3A0A"/>
+      <stop offset="1" stop-color="#F42405"/>
+    </linearGradient>
+    <linearGradient id="kbag-handle" x1="64" y1="6" x2="64" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F4560A"/>
+      <stop offset="1" stop-color="#E8430A"/>
+    </linearGradient>
+    <clipPath id="kbag-body">
+      <path d="M31 36 C31 33 33 31 36 31 L92 31 C95 31 97 33 97 36 L106 132 C106.5 137 102.5 141 97.5 141 L30.5 141 C25.5 141 21.5 137 22 132 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Handle -->
+  <path d="M45 42 L45 30 C45 18.5 53.5 10 64 10 C74.5 10 83 18.5 83 30 L83 42"
+        stroke="url(#kbag-handle)" stroke-width="11" stroke-linecap="round" fill="none"/>
+
+  <!-- Bag body: top zone -->
+  <path d="M31 36 C31 33 33 31 36 31 L92 31 C95 31 97 33 97 36 L106 132 C106.5 137 102.5 141 97.5 141 L30.5 141 C25.5 141 21.5 137 22 132 Z"
+        fill="url(#kbag-top)"/>
+
+  <!-- Bottom zone with curved seam -->
+  <g clip-path="url(#kbag-body)">
+    <path d="M14 96 C42 106 84 84 114 94 L114 148 L14 148 Z" fill="url(#kbag-bottom)"/>
+    <path d="M14 96 C42 106 84 84 114 94" stroke="#FFD37A" stroke-width="1.6" fill="none" opacity="0.9"/>
+
+    <!-- Embossed K (tone on tone) -->
+    <g opacity="0.55">
+      <path d="M52 50 L63 50 L60 86 L58 108 L47 108 L50 74 Z" fill="#E8430A"/>
+      <path d="M84 50 L96 50 L70 79 L60 86 L62 68 Z" fill="#E8430A"/>
+    </g>
+    <!-- White brush stroke: lower leg of the K -->
+    <path d="M60 82 C66 88 74 96 84 101 C88 103 92 104 95 104 C92 108 86 109 80 107 C70 103 61 95 55 87 C56 84 58 82 60 82 Z"
+          fill="#FFFFFF"/>
+    <path d="M55 87 C58 83 60 82 63 84 L58 92 Z" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Sparkles -->
+  <path d="M97 102 L99.4 111.6 L109 114 L99.4 116.4 L97 126 L94.6 116.4 L85 114 L94.6 111.6 Z" fill="#FFFFFF"/>
+  <path d="M88 90 L89.4 95 L94.4 96.4 L89.4 97.8 L88 102.8 L86.6 97.8 L81.6 96.4 L86.6 95 Z" fill="#FFFFFF" opacity="0.95"/>
+  <path d="M104 88 L105 91.4 L108.4 92.4 L105 93.4 L104 96.8 L103 93.4 L99.6 92.4 L103 91.4 Z" fill="#FFF3D6" opacity="0.9"/>
+  <circle cx="93" cy="129" r="1.6" fill="#FFFFFF" opacity="0.85"/>
+</svg>

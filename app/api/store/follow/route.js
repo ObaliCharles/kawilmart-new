@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isValidObjectId } from "mongoose";
 import connectDB from "@/config/db";
 import User from "@/models/User";
 import { getRequestUserId } from "@/lib/requestAuth";
@@ -12,7 +11,8 @@ export async function POST(request) {
     }
 
     const { sellerId } = await request.json();
-    if (!sellerId || !isValidObjectId(sellerId) || String(sellerId) === String(currentUserId)) {
+    // User ids are Clerk string ids (not Mongo ObjectIds), so only check shape.
+    if (!sellerId || typeof sellerId !== "string" || String(sellerId) === String(currentUserId)) {
       return NextResponse.json({ success: false, message: "Invalid seller" }, { status: 400 });
     }
 

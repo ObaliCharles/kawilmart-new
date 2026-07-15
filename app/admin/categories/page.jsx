@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { homeCategoryValues, getCategoryMeta } from '@/lib/marketplaceCategories';
+import { homeCategoryValues, getCategoryMeta, homeTopRailDefaults, TOP_RAIL_PARENT } from '@/lib/marketplaceCategories';
 
 const emptyForm = { name: '', icon: '', parentValue: '', sortOrder: 0, isActive: true, imageUrl: '', heroImage: '' };
 
@@ -50,6 +50,37 @@ export default function AdminCategoriesPage() {
         () => categories.filter((category) => !category.parentValue),
         [categories]
     );
+
+    // Records that back the homepage "Top Categories" rail tiles (T-Shirt,
+    // Shoes, Watches, ...) — stored under the TOP_RAIL_PARENT sentinel.
+    const topRailRecords = useMemo(
+        () => categories.filter((category) => category.parentValue === TOP_RAIL_PARENT),
+        [categories]
+    );
+    const topRailByName = useMemo(
+        () => new Map(topRailRecords.map((record) => [record.name, record])),
+        [topRailRecords]
+    );
+    const topLevelByName = useMemo(
+        () => new Map(customTopCategories.map((record) => [record.name, record])),
+        [customTopCategories]
+    );
+
+    // Open the form pre-filled so the admin can attach an image to a default
+    // (static) category or top-rail tile that has no DB record yet.
+    const startIconEdit = (name, parentValue, existingRecord) => {
+        if (existingRecord) {
+            handleEdit(existingRecord);
+        } else {
+            setEditingId(null);
+            setForm({ ...emptyForm, name, parentValue: parentValue || '' });
+            setImageFile(null);
+            setImagePreview('');
+            setHeroFile(null);
+            setHeroPreview('');
+        }
+        if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const parentOptions = useMemo(() => {
         const staticOptions = homeCategoryValues.map((value) => ({ value, label: getCategoryMeta(value).label }));
@@ -278,6 +309,7 @@ export default function AdminCategoriesPage() {
                         className="mt-1 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                     >
                         <option value="">Top-level category (no parent)</option>
+                        <option value={TOP_RAIL_PARENT}>🏠 Homepage — Top Categories rail (small PNG tiles)</option>
                         {parentOptions.map((option) => (
                             <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
@@ -326,6 +358,88 @@ export default function AdminCategoriesPage() {
                 <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 text-sm text-gray-500">Loading categories...</div>
             ) : (
                 <div className="space-y-4">
+                    {/* Default (built-in) categories — attach an image/icon to any of them */}
+                    <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
+                        <div className="border-b border-gray-100 px-4 py-3">
+                            <h2 className="text-sm font-bold text-gray-900">Default categories</h2>
+                            <p className="mt-0.5 text-[11px] text-gray-400">Built-in top-level categories. Upload a PNG to replace the default icon on the homepage rails.</p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2">
+                            {homeCategoryValues.map((value) => {
+                                const meta = getCategoryMeta(value);
+                                const record = topLevelByName.get(value);
+                                return (
+                                    <div key={value} className="flex items-center justify-between gap-2 border-b border-gray-50 px-4 py-2.5">
+                                        <span className="flex min-w-0 items-center">
+                                            {record?.imageUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={record.imageUrl} alt="" className="mr-2 h-7 w-7 shrink-0 rounded-md object-contain" />
+                                            ) : (
+                                                <span className="mr-2 shrink-0">{record?.icon || meta.icon}</span>
+                                            )}
+                                            <span className="truncate text-xs font-medium text-gray-900">{meta.label}</span>
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => startIconEdit(value, '', record)}
+                                            className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700 transition hover:bg-orange-50 hover:text-orange-700"
+                                        >
+                                            {record?.imageUrl ? 'Edit image' : 'Set image'}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Homepage Top Categories rail (T-Shirt, Shoes, Watches, ...) */}
+                    <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
+                        <div className="border-b border-gray-100 px-4 py-3">
+                            <h2 className="text-sm font-bold text-gray-900">Homepage — Top Categories rail</h2>
+                            <p className="mt-0.5 text-[11px] text-gray-400">
+                                The quick-pick tiles on the mobile homepage (T-Shirt, Shirt, Shoes, Watches, Bag...). Upload a small PNG for each;
+                                add more tiles via the form with &quot;Homepage — Top Categories rail&quot; as the parent.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2">
+                            {[
+                                ...homeTopRailDefaults.map(({ label }) => ({ name: label, record: topRailByName.get(label), isDefault: true })),
+                                ...topRailRecords
+                                    .filter((record) => !homeTopRailDefaults.some(({ label }) => label === record.name))
+                                    .map((record) => ({ name: record.name, record, isDefault: false })),
+                            ].map(({ name, record, isDefault }) => (
+                                <div key={name} className="flex items-center justify-between gap-2 border-b border-gray-50 px-4 py-2.5">
+                                    <span className="flex min-w-0 items-center">
+                                        {record?.imageUrl ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img src={record.imageUrl} alt="" className="mr-2 h-7 w-7 shrink-0 rounded-md object-contain" />
+                                        ) : (
+                                            <span className="mr-2 shrink-0">{record?.icon || '🖼️'}</span>
+                                        )}
+                                        <span className="truncate text-xs font-medium text-gray-900">{name}</span>
+                                        {record?.isActive === false ? (
+                                            <span className="ml-2 shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">Hidden</span>
+                                        ) : null}
+                                    </span>
+                                    <span className="flex shrink-0 items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => startIconEdit(name, TOP_RAIL_PARENT, record)}
+                                            className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700 transition hover:bg-orange-50 hover:text-orange-700"
+                                        >
+                                            {record?.imageUrl ? 'Edit image' : 'Set image'}
+                                        </button>
+                                        {record && !isDefault ? (
+                                            <button type="button" onClick={() => handleDelete(record)} className="text-[11px] font-medium text-rose-600 hover:underline">
+                                                Delete
+                                            </button>
+                                        ) : null}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
                     {customTopCategories.length > 0 && (
                         <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
                             <div className="border-b border-gray-100 px-4 py-3">

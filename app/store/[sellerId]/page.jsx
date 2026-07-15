@@ -761,8 +761,8 @@ const StorePage = () => {
         <button type="button" onClick={() => navigate(`/all-products?seller=${encodeURIComponent(String(sellerId))}`)} className="rounded-full border border-orange-200 px-2.5 py-1 text-[11.5px] font-semibold text-orange-600">
           View offers
         </button>
-        <button type="button" onClick={() => navigate("/inbox?tab=support")} className="rounded-full border border-gray-200 px-2.5 py-1 text-[11.5px] font-semibold text-gray-700">
-          Chat support
+        <button type="button" onClick={() => navigate(`/inbox?tab=chats&peer=${encodeURIComponent(String(sellerId))}`)} className="rounded-full bg-gray-100 px-2.5 py-1 text-[11.5px] font-semibold text-gray-700">
+          Chat with store
         </button>
       </div>
     </div>
@@ -869,7 +869,7 @@ const StorePage = () => {
                     <div className="flex flex-wrap gap-2.5">
                       <button
                         type="button"
-                        onClick={() => navigate("/inbox?tab=support")}
+                        onClick={() => navigate(`/inbox?tab=chats&peer=${encodeURIComponent(String(sellerId))}`)}
                         className="rounded-md border border-white/25 bg-black/20 px-3 py-1 text-[11.5px] font-semibold text-white backdrop-blur hover:bg-white/10"
                       >
                         Chat

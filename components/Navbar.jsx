@@ -219,12 +219,8 @@ const StoreLogo = () => (
 );
 
 const MobileStoreMark = () => (
-  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-sm" aria-label="KawilMart">
-    <span className="relative block h-6 w-6">
-      <span className="absolute inset-x-1 top-0 h-3 rounded-t-full border-2 border-white border-b-0" />
-      <span className="absolute bottom-0 left-0 right-0 h-5 rounded-md bg-white/95" />
-      <span className="absolute bottom-[5px] left-[7px] text-sm font-black leading-none text-orange-600">K</span>
-    </span>
+  <span className="flex h-10 w-10 items-center justify-center" aria-label="KawilMart">
+    <Image src={assets.kbag_logo} alt="KawilMart" width={40} height={46} className="h-10 w-auto object-contain" priority />
   </span>
 );
 

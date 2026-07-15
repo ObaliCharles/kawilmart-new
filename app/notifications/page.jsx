@@ -23,7 +23,9 @@ const formatWhen = (value) => {
 
 const InboxPage = () => {
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") === "support" ? "support" : "inbox";
+  const tabParam = searchParams.get("tab");
+  const initialTab = tabParam === "support" ? "support" : tabParam === "chats" ? "chats" : "inbox";
+  const initialPeerId = searchParams.get("peer") || "";
   const {
     user,
     authReady,
@@ -49,6 +51,14 @@ const InboxPage = () => {
   });
   const [sendingSupport, setSendingSupport] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
+  // Store chats: direct buyer <-> seller conversations.
+  const [chatThreads, setChatThreads] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatPeer, setChatPeer] = useState(null);
+  const [activePeerId, setActivePeerId] = useState(initialPeerId);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatDraft, setChatDraft] = useState("");
+  const [sendingChat, setSendingChat] = useState(false);
   const usesAdminSupportQueue = Boolean(isAdmin);
 
   const unreadCount = useMemo(
@@ -98,6 +108,86 @@ const InboxPage = () => {
     }
   }, [getToken, usesAdminSupportQueue]);
 
+  const fetchChatThreads = useCallback(async () => {
+    try {
+      setChatLoading(true);
+      const token = await getToken();
+      const { data } = await axios.get("/api/store/chat", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) {
+        setChatThreads(data.threads || []);
+      }
+    } catch {
+      // Quietly keep the previous list; the tab shows an empty state anyway.
+    } finally {
+      setChatLoading(false);
+    }
+  }, [getToken]);
+
+  const fetchChatThread = useCallback(async (peerId) => {
+    if (!peerId) return;
+    try {
+      setChatLoading(true);
+      const token = await getToken();
+      const { data } = await axios.get(`/api/store/chat?peerId=${encodeURIComponent(peerId)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) {
+        setChatMessages(data.messages || []);
+        setChatPeer(data.peer || null);
+      } else {
+        toast.error(data.message || "Failed to load chat");
+      }
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Failed to load chat"));
+    } finally {
+      setChatLoading(false);
+    }
+  }, [getToken]);
+
+  const openChatThread = (peerId) => {
+    setActivePeerId(peerId);
+    setChatMessages([]);
+    setChatPeer(null);
+    void fetchChatThread(peerId);
+  };
+
+  const sendChatMessage = async () => {
+    const content = chatDraft.trim();
+    if (!content || !activePeerId) return;
+
+    const optimistic = {
+      messageId: `temp-${Date.now()}`,
+      from: user?.id,
+      to: activePeerId,
+      content,
+      date: new Date().toISOString(),
+      read: true,
+    };
+    setChatMessages((current) => [...current, optimistic]);
+    setChatDraft("");
+    setSendingChat(true);
+
+    try {
+      const token = await getToken();
+      const { data } = await axios.post(
+        "/api/store/chat",
+        { peerId: activePeerId, content },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!data.success) {
+        toast.error(data.message || "Failed to send message");
+        setChatMessages((current) => current.filter((m) => m.messageId !== optimistic.messageId));
+      }
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Failed to send message"));
+      setChatMessages((current) => current.filter((m) => m.messageId !== optimistic.messageId));
+    } finally {
+      setSendingChat(false);
+    }
+  };
+
   const handleSelectNotification = (notification) => {
     setExpandedId((current) => (current === notification._id ? null : notification._id));
     if (!notification.read) {
@@ -120,6 +210,11 @@ const InboxPage = () => {
   const handleRefresh = () => {
     if (activeTab === "inbox") {
       void loadNotifications({ background: true });
+      return;
+    }
+    if (activeTab === "chats") {
+      if (activePeerId) void fetchChatThread(activePeerId);
+      else void fetchChatThreads();
       return;
     }
     void fetchSupportThread();
@@ -174,7 +269,19 @@ const InboxPage = () => {
 
   useEffect(() => {
     setActiveTab(initialTab);
-  }, [initialTab]);
+    if (initialPeerId) {
+      setActivePeerId(initialPeerId);
+    }
+  }, [initialTab, initialPeerId]);
+
+  useEffect(() => {
+    if (!authReady || !user || activeTab !== "chats") return;
+    if (activePeerId) {
+      void fetchChatThread(activePeerId);
+    } else {
+      void fetchChatThreads();
+    }
+  }, [authReady, user, activeTab, activePeerId, fetchChatThread, fetchChatThreads]);
 
   useEffect(() => {
     if (!authReady) return;
@@ -244,6 +351,7 @@ const InboxPage = () => {
         <div className="mt-4 inline-flex rounded-full bg-gray-100 p-1">
           {[
             ["inbox", "Inbox", unreadCount || null],
+            ["chats", "Chats", chatThreads.reduce((sum, thread) => sum + (thread.unreadCount || 0), 0) || null],
             ["support", "Support", null],
           ].map(([tab, label, badge]) => (
             <button
@@ -347,6 +455,126 @@ const InboxPage = () => {
                 })
               )}
             </div>
+          </div>
+        ) : activeTab === "chats" ? (
+          <div className="mt-4 space-y-3">
+            {activePeerId ? (
+              <>
+                <div className="flex items-center gap-2.5 rounded-xl bg-white p-3 shadow-sm ring-1 ring-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => { setActivePeerId(""); void fetchChatThreads(); }}
+                    aria-label="Back to chats"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </button>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-orange-100 text-xs font-bold text-orange-700">
+                    {chatPeer?.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={chatPeer.imageUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      (chatPeer?.name || "?").slice(0, 1)
+                    )}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold text-gray-950">{chatPeer?.name || "Chat"}</p>
+                    <p className="text-[10px] text-gray-400">{chatPeer?.isSeller ? "Store" : "Buyer"}</p>
+                  </div>
+                </div>
+
+                <div className="max-h-80 overflow-y-auto rounded-xl bg-gray-50 p-3 ring-1 ring-gray-100">
+                  {chatLoading && chatMessages.length === 0 ? (
+                    <p className="py-8 text-center text-xs text-gray-400">Loading conversation...</p>
+                  ) : chatMessages.length === 0 ? (
+                    <p className="py-8 text-center text-xs text-gray-400">No messages yet. Say hello 👋</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {chatMessages.map((message) => {
+                        const isOwn = String(message.from) === String(user?.id);
+                        return (
+                          <div key={message.messageId} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
+                            <div className={`max-w-[88%] rounded-2xl px-3 py-2 text-xs ${isOwn ? "bg-gray-900 text-white" : "bg-white text-gray-700 ring-1 ring-gray-100"}`}>
+                              <p className="whitespace-pre-wrap leading-5">{message.content}</p>
+                              <p className={`mt-1 text-[10px] ${isOwn ? "text-white/60" : "text-gray-400"}`}>{formatWhen(message.date)}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-end gap-2 rounded-xl bg-white p-2.5 shadow-sm ring-1 ring-gray-100">
+                  <textarea
+                    value={chatDraft}
+                    onChange={(event) => setChatDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        void sendChatMessage();
+                      }
+                    }}
+                    placeholder="Write a message..."
+                    rows={1}
+                    className="min-h-[2.25rem] w-full resize-none rounded-lg bg-gray-50 px-3 py-2 text-xs outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void sendChatMessage()}
+                    disabled={sendingChat || !chatDraft.trim()}
+                    className="shrink-0 rounded-full bg-orange-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                  >
+                    {sendingChat ? "..." : "Send"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
+                {chatLoading && chatThreads.length === 0 ? (
+                  <p className="px-4 py-12 text-center text-xs text-gray-400">Loading chats...</p>
+                ) : chatThreads.length === 0 ? (
+                  <div className="px-4 py-12 text-center">
+                    <p className="text-sm text-gray-500">No chats yet</p>
+                    <p className="mt-1 text-xs text-gray-400">Open a store and tap Chat to message the seller.</p>
+                  </div>
+                ) : (
+                  chatThreads.map((thread) => (
+                    <button
+                      key={thread.peerId}
+                      type="button"
+                      onClick={() => openChatThread(thread.peerId)}
+                      className="flex w-full items-center gap-3 px-3.5 py-3 text-left transition hover:bg-gray-50"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-orange-100 text-sm font-bold text-orange-700">
+                        {thread.peer?.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={thread.peer.imageUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          (thread.peer?.name || "?").slice(0, 1)
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2">
+                          <span className={`truncate text-sm ${thread.unreadCount ? "font-semibold text-gray-950" : "font-medium text-gray-800"}`}>
+                            {thread.peer?.name || "KawilMart user"}
+                          </span>
+                          <span className="shrink-0 text-[10px] text-gray-400">{formatWhen(thread.lastMessage?.date)}</span>
+                        </span>
+                        <span className="mt-0.5 line-clamp-1 block text-xs text-gray-500">
+                          {thread.lastMessage?.content || ""}
+                        </span>
+                      </span>
+                      {thread.unreadCount ? (
+                        <span className="inline-flex min-w-[1.1rem] shrink-0 items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          {thread.unreadCount}
+                        </span>
+                      ) : null}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         ) : usesAdminSupportQueue ? (
           <div className="mt-4 rounded-xl bg-orange-50 p-5 ring-1 ring-orange-100">

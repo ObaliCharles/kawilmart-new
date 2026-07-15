@@ -10,19 +10,9 @@ import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
 import Skeleton from "@/components/Skeleton";
 import { resolveSiteContent } from "@/lib/defaultSiteContent";
-import { categoryMatchesSelection, homeCategoryValues, getCategoryMeta } from "@/lib/marketplaceCategories";
+import { categoryMatchesSelection, homeCategoryValues, getCategoryMeta, homeTopRailDefaults, TOP_RAIL_PARENT } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 import { getProductStockSnapshot } from "@/lib/productStock";
-
-const mobileTopCategories = [
-  ["T-Shirt", "Fashion"],
-  ["Shirt", "Fashion"],
-  ["Shoes", "Fashion"],
-  ["Watches", "Watches & Wearables"],
-  ["Bag", "Accessories"],
-  ["Jeans", "Fashion"],
-  ["Jacket", "Fashion"],
-];
 
 const takeProducts = (products, count) => products.slice(0, count);
 
@@ -369,19 +359,24 @@ const MobileRoundCategory = ({ label, category, icon, imageUrl, navigate }) => {
   );
 };
 
-const MobileTopCategory = ({ label, category, products, navigate }) => {
-  const product = productForCategory(products, category);
+const MobileTopCategory = ({ label, category, imageUrl, icon, products, navigate }) => {
+  const product = imageUrl ? null : productForCategory(products, category);
   const brandLogo = product?.sellerProfile?.avatarUrl;
 
   return (
     <button
       type="button"
       onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
-      className="flex h-[6.7rem] min-w-0 flex-col items-center justify-center rounded-xl border border-gray-200 bg-white px-2 py-3 text-center shadow-sm"
+      className="flex h-[6.7rem] min-w-0 flex-col items-center justify-center rounded-xl bg-white px-2 py-3 text-center shadow-sm ring-1 ring-gray-100"
     >
       <span className="relative flex h-12 w-full items-center justify-center">
-        {product ? (
+        {imageUrl ? (
+          // Admin-uploaded PNG icon (set from Admin -> Categories -> Top Categories)
+          <img src={imageUrl} alt={label} className="h-full w-full object-contain" />
+        ) : product ? (
           <ProductImage product={product} alt={label} width={86} height={62} className="h-full w-full object-contain" />
+        ) : icon ? (
+          <span className="text-2xl">{icon}</span>
         ) : (
           <CategoryLineIcon category={category} className="h-5 w-5 text-gray-700" />
         )}
@@ -609,6 +604,7 @@ const MobileHome = ({
   timeLeft,
   hasCountdown,
   homeCategoryRail = [],
+  topRailTiles = [],
   navigate,
   prefetchRoute,
   formatCurrency,
@@ -708,10 +704,10 @@ const MobileHome = ({
       <section className="mt-8">
         <SectionHeader title="Top Categories" onViewAll={() => navigate("/all-products")} />
         <div className="grid grid-cols-4 gap-3">
-          {mobileTopCategories.map(([label, category]) => (
-            <MobileTopCategory key={label} label={label} category={category} products={sortedProducts} navigate={navigate} />
+          {topRailTiles.map((tile) => (
+            <MobileTopCategory key={tile.label} label={tile.label} category={tile.category} imageUrl={tile.imageUrl} icon={tile.icon} products={sortedProducts} navigate={navigate} />
           ))}
-          <button type="button" onClick={() => navigate("/categories")} className="flex h-[6.7rem] flex-col items-center justify-center rounded-xl border border-gray-200 bg-white text-center shadow-sm">
+          <button type="button" onClick={() => navigate("/categories")} className="flex h-[6.7rem] flex-col items-center justify-center rounded-xl bg-white text-center shadow-sm ring-1 ring-gray-100">
             <span className="text-gray-400"><UtilityIcon type="grid" /></span>
             <span className="mt-2 text-[12px] font-bold text-gray-950">All Categories</span>
           </button>
@@ -1163,7 +1159,7 @@ const FlashCountdown = ({ timeLeft, size = "md" }) => {
 };
 
 const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
-  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike, customTopCategories } = useAppContext();
+  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike, customTopCategories, subcategoriesByParent } = useAppContext();
   const resolvedContent = useMemo(() => resolveSiteContent(siteContent), [siteContent]);
   // Real top-level categories (the static marketplace list plus any the admin
   // added), each with its icon/image — replaces the old hardcoded category
@@ -1189,6 +1185,31 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       }));
     return [...staticRail, ...customRail];
   }, [customTopCategories]);
+  // "Top Categories" quick-pick rail: static defaults (T-Shirt, Shoes, ...)
+  // merged with admin-managed records stored under the TOP_RAIL_PARENT
+  // sentinel — an uploaded PNG on a matching record replaces the tile image,
+  // and extra records become additional tiles.
+  const topRailTiles = useMemo(() => {
+    const railRecords = (subcategoriesByParent?.get(TOP_RAIL_PARENT) || [])
+      .filter((record) => record.isActive !== false);
+    const recordsByName = new Map(railRecords.map((record) => [record.name, record]));
+    const usedNames = new Set();
+    const staticTiles = homeTopRailDefaults.map(({ label, category }) => {
+      const dbMatch = recordsByName.get(label);
+      if (dbMatch) usedNames.add(label);
+      return { label, category, imageUrl: dbMatch?.imageUrl || "", icon: dbMatch?.icon || "" };
+    });
+    const customTiles = railRecords
+      .filter((record) => !usedNames.has(record.name))
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .map((record) => ({
+        label: record.name,
+        category: record.name,
+        imageUrl: record.imageUrl || "",
+        icon: record.icon || "",
+      }));
+    return [...staticTiles, ...customTiles];
+  }, [subcategoriesByParent]);
   const storefrontProducts = products.length
     ? products
     : initialProducts.length
@@ -1387,6 +1408,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       timeLeft={timeLeft}
       hasCountdown={earliestDealDeadline > now}
       homeCategoryRail={homeCategoryRail}
+      topRailTiles={topRailTiles}
       navigate={navigate}
       prefetchRoute={prefetchRoute}
       formatCurrency={formatCurrency}
