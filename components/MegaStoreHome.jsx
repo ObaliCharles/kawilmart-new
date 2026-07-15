@@ -1128,13 +1128,13 @@ const FlashCountdown = ({ timeLeft, size = "md" }) => {
 
   if (size === "sm") {
     return (
-      <div className="inline-flex items-center gap-1 rounded-lg bg-orange-700/10 px-2 py-1">
+      <div className="inline-flex items-center gap-1 rounded-lg bg-gray-950/5 px-1.5 py-1">
         <span className="pr-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-orange-700">Ends</span>
-        {units.map(([value], index) => (
-          <span key={`${value}-${index}`} className="flex items-center gap-0.5">
-            {index > 0 ? <span className="text-[10px] font-bold text-orange-400">:</span> : null}
-            <span className="min-w-[1.35rem] rounded bg-orange-600 px-1 py-0.5 text-center text-[11px] font-extrabold tabular-nums text-white">
-              {value}
+        {units.map(([value, label], index) => (
+          <span key={label} className="flex items-center gap-1">
+            {index > 0 ? <span className="text-[10px] font-black text-gray-400">:</span> : null}
+            <span className="flip-card flip-card-sm text-[11px] font-extrabold">
+              <span key={value} className="flip-digit">{value}</span>
             </span>
           </span>
         ))}
@@ -1143,15 +1143,18 @@ const FlashCountdown = ({ timeLeft, size = "md" }) => {
   }
 
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-xl bg-orange-700/10 px-2.5 py-1.5">
+    <div className="inline-flex items-center gap-1.5 rounded-xl bg-gray-950/5 px-2 py-1.5">
       <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-orange-700">Ends in</span>
-      <div className="flex items-center gap-1">
-        {units.map(([value, label]) => (
-          <div key={label} className="text-center">
-            <span className="block min-w-[1.75rem] rounded-md bg-orange-600 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-white">
-              {value}
-            </span>
-            <span className="mt-0.5 block text-[9px] font-medium text-gray-500">{label}</span>
+      <div className="flex items-start gap-1">
+        {units.map(([value, label], index) => (
+          <div key={label} className="flex items-start gap-1">
+            {index > 0 ? <span className="pt-0.5 text-[12px] font-black leading-[1.35rem] text-gray-400">:</span> : null}
+            <div className="text-center">
+              <span className="flip-card text-[12px] font-extrabold">
+                <span key={value} className="flip-digit">{value}</span>
+              </span>
+              <span className="mt-0.5 block text-[8.5px] font-semibold uppercase tracking-wide text-gray-500">{label}</span>
+            </div>
           </div>
         ))}
       </div>

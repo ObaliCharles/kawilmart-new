@@ -6,13 +6,16 @@ import { AllProductsPageSkeleton, ProductsGridSkeleton } from "@/components/Page
 import Image from "next/image";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
-import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { categoryMatchesSelection, getCategoryMeta, marketplaceFilterCategories } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, resolveProductTagSlugs, SYSTEM_TAG_DEFINITIONS } from "@/lib/liveCommerce";
 import axios from "axios";
 
 const categories = ["All", ...marketplaceFilterCategories];
+
+// How many products load per scroll batch on the browse grid.
+const PAGE_SIZE = 24;
 
 const priceRanges = [
   { label: "All Prices", min: 0, max: Infinity },
@@ -463,7 +466,10 @@ function AllProductsInner() {
   const [selectedTags, setSelectedTags] = useState(initialTags);
   const [manualTagOptions, setManualTagOptions] = useState([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  // Infinite scroll: instead of paginating, we grow the visible window as the
+  // shopper nears the bottom of the grid (marketplace-style browsing).
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const loadMoreRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -508,11 +514,11 @@ function AllProductsInner() {
     setSelectedCondition(filter === "flash" ? "flash" : "all");
     setSortBy(filter === "flash" ? "discount" : sortOptions.some((option) => option.value === sort) ? sort : "default");
     setSelectedTags(tags);
-    setCurrentPage(1);
+    setVisibleCount(PAGE_SIZE);
   }, [searchParams]);
 
   useEffect(() => {
-    setCurrentPage(1);
+    setVisibleCount(PAGE_SIZE);
   }, [selectedCategory, selectedSubcategory, selectedPriceRange, selectedCondition, selectedBrand, selectedRating, selectedTags, searchQuery, selectedSeller, effectiveSortBy]);
 
   const brandOptions = useMemo(() => {
@@ -612,10 +618,23 @@ function AllProductsInner() {
   };
 
   const filteredProducts = filterAndSort();
-  const pageSize = 24;
-  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
-  const startIndex = (currentPage - 1) * pageSize;
-  const pagedProducts = filteredProducts.slice(startIndex, startIndex + pageSize);
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
+  const hasMoreProducts = visibleCount < filteredProducts.length;
+
+  // Load the next batch when the sentinel below the grid scrolls into view.
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || !hasMoreProducts) return undefined;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setVisibleCount((count) => count + PAGE_SIZE);
+      }
+    }, { rootMargin: "600px 0px" });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMoreProducts, filteredProducts.length]);
   const sellerReferenceProduct = selectedSeller ? products.find((product) => product.userId === selectedSeller) : null;
   const sellerFilterLabel = sellerReferenceProduct?.sellerProfile?.name || sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
@@ -1092,47 +1111,21 @@ function AllProductsInner() {
                 <p className="text-sm">Try adjusting your filters</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2 pb-8 min-[480px]:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                {pagedProducts.map((product, index) => (
-                  <ProductCard key={`${product._id || index}-${currentPage}`} product={product} />
+              <div className="grid grid-cols-2 gap-2 pb-4 min-[480px]:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                {visibleProducts.map((product, index) => (
+                  <ProductCard key={product._id || index} product={product} />
                 ))}
               </div>
             )}
-            {filteredProducts.length > 0 && totalPages > 1 ? (
-              <div className="mb-14 flex flex-wrap items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                  disabled={currentPage === 1}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  ‹
-                </button>
-                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-                  <button
-                    key={page}
-                    type="button"
-                    onClick={() => setCurrentPage(page)}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
-                      currentPage === page ? "bg-orange-600 text-white" : "border border-gray-200 bg-white text-gray-700"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-                  disabled={currentPage === totalPages}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  ›
-                </button>
+            {hasMoreProducts ? (
+              <div ref={loadMoreRef} className="mb-10 flex items-center justify-center gap-2 py-4 text-[12px] font-medium text-gray-400" aria-hidden="true">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-orange-500" />
+                Loading more items…
               </div>
             ) : null}
-            {filteredProducts.length > 0 ? (
+            {filteredProducts.length > 0 && !hasMoreProducts ? (
               <p className="mb-8 text-center text-[11px] text-gray-400">
-                Showing {startIndex + 1}-{Math.min(startIndex + pageSize, filteredProducts.length)} of {filteredProducts.length} items
+                You&apos;ve seen all {filteredProducts.length} item{filteredProducts.length === 1 ? "" : "s"}
               </p>
             ) : null}
           </div>

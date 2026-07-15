@@ -15,7 +15,7 @@ export async function GET(request) {
 
         await connectDB()
 
-        const products = await Product.find({ userId })
+        const products = await Product.find({ userId }).sort({ date: -1 }).lean()
         return NextResponse.json({ success: true, products })
 
     } catch (error) {

@@ -78,6 +78,72 @@
   animation: search-hint-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Flip-clock ("book style") flash sale countdown.
+   Each unit is a split-flap card: dark card with a horizontal seam and a
+   page-flip animation whenever the digit changes (the inner span is
+   re-mounted via its React key). */
+@keyframes flip-tick {
+  0% { transform: rotateX(-90deg); }
+  55% { transform: rotateX(14deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+.flip-card {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9rem;
+  padding: 0.28rem 0.2rem;
+  border-radius: 0.4rem;
+  background: linear-gradient(180deg, #2b3544 0%, #1c2532 49%, #0b1220 51%, #1a2230 100%);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  perspective: 220px;
+  box-shadow: 0 1px 2px rgba(2, 6, 23, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.flip-card::before {
+  /* The book seam across the middle of the card */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1.5px;
+  background: rgba(2, 6, 23, 0.65);
+  z-index: 2;
+}
+
+.flip-card::after {
+  /* Slightly lighter top page, like a split-flap display */
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: rgba(255, 255, 255, 0.07);
+  z-index: 1;
+}
+
+.flip-card-sm {
+  min-width: 1.55rem;
+  padding: 0.18rem 0.15rem;
+  border-radius: 0.32rem;
+}
+
+.flip-digit {
+  display: block;
+  transform-origin: center 50%;
+  backface-visibility: hidden;
+  animation: flip-tick 0.45s cubic-bezier(0.36, 0.9, 0.4, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-digit {
+    animation: none;
+  }
+}
+
 html {
   scroll-behavior: auto;
 }

@@ -123,13 +123,13 @@ const AdminLayout = ({ children }) => {
                             const isActive = pathname === item.path;
                             return (
                                 <Link href={item.path} key={item.name} onClick={() => setSidebarOpen(false)}>
-                                    <div className={`flex items-center gap-3 px-4 py-3 mx-2 rounded-xl mb-1 transition-all ${
+                                    <div className={`mx-2 mb-0.5 flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-all ${
                                         isActive
                                             ? 'bg-orange-600 text-white font-semibold shadow-sm'
                                             : 'text-gray-600 hover:bg-gray-100'
                                     }`}>
-                                        <span className="text-xl">{item.icon}</span>
-                                        <span className="text-sm">{item.name}</span>
+                                        <span className="text-base">{item.icon}</span>
+                                        <span className="text-[13px]">{item.name}</span>
                                     </div>
                                 </Link>
                             );
@@ -152,7 +152,7 @@ const AdminLayout = ({ children }) => {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 p-4 md:p-8 overflow-x-hidden min-w-0">
+                <main className="min-w-0 flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6">
                     {children}
                 </main>
             </div>

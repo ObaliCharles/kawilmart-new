@@ -7,15 +7,15 @@ import { AdminDashboardPageSkeleton } from '@/components/dashboard/DashboardSkel
 import { getOrderStatusBadgeClass, getOrderStatusDisplay } from '@/lib/orderUi';
 
 const StatCard = ({ icon, label, value, sub, color }) => (
-    <div className="group rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-gray-200">
-        <div className="flex items-start gap-4">
-            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xl shadow-sm ring-1 ring-black/5 ${color}`}>
+    <div className="rounded-xl bg-white p-3.5 ring-1 ring-gray-100 transition hover:shadow-sm">
+        <div className="flex items-start gap-3">
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base ${color}`}>
                 {icon}
             </div>
             <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium uppercase tracking-wider text-gray-500">{label}</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
-                {sub && <p className="mt-0.5 text-xs text-gray-400">{sub}</p>}
+                <p className="truncate text-[11px] font-medium text-gray-500">{label}</p>
+                <p className="mt-0.5 truncate text-lg font-bold text-gray-950">{value}</p>
+                {sub && <p className="mt-0.5 truncate text-[11px] text-gray-400">{sub}</p>}
             </div>
         </div>
     </div>
@@ -70,38 +70,33 @@ export default function AdminDashboard() {
     const maxRevenue = Math.max(...stats.revenueByDay.map(d => d.revenue), 1);
 
     return (
-        <div className="space-y-8 max-w-7xl">
+        <div className="max-w-7xl space-y-4">
             {/* Page header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                    <p className="text-gray-500 text-sm mt-1">Welcome back, {user?.firstName}. Here's what's happening today.</p>
+                    <h1 className="text-lg font-semibold tracking-tight text-gray-950">Dashboard</h1>
+                    <p className="mt-0.5 text-xs text-gray-500">Welcome back, {user?.firstName}. Here's what's happening today.</p>
                 </div>
-                <button onClick={fetchStats} className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-300">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M4 12a8 8 0 1 1 8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                        <path d="M4 12h4M4 12V8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                <button onClick={fetchStats} className="shrink-0 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-200">
                     Refresh
                 </button>
             </div>
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
                 <StatCard icon="💰" label="Total Revenue" value={formatCurrency(stats.totalRevenue)} sub={`${stats.completedOrders || 0} completed orders`} color="bg-green-50 text-green-600" />
                 <StatCard icon="📦" label="Total Orders" value={stats.totalOrders.toLocaleString()} sub={`${stats.flaggedSellers || 0} flagged sellers`} color="bg-blue-50 text-blue-600" />
                 <StatCard icon="🛍️" label="Products" value={stats.totalProducts.toLocaleString()} sub="Listed in store" color="bg-purple-50 text-purple-600" />
                 <StatCard icon="👥" label="Users" value={stats.totalUsers.toLocaleString()} sub="Registered accounts" color="bg-orange-50 text-orange-600" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
                 {/* Revenue Chart */}
-                <div className="lg:col-span-2 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <div className="mb-6 flex items-center justify-between">
-                        <h2 className="font-bold text-gray-900">Revenue (Last 7 Days)</h2>
-                        <span className="rounded-full bg-green-50 px-3 py-1 text-[11px] font-semibold text-green-700">+12.5% vs last week</span>
+                <div className="rounded-xl bg-white p-4 ring-1 ring-gray-100 lg:col-span-2">
+                    <div className="mb-4 flex items-center justify-between gap-2">
+                        <h2 className="text-sm font-semibold text-gray-950">Revenue (Last 7 Days)</h2>
                     </div>
-                    <div className="flex items-end gap-2">
+                    <div className="flex items-end gap-1.5 sm:gap-2">
                         {stats.revenueByDay.map((day, i) => (
                             <ChartBar key={i} height={day.revenue} label={day.day} value={formatCompactCurrency(day.revenue)} max={maxRevenue} />
                         ))}
@@ -109,35 +104,35 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Order Status Breakdown */}
-                <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <h2 className="mb-5 font-bold text-gray-900">Order Status</h2>
-                    <div className="space-y-4">
+                <div className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
+                    <h2 className="mb-3 text-sm font-semibold text-gray-950">Order Status</h2>
+                    <div className="space-y-3">
                         {Object.entries(stats.statusCounts).map(([status, count]) => (
                             <div key={status}>
-                                <div className="mb-1.5 flex items-center justify-between">
-                                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${getOrderStatusBadgeClass(status)}`}>
+                                <div className="mb-1 flex items-center justify-between gap-2">
+                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${getOrderStatusBadgeClass(status)}`}>
                                         {getOrderStatusDisplay(status)}
                                     </span>
-                                    <span className="text-sm font-bold text-gray-700">{count}</span>
+                                    <span className="text-xs font-bold text-gray-700">{count}</span>
                                 </div>
-                                <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
-                                    <div className="h-full rounded-full bg-gradient-to-r from-orange-400 to-orange-600 transition-all" style={{ width: `${(count / stats.totalOrders) * 100}%` }} />
+                                <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                                    <div className="h-full rounded-full bg-orange-500 transition-all" style={{ width: `${(count / stats.totalOrders) * 100}%` }} />
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-6 border-t border-gray-100 pt-5">
-                        <h2 className="mb-4 font-bold text-gray-900">Products by Category</h2>
-                        <div className="space-y-2.5">
+                    <div className="mt-4 border-t border-gray-100 pt-4">
+                        <h2 className="mb-3 text-sm font-semibold text-gray-950">Products by Category</h2>
+                        <div className="space-y-2">
                             {Object.entries(stats.categoryBreakdown).slice(0, 5).map(([cat, count]) => (
-                                <div key={cat} className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">{cat}</span>
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-1.5 w-20 rounded-full bg-gray-100 overflow-hidden">
+                                <div key={cat} className="flex items-center justify-between gap-2">
+                                    <span className="min-w-0 truncate text-xs text-gray-600">{cat}</span>
+                                    <div className="flex shrink-0 items-center gap-2">
+                                        <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100 sm:w-20">
                                             <div className="h-full rounded-full bg-orange-500" style={{ width: `${(count / stats.totalProducts) * 100}%` }} />
                                         </div>
-                                        <span className="text-sm font-semibold text-gray-800 w-8 text-right">{count}</span>
+                                        <span className="w-7 text-right text-xs font-semibold text-gray-800">{count}</span>
                                     </div>
                                 </div>
                             ))}
@@ -147,41 +142,58 @@ export default function AdminDashboard() {
             </div>
 
             {/* Recent Orders */}
-            <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-                    <h2 className="font-bold text-gray-900">Recent Orders</h2>
-                    <a href="/admin/orders" className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600 hover:text-orange-700">
-                        View all
-                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="m9 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+            <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
+                <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                    <h2 className="text-sm font-semibold text-gray-950">Recent Orders</h2>
+                    <a href="/admin/orders" className="text-xs font-semibold text-orange-600 hover:text-orange-700">
+                        View all →
                     </a>
                 </div>
-                <div className="overflow-x-auto">
+
+                {/* Mobile: compact list */}
+                <div className="divide-y divide-gray-50 sm:hidden">
+                    {stats.recentOrders.map((order, i) => (
+                        <div key={i} className="flex items-center justify-between gap-3 px-4 py-3">
+                            <div className="min-w-0">
+                                <p className="font-mono text-[11px] text-gray-500">#{String(order._id).slice(-8).toUpperCase()}</p>
+                                <p className="mt-0.5 text-[11px] text-gray-400">{new Date(order.date).toLocaleDateString()}</p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                                <p className="text-xs font-semibold text-gray-950">{formatCurrency(order.amount)}</p>
+                                <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${getOrderStatusBadgeClass(order.status)}`}>
+                                    {getOrderStatusDisplay(order.status)}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden overflow-x-auto sm:block">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-gray-50">
-                                <th className="px-6 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Order ID</th>
-                                <th className="px-6 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
-                                <th className="px-6 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                                <th className="px-6 py-3.5 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                                <th className="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Order ID</th>
+                                <th className="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                                <th className="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Status</th>
+                                <th className="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Date</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                             {stats.recentOrders.map((order, i) => (
                                 <tr key={i} className="transition hover:bg-gray-50/50">
-                                    <td className="px-6 py-4 font-mono text-xs text-gray-500">
+                                    <td className="px-4 py-2.5 font-mono text-xs text-gray-500">
                                         #{String(order._id).slice(-8).toUpperCase()}
                                     </td>
-                                    <td className="px-6 py-4 font-semibold text-gray-800">
+                                    <td className="px-4 py-2.5 text-xs font-semibold text-gray-800">
                                         {formatCurrency(order.amount)}
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getOrderStatusBadgeClass(order.status)}`}>
+                                    <td className="px-4 py-2.5">
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${getOrderStatusBadgeClass(order.status)}`}>
                                             {getOrderStatusDisplay(order.status)}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-gray-500">
+                                    <td className="px-4 py-2.5 text-xs text-gray-500">
                                         {new Date(order.date).toLocaleDateString()}
                                     </td>
                                 </tr>

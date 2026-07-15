@@ -18,14 +18,19 @@ export async function GET(request) {
 
         await connectDB();
 
+        // Lean + field-selected reads: the stats page only aggregates, so we
+        // never need full hydrated documents here.
         const [orders, products, users] = await Promise.all([
-            Order.find({}),
-            Product.find({}),
-            User.find({}),
+            Order.find({})
+                .select("status subtotal commissionAmount amount date items sellerId customerConfirmedAt deliveredAt")
+                .sort({ date: -1 })
+                .lean(),
+            Product.find({}).select("name category offerPrice price image").lean(),
+            User.find({}).select("sellerSubscriptionStatus riderSubscriptionStatus sellerSubscriptionFee riderSubscriptionFee").lean(),
         ]);
 
         const normalizedOrders = orders.map((order) => ({
-            ...order.toObject(),
+            ...order,
             status: normalizeOrderStatus(order.status),
         }));
         const completedOrdersList = normalizedOrders.filter((order) => order.status === ORDER_STATUSES.COMPLETED);
@@ -78,13 +83,25 @@ export async function GET(request) {
             .map(([id]) => id);
         const topProducts = products
             .filter(p => topProductIds.includes(String(p._id)))
-            .map(p => ({ ...p._doc, soldCount: productFreq[String(p._id)] || 0 }));
+            .map(p => ({ ...p, soldCount: productFreq[String(p._id)] || 0 }));
 
         // Category breakdown
         const categoryBreakdown = products.reduce((acc, p) => {
             acc[p.category] = (acc[p.category] || 0) + 1;
             return acc;
         }, {});
+
+        // Group orders by seller once instead of re-scanning all orders per user.
+        const ordersBySeller = new Map();
+        normalizedOrders.forEach((order) => {
+            const sellerKey = String(order.sellerId || "");
+            if (!sellerKey) return;
+            if (!ordersBySeller.has(sellerKey)) ordersBySeller.set(sellerKey, []);
+            ordersBySeller.get(sellerKey).push(order);
+        });
+        const flaggedSellers = [...ordersBySeller.values()]
+            .filter((sellerOrders) => getSellerRiskSummary(sellerOrders).flagged)
+            .length;
 
         return NextResponse.json({
             success: true,
@@ -103,10 +120,9 @@ export async function GET(request) {
                 revenueByDay,
                 topProducts,
                 categoryBreakdown,
+                // Orders come back date-desc, so this really is "most recent".
                 recentOrders: normalizedOrders.slice(0, 5),
-                flaggedSellers: users.filter((user) => getSellerRiskSummary(
-                    normalizedOrders.filter((order) => String(order.sellerId) === String(user._id))
-                ).flagged).length,
+                flaggedSellers,
                 deliveredOrders: statusCounts[ORDER_STATUSES.DELIVERED] || 0,
                 completedOrders: statusCounts[ORDER_STATUSES.COMPLETED] || 0,
                 cancelledOrders: statusCounts[ORDER_STATUSES.CANCELLED] || 0,

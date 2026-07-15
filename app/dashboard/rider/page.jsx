@@ -5,8 +5,6 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import Navbar from '@/components/Navbar';
 import Image from 'next/image';
-import { assets } from '@/assets/assets';
-import Link from 'next/link';
 import { RiderDashboardSkeleton } from '@/components/dashboard/DashboardSkeletons';
 import { getOrderStatusBadgeClass, getOrderStatusDisplay, getRiderAssignmentBadgeClass } from '@/lib/orderUi';
 import { downloadAuthenticatedFile } from '@/lib/clientDownloads';
@@ -179,11 +177,13 @@ export default function RiderDashboard() {
     return (
         <>
             <Navbar />
-            <div className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 md:px-10 md:py-8 lg:px-20">
-                <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-h-screen bg-gray-50 px-3 py-4 sm:px-4 md:px-6 md:py-5">
+                <div className="mx-auto max-w-6xl">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <div className="mb-1 flex items-center gap-2">
-                            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-lg font-semibold tracking-tight text-gray-950">Deliveries</h1>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                                 riderAvailability === 'busy'
                                     ? 'bg-orange-100 text-orange-700'
                                     : 'bg-emerald-100 text-emerald-700'
@@ -191,78 +191,70 @@ export default function RiderDashboard() {
                                 {riderAvailability === 'busy' ? 'BUSY' : 'AVAILABLE'}
                             </span>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900">Delivery Dashboard</h1>
-                        <p className="mt-1 text-sm text-gray-500">Accept jobs, unlock contacts after acceptance, and update delivery progress inside KawilMart.</p>
+                        <p className="mt-0.5 text-xs text-gray-500">Accept jobs, unlock contacts after acceptance, and update delivery progress.</p>
                     </div>
-                    <div className="flex flex-col items-start gap-3 sm:items-end">
-                        <div className="rounded-2xl border border-gray-200 bg-white p-1 shadow-sm">
-                            <div className="flex flex-wrap gap-1">
-                                <button
-                                    type="button"
-                                    onClick={() => void updateAvailability('available')}
-                                    disabled={availabilityUpdating || riderAvailability === 'available'}
-                                    className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                                        riderAvailability === 'available'
-                                            ? 'bg-emerald-600 text-white'
-                                            : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700'
-                                    } ${availabilityUpdating ? 'cursor-wait opacity-70' : ''}`}
-                                >
-                                    Ready for work
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => void updateAvailability('busy')}
-                                    disabled={availabilityUpdating || riderAvailability === 'busy'}
-                                    className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                                        riderAvailability === 'busy'
-                                            ? 'bg-orange-600 text-white'
-                                            : 'text-gray-600 hover:bg-orange-50 hover:text-orange-700'
-                                    } ${availabilityUpdating ? 'cursor-wait opacity-70' : ''}`}
-                                >
-                                    Busy
-                                </button>
-                            </div>
+                    <div className="flex flex-col items-start gap-1.5 sm:items-end">
+                        <div className="inline-flex rounded-full bg-gray-100 p-1">
+                            <button
+                                type="button"
+                                onClick={() => void updateAvailability('available')}
+                                disabled={availabilityUpdating || riderAvailability === 'available'}
+                                className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
+                                    riderAvailability === 'available'
+                                        ? 'bg-white text-emerald-700 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                } ${availabilityUpdating ? 'cursor-wait opacity-70' : ''}`}
+                            >
+                                Ready for work
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => void updateAvailability('busy')}
+                                disabled={availabilityUpdating || riderAvailability === 'busy'}
+                                className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
+                                    riderAvailability === 'busy'
+                                        ? 'bg-white text-orange-700 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                } ${availabilityUpdating ? 'cursor-wait opacity-70' : ''}`}
+                            >
+                                Busy
+                            </button>
                         </div>
-                        <p className="max-w-sm text-xs text-gray-500 sm:text-right">
+                        <p className="max-w-sm text-[11px] text-gray-400 sm:text-right">
                             {activeAcceptedTrips > 0
-                                ? `You still have ${activeAcceptedTrips} active delivery ${activeAcceptedTrips === 1 ? 'trip' : 'trips'}, so you cannot mark yourself ready until it is completed.`
-                                : 'Use this switch to tell sellers and admins whether you are ready to receive delivery work.'}
+                                ? `You still have ${activeAcceptedTrips} active ${activeAcceptedTrips === 1 ? 'trip' : 'trips'} — finish ${activeAcceptedTrips === 1 ? 'it' : 'them'} before marking yourself ready.`
+                                : 'Tell sellers and admins whether you can take delivery work.'}
                         </p>
-                        <Link href="/">
-                            <div className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
-                                <Image src={assets.logo} alt="logo" className="w-20 sm:w-24" />
-                            </div>
-                        </Link>
                     </div>
                 </div>
 
-                <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="mb-4 grid grid-cols-2 gap-2.5 md:grid-cols-4">
                     {[
-                        { label: 'Pending Jobs', value: pendingAssignments, bg: 'bg-cyan-50' },
-                        { label: 'On the Road', value: onTheRoad, bg: 'bg-orange-50' },
-                        { label: 'Delivered', value: totalDelivered, bg: 'bg-green-50' },
-                        { label: 'Delivery Fees', value: formatCurrency(totalPayout), bg: 'bg-purple-50' },
+                        { label: 'Pending Jobs', value: pendingAssignments },
+                        { label: 'On the Road', value: onTheRoad },
+                        { label: 'Delivered', value: totalDelivered },
+                        { label: 'Delivery Fees', value: formatCurrency(totalPayout) },
                     ].map((metric) => (
-                        <div key={metric.label} className={`${metric.bg} rounded-xl border border-white p-4 shadow-sm`}>
-                            <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
-                            <p className="text-xs text-gray-500">{metric.label}</p>
+                        <div key={metric.label} className="rounded-xl bg-white p-3.5 ring-1 ring-gray-100">
+                            <p className="truncate text-lg font-bold text-gray-950">{metric.value}</p>
+                            <p className="text-[11px] text-gray-500">{metric.label}</p>
                         </div>
                     ))}
                 </div>
 
-                <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div className="mb-4 rounded-xl bg-white p-4 ring-1 ring-gray-100">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">Monthly statement</h2>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Download your delivery earnings and rider subscription summary for any month in your activity history.
+                            <h2 className="text-sm font-semibold text-gray-950">Monthly statement</h2>
+                            <p className="mt-0.5 text-xs text-gray-500">
+                                Delivery earnings and subscription summary for any month.
                             </p>
                         </div>
-                        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                             <select
                                 value={statementPeriodKey}
                                 onChange={(event) => setStatementPeriodKey(event.target.value)}
-                                className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-700 outline-none transition focus:border-orange-400 sm:min-w-[220px]"
+                                className="w-full cursor-pointer rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700 outline-none sm:min-w-[180px]"
                             >
                                 {statementPeriodOptions.map((option) => (
                                     <option key={option} value={option}>{option}</option>
@@ -272,10 +264,10 @@ export default function RiderDashboard() {
                                 type="button"
                                 onClick={() => void handleStatementDownload()}
                                 disabled={!statementPeriodKey || downloadingStatement}
-                                className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                                     !statementPeriodKey || downloadingStatement
                                         ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                                        : 'bg-gray-900 text-white hover:bg-black'
+                                        : 'bg-gray-950 text-white hover:bg-gray-800'
                                 }`}
                             >
                                 {downloadingStatement ? 'Preparing...' : 'Download statement'}
@@ -284,23 +276,23 @@ export default function RiderDashboard() {
                     </div>
                 </div>
 
-                <div className="mb-6 flex flex-wrap gap-2">
+                <div className="mb-4 inline-flex rounded-full bg-gray-100 p-1">
                     <button
                         onClick={() => setActiveTab('active')}
-                        className={`rounded-xl px-4 py-2.5 text-sm font-medium transition sm:px-5 ${
+                        className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
                             activeTab === 'active'
-                                ? 'bg-orange-600 text-white shadow-sm'
-                                : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                                ? 'bg-white text-gray-950 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                         }`}
                     >
                         Active ({active.length})
                     </button>
                     <button
                         onClick={() => setActiveTab('completed')}
-                        className={`rounded-xl px-4 py-2.5 text-sm font-medium transition sm:px-5 ${
+                        className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
                             activeTab === 'completed'
-                                ? 'bg-green-600 text-white shadow-sm'
-                                : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                                ? 'bg-white text-gray-950 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                         }`}
                     >
                         Completed ({completed.length})
@@ -308,8 +300,8 @@ export default function RiderDashboard() {
                 </div>
 
                 {displayed.length === 0 ? (
-                    <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white text-gray-400">
-                        <p className="font-medium">{activeTab === 'active' ? 'No active deliveries' : 'No completed deliveries yet'}</p>
+                    <div className="flex h-40 flex-col items-center justify-center rounded-xl bg-white text-gray-400 ring-1 ring-gray-100">
+                        <p className="text-sm font-medium">{activeTab === 'active' ? 'No active deliveries' : 'No completed deliveries yet'}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -317,7 +309,7 @@ export default function RiderDashboard() {
                             const isExpanded = expandedId === delivery._id;
 
                             return (
-                                <div key={delivery._id} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                                <div key={delivery._id} className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
                                     <div
                                         className="cursor-pointer p-4 hover:bg-gray-50/50 sm:p-5"
                                         onClick={() => setExpandedId(isExpanded ? null : delivery._id)}
@@ -347,12 +339,12 @@ export default function RiderDashboard() {
                                     </div>
 
                                     {isExpanded && (
-                                        <div className="space-y-5 border-t border-gray-100 p-5">
-                                            <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_1.15fr_0.9fr]">
+                                        <div className="space-y-4 border-t border-gray-100 p-3.5 sm:p-4">
+                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1.15fr_1.15fr_0.9fr]">
                                                 <div className="space-y-4">
                                                     <div>
                                                         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Pickup Details</p>
-                                                        <div className="space-y-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-gray-700">
+                                                        <div className="space-y-1.5 rounded-lg bg-gray-50/80 p-3 text-xs text-gray-700">
                                                             <p className="font-semibold text-gray-900">{delivery.seller?.name || 'Seller'}</p>
                                                             <p>Pickup base: {delivery.pickup?.location || 'Pickup location not available yet'}</p>
                                                             <p>
@@ -367,7 +359,7 @@ export default function RiderDashboard() {
                                                         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Items</p>
                                                         <div className="space-y-2">
                                                             {delivery.items.map((item, index) => (
-                                                                <div key={index} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+                                                                <div key={index} className="flex items-center gap-2.5 rounded-lg bg-gray-50/80 p-2.5">
                                                                     {item.product?.image?.[0] && (
                                                                         <Image
                                                                             src={item.product.image[0]}
@@ -393,7 +385,7 @@ export default function RiderDashboard() {
                                                 <div className="space-y-4">
                                                     <div>
                                                         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Drop-off Details</p>
-                                                        <div className="space-y-2 rounded-2xl border border-gray-100 bg-gray-50 p-4 text-sm text-gray-700">
+                                                        <div className="space-y-1.5 rounded-lg bg-gray-50/80 p-3 text-xs text-gray-700">
                                                             <p className="font-semibold text-gray-900">{delivery.dropoff?.customerName || 'Customer'}</p>
                                                             <p>{delivery.dropoff?.location || 'No address available yet'}</p>
                                                             <p>
@@ -406,7 +398,7 @@ export default function RiderDashboard() {
 
                                                     <div>
                                                         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Tracking Timeline</p>
-                                                        <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                                                        <div className="rounded-lg bg-gray-50/80 p-3">
                                                             <div className="space-y-4">
                                                                 {(delivery.trackingEvents || []).slice().reverse().map((event) => (
                                                                     <div key={event.id} className="relative pl-5">
@@ -426,7 +418,7 @@ export default function RiderDashboard() {
                                                 <div className="space-y-4">
                                                     <div>
                                                         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Trip Snapshot</p>
-                                                        <div className="space-y-2 rounded-2xl border border-gray-100 bg-gray-50 p-4 text-sm text-gray-600">
+                                                        <div className="space-y-1.5 rounded-lg bg-gray-50/80 p-3 text-xs text-gray-600">
                                                             <p>{new Date(delivery.date).toLocaleDateString()}</p>
                                                             <p className="font-semibold text-gray-800">
                                                                 Order total: {formatCurrency(delivery.amount)}
@@ -443,7 +435,7 @@ export default function RiderDashboard() {
                                                             <button
                                                                 onClick={() => void updateDelivery(delivery._id, { assignmentResponse: 'ACCEPT' }, 'Delivery accepted')}
                                                                 disabled={updatingId === delivery._id}
-                                                                className="rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60"
+                                                                className="rounded-full bg-emerald-600 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60"
                                                             >
                                                                 {updatingId === delivery._id ? 'Saving...' : 'Accept Delivery'}
                                                             </button>
@@ -453,7 +445,7 @@ export default function RiderDashboard() {
                                                             <button
                                                                 onClick={() => void updateDelivery(delivery._id, { assignmentResponse: 'DECLINE' }, 'Delivery declined')}
                                                                 disabled={updatingId === delivery._id}
-                                                                className="rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-wait disabled:opacity-60"
+                                                                className="rounded-full bg-red-600 py-2.5 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-wait disabled:opacity-60"
                                                             >
                                                                 {updatingId === delivery._id ? 'Saving...' : 'Decline Delivery'}
                                                             </button>
@@ -463,7 +455,7 @@ export default function RiderDashboard() {
                                                             <button
                                                                 onClick={() => void updateDelivery(delivery._id, { status: 'OUT_FOR_DELIVERY' }, 'Delivery started')}
                                                                 disabled={updatingId === delivery._id}
-                                                                className="rounded-xl bg-orange-600 py-3 text-sm font-semibold text-white transition hover:bg-orange-700 disabled:cursor-wait disabled:opacity-60"
+                                                                className="rounded-full bg-orange-600 py-2.5 text-xs font-semibold text-white transition hover:bg-orange-700 disabled:cursor-wait disabled:opacity-60"
                                                             >
                                                                 {updatingId === delivery._id ? 'Saving...' : 'Mark Out for Delivery'}
                                                             </button>
@@ -473,14 +465,14 @@ export default function RiderDashboard() {
                                                             <button
                                                                 onClick={() => void updateDelivery(delivery._id, { status: 'DELIVERED' }, 'Marked delivered')}
                                                                 disabled={updatingId === delivery._id}
-                                                                className="rounded-xl bg-green-600 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-wait disabled:opacity-60"
+                                                                className="rounded-full bg-green-600 py-2.5 text-xs font-semibold text-white transition hover:bg-green-700 disabled:cursor-wait disabled:opacity-60"
                                                             >
                                                                 {updatingId === delivery._id ? 'Saving...' : 'Mark Delivered'}
                                                             </button>
                                                         )}
 
                                                         {!delivery.actions?.canAcceptAssignment && !delivery.actions?.canDeclineAssignment && !delivery.actions?.canStartDelivery && !delivery.actions?.canMarkDelivered && (
-                                                            <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-500">
+                                                            <div className="rounded-lg bg-gray-50 px-3 py-2.5 text-xs text-gray-500">
                                                                 No rider action is needed right now. Keep monitoring this delivery from your dashboard.
                                                             </div>
                                                         )}
@@ -494,6 +486,7 @@ export default function RiderDashboard() {
                         })}
                     </div>
                 )}
+                </div>
             </div>
         </>
     );

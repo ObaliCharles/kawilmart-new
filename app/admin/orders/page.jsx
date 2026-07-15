@@ -76,50 +76,116 @@ export default function AdminOrders() {
     if (loading) return <OrdersManagementPageSkeleton showTabs />;
 
     return (
-        <div className="space-y-6 max-w-7xl">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">All Orders</h1>
-                    <p className="text-sm text-gray-500 mt-1">{filtered.length} orders</p>
-                </div>
+        <div className="max-w-7xl space-y-4">
+            <div>
+                <h1 className="text-lg font-semibold tracking-tight text-gray-950">All Orders</h1>
+                <p className="mt-0.5 text-xs text-gray-500">{filtered.length} order{filtered.length === 1 ? '' : 's'}</p>
             </div>
 
             {/* Status Filter Tabs */}
-            <div className="flex flex-wrap gap-2">
+            <div className="scrollbar-none -mx-3 flex gap-1.5 overflow-x-auto px-3 sm:mx-0 sm:flex-wrap sm:px-0">
                 {['All', ...new Set(orders.map((order) => order.status))].map(s => (
                     <button
                         key={s}
                         onClick={() => setFilterStatus(s)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
                             filterStatus === s
-                                ? 'bg-orange-600 text-white shadow-sm'
-                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                ? 'bg-gray-950 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                     >
                         {s === 'All' ? s : getOrderStatusDisplay(s)}
                         {s !== 'All' && (
-                            <span className="ml-1.5 text-xs opacity-75">
-                                ({orders.filter(o => o.status === s).length})
+                            <span className="ml-1 text-[10px] opacity-70">
+                                {orders.filter(o => o.status === s).length}
                             </span>
                         )}
                     </button>
                 ))}
             </div>
 
-            {/* Orders Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* Mobile: card list */}
+            <div className="space-y-2.5 lg:hidden">
+                {filtered.length === 0 ? (
+                    <div className="rounded-xl bg-white py-12 text-center text-sm text-gray-400 ring-1 ring-gray-100">
+                        No orders found
+                    </div>
+                ) : filtered.map((order) => (
+                    <div key={order._id} className="rounded-xl bg-white p-3 ring-1 ring-gray-100">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                                <p className="font-mono text-[11px] text-gray-500">#{String(order._id).slice(-8).toUpperCase()}</p>
+                                <p className="mt-0.5 line-clamp-2 text-xs font-medium text-gray-900">
+                                    {order.items.map((item) => `${item.product?.name || 'Deleted Product'} ×${item.quantity}`).join(', ')}
+                                </p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                                <p className="text-xs font-bold text-gray-950">{formatCurrency(order.amount)}</p>
+                                <p className="text-[10px] text-gray-400">{new Date(order.date).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${getOrderStatusBadgeClass(order.status)}`}>
+                                {getOrderStatusDisplay(order.status)}
+                            </span>
+                            {order.address ? (
+                                <span className="text-[10px] text-gray-400">{order.address.fullName} · {order.address.city}</span>
+                            ) : null}
+                            {order.riskFlags?.map((flag) => (
+                                <span key={`${order._id}-${flag}`} className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700">
+                                    {flag.replace(/_/g, ' ')}
+                                </span>
+                            ))}
+                        </div>
+                        <div className="mt-2.5 grid grid-cols-2 gap-2">
+                            <select
+                                value={order.riderId || ''}
+                                disabled={updatingId === order._id || (!order.actions?.canAssignRider && !order.riderId)}
+                                onChange={(e) => updateOrder(order._id, { riderId: e.target.value })}
+                                className="w-full cursor-pointer rounded-lg bg-gray-50 px-2 py-1.5 text-[11px] font-medium text-gray-700 outline-none disabled:opacity-60"
+                            >
+                                <option value="">Unassigned rider</option>
+                                {riders.map((rider) => (
+                                    <option
+                                        key={rider.id}
+                                        value={rider.id}
+                                        disabled={rider.riderAvailability === 'busy' && rider.id !== order.riderId}
+                                    >
+                                        {(rider.name || rider.email)}{rider.riderAvailability === 'busy' && rider.id !== order.riderId ? ' · Busy' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <select
+                                value={order.status}
+                                disabled={updatingId === order._id}
+                                onChange={(e) => updateOrder(order._id, { status: e.target.value })}
+                                className="w-full cursor-pointer rounded-lg bg-gray-50 px-2 py-1.5 text-[11px] font-medium text-gray-700 outline-none disabled:opacity-60"
+                            >
+                                {[...new Set([order.status, ...(order.actions?.allowedNextStatuses || [])])].map((statusOption) => (
+                                    <option key={statusOption} value={statusOption}>
+                                        {getOrderStatusDisplay(statusOption)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop: orders table */}
+            <div className="hidden overflow-hidden rounded-xl bg-white ring-1 ring-gray-100 lg:block">
                 <div className="overflow-x-auto">
                     <table className="min-w-[900px] w-full text-sm">
-                        <thead className="bg-gray-50 border-b border-gray-100">
+                        <thead className="border-b border-gray-100 bg-gray-50/60">
                             <tr>
-                                <th className="text-left px-5 py-4 text-gray-500 font-medium">Order</th>
-                                <th className="text-left px-5 py-4 text-gray-500 font-medium">Items</th>
-                                <th className="text-left px-5 py-4 text-gray-500 font-medium">Address</th>
-                                    <th className="text-left px-5 py-4 text-gray-500 font-medium">Amount</th>
-                                    <th className="text-left px-5 py-4 text-gray-500 font-medium">Date</th>
-                                    <th className="text-left px-5 py-4 text-gray-500 font-medium">Rider</th>
-                                    <th className="text-left px-5 py-4 text-gray-500 font-medium">Status</th>
-                                </tr>
+                                <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Order</th>
+                                <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Items</th>
+                                <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Address</th>
+                                <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                                <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Date</th>
+                                <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Rider</th>
+                                <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Status</th>
+                            </tr>
                         </thead>
                         <tbody>
                             {filtered.length === 0 ? (
@@ -131,7 +197,7 @@ export default function AdminOrders() {
                                 </tr>
                             ) : filtered.map((order) => (
                                 <tr key={order._id} className="border-t border-gray-50 hover:bg-gray-50/50">
-                                    <td className="px-5 py-4">
+                                    <td className="px-4 py-3">
                                         <p className="font-mono text-xs text-gray-500">#{String(order._id).slice(-8).toUpperCase()}</p>
                                         <p className="text-xs text-gray-400 mt-0.5">User: {String(order.userId).slice(-6)}</p>
                                         {order.riskFlags?.length > 0 && (
@@ -144,14 +210,14 @@ export default function AdminOrders() {
                                             </div>
                                         )}
                                     </td>
-                                    <td className="px-5 py-4 max-w-[200px]">
+                                    <td className="px-4 py-3 max-w-[200px]">
                                         {order.items.map((item, i) => (
                                             <p key={i} className="truncate text-gray-700">
                                                 {item.product?.name || 'Deleted Product'} ×{item.quantity}
                                             </p>
                                         ))}
                                     </td>
-                                    <td className="px-5 py-4 text-gray-600 text-xs">
+                                    <td className="px-4 py-3 text-gray-600 text-xs">
                                         {order.address ? (
                                             <>
                                                 <p className="font-medium">{order.address.fullName}</p>
@@ -160,13 +226,13 @@ export default function AdminOrders() {
                                             </>
                                         ) : '—'}
                                     </td>
-                                    <td className="px-5 py-4 font-semibold text-gray-800">
+                                    <td className="px-4 py-3 font-semibold text-gray-800">
                                         {formatCurrency(order.amount)}
                                     </td>
-                                    <td className="px-5 py-4 text-gray-500 text-xs">
+                                    <td className="px-4 py-3 text-gray-500 text-xs">
                                         {new Date(order.date).toLocaleDateString()}
                                     </td>
-                                    <td className="px-5 py-4">
+                                    <td className="px-4 py-3">
                                         <select
                                             value={order.riderId || ''}
                                             disabled={updatingId === order._id || (!order.actions?.canAssignRider && !order.riderId)}
@@ -185,7 +251,7 @@ export default function AdminOrders() {
                                             ))}
                                         </select>
                                     </td>
-                                    <td className="px-5 py-4">
+                                    <td className="px-4 py-3">
                                         <div className="space-y-2">
                                             <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getOrderStatusBadgeClass(order.status)}`}>
                                                 {getOrderStatusDisplay(order.status)}
