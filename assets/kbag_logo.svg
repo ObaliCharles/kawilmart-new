@@ -1,49 +1,56 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="148" viewBox="0 0 128 148" fill="none">
   <defs>
-    <linearGradient id="kbag-top" x1="64" y1="34" x2="64" y2="96" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FF8A2A"/>
-      <stop offset="1" stop-color="#FF5A12"/>
+    <linearGradient id="kbag-body" x1="64" y1="40" x2="64" y2="141" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8228"/>
+      <stop offset="0.55" stop-color="#FF5211"/>
+      <stop offset="1" stop-color="#F42A06"/>
     </linearGradient>
-    <linearGradient id="kbag-bottom" x1="64" y1="88" x2="64" y2="142" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FB3A0A"/>
-      <stop offset="1" stop-color="#F42405"/>
+    <linearGradient id="kbag-handle" x1="64" y1="9" x2="64" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F05310"/>
+      <stop offset="1" stop-color="#E2430C"/>
     </linearGradient>
-    <linearGradient id="kbag-handle" x1="64" y1="6" x2="64" y2="44" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F4560A"/>
-      <stop offset="1" stop-color="#E8430A"/>
-    </linearGradient>
-    <clipPath id="kbag-body">
-      <path d="M31 36 C31 33 33 31 36 31 L92 31 C95 31 97 33 97 36 L106 132 C106.5 137 102.5 141 97.5 141 L30.5 141 C25.5 141 21.5 137 22 132 Z"/>
+    <clipPath id="kbag-clip">
+      <path d="M36 40 L92 40 C94.8 40 97.1 42.1 97.4 44.9 L104.6 132.4 C105 136.9 101.5 140.8 97 140.8 L31 140.8 C26.5 140.8 23 136.9 23.4 132.4 L30.6 44.9 C30.9 42.1 33.2 40 36 40 Z"/>
     </clipPath>
   </defs>
 
-  <!-- Handle -->
-  <path d="M45 42 L45 30 C45 18.5 53.5 10 64 10 C74.5 10 83 18.5 83 30 L83 42"
-        stroke="url(#kbag-handle)" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <!-- Handle (behind the bag) -->
+  <path d="M49 44 L49 28.5 C49 17.2 55.6 9 64 9 C72.4 9 79 17.2 79 28.5 L79 44"
+        stroke="url(#kbag-handle)" stroke-width="9.5" stroke-linecap="round" fill="none"/>
 
-  <!-- Bag body: top zone -->
-  <path d="M31 36 C31 33 33 31 36 31 L92 31 C95 31 97 33 97 36 L106 132 C106.5 137 102.5 141 97.5 141 L30.5 141 C25.5 141 21.5 137 22 132 Z"
-        fill="url(#kbag-top)"/>
+  <!-- Bag body -->
+  <path d="M36 40 L92 40 C94.8 40 97.1 42.1 97.4 44.9 L104.6 132.4 C105 136.9 101.5 140.8 97 140.8 L31 140.8 C26.5 140.8 23 136.9 23.4 132.4 L30.6 44.9 C30.9 42.1 33.2 40 36 40 Z"
+        fill="url(#kbag-body)"/>
 
-  <!-- Bottom zone with curved seam -->
-  <g clip-path="url(#kbag-body)">
-    <path d="M14 96 C42 106 84 84 114 94 L114 148 L14 148 Z" fill="url(#kbag-bottom)"/>
-    <path d="M14 96 C42 106 84 84 114 94" stroke="#FFD37A" stroke-width="1.6" fill="none" opacity="0.9"/>
+  <g clip-path="url(#kbag-clip)">
+    <!-- Slightly deeper red below the seam -->
+    <path d="M18 98 C44 107 88 100 110 91.5 L114 148 L14 148 Z" fill="#F22505" opacity="0.35"/>
+    <!-- Thin gold seam line, dipping in the middle -->
+    <path d="M18 98 C44 107 88 100 110 91.5" stroke="#FFDFA0" stroke-width="1.7" fill="none" opacity="0.95"/>
 
-    <!-- Embossed K (tone on tone) -->
-    <g opacity="0.55">
-      <path d="M52 50 L63 50 L60 86 L58 108 L47 108 L50 74 Z" fill="#E8430A"/>
-      <path d="M84 50 L96 50 L70 79 L60 86 L62 68 Z" fill="#E8430A"/>
-    </g>
-    <!-- White brush stroke: lower leg of the K -->
-    <path d="M60 82 C66 88 74 96 84 101 C88 103 92 104 95 104 C92 108 86 109 80 107 C70 103 61 95 55 87 C56 84 58 82 60 82 Z"
-          fill="#FFFFFF"/>
-    <path d="M55 87 C58 83 60 82 63 84 L58 92 Z" fill="#FFFFFF"/>
+    <!-- Black K: slanted stem + upper arm, rounded terminals -->
+    <path d="M66.5 53 L58 103" stroke="#0C0B10" stroke-width="12" stroke-linecap="round"/>
+    <path d="M63 79.5 L86.5 54" stroke="#0C0B10" stroke-width="11.5" stroke-linecap="round"/>
+
+    <!-- White brush-stroke lower leg: chunky wave nestled in the joint,
+         tapering to a pointed, up-flicked tip -->
+    <path d="M64.5 73.5
+             C67 81 71.5 87.5 78 91.4
+             C83 94.3 88.3 94.4 92.8 91.2
+             C92.4 97.6 86.8 102.2 79.6 101.2
+             C69.6 99.7 61.6 90.4 59.4 79.6
+             C60.8 76.4 62.4 74.3 64.5 73.5 Z"
+          fill="#FFFDF6"/>
   </g>
 
-  <!-- Sparkles -->
-  <path d="M97 102 L99.4 111.6 L109 114 L99.4 116.4 L97 126 L94.6 116.4 L85 114 L94.6 111.6 Z" fill="#FFFFFF"/>
-  <path d="M88 90 L89.4 95 L94.4 96.4 L89.4 97.8 L88 102.8 L86.6 97.8 L81.6 96.4 L86.6 95 Z" fill="#FFFFFF" opacity="0.95"/>
-  <path d="M104 88 L105 91.4 L108.4 92.4 L105 93.4 L104 96.8 L103 93.4 L99.6 92.4 L103 91.4 Z" fill="#FFF3D6" opacity="0.9"/>
-  <circle cx="93" cy="129" r="1.6" fill="#FFFFFF" opacity="0.85"/>
+  <!-- Big black sparkle: tall 4-point star with concave sides -->
+  <path d="M91.5 84 Q93 103 104.5 106.5 Q93 110 91.5 134 Q90 110 78.5 106.5 Q90 103 91.5 84 Z" fill="#0C0B10"/>
+  <!-- Small black 4-point star -->
+  <path d="M72.5 109.5 Q73.6 115.6 79 117.2 Q73.6 118.8 72.5 125 Q71.4 118.8 66 117.2 Q71.4 115.6 72.5 109.5 Z" fill="#0C0B10"/>
+
+  <!-- Tiny white sparkles around the big star -->
+  <path d="M97.5 87.5 Q98.2 91.6 101.2 92.5 Q98.2 93.4 97.5 97.5 Q96.8 93.4 93.8 92.5 Q96.8 91.6 97.5 87.5 Z" fill="#FFFFFF"/>
+  <path d="M99.5 101.5 Q99.9 103.9 101.7 104.4 Q99.9 104.9 99.5 107.3 Q99.1 104.9 97.3 104.4 Q99.1 103.9 99.5 101.5 Z" fill="#FFFFFF" opacity="0.95"/>
+  <path d="M81.5 122.5 Q82 125.2 84.2 125.8 Q82 126.4 81.5 129 Q81 126.4 78.8 125.8 Q81 125.2 81.5 122.5 Z" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="95.5" cy="112.5" r="1.1" fill="#FFFFFF" opacity="0.85"/>
 </svg>
