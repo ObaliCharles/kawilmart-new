@@ -84,6 +84,57 @@ const SearchIcon = () => (
   </svg>
 );
 
+const getSuggestionImage = (product) => {
+  const image = Array.isArray(product?.image) ? product.image[0] : product?.image;
+  if (typeof image === "string" && image.trim()) return image.trim();
+  return null;
+};
+
+// Instant search suggestions: product matches (name-prefix first) shown while
+// typing, so shoppers reach a product without ever submitting the search.
+const SearchSuggestions = ({ suggestions, query, onPickProduct, onSubmit, formatCurrency }) => {
+  if (!suggestions.length) return null;
+  return (
+    <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.14)]">
+      {suggestions.map((product) => {
+        const image = getSuggestionImage(product);
+        return (
+          <button
+            key={product._id}
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); onPickProduct(product); }}
+            className="flex w-full items-center gap-3 border-b border-gray-50 px-3 py-2 text-left transition hover:bg-orange-50/60"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-50">
+              {image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={image} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" />
+              ) : (
+                <SearchIcon />
+              )}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="line-clamp-1 text-[12.5px] font-medium text-gray-900">{product.name}</span>
+              <span className="text-[11px] text-gray-400">{product.category}</span>
+            </span>
+            <span className="shrink-0 text-[12px] font-bold text-gray-950">
+              {formatCurrency(product.offerPrice || product.price)}
+            </span>
+          </button>
+        );
+      })}
+      <button
+        type="button"
+        onMouseDown={(e) => { e.preventDefault(); onSubmit(); }}
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-600 transition hover:bg-orange-50/60"
+      >
+        <SearchIcon />
+        See all results for &ldquo;{query}&rdquo;
+      </button>
+    </div>
+  );
+};
+
 // Animated placeholder overlay: shows "Search "<product name>"" where the
 // name rotates and each new name rolls up + fades in (via .animate-search-hint,
 // re-mounted by the `key`). Rendered only when the input is empty and unfocused.
@@ -387,6 +438,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
     refreshUnreadNotifications,
     markAllNotificationsAsRead,
     products,
+    formatCurrency,
   } = appContext;
   const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded: isAuthLoaded } = useAuth();
@@ -430,6 +482,42 @@ const Navbar = ({ hideMobileHeader = false }) => {
   const currentPlaceholderWord = searchPlaceholderNames.length
     ? searchPlaceholderNames[placeholderIndex % searchPlaceholderNames.length]
     : "";
+
+  // Live suggestions while typing: name matches first (prefix beats infix),
+  // then category matches fill remaining slots.
+  const searchSuggestions = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (query.length < 2) return [];
+
+    const prefix = [];
+    const infix = [];
+    const categoryHits = [];
+    for (const product of products) {
+      const name = String(product?.name || "").toLowerCase();
+      const category = String(product?.category || "").toLowerCase();
+      if (name.startsWith(query)) prefix.push(product);
+      else if (name.includes(query)) infix.push(product);
+      else if (category.includes(query)) categoryHits.push(product);
+      if (prefix.length >= 6) break;
+    }
+    return [...prefix, ...infix, ...categoryHits].slice(0, 6);
+  }, [products, searchQuery]);
+  const showSuggestions = searchFocused && searchSuggestions.length > 0;
+
+  const pickSuggestedProduct = (product) => {
+    setSearchQuery('');
+    setIsMobileSearchOpen(false);
+    closeDropdown();
+    navigate(`/product/${product._id}`);
+  };
+
+  const submitSearchQuery = () => {
+    if (!searchQuery.trim()) return;
+    closeDropdown();
+    navigate(`/all-products?search=${encodeURIComponent(searchQuery)}`);
+    setSearchQuery('');
+    setIsMobileSearchOpen(false);
+  };
   const showSearchHint = !searchQuery && !searchFocused && Boolean(currentPlaceholderWord);
   // Static fallback placeholder kept on the input for accessibility; the
   // animated overlay covers it when visible.
@@ -606,7 +694,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
         { label: "Track Order", href: "/my-orders", icon: "track" },
         showRider ? { label: "Deliveries", href: "/dashboard/rider", icon: "delivery" } : { label: "Deliveries", href: "/my-orders", icon: "delivery" },
         { label: "Returns & Refunds", href: "/legal#terms", icon: "returns" },
-        { label: "Wishlist", href: "/all-products", icon: "wishlist" },
+        { label: "Wishlist", href: "/wishlist", icon: "wishlist" },
       ],
     },
     {
@@ -770,13 +858,22 @@ const Navbar = ({ hideMobileHeader = false }) => {
             <button type="submit" className="self-stretch bg-orange-600 px-6 text-[13px] font-semibold text-white transition hover:bg-orange-700">
               Search
             </button>
+            {showSuggestions ? (
+              <SearchSuggestions
+                suggestions={searchSuggestions}
+                query={searchQuery.trim()}
+                onPickProduct={pickSuggestedProduct}
+                onSubmit={submitSearchQuery}
+                formatCurrency={formatCurrency}
+              />
+            ) : null}
           </form>
 
           <div className="ml-auto hidden items-center gap-4 md:flex">
             {isAuthenticated ? (
               <>
                 <NavAction label="Orders" onClick={() => navigate('/my-orders')}><BagIcon /></NavAction>
-                <NavAction label="Saved" onClick={() => navigate('/all-products')}><HeartIcon /></NavAction>
+                <NavAction label="Saved" onClick={() => navigate('/wishlist')}><HeartIcon /></NavAction>
                 <NotificationPopover
                   unreadCount={unreadNotificationsCount}
                   notifications={recentNotifications}
@@ -798,20 +895,31 @@ const Navbar = ({ hideMobileHeader = false }) => {
             )}
           </div>
 
-          <form onSubmit={handleSearch} className="flex min-w-0 flex-[1_1_0%] items-center rounded-lg border border-gray-200 bg-white px-3 md:hidden">
+          <form onSubmit={handleSearch} className="relative flex min-w-0 flex-[1_1_0%] items-center rounded-lg border border-gray-200 bg-white px-3 md:hidden">
             <SearchIcon />
-            <div className="relative min-w-0 flex-1 px-2">
-              <AnimatedSearchHint visible={showSearchHint} word={currentPlaceholderWord} textSize="text-xs" />
-              <input
-                type="text"
-                placeholder={searchInputPlaceholder}
-                value={searchQuery}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="min-w-0 w-full py-2.5 text-xs outline-none placeholder:text-gray-400"
-              />
+            <div className="min-w-0 flex-1 px-2">
+              <div className="relative">
+                <AnimatedSearchHint visible={showSearchHint} word={currentPlaceholderWord} textSize="text-xs" />
+                <input
+                  type="text"
+                  placeholder={searchInputPlaceholder}
+                  value={searchQuery}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="min-w-0 w-full py-2.5 text-xs outline-none placeholder:text-gray-400"
+                />
+              </div>
             </div>
+            {showSuggestions ? (
+              <SearchSuggestions
+                suggestions={searchSuggestions}
+                query={searchQuery.trim()}
+                onPickProduct={pickSuggestedProduct}
+                onSubmit={submitSearchQuery}
+                formatCurrency={formatCurrency}
+              />
+            ) : null}
           </form>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 md:hidden">

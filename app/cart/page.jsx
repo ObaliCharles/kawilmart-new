@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { assets } from "@/assets/assets";
 import OrderSummary from "@/components/OrderSummary";
 import Image from "next/image";
@@ -7,6 +7,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAppContext } from "@/context/AppContext";
 import Skeleton from "@/components/Skeleton";
+import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
+import { sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 
 const getProductImage = (product) => {
   const image = Array.isArray(product?.image) ? product.image[0] : product?.image;
@@ -49,6 +51,24 @@ const Cart = () => {
   const visibleCartItemIds = Object.keys(resolvedCartItems).filter((itemId) => resolvedCartItems[itemId] > 0);
   const isCartHydrating = loadingUser || (loadingProducts && visibleCartItemIds.length > 0);
   const cartCount = getCartCount();
+
+  // Cross-sell: best performers from the same categories as the cart items.
+  const crossSellProducts = useMemo(() => {
+    if (!visibleCartItemIds.length || !products.length) return [];
+    const inCart = new Set(visibleCartItemIds);
+    const cartCategories = [...new Set(
+      visibleCartItemIds
+        .map((itemId) => products.find((entry) => entry._id === itemId)?.category)
+        .filter(Boolean)
+    )];
+    if (!cartCategories.length) return [];
+    return sortProductsForLiveShowcase(
+      products.filter((product) => !inCart.has(product._id)
+        && cartCategories.some((category) => categoryMatchesSelection(product.category, category)))
+    ).slice(0, 8);
+    // visibleCartItemIds is derived fresh each render from resolvedCartItems.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products, resolvedCartItems]);
 
   return (
     <>
@@ -119,6 +139,32 @@ const Cart = () => {
               <OrderSummary />
             </div>
           </div>
+
+          {crossSellProducts.length > 0 ? (
+            <section className="mt-6">
+              <h2 className="mb-2.5 text-sm font-bold text-gray-950">You may also like</h2>
+              <div className="scrollbar-none flex gap-2.5 overflow-x-auto pb-1">
+                {crossSellProducts.map((product) => (
+                  <div key={`cross-${product._id}`} className="w-[7.6rem] shrink-0 rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-100">
+                    <button type="button" onClick={() => navigate(`/product/${product._id}`)} className="block w-full text-left">
+                      <span className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-50">
+                        <CartProductImage product={product} />
+                      </span>
+                      <span className="mt-1.5 line-clamp-1 block text-[11px] font-semibold text-gray-900">{product.name}</span>
+                      <span className="block text-[11.5px] font-bold text-gray-950">{formatCurrency(product.offerPrice || product.price)}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void addToCart(product._id)}
+                      className="mt-1.5 w-full rounded-full bg-orange-50 py-1.5 text-[10.5px] font-bold text-orange-700 transition hover:bg-orange-100"
+                    >
+                      Add
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       </main>
       <Footer />

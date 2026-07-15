@@ -13,8 +13,38 @@ import { resolveSiteContent } from "@/lib/defaultSiteContent";
 import { categoryMatchesSelection, homeCategoryValues, getCategoryMeta, homeTopRailDefaults, TOP_RAIL_PARENT } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 import { getProductStockSnapshot } from "@/lib/productStock";
+import { getRecentlyViewedIds } from "@/lib/recentlyViewed";
 
 const takeProducts = (products, count) => products.slice(0, count);
+
+// Compact horizontal product strip — used for "Recently viewed" and other
+// lightweight rails. Scrolls sideways; each tile links to the product.
+const ProductStripRail = ({ title, products, navigate, prefetchRoute, formatCurrency, className = "" }) => {
+  if (!products.length) return null;
+  return (
+    <section className={className}>
+      <h2 className="mb-3 text-base font-bold text-gray-950 md:text-lg">{title}</h2>
+      <div className="scrollbar-none flex gap-2.5 overflow-x-auto pb-1">
+        {products.map((product) => (
+          <button
+            key={`strip-${product._id}`}
+            type="button"
+            onClick={() => navigate(`/product/${product._id}`)}
+            onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
+            onFocus={() => prefetchRoute(`/product/${product._id}`)}
+            className="w-[7.2rem] shrink-0 rounded-xl bg-white p-2 text-left shadow-sm ring-1 ring-gray-100 transition hover:shadow-md md:w-[8.5rem]"
+          >
+            <span className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-50">
+              <ProductImage product={product} alt={product.name} width={130} height={130} className="h-full w-full object-contain p-1" />
+            </span>
+            <span className="mt-1.5 line-clamp-1 block text-[11px] font-semibold text-gray-900">{product.name}</span>
+            <span className="block text-[11.5px] font-bold text-gray-950">{formatCurrency(getPriceValue(product.offerPrice || product.price))}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 const uniqueById = (products) => {
   const seen = new Set();
@@ -605,6 +635,7 @@ const MobileHome = ({
   hasCountdown,
   homeCategoryRail = [],
   topRailTiles = [],
+  recentlyViewedProducts = [],
   navigate,
   prefetchRoute,
   formatCurrency,
@@ -713,6 +744,15 @@ const MobileHome = ({
           </button>
         </div>
       </section>
+
+      <ProductStripRail
+        title="Recently viewed"
+        products={recentlyViewedProducts}
+        navigate={navigate}
+        prefetchRoute={prefetchRoute}
+        formatCurrency={formatCurrency}
+        className="mt-8"
+      />
 
       {hasRealPromo ? (
         <button
@@ -1160,6 +1200,11 @@ const FlashCountdown = ({ timeLeft, size = "md" }) => {
 
 const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike, customTopCategories, subcategoriesByParent } = useAppContext();
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState([]);
+
+  useEffect(() => {
+    setRecentlyViewedIds(getRecentlyViewedIds());
+  }, []);
   const resolvedContent = useMemo(() => resolveSiteContent(siteContent), [siteContent]);
   // Real top-level categories (the static marketplace list plus any the admin
   // added), each with its icon/image — replaces the old hardcoded category
@@ -1210,6 +1255,15 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       }));
     return [...staticTiles, ...customTiles];
   }, [subcategoriesByParent]);
+  // Recently viewed products, most recent first (needs 2+ to feel like a rail).
+  const recentlyViewedProducts = useMemo(() => {
+    if (recentlyViewedIds.length < 2 || !products.length) return [];
+    const productsById = new Map(products.map((product) => [String(product._id), product]));
+    return recentlyViewedIds
+      .map((id) => productsById.get(id))
+      .filter(Boolean)
+      .slice(0, 10);
+  }, [recentlyViewedIds, products]);
   const storefrontProducts = products.length
     ? products
     : initialProducts.length
@@ -1409,6 +1463,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       hasCountdown={earliestDealDeadline > now}
       homeCategoryRail={homeCategoryRail}
       topRailTiles={topRailTiles}
+      recentlyViewedProducts={recentlyViewedProducts}
       navigate={navigate}
       prefetchRoute={prefetchRoute}
       formatCurrency={formatCurrency}
@@ -1532,6 +1587,15 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
           items={marketingBanners}
           navigate={navigate}
           prefetchRoute={prefetchRoute}
+          className="mt-8"
+        />
+
+        <ProductStripRail
+          title="Recently viewed"
+          products={recentlyViewedProducts}
+          navigate={navigate}
+          prefetchRoute={prefetchRoute}
+          formatCurrency={formatCurrency}
           className="mt-8"
         />
 

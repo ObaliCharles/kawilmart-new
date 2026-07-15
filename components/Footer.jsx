@@ -34,9 +34,9 @@ const footerColumns = [
     links: [
       ["My Account", "/my-orders"],
       ["Orders", "/my-orders"],
-      ["Wishlist", "/all-products"],
+      ["Wishlist", "/wishlist"],
       ["Track Order", "/my-orders"],
-      ["Saved Items", "/all-products"],
+      ["Saved Items", "/wishlist"],
     ],
   },
   {

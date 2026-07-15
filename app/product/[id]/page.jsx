@@ -14,6 +14,8 @@ import ProductActivityChips from "@/components/ProductActivityChips";
 import SellerTrustBadge from "@/components/SellerTrustBadge";
 import { getLocationLabel, getProductActivitySnapshot, sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 import { getProductStockSnapshot } from "@/lib/productStock";
+import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
+import { recordRecentlyViewed } from "@/lib/recentlyViewed";
 
 const Product = () => {
 
@@ -89,9 +91,26 @@ const Product = () => {
     const productActivity = productData ? getProductActivitySnapshot(productData) : null;
     const stockSnapshot = productData ? getProductStockSnapshot(productData) : null;
     const isOutOfStock = stockSnapshot?.status === 'out';
-    const relatedProducts = sortProductsForLiveShowcase(
-        products.filter((product) => product._id !== id)
-    ).slice(0, 5);
+    // Related items: same category first (what "related" actually means to a
+    // shopper), padded with general best-performers only when needed.
+    const sameCategoryProducts = sortProductsForLiveShowcase(
+        products.filter((product) => product._id !== id
+            && categoryMatchesSelection(product.category, productData?.category))
+    );
+    const relatedProducts = sameCategoryProducts.length >= 5
+        ? sameCategoryProducts.slice(0, 5)
+        : [
+            ...sameCategoryProducts,
+            ...sortProductsForLiveShowcase(
+                products.filter((product) => product._id !== id
+                    && !sameCategoryProducts.some((entry) => entry._id === product._id))
+            ),
+        ].slice(0, 5);
+    const relatedTitleIsCategory = sameCategoryProducts.length >= 3;
+
+    useEffect(() => {
+        recordRecentlyViewed(id);
+    }, [id]);
 
     useEffect(() => {
         return () => {
@@ -355,7 +374,11 @@ const Product = () => {
             </div>
             <div className="flex flex-col items-center">
                 <div className="flex flex-col items-center mb-4 mt-16">
-                    <p className="text-center text-2xl font-medium sm:text-3xl">Hot <span className="font-medium text-orange-600">Right Now</span></p>
+                    <p className="text-center text-2xl font-medium sm:text-3xl">
+                        {relatedTitleIsCategory
+                            ? <>More in <span className="font-medium text-orange-600">{productData.category}</span></>
+                            : <>Hot <span className="font-medium text-orange-600">Right Now</span></>}
+                    </p>
                     <div className="w-28 h-0.5 bg-orange-600 mt-2"></div>
                 </div>
                 <div className="mt-6 grid w-full grid-cols-1 gap-3 pb-14 min-[340px]:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 xl:gap-6">
@@ -370,6 +393,42 @@ const Product = () => {
                     See more
                 </button>
             </div>
+        </div>
+
+        {/* Sticky mobile buy bar: price + actions always reachable above the dock */}
+        <div className="fixed inset-x-0 bottom-[4.55rem] z-30 flex items-center gap-2.5 border-t border-gray-100 bg-white/95 px-3 py-2 backdrop-blur md:hidden">
+            <div className="min-w-0 shrink-0">
+                <p className="text-[14px] font-black leading-tight text-gray-950">{formatCurrency(productData.offerPrice || productData.price)}</p>
+                {productActivity?.hasDiscount ? (
+                    <p className="text-[10px] font-medium text-gray-400 line-through">{formatCurrency(productData.price)}</p>
+                ) : null}
+            </div>
+            <button
+                onClick={handleAddToCart}
+                disabled={!!cartAction || isOutOfStock}
+                className={`min-w-0 flex-1 rounded-full py-2.5 text-[12px] font-bold transition ${
+                    isOutOfStock
+                        ? 'cursor-not-allowed bg-slate-100 text-slate-500'
+                        : cartAction
+                        ? 'cursor-wait bg-gray-200 text-gray-500'
+                        : addedFeedback
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-orange-600 text-white'
+                }`}
+            >
+                {isOutOfStock ? 'Sold out' : cartAction === 'add' ? 'Adding...' : addedFeedback ? 'Added ✓' : 'Add to cart'}
+            </button>
+            <button
+                onClick={handleBuyNow}
+                disabled={!!cartAction || isOutOfStock}
+                className={`min-w-0 flex-1 rounded-full border-2 py-2 text-[12px] font-bold transition ${
+                    isOutOfStock
+                        ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500'
+                        : 'border-orange-600 bg-white text-orange-600'
+                }`}
+            >
+                {cartAction === 'buy' ? 'Adding...' : 'Buy now'}
+            </button>
         </div>
         <Footer />
     </>
