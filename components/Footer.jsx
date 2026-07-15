@@ -69,13 +69,42 @@ const SocialIconRow = ({ className = "" }) => (
         key={key}
         href={href}
         aria-label={label}
-        className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/10 transition hover:bg-white/20"
+        className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm transition hover:scale-105 hover:shadow-md"
       >
-        <Image src={assets[icon]} alt="" width={16} height={16} className="h-4 w-4 object-contain" />
+        <Image src={assets[icon]} alt="" width={22} height={22} className="h-[22px] w-[22px] object-contain" />
       </a>
     ))}
   </div>
 );
+
+// Brand-styled payment marks — rendered on white chips so they read as the
+// real Visa / Mastercard / MTN / Airtel logos rather than plain text pills.
+const PaymentMarks = ({ className = "" }) => {
+  const marks = [
+    { key: "visa", node: <span className="text-[13px] font-black italic tracking-tight text-[#1A1F71]">VISA</span> },
+    {
+      key: "mastercard",
+      node: (
+        <span className="flex items-center">
+          <span className="h-4 w-4 rounded-full bg-[#EB001B]" />
+          <span className="-ml-1.5 h-4 w-4 rounded-full bg-[#F79E1B] mix-blend-multiply" />
+        </span>
+      ),
+    },
+    { key: "mtn", node: <span className="rounded-sm bg-[#FFCC00] px-1 py-0.5 text-[10px] font-black leading-none text-black">MTN</span> },
+    { key: "airtel", node: <span className="text-[12px] font-black lowercase tracking-tight text-[#E40000]">airtel</span> },
+  ];
+
+  return (
+    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
+      {marks.map(({ key, node }) => (
+        <span key={key} className="flex h-8 min-w-[3rem] items-center justify-center rounded-md bg-white px-2.5 shadow-sm">
+          {node}
+        </span>
+      ))}
+    </div>
+  );
+};
 
 const NewsletterForm = ({ idPrefix = "" }) => {
   const [email, setEmail] = useState("");
@@ -145,20 +174,9 @@ const Footer = () => {
       <footer className="bg-white px-3 pb-24 pt-2 text-slate-300 md:hidden">
         <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(135deg,#0f172a_0%,#111827_100%)] shadow-[0_20px_60px_rgba(15,23,42,0.2)]">
           <div className="px-5 py-6">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 p-1.5 ring-1 ring-white/15">
-                  <Image className="h-full w-full object-contain" src={assets.logo} alt="KawilMart" width={44} height={44} />
-                </div>
-                <div>
-                  <p className="text-base font-extrabold text-white">KawilMart</p>
-                  <p className="text-[11px] uppercase tracking-[0.25em] text-orange-400">Marketplace</p>
-                </div>
-              </div>
-              <span className="rounded-full border border-orange-400/30 bg-orange-500/10 px-2.5 py-1 text-[10px] font-semibold text-orange-300">
-                Trusted deals
-              </span>
-            </div>
+            <span className="inline-flex items-center rounded-lg bg-white px-3 py-2">
+              <Image className="h-7 w-auto object-contain" src={assets.logo} alt="KawilMart" width={112} height={30} />
+            </span>
 
             <p className="mt-4 text-[13px] leading-6 text-slate-300">
               Discover verified shopping, fast delivery, and everyday value across fashion, electronics, home essentials, and more.
@@ -196,15 +214,9 @@ const Footer = () => {
       <footer className="hidden bg-[linear-gradient(135deg,#0f172a_0%,#111827_100%)] text-slate-300 md:block">
         <div className="mx-auto grid max-w-[1500px] gap-8 px-5 py-10 sm:px-6 lg:grid-cols-[1.35fr_repeat(5,1fr)_1.2fr] lg:px-5">
           <div className="max-w-sm">
-            <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-2.5 shadow-sm">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 p-1.5">
-                <Image className="h-full w-full object-contain" src={assets.logo} alt="KawilMart" width={44} height={44} />
-              </div>
-              <div>
-                <p className="text-lg font-extrabold text-white">KawilMart</p>
-                <p className="text-[11px] uppercase tracking-[0.25em] text-orange-400">Marketplace</p>
-              </div>
-            </div>
+            <span className="inline-flex items-center rounded-lg bg-white px-3.5 py-2.5">
+              <Image className="h-8 w-auto object-contain" src={assets.logo} alt="KawilMart" width={128} height={34} />
+            </span>
             <p className="mt-4 text-[13px] leading-6 text-slate-300">
               Your trusted place for modern shopping, top brands, and everyday convenience.
             </p>
@@ -232,13 +244,7 @@ const Footer = () => {
             <NewsletterForm idPrefix="desktop-" />
             <div className="mt-6">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Payment</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {['VISA', 'Mastercard', 'MTN', 'Airtel'].map((item) => (
-                  <span key={item} className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[11px] font-bold text-slate-200">
-                    {item}
-                  </span>
-                ))}
-              </div>
+              <PaymentMarks className="mt-2" />
             </div>
           </div>
         </div>

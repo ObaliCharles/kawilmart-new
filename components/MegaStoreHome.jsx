@@ -759,7 +759,7 @@ const MobileHome = ({
       {dealOfDay && dealOfDayActivity?.flashDealActive ? (
         <section
           onClick={() => navigate(`/product/${dealOfDay._id}`)}
-          className="relative mt-6 flex min-h-[11rem] cursor-pointer overflow-hidden rounded-lg bg-[#101923] text-white shadow-sm"
+          className="relative mt-6 flex min-h-[11rem] cursor-pointer items-stretch overflow-hidden rounded-lg bg-[#101923] text-white shadow-sm"
         >
           {activeDealOfDayBanner ? (
             <>
@@ -771,27 +771,30 @@ const MobileHome = ({
                 className="absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+              {dealOfDayActivity.flashDealCountdownLabel ? (
+                <div className="relative z-10 flex items-end p-6">
+                  <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
+                </div>
+              ) : null}
             </>
           ) : (
-            <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="absolute bottom-5 right-2 h-40 w-40 object-contain" />
-          )}
-          <div className="relative z-10 max-w-[58%] px-6 py-7">
-            {dealOfDayActivity.flashDealCountdownLabel ? (
-              <div className="mt-4">
-                <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
-              </div>
-            ) : null}
-            {!activeDealOfDayBanner ? (
-              <>
-                <p className="mt-4 line-clamp-2 text-sm font-bold">{dealOfDay.name}</p>
-                <p className="mt-3 text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
-                {dealOfDayActivity.hasDiscount ? (
-                  <p className="mt-3 text-sm font-extrabold text-orange-500">{dealOfDayActivity.priceDropPercent}% OFF</p>
+            <>
+              <span className="flex w-2/5 shrink-0 items-center justify-center bg-white/5 p-4">
+                <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="h-full max-h-36 w-full object-contain" />
+              </span>
+              <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center px-5 py-6">
+                {dealOfDayActivity.flashDealCountdownLabel ? (
+                  <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
                 ) : null}
-                <span className="mt-2 block text-[11px] text-white/75">{getProductStockSnapshot(dealOfDay).label}</span>
-              </>
-            ) : null}
-          </div>
+                <p className="mt-3 line-clamp-2 text-sm font-bold">{dealOfDay.name}</p>
+                <p className="mt-2 text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
+                {dealOfDayActivity.hasDiscount ? (
+                  <p className="mt-1 text-sm font-extrabold text-orange-400">{dealOfDayActivity.priceDropPercent}% OFF</p>
+                ) : null}
+                <span className="mt-1 block text-[11px] text-white/75">{getProductStockSnapshot(dealOfDay).label}</span>
+              </div>
+            </>
+          )}
         </section>
       ) : null}
 

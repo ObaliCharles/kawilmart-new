@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { useAppContext } from '@/context/AppContext';
 import { getProductStockSnapshot } from '@/lib/productStock';
 import { getProductRatingSnapshot } from '@/lib/productRating';
-import { getProductActivitySnapshot, getSystemTags } from '@/lib/liveCommerce';
 
 const tagToneClasses = {
     orange: "bg-orange-50 text-orange-700 border-orange-200",
@@ -40,14 +39,12 @@ const ProductCard = ({ product }) => {
     const isOutOfStock = stockSnapshot.status === 'out';
     const { rating, reviewCount, hasRating, filledStars } = getProductRatingSnapshot(product);
     const soldCount = Math.max(0, Number(product.soldCount) || 0);
-    const activity = getProductActivitySnapshot(product);
-    const showCountdown = activity.flashDealActive && activity.flashDealCountdownLabel;
-    const manualTags = Array.isArray(product.tags)
+    // Only admin-set merchandising tags render as badges — computed "system"
+    // labels (New Arrival / flash-deal / trending) are intentionally not shown
+    // on the card.
+    const badgeTags = (Array.isArray(product.tags)
       ? product.tags.map((slug) => tagsBySlug.get(slug)).filter(Boolean)
-      : [];
-    const manualTagSlugs = new Set(manualTags.map((tag) => tag.slug));
-    const systemTags = getSystemTags(product).filter((tag) => !manualTagSlugs.has(tag.slug));
-    const badgeTags = [...manualTags, ...systemTags].slice(0, 3);
+      : []).slice(0, 3);
     const stockBarWidth = stockSnapshot.status === "out"
       ? 0
       : stockSnapshot.status === "low"
@@ -130,14 +127,9 @@ const ProductCard = ({ product }) => {
                     placeholder="blur"
                     blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+IRjWjBqO6O2mhP//Z"
                 />
-                <span className={`absolute left-0 top-0 rounded-br-md rounded-tl-md px-2.5 py-1 text-xs font-bold text-white ${
-                    discountPercent ? "bg-rose-500" : "bg-green-500"
-                }`}>
-                    {discountPercent ? `-${discountPercent}%` : "NEW"}
-                </span>
-                {showCountdown ? (
-                    <span className="absolute bottom-1.5 left-1.5 right-1.5 rounded-md bg-gray-950/80 px-2 py-1 text-center text-[10px] font-semibold text-white backdrop-blur-sm">
-                        Ends in {activity.flashDealCountdownLabel}
+                {discountPercent ? (
+                    <span className="absolute left-0 top-0 rounded-br-md rounded-tl-md bg-rose-500 px-2.5 py-1 text-xs font-bold text-white">
+                        -{discountPercent}%
                     </span>
                 ) : null}
                 <button

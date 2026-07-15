@@ -90,9 +90,9 @@ const SearchIcon = () => (
 const AnimatedSearchHint = ({ visible, word, textSize = "text-[13px]" }) => {
   if (!visible || !word) return null;
   return (
-    <span className={`pointer-events-none absolute inset-y-0 left-0 flex items-center overflow-hidden whitespace-nowrap text-gray-400 ${textSize}`} aria-hidden="true">
-      <span>Search </span>
-      <span key={word} className="animate-search-hint ml-1 inline-block font-medium text-gray-500">&ldquo;{word}&rdquo;</span>
+    <span className={`pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-nowrap text-gray-400 ${textSize}`} aria-hidden="true">
+      <span className="shrink-0">Search </span>
+      <span key={word} className="animate-search-hint ml-1 inline-block min-w-0 truncate font-medium text-gray-500">&ldquo;{word}&rdquo;</span>
     </span>
   );
 };
