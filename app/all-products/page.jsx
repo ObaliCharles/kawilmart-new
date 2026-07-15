@@ -10,7 +10,6 @@ import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation";
 import { categoryMatchesSelection, getCategoryMeta, marketplaceFilterCategories } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, resolveProductTagSlugs, SYSTEM_TAG_DEFINITIONS } from "@/lib/liveCommerce";
-import { getCategoryExperience } from "@/lib/categoryExperiences";
 import axios from "axios";
 
 const categories = ["All", ...marketplaceFilterCategories];
@@ -625,39 +624,6 @@ function AllProductsInner() {
     : null;
   const resultsLabel = `${filteredProducts.length} result${filteredProducts.length === 1 ? "" : "s"}`;
   const compactHeading = hasActiveSearch || selectedBrand !== "all" || selectedSeller || selectedCondition !== "all" || selectedPriceRange !== 0 || selectedRating > 0 || selectedTags.length > 0;
-  // When a subcategory is chosen we show the plain filtered product grid, not
-  // the category-experience tile layout (which repeated one representative
-  // product across tiles). The category landing view is only for a top-level
-  // category with no subcategory filter.
-  const selectedCategoryMode = selectedCategory !== "All" && !selectedSubcategory && !hasActiveSearch && !selectedSeller;
-  const selectedCategoryPool = useMemo(() => (
-    selectedCategory === "All"
-      ? products
-      : products.filter((product) => categoryMatchesSelection(product.category, selectedCategory))
-  ), [products, selectedCategory]);
-  const selectedCategoryExperience = useMemo(() => (
-    getCategoryExperience(selectedCategoryPool.length ? selectedCategoryPool : products, selectedCategory)
-  ), [selectedCategoryPool, products, selectedCategory]);
-  const realSubcategoryTiles = useMemo(() => {
-    if (!selectedCategoryMeta) return [];
-    const subcategories = (subcategoriesByParent.get(selectedCategoryMeta.value) || [])
-      .filter((subcategory) => subcategory.isActive !== false)
-      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-
-    return subcategories.map((subcategory) => ({
-      label: subcategory.name,
-      subcategory: subcategory.name,
-      icon: subcategory.icon,
-      imageUrl: subcategory.imageUrl || "",
-      count: selectedCategoryPool.filter((product) => product.subcategory === subcategory.name).length,
-      categories: [selectedCategoryMeta.value],
-      description: "",
-    }));
-  }, [subcategoriesByParent, selectedCategoryMeta, selectedCategoryPool]);
-  const useSupermarketMobileDisplay = realSubcategoryTiles.length > 0;
-  const mobileDisplayTiles = useSupermarketMobileDisplay
-    ? realSubcategoryTiles
-    : selectedCategoryExperience.tiles;
   const resetFilters = () => {
     setSelectedCategory("All");
     setSelectedSubcategory("");
@@ -830,151 +796,10 @@ function AllProductsInner() {
     </div>
   );
 
-  // Mobile-only category "browse" experience. Desktop falls through to the
-  // standard filtered product grid below (per the requested split: desktop =
-  // plain grid, mobile = browse page).
-  const mobileCategoryBrowse = selectedCategoryMode ? (
-    <main className="min-h-screen bg-[#f5f7fb] pb-16 lg:hidden">
-      <div className="mx-auto max-w-[1600px] px-3 pt-3 sm:px-4">
-        <div className="min-w-0">
-                <div className="lg:hidden">
-                  {/* Ultra compact search bar */}
-                  <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 shadow-sm">
-                    <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="m21 21-4.2-4.2m1.2-5.3a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                    </svg>
-                    <input
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search..."
-                      className="min-w-0 flex-1 bg-transparent text-[12px] outline-none placeholder:text-gray-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowMobileFilters(true)}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white"
-                      aria-label="Open filters"
-                    >
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M5 7h8m3 0h3M5 17h3m3 0h8M11 5v4m0 6v4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Ultra compact category rail */}
-                  <div className="scrollbar-none mt-2 flex gap-1.5 overflow-x-auto pb-1">
-                    <button
-                      type="button"
-                      onClick={() => navigate("/all-products")}
-                      className="flex h-[3.6rem] min-w-[3.6rem] flex-col items-center justify-center gap-0.5 rounded-lg bg-white px-1 text-center text-[10px] font-bold text-gray-900 shadow-sm ring-1 ring-gray-100"
-                    >
-                      <span className="text-xl leading-none" aria-hidden="true">🛒</span>
-                      <span className="leading-tight">All</span>
-                    </button>
-                    {useSupermarketMobileDisplay ? (
-                      realSubcategoryTiles.map((tile) => (
-                        <button
-                          key={`mobile-subcategory-rail-${tile.label}`}
-                          type="button"
-                          onClick={() => navigate(`/all-products?category=${encodeURIComponent(selectedCategory)}&subcategory=${encodeURIComponent(tile.subcategory)}`)}
-                          className="flex h-[3.6rem] min-w-[4rem] flex-col items-center justify-center gap-0.5 rounded-lg bg-white px-1 text-center text-gray-900 shadow-sm ring-1 ring-gray-100"
-                        >
-                          <span className="text-xl leading-none" aria-hidden="true">{tile.icon || "🏷️"}</span>
-                          <span className="line-clamp-2 text-[10px] font-bold leading-tight">{tile.label}</span>
-                        </button>
-                      ))
-                    ) : (
-                      mobileRailCategories.slice(0, 7).map((category) => {
-                        const meta = getCategoryMeta(category);
-                        const active = selectedCategory === category;
-
-                        return (
-                          <button
-                            key={`mobile-selected-rail-${category}`}
-                            type="button"
-                            onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
-                            className={`flex h-[3.6rem] min-w-[4rem] flex-col items-center justify-center gap-0.5 rounded-lg bg-white px-1 text-center shadow-sm ring-1 ${
-                              active ? "text-orange-700 ring-orange-100" : "text-gray-900 ring-gray-100"
-                            }`}
-                          >
-                            <span className="text-xl leading-none" aria-hidden="true">{meta.icon}</span>
-                            <span className="line-clamp-2 text-[10px] font-bold leading-tight">{meta.label}</span>
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  <div className="mt-5 space-y-4">
-                    {mobileDisplayTiles.slice(0, useSupermarketMobileDisplay ? 3 : 4).map((tile, index) => (
-                      <MobileCategorySection
-                        key={`mobile-display-${tile.label}`}
-                        tile={tile}
-                        products={filteredProducts.length ? filteredProducts : selectedCategoryPool}
-                        experience={selectedCategoryExperience}
-                        index={index}
-                        formatCurrency={formatCurrency}
-                        navigate={navigate}
-                        addToCart={addToCart}
-                      />
-                    ))}
-                  </div>
-
-                  <section className="mt-5 overflow-hidden rounded-[1.35rem] bg-white p-3 shadow-sm">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div>
-                        <h2 className="text-base font-black text-gray-950">{selectedCategoryExperience.meta.label} Picks</h2>
-                        <p className="text-[11px] font-semibold text-gray-500">{formatCount(filteredProducts.length)} products available</p>
-                      </div>
-                      <button type="button" onClick={() => setSelectedCondition("flash")} className="text-[12px] font-black text-orange-600">
-                        View All -&gt;
-                      </button>
-                    </div>
-                    {loadingProducts ? (
-                      <ProductsGridSkeleton showHeader={false} />
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2 min-[520px]:grid-cols-4">
-                        {filteredProducts.slice(0, 8).map((product, index) => {
-                          const theme = mobileSectionThemes[index % mobileSectionThemes.length];
-
-                          return (
-                            <MobileCategoryProductCard
-                              key={keyed("mobile-picks", product, index)}
-                              product={product}
-                              formatCurrency={formatCurrency}
-                              navigate={navigate}
-                              addToCart={addToCart}
-                              theme={theme}
-                              discount={getDiscountPercent(product, 6 + (index % 3) * 2)}
-                            />
-                          );
-                        })}
-                      </div>
-                    )}
-                  </section>
-
-                  {showMobileFilters && (
-                    <div className="fixed inset-0 z-50 bg-black/45" onClick={() => setShowMobileFilters(false)}>
-                      <div className="absolute bottom-0 left-0 right-0 max-h-[82vh] overflow-y-auto rounded-t-3xl bg-white p-5" onClick={(event) => event.stopPropagation()}>
-                        <div className="mb-4 flex items-center justify-between">
-                          <p className="text-lg font-black text-gray-950">Filters</p>
-                          <button type="button" onClick={() => setShowMobileFilters(false)} className="text-2xl font-bold text-gray-400">x</button>
-                        </div>
-                        <FilterPanel />
-                      </div>
-                    </div>
-                  )}
-                </div>
-        </div>
-      </div>
-    </main>
-  ) : null;
-
   return (
     <>
-      <Navbar hideMobileHeader={selectedCategoryMode} />
-      {mobileCategoryBrowse}
-      <div className={`min-h-screen bg-[#f8fafc] pb-24 ${selectedCategoryMode ? "hidden lg:block" : ""}`}>
+      <Navbar />
+      <div className="min-h-screen bg-[#f8fafc] pb-24">
         <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 md:px-6 md:py-5 lg:px-8">
           <div className="mb-3 flex items-center gap-1.5 text-[11px] text-gray-500">
           {hasActiveSearch ? (
