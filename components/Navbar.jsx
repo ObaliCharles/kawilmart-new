@@ -10,8 +10,43 @@ import { NavbarUserSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { usePathname } from "next/navigation";
 import { buildCategoryHref, homeCategoryValues, getCategoryMeta } from "@/lib/marketplaceCategories";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
-import SearchPanel from "@/components/SearchPanel";
+import SearchPanel, { MobileSearchBody } from "@/components/SearchPanel";
 import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from "@/lib/recentSearches";
+
+// Tolerates a single typo (one insertion, deletion, or substitution) so
+// searches like "nkie" still find "nike".
+const isWithinOneEdit = (a, b) => {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { i += 1; j += 1; continue; }
+    edits += 1;
+    if (edits > 1) return false;
+    if (a.length > b.length) i += 1;
+    else if (b.length > a.length) j += 1;
+    else { i += 1; j += 1; }
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1;
+};
+
+// Ranking per marketplace convention: exact > prefix > word-boundary >
+// substring > fuzzy (typo-tolerant). -1 means no match.
+const getTextMatchScore = (rawText, query) => {
+  const text = String(rawText || "").toLowerCase();
+  if (!text) return -1;
+  if (text === query) return 0;
+  if (text.startsWith(query)) return 1;
+  if (text.includes(` ${query}`)) return 2;
+  if (text.includes(query)) return 3;
+  if (query.length >= 4) {
+    for (const token of text.split(/\s+/)) {
+      if (isWithinOneEdit(token, query)) return 4;
+    }
+  }
+  return -1;
+};
 
 const userButtonAppearance = {
   elements: {
@@ -393,6 +428,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
     cartIconRef,
     cartBumpTick,
     brands,
+    customTopCategories,
   } = appContext;
   const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded: isAuthLoaded } = useAuth();
@@ -434,34 +470,64 @@ const Navbar = ({ hideMobileHeader = false }) => {
     ? searchPlaceholderNames[placeholderIndex % searchPlaceholderNames.length]
     : "";
 
-  // Predictive results while typing, grouped like a real marketplace search:
-  // matching products, brands, and categories, each capped to a handful so
-  // the panel stays scannable.
+  // Predictive results while typing, grouped and ranked like a real
+  // marketplace search (exact > prefix > keyword > fuzzy typo-match), with
+  // matching brands, categories, and seller stores alongside products.
   const predictiveMatches = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return { products: [], brands: [], categories: [] };
+    if (!query) return { products: [], brands: [], categories: [], stores: [] };
 
-    const prefix = [];
-    const infix = [];
+    const scoredProducts = [];
     for (const product of products) {
-      const name = String(product?.name || "").toLowerCase();
-      if (name.startsWith(query)) prefix.push(product);
-      else if (name.includes(query)) infix.push(product);
-      if (prefix.length >= 5) break;
+      const score = getTextMatchScore(product?.name, query);
+      if (score >= 0) scoredProducts.push({ product, score });
     }
-    const productMatches = [...prefix, ...infix].slice(0, 5);
+    const productMatches = scoredProducts
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 5)
+      .map((entry) => entry.product);
 
     const brandMatches = (brands || [])
-      .filter((brand) => String(brand?.name || "").toLowerCase().includes(query))
-      .slice(0, 3);
+      .map((brand) => ({ brand, score: getTextMatchScore(brand?.name, query) }))
+      .filter((entry) => entry.score >= 0)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3)
+      .map((entry) => entry.brand);
 
-    const categoryMatches = homeCategoryValues
-      .map((value) => ({ value, label: getCategoryMeta(value).label }))
-      .filter((category) => category.label.toLowerCase().includes(query))
-      .slice(0, 4);
+    const categoryOptions = [
+      ...homeCategoryValues.map((value) => ({ value, label: getCategoryMeta(value).label })),
+      ...(customTopCategories || []).map((category) => ({ value: category.name, label: category.name })),
+    ];
+    const categoryMatches = categoryOptions
+      .map((category) => ({ category, score: getTextMatchScore(category.label, query) }))
+      .filter((entry) => entry.score >= 0)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3)
+      .map((entry) => entry.category);
 
-    return { products: productMatches, brands: brandMatches, categories: categoryMatches };
-  }, [products, brands, searchQuery]);
+    const storesByName = new Map();
+    for (const product of products) {
+      const storeName = product?.sellerProfile?.name;
+      const sellerId = product?.userId;
+      if (!storeName || !sellerId || storesByName.has(storeName)) continue;
+      storesByName.set(storeName, { id: String(sellerId), name: storeName, avatarUrl: product?.sellerProfile?.avatarUrl || "" });
+    }
+    const storeMatches = [...storesByName.values()]
+      .map((store) => ({ store, score: getTextMatchScore(store.name, query) }))
+      .filter((entry) => entry.score >= 0)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 2)
+      .map((entry) => entry.store);
+
+    return { products: productMatches, brands: brandMatches, categories: categoryMatches, stores: storeMatches };
+  }, [products, brands, customTopCategories, searchQuery]);
+
+  // Empty-state recommendations for the desktop panel's Top Suggestions
+  // column: proven sellers first.
+  const recommendedProducts = useMemo(
+    () => [...products].sort((a, b) => (Number(b?.soldCount) || 0) - (Number(a?.soldCount) || 0)).slice(0, 5),
+    [products]
+  );
 
   // Trending searches derived from the real catalog (top categories + top
   // brands by listing count) — never hardcoded, so it can't drift from what
@@ -482,13 +548,14 @@ const Navbar = ({ hideMobileHeader = false }) => {
   }, [products, brands]);
 
   const popularCategoryTiles = useMemo(
-    () => homeCategoryValues.slice(0, 6).map((value) => ({ value, label: getCategoryMeta(value).label })),
+    () => homeCategoryValues.slice(0, 8).map((value) => ({ value, label: getCategoryMeta(value).label })),
     []
   );
 
   const featuredBrandTiles = useMemo(() => (brands || []).slice(0, 6), [brands]);
 
   const [recentSearches, setRecentSearches] = useState([]);
+  const [isMobileSearchActive, setIsMobileSearchActive] = useState(false);
   useEffect(() => {
     setRecentSearches(getRecentSearches());
   }, []);
@@ -500,6 +567,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
 
   const closeSearchPanel = () => {
     setSearchFocused(false);
+    setIsMobileSearchActive(false);
     if (typeof document !== 'undefined') document.activeElement?.blur?.();
   };
 
@@ -537,6 +605,42 @@ const Navbar = ({ hideMobileHeader = false }) => {
     setSearchQuery('');
     closeSearchPanel();
     navigate(`/all-products?brand=${encodeURIComponent(brand.name)}`);
+  };
+
+  const pickSearchStore = (store) => {
+    setSearchQuery('');
+    closeSearchPanel();
+    navigate(`/store/${encodeURIComponent(store.id)}`);
+  };
+
+  const goToAllCategories = () => {
+    setSearchQuery('');
+    closeSearchPanel();
+    navigate('/categories');
+  };
+
+  // Shared prop bundle for the desktop mega panel + mobile overlay body.
+  const searchPanelProps = {
+    query: searchQuery,
+    recentSearches,
+    trendingTerms: trendingSearchTerms,
+    popularCategories: popularCategoryTiles,
+    featuredBrands: featuredBrandTiles,
+    recommendedProducts,
+    productMatches: predictiveMatches.products,
+    brandMatches: predictiveMatches.brands,
+    categoryMatches: predictiveMatches.categories,
+    storeMatches: predictiveMatches.stores,
+    onPickTerm: pickSearchTerm,
+    onRemoveRecent: removeSearchTerm,
+    onClearRecent: clearSearchTerms,
+    onPickProduct: pickSuggestedProduct,
+    onPickBrand: pickSearchBrand,
+    onPickCategory: pickSearchCategory,
+    onPickStore: pickSearchStore,
+    onViewAllCategories: goToAllCategories,
+    onSubmit: submitSearchQuery,
+    formatCurrency,
   };
   const showSearchHint = !searchQuery && !searchFocused && Boolean(currentPlaceholderWord);
   // Static fallback placeholder kept on the input for accessibility; the
@@ -590,16 +694,17 @@ const Navbar = ({ hideMobileHeader = false }) => {
     const params = new URLSearchParams(window.location.search);
     setSearchQuery(params.get('search') || '');
     setIsMobileAccountOpen(false);
+    setIsMobileSearchActive(false);
   }, [pathname]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;
 
-    document.body.style.overflow = isMobileAccountOpen ? 'hidden' : '';
+    document.body.style.overflow = (isMobileAccountOpen || isMobileSearchActive) ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isMobileAccountOpen]);
+  }, [isMobileAccountOpen, isMobileSearchActive]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -801,6 +906,47 @@ const Navbar = ({ hideMobileHeader = false }) => {
         </div>
       ) : null}
 
+      {isMobileSearchActive ? (
+        <div className="fixed inset-x-0 top-0 bottom-[4.75rem] z-50 flex flex-col bg-white md:hidden">
+          <form onSubmit={handleSearch} className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-4 pb-3 pt-8">
+            <div className="flex h-12 min-w-0 flex-1 items-center rounded-full border border-gray-200 bg-white px-3.5 shadow-sm">
+              <span className="shrink-0 text-gray-400"><SearchIcon /></span>
+              <div className="relative min-w-0 flex-1 px-2">
+                <AnimatedSearchHint visible={!searchQuery && Boolean(currentPlaceholderWord)} word={currentPlaceholderWord} textSize="text-[13px]" />
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder={currentPlaceholderWord ? "" : "Search for products, brands..."}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="min-w-0 w-full py-2.5 text-[13px] outline-none placeholder:text-gray-400"
+                />
+              </div>
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500"
+                >
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                </button>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => { setSearchQuery(''); closeSearchPanel(); }}
+              className="shrink-0 text-[13.5px] font-semibold text-gray-600"
+            >
+              Cancel
+            </button>
+          </form>
+          <div className="flex-1 overflow-y-auto overscroll-contain">
+            <MobileSearchBody {...searchPanelProps} />
+          </div>
+        </div>
+      ) : null}
+
       <header className={`sticky top-0 z-40 border-b border-gray-200 bg-white ${hideMobileHeader ? "hidden md:block" : ""}`}>
         <div className="hidden border-b border-gray-100 text-xs text-gray-600 lg:block">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
@@ -820,16 +966,16 @@ const Navbar = ({ hideMobileHeader = false }) => {
             <span className="hidden md:block"><StoreLogo /></span>
           </Link>
 
-          <form onSubmit={handleSearch} className="relative hidden min-w-0 flex-1 items-center rounded-md border border-orange-200 bg-white md:flex">
+          <form onSubmit={handleSearch} className="relative hidden h-[52px] min-w-0 flex-1 items-center rounded-full border border-gray-200 bg-white shadow-sm md:flex">
             <div
-              className="relative hidden shrink-0 lg:block"
+              className="relative hidden h-full shrink-0 lg:block"
               onMouseLeave={() => openDropdown === 'search-categories' ? closeDropdown() : undefined}
             >
               <button
                 type="button"
                 onMouseEnter={() => setOpenDropdown('search-categories')}
                 onClick={() => toggleDropdown('search-categories')}
-                className="flex items-center gap-2 border-r border-gray-200 px-4 py-2.5 text-[13px] font-semibold text-gray-900 transition hover:text-orange-600"
+                className="flex h-full items-center gap-2 border-r border-gray-200 pl-5 pr-4 text-[13px] font-semibold text-gray-900 transition hover:text-orange-600"
               >
                 All Categories
                 <span className="text-gray-500"><ChevronDown /></span>
@@ -844,8 +990,8 @@ const Navbar = ({ hideMobileHeader = false }) => {
                 />
               ) : null}
             </div>
-            <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
-              <SearchIcon />
+            <div className="flex h-full min-w-0 flex-1 items-center gap-2 px-4">
+              <span className="text-gray-400"><SearchIcon /></span>
               <div className="relative min-w-0 flex-1">
                 <AnimatedSearchHint visible={showSearchHint} word={currentPlaceholderWord} textSize="text-[13px]" />
                 <input
@@ -859,30 +1005,10 @@ const Navbar = ({ hideMobileHeader = false }) => {
                 />
               </div>
             </div>
-            <button type="submit" className="self-stretch bg-orange-600 px-6 text-[13px] font-semibold text-white transition hover:bg-orange-700">
+            <button type="submit" className="m-1.5 flex h-[40px] shrink-0 items-center rounded-full bg-orange-600 px-6 text-[13px] font-semibold text-white transition hover:bg-orange-700">
               Search
             </button>
-            {searchFocused ? (
-              <SearchPanel
-                variant="desktop"
-                query={searchQuery}
-                recentSearches={recentSearches}
-                trendingTerms={trendingSearchTerms}
-                popularCategories={popularCategoryTiles}
-                featuredBrands={featuredBrandTiles}
-                productMatches={predictiveMatches.products}
-                brandMatches={predictiveMatches.brands}
-                categoryMatches={predictiveMatches.categories}
-                onPickTerm={pickSearchTerm}
-                onRemoveRecent={removeSearchTerm}
-                onClearRecent={clearSearchTerms}
-                onPickProduct={pickSuggestedProduct}
-                onPickBrand={pickSearchBrand}
-                onPickCategory={pickSearchCategory}
-                onSubmit={submitSearchQuery}
-                formatCurrency={formatCurrency}
-              />
-            ) : null}
+            {searchFocused ? <SearchPanel {...searchPanelProps} /> : null}
           </form>
 
           <div className="ml-auto hidden items-center gap-4 md:flex">
@@ -911,53 +1037,20 @@ const Navbar = ({ hideMobileHeader = false }) => {
             )}
           </div>
 
-          <form onSubmit={handleSearch} className="relative flex min-w-0 flex-[1_1_0%] items-center rounded-lg border border-gray-200 bg-white px-3 md:hidden">
-            <SearchIcon />
-            <div className="min-w-0 flex-1 px-2">
-              <div className="relative">
-                <AnimatedSearchHint visible={showSearchHint} word={currentPlaceholderWord} textSize="text-xs" />
-                <input
-                  type="text"
-                  placeholder={searchInputPlaceholder}
-                  value={searchQuery}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="min-w-0 w-full py-2.5 text-xs outline-none placeholder:text-gray-400"
-                />
-              </div>
-            </div>
-            {searchFocused ? (
-              <button
-                type="button"
-                onMouseDown={(event) => { event.preventDefault(); setSearchQuery(''); closeSearchPanel(); }}
-                className="shrink-0 pl-2 text-xs font-semibold text-orange-600"
-              >
-                Cancel
-              </button>
-            ) : null}
-            {searchFocused ? (
-              <SearchPanel
-                variant="mobile"
-                query={searchQuery}
-                recentSearches={recentSearches}
-                trendingTerms={trendingSearchTerms}
-                popularCategories={popularCategoryTiles}
-                featuredBrands={featuredBrandTiles}
-                productMatches={predictiveMatches.products}
-                brandMatches={predictiveMatches.brands}
-                categoryMatches={predictiveMatches.categories}
-                onPickTerm={pickSearchTerm}
-                onRemoveRecent={removeSearchTerm}
-                onClearRecent={clearSearchTerms}
-                onPickProduct={pickSuggestedProduct}
-                onPickBrand={pickSearchBrand}
-                onPickCategory={pickSearchCategory}
-                onSubmit={submitSearchQuery}
-                formatCurrency={formatCurrency}
-              />
-            ) : null}
-          </form>
+          <button
+            type="button"
+            onClick={() => setIsMobileSearchActive(true)}
+            className="relative flex h-12 min-w-0 flex-[1_1_0%] items-center rounded-full border border-gray-200 bg-white px-3.5 text-left shadow-sm md:hidden"
+            aria-label="Open search"
+          >
+            <span className="shrink-0 text-gray-400"><SearchIcon /></span>
+            <span className="relative min-w-0 flex-1 px-2">
+              <AnimatedSearchHint visible={!searchQuery && Boolean(currentPlaceholderWord)} word={currentPlaceholderWord} textSize="text-xs" />
+              <span className={`block truncate py-2.5 text-xs ${searchQuery ? "text-gray-900" : currentPlaceholderWord ? "text-transparent" : "text-gray-400"}`}>
+                {searchQuery || (currentPlaceholderWord ? "." : "Search for products, brands...")}
+              </span>
+            </span>
+          </button>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 md:hidden">
             {isAuthenticated ? (
