@@ -494,10 +494,20 @@ const Navbar = ({ hideMobileHeader = false }) => {
       .slice(0, 3)
       .map((entry) => entry.brand);
 
+    // Admin-added top-level categories can share names with the static
+    // defaults (e.g. a "Fashion" record created just to hold an uploaded
+    // icon) — de-duplicate case-insensitively so search never lists a
+    // category twice (also keeps React keys unique).
+    const seenCategoryValues = new Set();
     const categoryOptions = [
       ...homeCategoryValues.map((value) => ({ value, label: getCategoryMeta(value).label })),
       ...(customTopCategories || []).map((category) => ({ value: category.name, label: category.name })),
-    ];
+    ].filter((category) => {
+      const dedupeKey = String(category.value || "").toLowerCase();
+      if (!dedupeKey || seenCategoryValues.has(dedupeKey)) return false;
+      seenCategoryValues.add(dedupeKey);
+      return true;
+    });
     const categoryMatches = categoryOptions
       .map((category) => ({ category, score: getTextMatchScore(category.label, query) }))
       .filter((entry) => entry.score >= 0)
