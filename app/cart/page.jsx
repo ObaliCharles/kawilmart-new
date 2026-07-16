@@ -150,7 +150,7 @@ const Cart = () => {
                       <span className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-50">
                         <CartProductImage product={product} />
                       </span>
-                      <span className="mt-1.5 line-clamp-1 block text-[11px] font-semibold text-gray-900">{product.name}</span>
+                      <span className="mt-1.5 line-clamp-1 text-[11px] font-semibold text-gray-900">{product.name}</span>
                       <span className="block text-[11.5px] font-bold text-gray-950">{formatCurrency(product.offerPrice || product.price)}</span>
                     </button>
                     <button

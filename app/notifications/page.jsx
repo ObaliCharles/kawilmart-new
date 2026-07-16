@@ -561,7 +561,7 @@ const InboxPage = () => {
                           </span>
                           <span className="shrink-0 text-[10px] text-gray-400">{formatWhen(thread.lastMessage?.date)}</span>
                         </span>
-                        <span className="mt-0.5 line-clamp-1 block text-xs text-gray-500">
+                        <span className="mt-0.5 line-clamp-1 text-xs text-gray-500">
                           {thread.lastMessage?.content || ""}
                         </span>
                       </span>
