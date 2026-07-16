@@ -94,6 +94,16 @@
   animation: cart-burst 550ms ease-out;
 }
 
+/* Deal-of-the-day rotation: each new deal fades/slides in at a fixed card
+   size, so switching deals never jumps. */
+@keyframes deal-swap {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-deal-swap {
+  animation: deal-swap 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Animated search placeholder: each rotating product name rolls up + fades in. */
 @keyframes search-hint-enter {
   from { opacity: 0; transform: translateY(0.85em); }

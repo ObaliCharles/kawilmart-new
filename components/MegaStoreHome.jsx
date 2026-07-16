@@ -795,42 +795,46 @@ const MobileHome = ({
       {dealOfDay && dealOfDayActivity?.flashDealActive ? (
         <section
           onClick={() => navigate(`/product/${dealOfDay._id}`)}
-          className="relative mt-6 flex min-h-[11rem] cursor-pointer items-stretch overflow-hidden rounded-lg bg-[#101923] text-white shadow-sm"
+          className="relative mt-6 h-44 cursor-pointer overflow-hidden rounded-lg bg-[#101923] text-white shadow-sm"
         >
-          {activeDealOfDayBanner ? (
-            <>
-              <ContentImage
-                src={activeDealOfDayBanner.imageUrl}
-                alt={dealOfDay.name}
-                width={720}
-                height={360}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              {dealOfDayActivity.flashDealCountdownLabel ? (
-                <div className="relative z-10 flex items-end p-6">
-                  <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <span className="flex w-2/5 shrink-0 items-center justify-center bg-white p-3">
-                <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="h-full w-full object-contain" />
-              </span>
-              <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center px-5 py-6">
+          {/* Keyed by product so each rotation crossfades in at the exact
+              same card size — no jumping between deals. */}
+          <div key={dealOfDay._id} className="animate-deal-swap flex h-full w-full items-stretch">
+            {activeDealOfDayBanner ? (
+              <>
+                <ContentImage
+                  src={activeDealOfDayBanner.imageUrl}
+                  alt={dealOfDay.name}
+                  width={720}
+                  height={360}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                 {dealOfDayActivity.flashDealCountdownLabel ? (
-                  <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
+                  <div className="relative z-10 flex items-end p-6">
+                    <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
+                  </div>
                 ) : null}
-                <p className="mt-3 line-clamp-2 text-sm font-bold">{dealOfDay.name}</p>
-                <p className="mt-2 text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
-                {dealOfDayActivity.hasDiscount ? (
-                  <p className="mt-1 text-sm font-extrabold text-orange-400">{dealOfDayActivity.priceDropPercent}% OFF</p>
-                ) : null}
-                <span className="mt-1 block text-[11px] text-white/75">{getProductStockSnapshot(dealOfDay).label}</span>
-              </div>
-            </>
-          )}
+              </>
+            ) : (
+              <>
+                <span className="flex w-2/5 shrink-0 items-center justify-center bg-white p-3">
+                  <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="h-full w-full object-contain" />
+                </span>
+                <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center px-5 py-4">
+                  {dealOfDayActivity.flashDealCountdownLabel ? (
+                    <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
+                  ) : null}
+                  <p className="mt-2.5 line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5">{dealOfDay.name}</p>
+                  <p className="mt-1 truncate text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
+                  <p className="mt-0.5 min-h-[1.25rem] text-sm font-extrabold text-orange-400">
+                    {dealOfDayActivity.hasDiscount ? `${dealOfDayActivity.priceDropPercent}% OFF` : ""}
+                  </p>
+                  <span className="block truncate text-[11px] text-white/75">{getProductStockSnapshot(dealOfDay).label}</span>
+                </div>
+              </>
+            )}
+          </div>
         </section>
       ) : null}
 

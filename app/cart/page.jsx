@@ -110,13 +110,16 @@ const Cart = () => {
                 const isMutating = cartMutatingItemIds.has(itemId);
 
                 return (
-                  <article key={itemId} className={`flex items-center gap-2 rounded-lg bg-white p-2 ring-1 ring-gray-100 transition-opacity ${isMutating ? "opacity-60" : ""}`}>
+                  <article key={itemId} className={`flex min-w-0 items-center gap-2 rounded-lg bg-white p-2 ring-1 ring-gray-100 transition-opacity ${isMutating ? "opacity-60" : ""}`}>
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gray-50">
                       <CartProductImage product={product} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h2 className="line-clamp-1 text-[11px] font-semibold text-gray-950">{product.name}</h2>
-                      <p className="text-[10px] text-gray-500">{formatCurrency(product.offerPrice)} · Qty {quantity}</p>
+                      <p className="truncate text-[10px] text-gray-500">{formatCurrency(product.offerPrice)} · Qty {quantity}</p>
+                      {/* Line total lives under the name on narrow screens so a
+                          long UGX amount can never push the row past the card edge. */}
+                      <p className="text-[11px] font-bold text-gray-950 sm:hidden">{formatCurrency(product.offerPrice * quantity)}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-0.5">
                       <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100 text-orange-600 disabled:cursor-not-allowed disabled:opacity-50" aria-label="Decrease">
@@ -129,7 +132,7 @@ const Cart = () => {
                         <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
                       </button>
                     </div>
-                    <p className="w-14 shrink-0 text-right text-[11px] font-bold text-gray-950">{formatCurrency(product.offerPrice * quantity)}</p>
+                    <p className="hidden shrink-0 whitespace-nowrap text-right text-[11px] font-bold text-gray-950 sm:block">{formatCurrency(product.offerPrice * quantity)}</p>
                   </article>
                 );
               })}

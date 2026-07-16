@@ -192,13 +192,28 @@ const getCategoryChildren = (category) => ([
   ["Best sellers", `${buildCategoryHref(category)}&sort=popular`],
 ]);
 
-const CategoryDropdown = ({ categories, activeCategory, setActiveCategory, goTo, className = "" }) => {
+// Category thumb inside the desktop hover dropdown: the admin-uploaded
+// product PNG when one exists (same image as the homepage rail), line icon
+// only as a fallback.
+const DropdownCategoryThumb = ({ category, imageUrl, boxClassName, iconClassName }) => (
+  <span className={`flex shrink-0 items-center justify-center overflow-hidden rounded-md ${boxClassName}`}>
+    {imageUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={imageUrl} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" />
+    ) : (
+      <CategoryLineIcon category={category} className={iconClassName} />
+    )}
+  </span>
+);
+
+const CategoryDropdown = ({ categories, activeCategory, setActiveCategory, goTo, imagesByName, className = "" }) => {
   const selectedCategory = activeCategory || categories[0];
   const selectedMeta = getCategoryMeta(selectedCategory);
+  const getCategoryImage = (category) => imagesByName?.get(category) || "";
 
   return (
-    <div className={`grid overflow-hidden rounded-lg border border-gray-200 bg-white text-sm font-medium shadow-xl ${className}`}>
-      <div className="max-h-[28rem] overflow-y-auto border-r border-gray-100 p-2">
+    <div className={`grid overflow-hidden rounded-xl border border-gray-100 bg-white text-sm font-medium shadow-[0_20px_50px_rgba(15,23,42,0.14)] ${className}`}>
+      <div className="max-h-[24rem] overflow-y-auto border-r border-gray-100 p-1.5">
         {categories.map((category) => {
           const meta = getCategoryMeta(category);
           const isActive = selectedCategory === category;
@@ -210,39 +225,43 @@ const CategoryDropdown = ({ categories, activeCategory, setActiveCategory, goTo,
               onMouseEnter={() => setActiveCategory(category)}
               onFocus={() => setActiveCategory(category)}
               onClick={() => goTo(buildCategoryHref(category))}
-              className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition ${isActive ? "bg-orange-50 text-orange-700" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"}`}
+              className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition ${isActive ? "bg-orange-50 text-orange-700" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"}`}
             >
-                <span className="flex min-w-0 items-center gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-orange-50 text-orange-600">
-                  <CategoryLineIcon category={category} className="h-4 w-4" />
-                </span>
-                <span className="truncate">{meta.label}</span>
-              </span>
-              <ChevronRight />
+              <DropdownCategoryThumb
+                category={category}
+                imageUrl={getCategoryImage(category)}
+                boxClassName="h-7 w-7 bg-gray-50 text-orange-600"
+                iconClassName="h-3.5 w-3.5"
+              />
+              <span className="min-w-0 flex-1 truncate text-[12px]">{meta.label}</span>
+              <span className="shrink-0 text-gray-300"><ChevronRight /></span>
             </button>
           );
         })}
       </div>
-      <div className="min-w-0 p-3">
-        <div className="mb-2 flex items-center gap-3 rounded-md bg-gray-50 px-3 py-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-orange-600 shadow-sm">
-            <CategoryLineIcon category={selectedCategory} className="h-5 w-5" />
-          </span>
+      <div className="min-w-0 p-2.5">
+        <div className="mb-1.5 flex items-center gap-2.5 rounded-lg bg-gray-50 px-2.5 py-2.5">
+          <DropdownCategoryThumb
+            category={selectedCategory}
+            imageUrl={getCategoryImage(selectedCategory)}
+            boxClassName="h-9 w-9 bg-white text-orange-600 shadow-sm"
+            iconClassName="h-4 w-4"
+          />
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-gray-950">{selectedMeta.label}</p>
-            <p className="line-clamp-2 text-xs font-normal leading-5 text-gray-500">{selectedMeta.description}</p>
+            <p className="truncate text-[12.5px] font-bold text-gray-950">{selectedMeta.label}</p>
+            <p className="line-clamp-2 text-[11px] font-normal leading-4 text-gray-500">{selectedMeta.description}</p>
           </div>
         </div>
-        <div className="grid gap-1">
+        <div className="grid gap-0.5">
           {getCategoryChildren(selectedCategory).map(([label, href]) => (
             <button
               key={label}
               type="button"
               onClick={() => goTo(href)}
-              className="flex items-center justify-between rounded-md px-3 py-2 text-left text-gray-700 transition hover:bg-orange-50 hover:text-orange-600"
+              className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[12px] text-gray-700 transition hover:bg-orange-50 hover:text-orange-600"
             >
               {label}
-              <ChevronRight />
+              <span className="shrink-0 text-gray-300"><ChevronRight /></span>
             </button>
           ))}
         </div>
@@ -560,18 +579,23 @@ const Navbar = ({ hideMobileHeader = false }) => {
     return [...new Set([...topCategories, ...topBrands])].slice(0, 6);
   }, [products, brands]);
 
-  // Popular category tiles show the admin-uploaded PNG (same image the
-  // homepage rail uses) whenever one exists; the line icon is only a fallback.
-  const popularCategoryTiles = useMemo(() => {
-    const imageByCategoryName = new Map(
-      (customTopCategories || []).map((category) => [category.name, category.imageUrl || ""])
-    );
-    return homeCategoryValues.slice(0, 8).map((value) => ({
+  // Admin-uploaded category PNGs by category name (same images the homepage
+  // rail uses) — shared by the search panel and the hover category dropdowns.
+  const categoryImagesByName = useMemo(
+    () => new Map((customTopCategories || []).map((category) => [category.name, category.imageUrl || ""])),
+    [customTopCategories]
+  );
+
+  // Popular category tiles show the admin-uploaded PNG whenever one exists;
+  // the line icon is only a fallback.
+  const popularCategoryTiles = useMemo(
+    () => homeCategoryValues.slice(0, 8).map((value) => ({
       value,
       label: getCategoryMeta(value).label,
-      imageUrl: imageByCategoryName.get(value) || "",
-    }));
-  }, [customTopCategories]);
+      imageUrl: categoryImagesByName.get(value) || "",
+    })),
+    [categoryImagesByName]
+  );
 
   const featuredBrandTiles = useMemo(() => (brands || []).slice(0, 6), [brands]);
 
@@ -1008,7 +1032,8 @@ const Navbar = ({ hideMobileHeader = false }) => {
                   activeCategory={activeCategory}
                   setActiveCategory={setActiveCategory}
                   goTo={goTo}
-                  className="absolute left-0 top-full z-50 w-[560px] grid-cols-[260px_minmax(0,1fr)]"
+                  imagesByName={categoryImagesByName}
+                  className="absolute left-0 top-full z-50 w-[min(30rem,calc(100vw-4rem))] grid-cols-[13rem_minmax(0,1fr)]"
                 />
               ) : null}
             </div>
@@ -1113,7 +1138,8 @@ const Navbar = ({ hideMobileHeader = false }) => {
                     activeCategory={activeCategory}
                     setActiveCategory={setActiveCategory}
                     goTo={goTo}
-                    className="absolute left-0 top-full z-50 w-[570px] grid-cols-[270px_minmax(0,1fr)]"
+                    imagesByName={categoryImagesByName}
+                    className="absolute left-0 top-full z-50 w-[min(30rem,calc(100vw-4rem))] grid-cols-[13rem_minmax(0,1fr)]"
                   />
                 ) : null}
               </div>
