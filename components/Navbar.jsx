@@ -508,12 +508,15 @@ const Navbar = ({ hideMobileHeader = false }) => {
       seenCategoryValues.add(dedupeKey);
       return true;
     });
+    const imageByCategoryName = new Map(
+      (customTopCategories || []).map((category) => [category.name, category.imageUrl || ""])
+    );
     const categoryMatches = categoryOptions
       .map((category) => ({ category, score: getTextMatchScore(category.label, query) }))
       .filter((entry) => entry.score >= 0)
       .sort((a, b) => a.score - b.score)
       .slice(0, 3)
-      .map((entry) => entry.category);
+      .map((entry) => ({ ...entry.category, imageUrl: imageByCategoryName.get(entry.category.value) || "" }));
 
     const storesByName = new Map();
     for (const product of products) {
@@ -557,10 +560,18 @@ const Navbar = ({ hideMobileHeader = false }) => {
     return [...new Set([...topCategories, ...topBrands])].slice(0, 6);
   }, [products, brands]);
 
-  const popularCategoryTiles = useMemo(
-    () => homeCategoryValues.slice(0, 8).map((value) => ({ value, label: getCategoryMeta(value).label })),
-    []
-  );
+  // Popular category tiles show the admin-uploaded PNG (same image the
+  // homepage rail uses) whenever one exists; the line icon is only a fallback.
+  const popularCategoryTiles = useMemo(() => {
+    const imageByCategoryName = new Map(
+      (customTopCategories || []).map((category) => [category.name, category.imageUrl || ""])
+    );
+    return homeCategoryValues.slice(0, 8).map((value) => ({
+      value,
+      label: getCategoryMeta(value).label,
+      imageUrl: imageByCategoryName.get(value) || "",
+    }));
+  }, [customTopCategories]);
 
   const featuredBrandTiles = useMemo(() => (brands || []).slice(0, 6), [brands]);
 
@@ -917,19 +928,19 @@ const Navbar = ({ hideMobileHeader = false }) => {
       ) : null}
 
       {isMobileSearchActive ? (
-        <div className="fixed inset-x-0 top-0 bottom-[4.75rem] z-50 flex flex-col bg-white md:hidden">
-          <form onSubmit={handleSearch} className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-4 pb-3 pt-8">
-            <div className="flex h-12 min-w-0 flex-1 items-center rounded-full border border-gray-200 bg-white px-3.5 shadow-sm">
+        <div className="fixed inset-0 z-[45] flex flex-col bg-white md:hidden">
+          <form onSubmit={handleSearch} className="flex shrink-0 items-center gap-2.5 border-b border-gray-100 px-3 py-2.5">
+            <div className="flex h-10 min-w-0 flex-1 items-center rounded-full border border-gray-200 bg-white px-3 shadow-sm">
               <span className="shrink-0 text-gray-400"><SearchIcon /></span>
               <div className="relative min-w-0 flex-1 px-2">
-                <AnimatedSearchHint visible={!searchQuery && Boolean(currentPlaceholderWord)} word={currentPlaceholderWord} textSize="text-[13px]" />
+                <AnimatedSearchHint visible={!searchQuery && Boolean(currentPlaceholderWord)} word={currentPlaceholderWord} textSize="text-xs" />
                 <input
                   autoFocus
                   type="text"
                   placeholder={currentPlaceholderWord ? "" : "Search for products, brands..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="min-w-0 w-full py-2.5 text-[13px] outline-none placeholder:text-gray-400"
+                  className="min-w-0 w-full py-2 text-xs outline-none placeholder:text-gray-400"
                 />
               </div>
               {searchQuery ? (
@@ -937,21 +948,22 @@ const Navbar = ({ hideMobileHeader = false }) => {
                   type="button"
                   onClick={() => setSearchQuery('')}
                   aria-label="Clear search"
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500"
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500"
                 >
-                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                  <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
                 </button>
               ) : null}
             </div>
             <button
               type="button"
               onClick={() => { setSearchQuery(''); closeSearchPanel(); }}
-              className="shrink-0 text-[13.5px] font-semibold text-gray-600"
+              className="shrink-0 text-[12.5px] font-semibold text-gray-600"
             >
               Cancel
             </button>
           </form>
-          <div className="flex-1 overflow-y-auto overscroll-contain">
+          {/* pb clears the bottom dock + raised cart FAB, which stay on top */}
+          <div className="flex-1 overflow-y-auto overscroll-contain pb-28">
             <MobileSearchBody {...searchPanelProps} />
           </div>
         </div>
@@ -976,7 +988,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
             <span className="hidden md:block"><StoreLogo /></span>
           </Link>
 
-          <form onSubmit={handleSearch} className="relative hidden h-[52px] min-w-0 flex-1 items-center rounded-full border border-gray-200 bg-white shadow-sm md:flex">
+          <form onSubmit={handleSearch} className="relative hidden h-11 min-w-0 flex-1 items-center rounded-full border border-gray-200 bg-white shadow-sm md:flex">
             <div
               className="relative hidden h-full shrink-0 lg:block"
               onMouseLeave={() => openDropdown === 'search-categories' ? closeDropdown() : undefined}
@@ -985,7 +997,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
                 type="button"
                 onMouseEnter={() => setOpenDropdown('search-categories')}
                 onClick={() => toggleDropdown('search-categories')}
-                className="flex h-full items-center gap-2 border-r border-gray-200 pl-5 pr-4 text-[13px] font-semibold text-gray-900 transition hover:text-orange-600"
+                className="flex h-full items-center gap-1.5 border-r border-gray-200 pl-4 pr-3 text-[12.5px] font-semibold text-gray-900 transition hover:text-orange-600"
               >
                 All Categories
                 <span className="text-gray-500"><ChevronDown /></span>
@@ -1011,11 +1023,11 @@ const Navbar = ({ hideMobileHeader = false }) => {
                   onFocus={() => { setSearchFocused(true); if (openDropdown === 'search-categories') closeDropdown(); }}
                   onBlur={() => setSearchFocused(false)}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="min-w-0 w-full py-2.5 text-[13px] outline-none placeholder:text-gray-400"
+                  className="min-w-0 w-full py-2 text-[12.5px] outline-none placeholder:text-gray-400"
                 />
               </div>
             </div>
-            <button type="submit" className="m-1.5 flex h-[40px] shrink-0 items-center rounded-full bg-orange-600 px-6 text-[13px] font-semibold text-white transition hover:bg-orange-700">
+            <button type="submit" className="m-1 flex h-9 shrink-0 items-center rounded-full bg-orange-600 px-5 text-[12.5px] font-semibold text-white transition hover:bg-orange-700">
               Search
             </button>
             {searchFocused ? <SearchPanel {...searchPanelProps} /> : null}
@@ -1050,13 +1062,13 @@ const Navbar = ({ hideMobileHeader = false }) => {
           <button
             type="button"
             onClick={() => setIsMobileSearchActive(true)}
-            className="relative flex h-12 min-w-0 flex-[1_1_0%] items-center rounded-full border border-gray-200 bg-white px-3.5 text-left shadow-sm md:hidden"
+            className="relative flex h-10 min-w-0 flex-[1_1_0%] items-center rounded-full border border-gray-200 bg-white px-3 text-left shadow-sm md:hidden"
             aria-label="Open search"
           >
             <span className="shrink-0 text-gray-400"><SearchIcon /></span>
             <span className="relative min-w-0 flex-1 px-2">
               <AnimatedSearchHint visible={!searchQuery && Boolean(currentPlaceholderWord)} word={currentPlaceholderWord} textSize="text-xs" />
-              <span className={`block truncate py-2.5 text-xs ${searchQuery ? "text-gray-900" : currentPlaceholderWord ? "text-transparent" : "text-gray-400"}`}>
+              <span className={`block truncate py-2 text-xs ${searchQuery ? "text-gray-900" : currentPlaceholderWord ? "text-transparent" : "text-gray-400"}`}>
                 {searchQuery || (currentPlaceholderWord ? "." : "Search for products, brands...")}
               </span>
             </span>
@@ -1145,7 +1157,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 bg-white/95 px-4 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.10)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-[48] bg-white/95 px-4 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.10)] backdrop-blur md:hidden">
         <div className="relative mx-auto grid max-w-sm grid-cols-5 rounded-2xl border border-gray-100 bg-white px-1 py-1.5 text-[11px] font-semibold text-gray-500 shadow-sm">
           {[
             { key: "home", label: "Home", href: "/", icon: <DockIcon type="home" /> },
