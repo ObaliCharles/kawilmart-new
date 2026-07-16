@@ -439,6 +439,8 @@ const Navbar = ({ hideMobileHeader = false }) => {
     markAllNotificationsAsRead,
     products,
     formatCurrency,
+    cartIconRef,
+    cartBumpTick,
   } = appContext;
   const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded: isAuthLoaded } = useAuth();
@@ -1060,11 +1062,48 @@ const Navbar = ({ hideMobileHeader = false }) => {
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 bg-white/95 px-4 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.10)] backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-sm grid-cols-5 rounded-2xl border border-gray-100 bg-white px-1 py-1.5 text-[11px] font-semibold text-gray-500 shadow-sm">
+        <div className="relative mx-auto grid max-w-sm grid-cols-5 rounded-2xl border border-gray-100 bg-white px-1 py-1.5 text-[11px] font-semibold text-gray-500 shadow-sm">
           {[
             { key: "home", label: "Home", href: "/", icon: <DockIcon type="home" /> },
             { key: "categories", label: "Categories", href: "/categories", icon: <DockIcon type="categories" /> },
-            { key: "cart", label: "Cart", href: "/cart", icon: <DockIcon type="cart" />, badge: cartCount },
+          ].map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => item.href ? navigate(item.href) : openSignIn()}
+              className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl transition ${isDockActive(item) ? "bg-orange-50 text-orange-600" : "text-gray-500"}`}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+
+          {/* Cart: raised circular FAB — the centerpiece of the dock and the
+              landing target for the fly-to-cart animation. */}
+          <div className="relative flex min-h-12 flex-col items-center justify-end gap-1">
+            <button
+              ref={cartIconRef}
+              type="button"
+              onClick={() => navigate('/cart')}
+              aria-label={`Cart, ${cartCount} item${cartCount === 1 ? "" : "s"}`}
+              className="absolute -top-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-[0_10px_22px_rgba(234,88,12,0.45)] ring-[5px] ring-white transition-transform active:scale-95"
+            >
+              {cartBumpTick > 0 ? (
+                <span key={`burst-${cartBumpTick}`} className="pointer-events-none absolute inset-0 rounded-full animate-cart-burst" />
+              ) : null}
+              <span key={`icon-${cartBumpTick}`} className={cartBumpTick > 0 ? "animate-cart-bump" : ""}>
+                <DockIcon type="cart" className="h-6 w-6" />
+              </span>
+              {cartCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                  {formatBadgeCount(cartCount)}
+                </span>
+              )}
+            </button>
+            <span className={`mt-8 transition ${pathname === "/cart" ? "text-orange-600" : "text-gray-500"}`}>Cart</span>
+          </div>
+
+          {[
             { key: "orders", label: "Orders", href: "/my-orders", icon: <DockIcon type="orders" /> },
           ].map((item) => (
             <button
@@ -1074,11 +1113,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
               className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl transition ${isDockActive(item) ? "bg-orange-50 text-orange-600" : "text-gray-500"}`}
             >
               {item.icon}
-              {item.badge > 0 && (
-                <span className="absolute right-2 top-0 inline-flex min-w-[0.95rem] items-center justify-center rounded-full bg-orange-600 px-1 py-0.5 text-[8.5px] font-semibold leading-none text-white shadow-sm">
-                  {formatBadgeCount(item.badge)}
-                </span>
-              )}
               {item.label}
             </button>
           ))}

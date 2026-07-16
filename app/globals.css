@@ -73,6 +73,27 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Cart FAB feedback when an item lands (see CartFlyAnimation + Navbar dock). */
+@keyframes cart-bump {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.28); }
+  55% { transform: scale(0.92); }
+  78% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.animate-cart-bump {
+  display: inline-flex;
+  animation: cart-bump 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cart-burst {
+  0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.55); opacity: 1; }
+  100% { box-shadow: 0 0 0 16px rgba(234, 88, 12, 0); opacity: 0; }
+}
+.animate-cart-burst {
+  animation: cart-burst 550ms ease-out;
+}
+
 /* Animated search placeholder: each rotating product name rolls up + fades in. */
 @keyframes search-hint-enter {
   from { opacity: 0; transform: translateY(0.85em); }

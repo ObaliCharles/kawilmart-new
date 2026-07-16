@@ -21,12 +21,13 @@ const Product = () => {
 
     const { id } = useParams();
 
-    const { products, addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike } = useAppContext()
+    const { products, addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike, triggerCartFly } = useAppContext()
 
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [liking, setLiking] = useState(false);
+    const mainImageRef = useRef(null);
     const [cartAction, setCartAction] = useState(null);
     const [addedFeedback, setAddedFeedback] = useState(false);
     const feedbackTimeoutRef = useRef(null);
@@ -62,6 +63,7 @@ const Product = () => {
         setCartAction(null);
 
         if (result?.success) {
+            triggerCartFly(mainImageRef.current, mainImage || productData.image[0]);
             setAddedFeedback(true);
             if (feedbackTimeoutRef.current) {
                 window.clearTimeout(feedbackTimeoutRef.current);
@@ -148,7 +150,7 @@ const Product = () => {
 
                         ))}
                     </div>
-                    <div className="relative order-1 overflow-hidden rounded-xl bg-white ring-1 ring-gray-100 sm:order-2">
+                    <div ref={mainImageRef} className="relative order-1 overflow-hidden rounded-xl bg-white ring-1 ring-gray-100 sm:order-2">
                         <button type="button" className="absolute right-4 top-4 z-10 rounded-full bg-white p-2 text-gray-500 shadow-sm" aria-label="Zoom image">
                           <Image src={assets.search_icon} alt="" className="h-5 w-5" />
                         </button>

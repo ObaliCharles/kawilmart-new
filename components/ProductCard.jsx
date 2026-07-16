@@ -24,13 +24,14 @@ const getProductImage = (product) => {
 };
 
 const ProductCard = ({ product }) => {
-    const { addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike, tagsBySlug } = useAppContext();
+    const { addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike, tagsBySlug, triggerCartFly } = useAppContext();
     const productHref = `/product/${product._id}`;
     const [liking, setLiking] = useState(false);
     const [liked, setLiked] = useState(Boolean(product.likedByCurrentUser));
     const [isAdding, setIsAdding] = useState(false);
     const [addedFeedback, setAddedFeedback] = useState(false);
     const feedbackTimeoutRef = useRef(null);
+    const imageBoxRef = useRef(null);
 
     const discountPercent = product.price && product.price > product.offerPrice
       ? Math.round(((product.price - product.offerPrice) / product.price) * 100)
@@ -76,6 +77,7 @@ const ProductCard = ({ product }) => {
         setIsAdding(false);
 
         if (result?.success) {
+            triggerCartFly(imageBoxRef.current, getProductImage(product));
             setAddedFeedback(true);
             if (feedbackTimeoutRef.current) window.clearTimeout(feedbackTimeoutRef.current);
             feedbackTimeoutRef.current = window.setTimeout(() => setAddedFeedback(false), 1400);
@@ -115,7 +117,7 @@ const ProductCard = ({ product }) => {
             onFocus={() => prefetchRoute(productHref)}
             className="group interactive-lift flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-2 hover:border-orange-300 hover:shadow-[0_6px_14px_rgba(15,23,42,0.05)]"
         >
-            <div className="relative flex aspect-[1.12/1] items-center justify-center overflow-hidden rounded-md bg-white">
+            <div ref={imageBoxRef} className="relative flex aspect-[1.12/1] items-center justify-center overflow-hidden rounded-md bg-white">
                 <Image
                     src={getProductImage(product)}
                     alt={product.name}

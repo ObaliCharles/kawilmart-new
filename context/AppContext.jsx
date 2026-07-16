@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from 'react-hot-toast';
 import { getApiErrorMessage, sanitizeApiErrorMessage } from "@/lib/apiErrors";
 import { areCartItemsEqual, countCartItems, filterCartItemsByProductIds, normalizeCartItems } from "@/lib/cart";
+import CartFlyAnimation from "@/components/CartFlyAnimation";
 
 const PRODUCT_CACHE_KEY = 'kawilmart_products_cache_v2';
 const PRODUCT_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -65,6 +66,12 @@ const defaultAppContextValue = {
     setCartItems: noop,
     addToCart: async () => ({ success: false, message: 'App context is not ready' }),
     updateCartQuantity: noop,
+    cartIconRef: { current: null },
+    flyToCartRequest: null,
+    clearFlyToCartRequest: noop,
+    triggerCartFly: noop,
+    cartBumpTick: 0,
+    bumpCartIcon: noop,
     getCartCount: () => 0,
     getCartAmount: () => 0,
     unreadNotificationsCount: 0,
@@ -121,6 +128,25 @@ export const AppContextProvider = (props) => {
     const cartItemsRef = useRef(cartItems)
     const cartRequestSeqRef = useRef(0)
     const [cartMutatingItemIds, setCartMutatingItemIds] = useState(() => new Set())
+    // "Fly to cart" add-animation: the mobile dock's cart button registers
+    // itself here so any Add-to-cart click anywhere in the app can animate a
+    // thumbnail flying to it, then bump it, without prop-drilling refs.
+    const cartIconRef = useRef(null)
+    const [flyToCartRequest, setFlyToCartRequest] = useState(null)
+    const [cartBumpTick, setCartBumpTick] = useState(0)
+    const flyToCartRequestSeqRef = useRef(0)
+    const triggerCartFly = useCallback((sourceEl, imageUrl) => {
+        if (!sourceEl || !imageUrl || typeof window === 'undefined') return
+        const sourceRect = sourceEl.getBoundingClientRect()
+        if (!sourceRect.width || !sourceRect.height) return
+        setFlyToCartRequest({
+            id: ++flyToCartRequestSeqRef.current,
+            imageUrl,
+            sourceRect: { top: sourceRect.top, left: sourceRect.left, width: sourceRect.width, height: sourceRect.height },
+        })
+    }, [])
+    const clearFlyToCartRequest = useCallback(() => setFlyToCartRequest(null), [])
+    const bumpCartIcon = useCallback(() => setCartBumpTick((tick) => tick + 1), [])
     const [loadingProducts, setLoadingProducts] = useState(true)
     const [loadingUser, setLoadingUser] = useState(false)
     const [isRouteLoading, setIsRouteLoading] = useState(false)
@@ -932,6 +958,7 @@ export const AppContextProvider = (props) => {
         toggleProductLike,
         cartItems, resolvedCartItems, cartMutatingItemIds, setCartItems,
         addToCart, updateCartQuantity,
+        cartIconRef, flyToCartRequest, clearFlyToCartRequest, triggerCartFly, cartBumpTick, bumpCartIcon,
         getCartCount, getCartAmount,
         unreadNotificationsCount, recentNotifications, setUnreadNotificationsCount,
         refreshUnreadNotifications, refreshNotifications, markNotificationAsRead, markAllNotificationsAsRead,
@@ -944,6 +971,12 @@ export const AppContextProvider = (props) => {
                 <RouteStateSync onRouteSettled={handleRouteSettled} />
             </Suspense>
             {props.children}
+            <CartFlyAnimation
+                flyToCartRequest={flyToCartRequest}
+                clearFlyToCartRequest={clearFlyToCartRequest}
+                cartIconRef={cartIconRef}
+                bumpCartIcon={bumpCartIcon}
+            />
         </AppContext.Provider>
     )
 }
