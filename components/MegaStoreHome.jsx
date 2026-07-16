@@ -815,8 +815,8 @@ const MobileHome = ({
             </>
           ) : (
             <>
-              <span className="flex w-2/5 shrink-0 items-center justify-center bg-white/5 p-4">
-                <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="h-full max-h-36 w-full object-contain" />
+              <span className="flex w-2/5 shrink-0 items-center justify-center bg-white p-3">
+                <ProductImage product={dealOfDay} alt={dealOfDay.name} width={230} height={230} className="h-full w-full object-contain" />
               </span>
               <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center px-5 py-6">
                 {dealOfDayActivity.flashDealCountdownLabel ? (
