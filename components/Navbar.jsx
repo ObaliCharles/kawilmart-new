@@ -10,6 +10,8 @@ import { NavbarUserSkeleton } from "@/components/dashboard/DashboardSkeletons";
 import { usePathname } from "next/navigation";
 import { buildCategoryHref, homeCategoryValues, getCategoryMeta } from "@/lib/marketplaceCategories";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
+import SearchPanel from "@/components/SearchPanel";
+import { getRecentSearches, addRecentSearch, removeRecentSearch, clearRecentSearches } from "@/lib/recentSearches";
 
 const userButtonAppearance = {
   elements: {
@@ -83,57 +85,6 @@ const SearchIcon = () => (
     <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="m21 21-4.3-4.3m1.3-5.2a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0Z" />
   </svg>
 );
-
-const getSuggestionImage = (product) => {
-  const image = Array.isArray(product?.image) ? product.image[0] : product?.image;
-  if (typeof image === "string" && image.trim()) return image.trim();
-  return null;
-};
-
-// Instant search suggestions: product matches (name-prefix first) shown while
-// typing, so shoppers reach a product without ever submitting the search.
-const SearchSuggestions = ({ suggestions, query, onPickProduct, onSubmit, formatCurrency }) => {
-  if (!suggestions.length) return null;
-  return (
-    <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.14)]">
-      {suggestions.map((product) => {
-        const image = getSuggestionImage(product);
-        return (
-          <button
-            key={product._id}
-            type="button"
-            onMouseDown={(e) => { e.preventDefault(); onPickProduct(product); }}
-            className="flex w-full items-center gap-3 border-b border-gray-50 px-3 py-2 text-left transition hover:bg-orange-50/60"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-50">
-              {image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={image} alt="" className="h-full w-full object-contain p-0.5" loading="lazy" />
-              ) : (
-                <SearchIcon />
-              )}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="line-clamp-1 text-[12.5px] font-medium text-gray-900">{product.name}</span>
-              <span className="text-[11px] text-gray-400">{product.category}</span>
-            </span>
-            <span className="shrink-0 text-[12px] font-bold text-gray-950">
-              {formatCurrency(product.offerPrice || product.price)}
-            </span>
-          </button>
-        );
-      })}
-      <button
-        type="button"
-        onMouseDown={(e) => { e.preventDefault(); onSubmit(); }}
-        className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-600 transition hover:bg-orange-50/60"
-      >
-        <SearchIcon />
-        See all results for &ldquo;{query}&rdquo;
-      </button>
-    </div>
-  );
-};
 
 // Animated placeholder overlay: shows "Search "<product name>"" where the
 // name rotates and each new name rolls up + fades in (via .animate-search-hint,
@@ -441,6 +392,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
     formatCurrency,
     cartIconRef,
     cartBumpTick,
+    brands,
   } = appContext;
   const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded: isAuthLoaded } = useAuth();
@@ -451,10 +403,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
   const [isDesktopViewport, setIsDesktopViewport] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [activeCategory, setActiveCategory] = useState(homeCategoryValues[0]);
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isMobileAccountOpen, setIsMobileAccountOpen] = useState(false);
-  const mobileSearchRef = useRef(null);
-  const mobileSearchInputRef = useRef(null);
   const clerkReady = isUserLoaded && isAuthLoaded;
   const cartCount = getCartCount();
   const isAuthenticated = Boolean(user);
@@ -485,40 +434,109 @@ const Navbar = ({ hideMobileHeader = false }) => {
     ? searchPlaceholderNames[placeholderIndex % searchPlaceholderNames.length]
     : "";
 
-  // Live suggestions while typing: name matches first (prefix beats infix),
-  // then category matches fill remaining slots.
-  const searchSuggestions = useMemo(() => {
+  // Predictive results while typing, grouped like a real marketplace search:
+  // matching products, brands, and categories, each capped to a handful so
+  // the panel stays scannable.
+  const predictiveMatches = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (query.length < 2) return [];
+    if (!query) return { products: [], brands: [], categories: [] };
 
     const prefix = [];
     const infix = [];
-    const categoryHits = [];
     for (const product of products) {
       const name = String(product?.name || "").toLowerCase();
-      const category = String(product?.category || "").toLowerCase();
       if (name.startsWith(query)) prefix.push(product);
       else if (name.includes(query)) infix.push(product);
-      else if (category.includes(query)) categoryHits.push(product);
-      if (prefix.length >= 6) break;
+      if (prefix.length >= 5) break;
     }
-    return [...prefix, ...infix, ...categoryHits].slice(0, 6);
-  }, [products, searchQuery]);
-  const showSuggestions = searchFocused && searchSuggestions.length > 0;
+    const productMatches = [...prefix, ...infix].slice(0, 5);
+
+    const brandMatches = (brands || [])
+      .filter((brand) => String(brand?.name || "").toLowerCase().includes(query))
+      .slice(0, 3);
+
+    const categoryMatches = homeCategoryValues
+      .map((value) => ({ value, label: getCategoryMeta(value).label }))
+      .filter((category) => category.label.toLowerCase().includes(query))
+      .slice(0, 4);
+
+    return { products: productMatches, brands: brandMatches, categories: categoryMatches };
+  }, [products, brands, searchQuery]);
+
+  // Trending searches derived from the real catalog (top categories + top
+  // brands by listing count) — never hardcoded, so it can't drift from what
+  // actually exists in the store.
+  const trendingSearchTerms = useMemo(() => {
+    const categoryCounts = new Map();
+    products.forEach((product) => {
+      const category = product?.category;
+      if (!category) return;
+      categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+    });
+    const topCategories = [...categoryCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([value]) => getCategoryMeta(value).label);
+    const topBrands = (brands || []).slice(0, 3).map((brand) => brand.name).filter(Boolean);
+    return [...new Set([...topCategories, ...topBrands])].slice(0, 6);
+  }, [products, brands]);
+
+  const popularCategoryTiles = useMemo(
+    () => homeCategoryValues.slice(0, 6).map((value) => ({ value, label: getCategoryMeta(value).label })),
+    []
+  );
+
+  const featuredBrandTiles = useMemo(() => (brands || []).slice(0, 6), [brands]);
+
+  const [recentSearches, setRecentSearches] = useState([]);
+  useEffect(() => {
+    setRecentSearches(getRecentSearches());
+  }, []);
+
+  const recordSearchTerm = (term) => {
+    if (!term?.trim()) return;
+    setRecentSearches(addRecentSearch(term));
+  };
+
+  const closeSearchPanel = () => {
+    setSearchFocused(false);
+    if (typeof document !== 'undefined') document.activeElement?.blur?.();
+  };
 
   const pickSuggestedProduct = (product) => {
     setSearchQuery('');
-    setIsMobileSearchOpen(false);
-    closeDropdown();
+    closeSearchPanel();
     navigate(`/product/${product._id}`);
   };
 
   const submitSearchQuery = () => {
     if (!searchQuery.trim()) return;
-    closeDropdown();
+    recordSearchTerm(searchQuery);
     navigate(`/all-products?search=${encodeURIComponent(searchQuery)}`);
     setSearchQuery('');
-    setIsMobileSearchOpen(false);
+    closeSearchPanel();
+  };
+
+  const pickSearchTerm = (term) => {
+    recordSearchTerm(term);
+    navigate(`/all-products?search=${encodeURIComponent(term)}`);
+    setSearchQuery('');
+    closeSearchPanel();
+  };
+
+  const removeSearchTerm = (term) => setRecentSearches(removeRecentSearch(term));
+  const clearSearchTerms = () => setRecentSearches(clearRecentSearches());
+
+  const pickSearchCategory = (categoryValue) => {
+    setSearchQuery('');
+    closeSearchPanel();
+    navigate(buildCategoryHref(categoryValue));
+  };
+
+  const pickSearchBrand = (brand) => {
+    setSearchQuery('');
+    closeSearchPanel();
+    navigate(`/all-products?brand=${encodeURIComponent(brand.name)}`);
   };
   const showSearchHint = !searchQuery && !searchFocused && Boolean(currentPlaceholderWord);
   // Static fallback placeholder kept on the input for accessibility; the
@@ -529,9 +547,10 @@ const Navbar = ({ hideMobileHeader = false }) => {
     e.preventDefault();
     closeDropdown();
     if (searchQuery.trim()) {
+      recordSearchTerm(searchQuery);
       navigate(`/all-products?search=${encodeURIComponent(searchQuery)}`);
       setSearchQuery('');
-      setIsMobileSearchOpen(false);
+      closeSearchPanel();
     }
   };
 
@@ -543,7 +562,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
 
   const goTo = (href) => {
     closeDropdown();
-    setIsMobileSearchOpen(false);
     setIsMobileAccountOpen(false);
     navigate(href);
   };
@@ -564,7 +582,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
     }
 
     closeDropdown();
-    setIsMobileSearchOpen(false);
     setIsMobileAccountOpen(true);
   };
 
@@ -572,7 +589,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     setSearchQuery(params.get('search') || '');
-    setIsMobileSearchOpen(false);
     setIsMobileAccountOpen(false);
   }, [pathname]);
 
@@ -584,20 +600,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
       document.body.style.overflow = '';
     };
   }, [isMobileAccountOpen]);
-
-  useEffect(() => {
-    if (!isMobileSearchOpen || typeof window === 'undefined') return undefined;
-
-    const handlePointerDown = (event) => {
-      if (!mobileSearchRef.current?.contains(event.target)) {
-        setIsMobileSearchOpen(false);
-        closeDropdown();
-      }
-    };
-
-    window.addEventListener('pointerdown', handlePointerDown);
-    return () => window.removeEventListener('pointerdown', handlePointerDown);
-  }, [isMobileSearchOpen]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -860,11 +862,23 @@ const Navbar = ({ hideMobileHeader = false }) => {
             <button type="submit" className="self-stretch bg-orange-600 px-6 text-[13px] font-semibold text-white transition hover:bg-orange-700">
               Search
             </button>
-            {showSuggestions ? (
-              <SearchSuggestions
-                suggestions={searchSuggestions}
-                query={searchQuery.trim()}
+            {searchFocused ? (
+              <SearchPanel
+                variant="desktop"
+                query={searchQuery}
+                recentSearches={recentSearches}
+                trendingTerms={trendingSearchTerms}
+                popularCategories={popularCategoryTiles}
+                featuredBrands={featuredBrandTiles}
+                productMatches={predictiveMatches.products}
+                brandMatches={predictiveMatches.brands}
+                categoryMatches={predictiveMatches.categories}
+                onPickTerm={pickSearchTerm}
+                onRemoveRecent={removeSearchTerm}
+                onClearRecent={clearSearchTerms}
                 onPickProduct={pickSuggestedProduct}
+                onPickBrand={pickSearchBrand}
+                onPickCategory={pickSearchCategory}
                 onSubmit={submitSearchQuery}
                 formatCurrency={formatCurrency}
               />
@@ -913,11 +927,32 @@ const Navbar = ({ hideMobileHeader = false }) => {
                 />
               </div>
             </div>
-            {showSuggestions ? (
-              <SearchSuggestions
-                suggestions={searchSuggestions}
-                query={searchQuery.trim()}
+            {searchFocused ? (
+              <button
+                type="button"
+                onMouseDown={(event) => { event.preventDefault(); setSearchQuery(''); closeSearchPanel(); }}
+                className="shrink-0 pl-2 text-xs font-semibold text-orange-600"
+              >
+                Cancel
+              </button>
+            ) : null}
+            {searchFocused ? (
+              <SearchPanel
+                variant="mobile"
+                query={searchQuery}
+                recentSearches={recentSearches}
+                trendingTerms={trendingSearchTerms}
+                popularCategories={popularCategoryTiles}
+                featuredBrands={featuredBrandTiles}
+                productMatches={predictiveMatches.products}
+                brandMatches={predictiveMatches.brands}
+                categoryMatches={predictiveMatches.categories}
+                onPickTerm={pickSearchTerm}
+                onRemoveRecent={removeSearchTerm}
+                onClearRecent={clearSearchTerms}
                 onPickProduct={pickSuggestedProduct}
+                onPickBrand={pickSearchBrand}
+                onPickCategory={pickSearchCategory}
                 onSubmit={submitSearchQuery}
                 formatCurrency={formatCurrency}
               />
@@ -943,60 +978,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
                 </span>
               )}
             </button>
-          </div>
-        </div>
-
-        <div ref={mobileSearchRef} className="mx-auto hidden px-4 pb-3 sm:px-6 md:hidden">
-          <div className={`grid transition-all duration-300 ease-out ${isMobileSearchOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-            <div className="overflow-hidden">
-              <form onSubmit={handleSearch} className="flex overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
-                <div className="flex min-w-0 flex-1 items-center gap-2 px-3">
-                  <SearchIcon />
-                  <div className="relative min-w-0 flex-1">
-                    <AnimatedSearchHint visible={showSearchHint} word={currentPlaceholderWord} textSize="text-sm" />
-                    <input
-                      ref={mobileSearchInputRef}
-                      type="text"
-                      placeholder={searchInputPlaceholder}
-                      value={searchQuery}
-                      onFocus={() => { setSearchFocused(true); closeDropdown(); }}
-                      onBlur={() => setSearchFocused(false)}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      className="min-w-0 w-full py-3 text-sm outline-none placeholder:text-gray-400"
-                    />
-                  </div>
-                </div>
-                <button type="button" onClick={() => toggleDropdown('mobile-categories')} className="border-l border-gray-200 px-3 text-xs font-semibold text-gray-900">
-                  All category
-                </button>
-                <button type="submit" className="bg-orange-600 px-4 text-xs font-semibold text-white">
-                  Search
-                </button>
-              </form>
-              {openDropdown === 'mobile-categories' ? (
-                <div className="mt-2 rounded-2xl border border-gray-200 bg-white p-3 text-sm shadow-xl">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Browse categories</p>
-                  <div className="grid grid-cols-2 gap-2">
-                  {homeCategoryValues.slice(0, 8).map((category) => {
-                    const meta = getCategoryMeta(category);
-                    return (
-                      <button
-                        key={category}
-                        type="button"
-                        onClick={() => goTo(buildCategoryHref(category))}
-                        className="flex min-h-14 flex-col items-start justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-left text-gray-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600"
-                      >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-orange-600 shadow-sm">
-                          <CategoryLineIcon category={category} className="h-4 w-4" />
-                        </span>
-                        <span className="min-w-0 pt-1 text-[11px] font-semibold leading-4">{meta.label}</span>
-                      </button>
-                    );
-                  })}
-                  </div>
-                </div>
-              ) : null}
-            </div>
           </div>
         </div>
 
