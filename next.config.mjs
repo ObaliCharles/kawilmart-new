@@ -42,6 +42,9 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Lets CI/checks build into an isolated dir so a running `next dev`
+    // (which owns .next) is never corrupted by a parallel build.
+    distDir: process.env.NEXT_DIST_DIR || '.next',
     reactStrictMode: false,
     images: {
         remotePatterns: [

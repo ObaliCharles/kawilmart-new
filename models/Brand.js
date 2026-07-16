@@ -12,7 +12,7 @@ const brandSchema = new mongoose.Schema({
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
-brandSchema.index({ slug: 1 }, { unique: true });
+// slug already gets a unique index from its field definition above.
 brandSchema.index({ sortOrder: 1 });
 
 const Brand = mongoose.models.brand || mongoose.model("brand", brandSchema);
