@@ -479,7 +479,7 @@ const MobileFlashCard = ({ product, navigate, prefetchRoute, formatCurrency, tog
       <span className="relative z-0 flex aspect-square items-center justify-center rounded-lg bg-white/75 p-1 shadow-inner backdrop-blur-sm">
         <ProductImage product={product} alt={product.name} width={150} height={150} className="h-full w-full object-contain" />
       </span>
-      <span className="mt-2 block line-clamp-2 min-h-9 text-[12px] font-bold leading-[18px] text-gray-950">{product.name}</span>
+      <span className="mt-2 block line-clamp-2 min-h-[2rem] text-[12px] font-semibold leading-4 text-gray-950">{product.name}</span>
       <span className="mt-1 block text-[11px] font-medium text-gray-700/80">{activity.localTrend}</span>
       <span className="mt-1 block text-sm font-extrabold text-gray-950">{formatCurrency(offerPrice)}</span>
       {originalPrice > offerPrice ? <span className="text-[11px] text-gray-700/60 line-through">{formatCurrency(originalPrice)}</span> : null}
@@ -536,7 +536,7 @@ const MobileProductCard = ({ product, navigate, prefetchRoute, formatCurrency, t
       <span className="relative z-0 flex aspect-[1.12/1] items-center justify-center rounded-md bg-gray-50">
         <ProductImage product={product} alt={product.name} width={190} height={170} className="h-full w-full object-contain p-2" />
       </span>
-      <span className="mt-2 block line-clamp-2 min-h-10 text-[13px] font-bold leading-5 text-gray-950">{product.name}</span>
+      <span className="mt-2 block line-clamp-2 min-h-[2rem] text-[12px] font-semibold leading-4 text-gray-950">{product.name}</span>
       <span className="mt-1 flex items-center gap-1 text-[11px] text-gray-500">
         <span className="text-orange-500">★</span>
         {activity.hasRating ? activity.displayRating.toFixed(1) : "New"} · {soldCount > 0 ? `${soldCount} sold` : "Fresh"}
@@ -1115,7 +1115,7 @@ const RecommendedCard = ({ product, navigate, prefetchRoute, formatCurrency }) =
       <span className="flex aspect-square items-center justify-center">
         <ProductImage product={product} alt={product.name} width={190} height={190} className="h-full w-full object-contain" />
       </span>
-      <span className="mt-3 line-clamp-2 min-h-[2.25rem] text-[13px] font-semibold leading-[18px] text-gray-950">{product.name}</span>
+      <span className="mt-3 line-clamp-2 min-h-[2rem] text-[12px] font-semibold leading-4 text-gray-950">{product.name}</span>
       <span className="mt-1 block text-[11px] text-gray-400">SKU: {product._id.slice(-8).toUpperCase()}</span>
       <span className="mt-2.5 flex items-center gap-2">
         <span className="text-sm font-bold text-orange-600">{formatCurrency(getPriceValue(product.offerPrice || product.price))}</span>
