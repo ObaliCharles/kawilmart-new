@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
+import AnimatedTrustStrip from "@/components/AnimatedTrustStrip";
 import Skeleton from "@/components/Skeleton";
 import { resolveSiteContent } from "@/lib/defaultSiteContent";
 import { categoryMatchesSelection, homeCategoryValues, getCategoryMeta, homeTopRailDefaults, TOP_RAIL_PARENT } from "@/lib/marketplaceCategories";
@@ -684,12 +685,7 @@ const MobileHome = ({
         </button>
       </section>
 
-      <section className="mt-4 grid grid-cols-2 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
-        <MobileServiceCard title="100% Original" text="Genuine products" icon={<UtilityIcon type="shield" />} />
-        <MobileServiceCard title="Fast Delivery" text="Get it in 24 - 48hrs" icon={<UtilityIcon type="delivery" />} />
-        <MobileServiceCard title="Easy Returns" text="7-day return policy" icon={<UtilityIcon type="returns" />} />
-        <MobileServiceCard title="Secure Payment" text="Pay safely" icon={<UtilityIcon type="grid" />} />
-      </section>
+      <AnimatedTrustStrip className="mt-4" />
 
       <section className="-mx-3 mt-6 rounded-xl bg-gradient-to-br from-orange-100/90 via-rose-100/75 to-amber-50 px-3 py-3.5">
         <div className="mb-3 flex items-center justify-between gap-2">
