@@ -272,6 +272,25 @@ const OrderSummary = () => {
           )}
         </span>
       </button>
+
+      {/* Payment trust row: recognized payment marks + security note lift
+          checkout confidence right at the point of commitment. */}
+      <div className="mt-2.5 border-t border-gray-100 pt-2.5">
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <span className="flex h-6 items-center rounded bg-gray-50 px-1.5 text-[9px] font-black italic tracking-tight text-[#1A1F71]">VISA</span>
+          <span className="flex h-6 items-center rounded bg-gray-50 px-1.5">
+            <span className="h-3 w-3 rounded-full bg-[#EB001B]" />
+            <span className="-ml-1 h-3 w-3 rounded-full bg-[#F79E1B] mix-blend-multiply" />
+          </span>
+          <span className="flex h-6 items-center rounded bg-[#FFCC00] px-1.5 text-[8px] font-black text-black">MTN MoMo</span>
+          <span className="flex h-6 items-center rounded bg-gray-50 px-1.5 text-[9px] font-black lowercase text-[#E40000]">airtel money</span>
+          <span className="flex h-6 items-center rounded bg-gray-50 px-1.5 text-[8.5px] font-bold text-gray-600">Cash on delivery</span>
+        </div>
+        <p className="mt-1.5 flex items-center justify-center gap-1 text-center text-[10px] text-gray-400">
+          <svg className="h-3 w-3 text-emerald-600" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 19 6v5c0 4.4-2.9 8.4-7 10-4.1-1.6-7-5.6-7-10V6l7-3Zm-2.6 8.6 2 2 3.8-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          Secure checkout · Your details are protected
+        </p>
+      </div>
     </aside>
   );
 };

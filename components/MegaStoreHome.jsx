@@ -632,8 +632,7 @@ const MobileHome = ({
   sortedProducts,
   storeCards,
   storeLoadMoreRef,
-  timeLeft,
-  hasCountdown,
+  dealDeadline = 0,
   homeCategoryRail = [],
   topRailTiles = [],
   recentlyViewedProducts = [],
@@ -694,7 +693,7 @@ const MobileHome = ({
             <p className="mt-0.5 text-[10px] text-gray-500">Limited-time deals</p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1.5">
-            {hasCountdown ? <FlashCountdown timeLeft={timeLeft} size="sm" /> : null}
+            {dealDeadline ? <FlashCountdown deadline={dealDeadline} size="sm" /> : null}
             <button type="button" onClick={() => navigate("/all-products?filter=flash")} className="text-[11px] font-bold text-orange-600">
               View all -&gt;
             </button>
@@ -808,7 +807,7 @@ const MobileHome = ({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                 {dealOfDayActivity.flashDealCountdownLabel ? (
                   <div className="relative z-10 flex items-end p-6">
-                    <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
+                    <FlashCountdown deadline={dealOfDayActivity.flashDealEndsAt} size="sm" />
                   </div>
                 ) : null}
               </>
@@ -819,7 +818,7 @@ const MobileHome = ({
                 </span>
                 <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center px-5 py-4">
                   {dealOfDayActivity.flashDealCountdownLabel ? (
-                    <FlashCountdown timeLeft={getTimeParts(dealOfDayActivity.flashDealEndsInMs)} size="sm" />
+                    <FlashCountdown deadline={dealOfDayActivity.flashDealEndsAt} size="sm" />
                   ) : null}
                   <p className="mt-2.5 line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5">{dealOfDay.name}</p>
                   <p className="mt-1 truncate text-lg font-extrabold">{formatCurrency(getPriceValue(dealOfDay.offerPrice || dealOfDay.price))}</p>
@@ -1140,10 +1139,31 @@ const getTimeParts = (milliseconds) => {
 
 const padTime = (value) => String(value).padStart(2, "0");
 
-const FlashCountdown = ({ timeLeft, size = "md" }) => {
-  const hasTime = Boolean(
-    timeLeft && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0)
+// Self-ticking countdown: takes an absolute `deadline` timestamp and keeps
+// its own 1s interval, so the per-second re-render is confined to this tiny
+// component instead of the whole homepage tree (a major win on low-end
+// phones). Renders null once the deadline passes or is invalid.
+const FlashCountdown = ({ deadline, size = "md" }) => {
+  const [remainingMs, setRemainingMs] = useState(() =>
+    Number.isFinite(deadline) ? Math.max(0, deadline - Date.now()) : 0
   );
+
+  useEffect(() => {
+    if (!Number.isFinite(deadline) || deadline <= Date.now()) {
+      setRemainingMs(0);
+      return undefined;
+    }
+
+    setRemainingMs(Math.max(0, deadline - Date.now()));
+    const interval = window.setInterval(() => {
+      setRemainingMs(Math.max(0, deadline - Date.now()));
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [deadline]);
+
+  const timeLeft = getTimeParts(remainingMs);
+  const hasTime = remainingMs > 0;
 
   if (!hasTime) {
     return null;
@@ -1330,7 +1350,6 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [activePromoIndex, setActivePromoIndex] = useState(0);
   const [activeDealIndex, setActiveDealIndex] = useState(0);
-  const [now, setNow] = useState(Date.now());
   const [visibleStoreCount, setVisibleStoreCount] = useState(8);
   const storeLoadMoreRef = useRef(null);
 
@@ -1380,24 +1399,11 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     return deadlines.length ? Math.min(...deadlines) : 0;
   }, [dealProducts]);
 
-  useEffect(() => {
-    if (!earliestDealDeadline) {
-      return undefined;
-    }
-
-    const interval = window.setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-
-    return () => window.clearInterval(interval);
-  }, [earliestDealDeadline]);
-
   const activePromo = {
     ...(promoSlides[activePromoIndex % Math.max(promoSlides.length, 1)] || resolvedContent.promoBanner),
     _activeDealIndex: activeDealIndex,
   };
   const marketingBanners = [...promoSlides, ...featuredCards];
-  const timeLeft = getTimeParts(earliestDealDeadline ? earliestDealDeadline - now : 0);
 
   useEffect(() => {
     setVisibleStoreCount(Math.min(8, storeCards.length || 8));
@@ -1459,8 +1465,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       sortedProducts={sortedProducts}
       storeCards={visibleStoreCards}
       storeLoadMoreRef={storeLoadMoreRef}
-      timeLeft={timeLeft}
-      hasCountdown={earliestDealDeadline > now}
+      dealDeadline={earliestDealDeadline}
       homeCategoryRail={homeCategoryRail}
       topRailTiles={topRailTiles}
       recentlyViewedProducts={recentlyViewedProducts}
@@ -1537,7 +1542,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
                 <p className="text-[11px] text-gray-500">Active promotions ending soon</p>
               </div>
               <div className="flex items-center gap-3">
-                {earliestDealDeadline > now ? <FlashCountdown timeLeft={timeLeft} /> : null}
+                {earliestDealDeadline ? <FlashCountdown deadline={earliestDealDeadline} /> : null}
                 <button
                   type="button"
                   onClick={() => navigate("/all-products?filter=flash")}

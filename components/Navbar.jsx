@@ -123,8 +123,22 @@ const SearchIcon = () => (
 
 // Animated placeholder overlay: shows "Search "<product name>"" where the
 // name rotates and each new name rolls up + fades in (via .animate-search-hint,
-// re-mounted by the `key`). Rendered only when the input is empty and unfocused.
-const AnimatedSearchHint = ({ visible, word, textSize = "text-[13px]" }) => {
+// re-mounted by the `key`). Owns its own 2.6s ticker so the rotation only
+// re-renders this tiny overlay — not the entire Navbar.
+const AnimatedSearchHint = ({ visible, words = [], textSize = "text-[13px]" }) => {
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    if (words.length < 2) return undefined;
+
+    const interval = window.setInterval(() => {
+      setWordIndex((current) => (current + 1) % words.length);
+    }, 2600);
+
+    return () => window.clearInterval(interval);
+  }, [words]);
+
+  const word = words.length ? words[wordIndex % words.length] : "";
   if (!visible || !word) return null;
   return (
     <span className={`pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-nowrap text-gray-400 ${textSize}`} aria-hidden="true">
@@ -473,21 +487,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
     const names = products.map((product) => product?.name).filter(Boolean);
     return [...new Set(names)].slice(0, 15);
   }, [products]);
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-
-  useEffect(() => {
-    if (searchPlaceholderNames.length < 2) return undefined;
-
-    const interval = window.setInterval(() => {
-      setPlaceholderIndex((current) => (current + 1) % searchPlaceholderNames.length);
-    }, 2600);
-
-    return () => window.clearInterval(interval);
-  }, [searchPlaceholderNames]);
-
-  const currentPlaceholderWord = searchPlaceholderNames.length
-    ? searchPlaceholderNames[placeholderIndex % searchPlaceholderNames.length]
-    : "";
+  const hasPlaceholderWords = searchPlaceholderNames.length > 0;
 
   // Predictive results while typing, grouped and ranked like a real
   // marketplace search (exact > prefix > keyword > fuzzy typo-match), with
@@ -687,7 +687,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
     onSubmit: submitSearchQuery,
     formatCurrency,
   };
-  const showSearchHint = !searchQuery && !searchFocused && Boolean(currentPlaceholderWord);
+  const showSearchHint = !searchQuery && !searchFocused && hasPlaceholderWords;
   // Static fallback placeholder kept on the input for accessibility; the
   // animated overlay covers it when visible.
   const searchInputPlaceholder = showSearchHint ? "" : "Search for products, brands...";
@@ -957,11 +957,11 @@ const Navbar = ({ hideMobileHeader = false }) => {
             <div className="flex h-10 min-w-0 flex-1 items-center rounded-full border border-gray-200 bg-white px-3 shadow-sm">
               <span className="shrink-0 text-gray-400"><SearchIcon /></span>
               <div className="relative min-w-0 flex-1 px-2">
-                <AnimatedSearchHint visible={!searchQuery && Boolean(currentPlaceholderWord)} word={currentPlaceholderWord} textSize="text-xs" />
+                <AnimatedSearchHint visible={!searchQuery && hasPlaceholderWords} words={searchPlaceholderNames} textSize="text-xs" />
                 <input
                   autoFocus
                   type="text"
-                  placeholder={currentPlaceholderWord ? "" : "Search for products, brands..."}
+                  placeholder={hasPlaceholderWords ? "" : "Search for products, brands..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="min-w-0 w-full py-2 text-xs outline-none placeholder:text-gray-400"
@@ -1040,7 +1040,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
             <div className="flex h-full min-w-0 flex-1 items-center gap-2 px-4">
               <span className="text-gray-400"><SearchIcon /></span>
               <div className="relative min-w-0 flex-1">
-                <AnimatedSearchHint visible={showSearchHint} word={currentPlaceholderWord} textSize="text-[13px]" />
+                <AnimatedSearchHint visible={showSearchHint} words={searchPlaceholderNames} textSize="text-[13px]" />
                 <input
                   type="text"
                   placeholder={searchInputPlaceholder}
@@ -1092,9 +1092,9 @@ const Navbar = ({ hideMobileHeader = false }) => {
           >
             <span className="shrink-0 text-gray-400"><SearchIcon /></span>
             <span className="relative min-w-0 flex-1 px-2">
-              <AnimatedSearchHint visible={!searchQuery && Boolean(currentPlaceholderWord)} word={currentPlaceholderWord} textSize="text-xs" />
-              <span className={`block truncate py-2 text-xs ${searchQuery ? "text-gray-900" : currentPlaceholderWord ? "text-transparent" : "text-gray-400"}`}>
-                {searchQuery || (currentPlaceholderWord ? "." : "Search for products, brands...")}
+              <AnimatedSearchHint visible={!searchQuery && hasPlaceholderWords} words={searchPlaceholderNames} textSize="text-xs" />
+              <span className={`block truncate py-2 text-xs ${searchQuery ? "text-gray-900" : hasPlaceholderWords ? "text-transparent" : "text-gray-400"}`}>
+                {searchQuery || (hasPlaceholderWords ? "." : "Search for products, brands...")}
               </span>
             </span>
           </button>
