@@ -47,6 +47,46 @@ const ProductStripRail = ({ title, products, navigate, prefetchRoute, formatCurr
   );
 };
 
+// Auto-sliding banner marquee: all secondary promo banners in one horizontal
+// strip that glides continuously (~15s per loop), framed by colored bars top
+// and bottom. Content is duplicated once so the -50% translate loops
+// seamlessly; users can still swipe manually (reduced-motion gets swipe only).
+const BannerMarquee = ({ banners, navigate, className = "" }) => {
+  const items = [];
+  const seen = new Set();
+  for (const banner of banners) {
+    if (!banner?.imageUrl || seen.has(banner.imageUrl)) continue;
+    seen.add(banner.imageUrl);
+    items.push(banner);
+  }
+  if (!items.length) return null;
+
+  const loopItems = [...items, ...items];
+
+  return (
+    <section className={`-mx-3 ${className}`}>
+      <div className="h-1.5 bg-gradient-to-r from-orange-600 via-amber-400 to-orange-600" />
+      <div className="scrollbar-none overflow-x-auto bg-white py-3">
+        <div className="kw-banner-marquee flex w-max gap-3 px-3">
+          {loopItems.map((item, index) => (
+            <button
+              key={`marquee-${item._id || item.imageUrl}-${index}`}
+              type="button"
+              onClick={() => navigate(getContentHref(item, "/all-products"))}
+              className="relative aspect-[2.1/1] w-64 shrink-0 overflow-hidden rounded-xl bg-gray-100 shadow-sm"
+              aria-hidden={index >= items.length}
+              tabIndex={index >= items.length ? -1 : 0}
+            >
+              <ContentImage src={item.imageUrl} alt={item.title || "Promotion"} width={512} height={244} className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="h-1.5 bg-gradient-to-r from-orange-600 via-amber-400 to-orange-600" />
+    </section>
+  );
+};
+
 const uniqueById = (products) => {
   const seen = new Set();
 
@@ -422,16 +462,6 @@ const MobileTopCategory = ({ label, category, imageUrl, icon, products, navigate
   );
 };
 
-const MobileServiceCard = ({ title, text, icon }) => (
-  <div className="flex items-center gap-2 px-2.5 py-3">
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-orange-600">{icon}</div>
-    <div className="min-w-0 text-left">
-      <p className="text-[11px] font-extrabold leading-4 text-gray-950">{title}</p>
-      <p className="mt-0.5 truncate text-[10px] leading-4 text-gray-500">{text}</p>
-    </div>
-  </div>
-);
-
 const FLASH_CARD_BACKGROUNDS = [
   "bg-gradient-to-br from-orange-300/90 via-amber-200 to-orange-100",
   "bg-gradient-to-br from-rose-300/90 via-pink-200 to-rose-100",
@@ -625,6 +655,7 @@ const MobileHome = ({
   setActiveHeroIndex,
   activePromo,
   marketingBanners,
+  featuredBanners = [],
   sidebarBanners = [],
   dealOfDayBanners = [],
   dealProducts,
@@ -655,9 +686,30 @@ const MobileHome = ({
   const topStoreCards = storeCards;
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
   const hasRealPromo = Boolean(activePromo?.imageUrl);
-  const mobileMarketingBanners = (Array.isArray(marketingBanners) ? marketingBanners : [])
-    .filter((item) => item?.imageUrl)
-    .slice(0, 3);
+  // Every secondary banner (featured + sidebar) lives in the marquee; the
+  // promocard and the Deal-of-the-Day banner stay standalone, so nothing is
+  // ever shown twice.
+  const marqueeBanners = [...featuredBanners, ...sidebarBanners]
+    .filter((item) => item?.imageUrl && item.imageUrl !== activePromo?.imageUrl);
+
+  // Endless product feed under the stores: 10 more items stream in each time
+  // the sentinel scrolls near the viewport.
+  const [feedCount, setFeedCount] = useState(10);
+  const feedLoadMoreRef = useRef(null);
+
+  useEffect(() => {
+    const node = feedLoadMoreRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") return undefined;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setFeedCount((current) => Math.min(current + 10, sortedProducts.length));
+      }
+    }, { rootMargin: "600px 0px" });
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [sortedProducts.length, feedCount]);
 
   return (
     <main className="bg-[#fbfbfb] px-3 pb-8 pt-3 md:hidden">
@@ -749,6 +801,8 @@ const MobileHome = ({
         className="mt-8"
       />
 
+      <BannerMarquee banners={marqueeBanners} navigate={navigate} className="mt-6" />
+
       {hasRealPromo ? (
         <button
           type="button"
@@ -757,34 +811,6 @@ const MobileHome = ({
         >
           <ContentImage src={activePromo.imageUrl} alt={activePromo.title || "Promotion"} width={720} height={346} className="h-full w-full transition-opacity duration-500" />
         </button>
-      ) : null}
-
-      {sidebarBanners.length ? (
-        <section className="mt-5 grid grid-cols-2 gap-3">
-          {sidebarBanners.slice(0, 2).map((banner, index) => (
-            <MarketingBannerTile
-              key={banner._id || `sidebar-banner-${index}`}
-              item={banner}
-              navigate={navigate}
-              prefetchRoute={prefetchRoute}
-              className="aspect-square rounded-lg"
-            />
-          ))}
-        </section>
-      ) : null}
-
-      {mobileMarketingBanners.length ? (
-        <section className="mt-6 grid gap-2">
-          {mobileMarketingBanners.map((item, index) => (
-            <MarketingBannerTile
-              key={getMarketingBannerKey(item, index)}
-              item={item}
-              navigate={navigate}
-              prefetchRoute={prefetchRoute}
-              className="aspect-[2.35/1]"
-            />
-          ))}
-        </section>
       ) : null}
 
       {dealOfDay && dealOfDayActivity?.flashDealActive ? (
@@ -861,13 +887,23 @@ const MobileHome = ({
         <div ref={storeLoadMoreRef} className="h-1 w-full" aria-hidden="true" />
       </section>
 
-      <NewsletterSection />
+      {sortedProducts.length ? (
+        <section className="mt-8">
+          <SectionHeader title="More To Explore" onViewAll={() => navigate("/all-products")} />
+          <div className="grid grid-cols-2 gap-3">
+            {sortedProducts.slice(0, feedCount).map((product, index) => (
+              <MobileProductCard key={`feed-${index}-${product._id || product.name}`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} toggleProductLike={toggleProductLike} />
+            ))}
+          </div>
+          {feedCount < sortedProducts.length ? (
+            <div ref={feedLoadMoreRef} className="flex justify-center py-5" aria-hidden="true">
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-orange-200 border-t-orange-600" />
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
-      <section className="mt-5 grid grid-cols-3 gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
-        <MobileServiceCard title="Free Delivery" text="On orders over UGX 100,000" icon={<UtilityIcon type="delivery" />} />
-        <MobileServiceCard title="Easy Returns" text="14 days return policy" icon={<UtilityIcon type="returns" />} />
-        <MobileServiceCard title="Secure Payment" text="100% secure checkout" icon={<UtilityIcon type="shield" />} />
-      </section>
+      <NewsletterSection />
     </main>
   );
 };
@@ -1458,6 +1494,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       setActiveHeroIndex={setActiveHeroIndex}
       activePromo={activePromo}
       marketingBanners={marketingBanners}
+      featuredBanners={featuredCards}
       sidebarBanners={sidebarBanners}
       dealOfDayBanners={dealOfDayBanners}
       dealProducts={dealProducts}

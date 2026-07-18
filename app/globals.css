@@ -94,6 +94,23 @@
   animation: cart-burst 550ms ease-out;
 }
 
+/* Banner marquee: content is rendered twice, so translating -50% loops
+   seamlessly. ~15s per pass; pauses while the shopper touches/hovers it. */
+@keyframes kw-banner-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.kw-banner-marquee {
+  animation: kw-banner-marquee 15s linear infinite;
+}
+.kw-banner-marquee:hover,
+.kw-banner-marquee:active {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kw-banner-marquee { animation: none; }
+}
+
 /* Deal-of-the-day rotation: each new deal fades/slides in at a fixed card
    size, so switching deals never jumps. */
 @keyframes deal-swap {
