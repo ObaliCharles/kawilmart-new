@@ -47,40 +47,61 @@ const ProductStripRail = ({ title, products, navigate, prefetchRoute, formatCurr
   );
 };
 
-// Auto-sliding banner marquee: all secondary promo banners in one horizontal
-// strip that glides continuously (~15s per loop), framed by colored bars top
-// and bottom. Content is duplicated once so the -50% translate loops
-// seamlessly; users can still swipe manually (reduced-motion gets swipe only).
-const BannerMarquee = ({ banners, navigate, className = "" }) => {
+// Banner slideshow: exactly ONE banner visible at a time (each shown once —
+// no duplication), held for 10 seconds, then sliding smoothly to the next,
+// looping forever. Framed by colored bars top and bottom.
+const BANNER_SLIDESHOW_HOLD_MS = 10000;
+
+const BannerSlideshow = ({ banners, navigate, className = "" }) => {
+  const [slideIndex, setSlideIndex] = useState(0);
+
   const items = [];
   const seen = new Set();
   for (const banner of banners) {
-    if (!banner?.imageUrl || seen.has(banner.imageUrl)) continue;
-    seen.add(banner.imageUrl);
+    const dedupeKey = banner?._id || banner?.imageUrl;
+    if (!banner?.imageUrl || seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
     items.push(banner);
   }
+
+  useEffect(() => {
+    if (items.length < 2) return undefined;
+
+    const interval = window.setInterval(() => {
+      setSlideIndex((current) => (current + 1) % items.length);
+    }, BANNER_SLIDESHOW_HOLD_MS);
+
+    return () => window.clearInterval(interval);
+  }, [items.length]);
+
   if (!items.length) return null;
 
-  const loopItems = [...items, ...items];
+  const activeBanner = items[slideIndex % items.length];
 
   return (
     <section className={`-mx-3 ${className}`}>
       <div className="h-1.5 bg-gradient-to-r from-orange-600 via-amber-400 to-orange-600" />
-      <div className="scrollbar-none overflow-x-auto bg-white py-3">
-        <div className="kw-banner-marquee flex w-max gap-3 px-3">
-          {loopItems.map((item, index) => (
-            <button
-              key={`marquee-${item._id || item.imageUrl}-${index}`}
-              type="button"
-              onClick={() => navigate(getContentHref(item, "/all-products"))}
-              className="relative aspect-[2.1/1] w-64 shrink-0 overflow-hidden rounded-xl bg-gray-100 shadow-sm"
-              aria-hidden={index >= items.length}
-              tabIndex={index >= items.length ? -1 : 0}
-            >
-              <ContentImage src={item.imageUrl} alt={item.title || "Promotion"} width={512} height={244} className="h-full w-full object-cover" />
-            </button>
-          ))}
+      <div className="bg-white px-3 py-3">
+        <div className="overflow-hidden rounded-xl">
+          <button
+            key={activeBanner._id || activeBanner.imageUrl}
+            type="button"
+            onClick={() => navigate(getContentHref(activeBanner, "/all-products"))}
+            className="kw-banner-slide relative block aspect-[2.1/1] w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm"
+          >
+            <ContentImage src={activeBanner.imageUrl} alt={activeBanner.title || "Promotion"} width={720} height={343} className="h-full w-full object-cover" />
+          </button>
         </div>
+        {items.length > 1 ? (
+          <div className="mt-2 flex items-center justify-center gap-1">
+            {items.map((item, index) => (
+              <span
+                key={`slide-dot-${item._id || item.imageUrl}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${index === slideIndex % items.length ? "w-4 bg-orange-600" : "w-1.5 bg-gray-200"}`}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
       <div className="h-1.5 bg-gradient-to-r from-orange-600 via-amber-400 to-orange-600" />
     </section>
@@ -686,11 +707,16 @@ const MobileHome = ({
   const topStoreCards = storeCards;
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
   const hasRealPromo = Boolean(activePromo?.imageUrl);
-  // Every secondary banner (featured + sidebar) lives in the marquee; the
-  // promocard and the Deal-of-the-Day banner stay standalone, so nothing is
-  // ever shown twice.
-  const marqueeBanners = [...featuredBanners, ...sidebarBanners]
-    .filter((item) => item?.imageUrl && item.imageUrl !== activePromo?.imageUrl);
+  // Slideshow pool: featured + sidebar banners ONLY — promo cards are never
+  // included (they belong to the promocard), and anything matching a promo
+  // slide's image is filtered so no banner can ever appear twice on the page.
+  const promoImageUrls = new Set(
+    (Array.isArray(marketingBanners) ? marketingBanners : [])
+      .filter((item) => item?.imageUrl && !featuredBanners.includes(item))
+      .map((item) => item.imageUrl)
+  );
+  const slideshowBanners = [...featuredBanners, ...sidebarBanners]
+    .filter((item) => item?.imageUrl && !promoImageUrls.has(item.imageUrl));
 
   // Endless product feed under the stores: 10 more items stream in each time
   // the sentinel scrolls near the viewport.
@@ -801,7 +827,7 @@ const MobileHome = ({
         className="mt-8"
       />
 
-      <BannerMarquee banners={marqueeBanners} navigate={navigate} className="mt-6" />
+      <BannerSlideshow banners={slideshowBanners} navigate={navigate} className="mt-6" />
 
       {hasRealPromo ? (
         <button
