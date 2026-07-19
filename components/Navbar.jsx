@@ -289,8 +289,8 @@ const StoreLogo = () => (
 );
 
 const MobileStoreMark = () => (
-  <span className="flex h-10 w-10 items-center justify-center" aria-label="KawilMart">
-    <Image src={assets.kbag_logo} alt="KawilMart" width={40} height={46} className="h-10 w-auto object-contain" priority />
+  <span className="flex h-10 items-center" aria-label="KawilMart">
+    <Image src={assets.logo} alt="KawilMart" width={142} height={42} className="h-9 w-auto object-contain" priority />
   </span>
 );
 
@@ -454,7 +454,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
     getCartCount,
     unreadNotificationsCount,
     recentNotifications,
-    refreshUnreadNotifications,
     markAllNotificationsAsRead,
     products,
     formatCurrency,
@@ -473,6 +472,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [activeCategory, setActiveCategory] = useState(homeCategoryValues[0]);
   const [isMobileAccountOpen, setIsMobileAccountOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const clerkReady = isUserLoaded && isAuthLoaded;
   const cartCount = getCartCount();
   const isAuthenticated = Boolean(user);
@@ -712,6 +712,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
   const goTo = (href) => {
     closeDropdown();
     setIsMobileAccountOpen(false);
+    setIsMobileMenuOpen(false);
     navigate(href);
   };
 
@@ -731,6 +732,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
     }
 
     closeDropdown();
+    setIsMobileMenuOpen(false);
     setIsMobileAccountOpen(true);
   };
 
@@ -745,11 +747,11 @@ const Navbar = ({ hideMobileHeader = false }) => {
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;
 
-    document.body.style.overflow = (isMobileAccountOpen || isMobileSearchActive) ? 'hidden' : '';
+    document.body.style.overflow = (isMobileAccountOpen || isMobileSearchActive || isMobileMenuOpen) ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isMobileAccountOpen, isMobileSearchActive]);
+  }, [isMobileAccountOpen, isMobileMenuOpen, isMobileSearchActive]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -766,29 +768,6 @@ const Navbar = ({ hideMobileHeader = false }) => {
     mediaQuery.addListener(syncViewport);
     return () => mediaQuery.removeListener(syncViewport);
   }, []);
-
-  useEffect(() => {
-    if (!clerkReady || !user) return;
-
-    let timeoutId;
-    let idleId;
-    const scheduleFetch = () => {
-      void refreshUnreadNotifications({ silent: true });
-    };
-
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      idleId = window.requestIdleCallback(scheduleFetch, { timeout: 1200 });
-    } else {
-      timeoutId = window.setTimeout(scheduleFetch, 400);
-    }
-
-    return () => {
-      if (idleId && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
-        window.cancelIdleCallback(idleId);
-      }
-      if (timeoutId) window.clearTimeout(timeoutId);
-    };
-  }, [clerkReady, refreshUnreadNotifications, user]);
 
   useEffect(() => {
     const routes = ['/', '/categories', '/all-products', '/cart', '/my-orders', '/inbox'];
@@ -993,6 +972,61 @@ const Navbar = ({ hideMobileHeader = false }) => {
         </div>
       ) : null}
 
+      {isMobileMenuOpen ? (
+        <div className="fixed inset-0 z-[52] bg-black/35 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+          <aside className="h-full w-[86vw] max-w-[22rem] overflow-y-auto bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-100 bg-white px-4 py-4">
+              <button type="button" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-950">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+              </button>
+              <MobileStoreMark />
+            </div>
+            <div className="divide-y divide-gray-100">
+              <section className="px-4 py-3">
+                <button type="button" onClick={() => goTo('/about')} className="flex w-full items-center justify-between py-3 text-left text-[13px] font-bold uppercase tracking-wide text-gray-500">
+                  Need help?
+                  <ChevronRight />
+                </button>
+                <button type="button" onClick={() => user ? openMobileAccount() : openSignIn()} className="flex w-full items-center justify-between py-3 text-left text-[13px] font-bold uppercase tracking-wide text-gray-500">
+                  My KawilMart account
+                  <ChevronRight />
+                </button>
+              </section>
+              <section className="px-4 py-3">
+                {[
+                  ["Orders", "/my-orders", "orders"],
+                  ["Inbox", "/inbox", "bell"],
+                  ["Wishlist", "/wishlist", "wishlist"],
+                  ["Become a Vendor", "/seller", "seller"],
+                ].map(([label, href, icon]) => (
+                  <button key={label} type="button" onClick={() => requireAuthNavigation(href)} className="flex w-full items-center gap-4 py-3 text-left text-[16px] font-medium text-gray-900">
+                    <AccountMenuIcon type={icon} className="h-6 w-6 text-gray-800" />
+                    {label}
+                  </button>
+                ))}
+              </section>
+              <section className="px-4 py-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="text-[13px] font-bold uppercase tracking-wide text-gray-500">Our categories</h2>
+                  <button type="button" onClick={() => goTo('/categories')} className="text-sm font-semibold text-orange-600">See All</button>
+                </div>
+                {popularCategoryTiles.slice(0, 8).map((category) => (
+                  <button key={category.value} type="button" onClick={() => goTo(buildCategoryHref(category.value))} className="flex w-full items-center gap-4 py-3 text-left text-[16px] font-medium text-gray-900">
+                    <DropdownCategoryThumb
+                      category={category.value}
+                      imageUrl={category.imageUrl}
+                      boxClassName="h-7 w-7 bg-white text-gray-900"
+                      iconClassName="h-6 w-6"
+                    />
+                    {category.label}
+                  </button>
+                ))}
+              </section>
+            </div>
+          </aside>
+        </div>
+      ) : null}
+
       <header className={`sticky top-0 z-40 border-b border-gray-200 bg-white ${hideMobileHeader ? "hidden md:block" : ""}`}>
         <div className="hidden border-b border-gray-100 text-xs text-gray-600 lg:block">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
@@ -1006,7 +1040,15 @@ const Navbar = ({ hideMobileHeader = false }) => {
           </div>
         </div>
 
-        <div className="mx-auto flex max-w-[1500px] items-center gap-2 px-3 py-2.5 md:gap-3 md:px-5 lg:gap-5">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center gap-x-2 gap-y-2 px-3 py-2 md:flex-nowrap md:gap-3 md:px-5 md:py-2.5 lg:gap-5">
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-950 md:hidden"
+            aria-label="Open menu"
+          >
+            <MenuIcon />
+          </button>
           <Link href="/" prefetch className="shrink-0" onClick={() => beginLinkNavigation("/")}>
             <span className="md:hidden"><MobileStoreMark /></span>
             <span className="hidden md:block"><StoreLogo /></span>
@@ -1087,7 +1129,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
           <button
             type="button"
             onClick={() => setIsMobileSearchActive(true)}
-            className="relative flex h-10 min-w-0 flex-[1_1_0%] items-center rounded-full border border-gray-200 bg-white px-3 text-left shadow-sm md:hidden"
+            className="relative order-last flex h-11 w-full min-w-0 items-center rounded-full border border-gray-200 bg-white px-3 text-left shadow-sm md:hidden"
             aria-label="Open search"
           >
             <span className="shrink-0 text-gray-400"><SearchIcon /></span>
@@ -1099,9 +1141,9 @@ const Navbar = ({ hideMobileHeader = false }) => {
             </span>
           </button>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1.5 md:hidden">
+          <div className="ml-auto flex shrink-0 items-center gap-2 md:hidden">
             {isAuthenticated ? (
-              <button type="button" onClick={() => navigate('/inbox')} aria-label="Open notifications" className="relative flex h-9 w-9 shrink-0 items-center justify-center text-gray-900">
+              <button type="button" onClick={() => navigate('/inbox')} aria-label="Open notifications" className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-900">
                 <NotificationIcon />
                 {unreadNotificationsCount > 0 && (
                   <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
@@ -1110,7 +1152,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
                 )}
               </button>
             ) : null}
-            <button type="button" onClick={() => navigate('/cart')} aria-label="Open cart" className="relative flex h-9 w-9 shrink-0 items-center justify-center text-gray-900">
+            <button type="button" onClick={() => navigate('/cart')} aria-label="Open cart" className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-900">
               <AccountMenuIcon type="cart" className="h-6 w-6" />
               {cartCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
@@ -1183,8 +1225,8 @@ const Navbar = ({ hideMobileHeader = false }) => {
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-[48] bg-white/95 px-4 pb-2 pt-2 shadow-[0_-10px_30px_rgba(15,23,42,0.10)] backdrop-blur md:hidden">
-        <div className="relative mx-auto grid max-w-sm grid-cols-5 rounded-2xl border border-gray-100 bg-white px-1 py-1.5 text-[11px] font-semibold text-gray-500 shadow-sm">
+      <nav className="fixed inset-x-0 bottom-0 z-[48] bg-white/95 px-4 pb-1.5 pt-1.5 shadow-[0_-8px_24px_rgba(15,23,42,0.10)] backdrop-blur md:hidden">
+        <div className="relative mx-auto grid max-w-sm grid-cols-5 rounded-[1.25rem] border border-gray-100 bg-white px-1 py-1 text-[10px] font-semibold text-gray-500 shadow-sm">
           {[
             { key: "home", label: "Home", href: "/", icon: <DockIcon type="home" /> },
             { key: "categories", label: "Categories", href: "/categories", icon: <DockIcon type="categories" /> },
@@ -1193,28 +1235,28 @@ const Navbar = ({ hideMobileHeader = false }) => {
               key={item.label}
               type="button"
               onClick={() => item.href ? navigate(item.href) : openSignIn()}
-              className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl transition ${isDockActive(item) ? "bg-orange-50 text-orange-600" : "text-gray-500"}`}
+              className={`relative flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-xl transition ${isDockActive(item) ? "bg-orange-50 text-orange-600" : "text-gray-500"}`}
             >
-              {item.icon}
+              {React.cloneElement(item.icon, { className: "h-5 w-5" })}
               {item.label}
             </button>
           ))}
 
           {/* Cart: raised circular FAB — the centerpiece of the dock and the
               landing target for the fly-to-cart animation. */}
-          <div className="relative flex min-h-12 flex-col items-center justify-end gap-1">
+          <div className="relative flex min-h-10 flex-col items-center justify-end gap-0.5">
             <button
               ref={cartIconRef}
               type="button"
               onClick={() => navigate('/cart')}
               aria-label={`Cart, ${cartCount} item${cartCount === 1 ? "" : "s"}`}
-              className="absolute -top-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-[0_10px_22px_rgba(234,88,12,0.45)] ring-[5px] ring-white transition-transform active:scale-95"
+              className="absolute -top-6 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-[0_9px_20px_rgba(234,88,12,0.42)] ring-[4px] ring-white transition-transform active:scale-95"
             >
               {cartBumpTick > 0 ? (
                 <span key={`burst-${cartBumpTick}`} className="pointer-events-none absolute inset-0 rounded-full animate-cart-burst" />
               ) : null}
               <span key={`icon-${cartBumpTick}`} className={cartBumpTick > 0 ? "animate-cart-bump" : ""}>
-                <DockIcon type="cart" className="h-6 w-6" />
+                <DockIcon type="cart" className="h-5 w-5" />
               </span>
               {cartCount > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white ring-2 ring-white">
@@ -1222,7 +1264,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
                 </span>
               )}
             </button>
-            <span className={`mt-8 transition ${pathname === "/cart" ? "text-orange-600" : "text-gray-500"}`}>Cart</span>
+            <span className={`mt-7 transition ${pathname === "/cart" ? "text-orange-600" : "text-gray-500"}`}>Cart</span>
           </div>
 
           {[
@@ -1232,21 +1274,21 @@ const Navbar = ({ hideMobileHeader = false }) => {
               key={item.label}
               type="button"
               onClick={() => item.href ? navigate(item.href) : openSignIn()}
-              className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl transition ${isDockActive(item) ? "bg-orange-50 text-orange-600" : "text-gray-500"}`}
+              className={`relative flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-xl transition ${isDockActive(item) ? "bg-orange-50 text-orange-600" : "text-gray-500"}`}
             >
-              {item.icon}
+              {React.cloneElement(item.icon, { className: "h-5 w-5" })}
               {item.label}
             </button>
           ))}
           {!clerkReady ? (
-            <div className="flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-gray-500">
+            <div className="flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-xl text-gray-500">
               <NavbarUserSkeleton />
               <span>Account</span>
             </div>
           ) : user ? (
-            <div className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl transition ${isMobileAccountOpen ? "text-orange-600" : "text-gray-500"}`}>
-              <button type="button" onClick={openMobileAccount} aria-label="Open account menu" className="relative flex flex-col items-center gap-1">
-                <DockIcon type="account" />
+            <div className={`relative flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-xl transition ${isMobileAccountOpen ? "text-orange-600" : "text-gray-500"}`}>
+              <button type="button" onClick={openMobileAccount} aria-label="Open account menu" className="relative flex flex-col items-center gap-0.5">
+                <DockIcon type="account" className="h-5 w-5" />
                 {unreadNotificationsCount > 0 && (
                   <span className="absolute -right-2 -top-2 inline-flex min-w-[1.05rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white shadow-sm">
                     {formatBadgeCount(unreadNotificationsCount)}
@@ -1259,7 +1301,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
             <button
               type="button"
               onClick={openSignIn}
-              className="relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-gray-500 transition hover:text-orange-600"
+              className="relative flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-xl text-gray-500 transition hover:text-orange-600"
             >
               <UserLineIcon />
               Account

@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
-import AnimatedTrustStrip from "@/components/AnimatedTrustStrip";
 import Skeleton from "@/components/Skeleton";
 import { resolveSiteContent } from "@/lib/defaultSiteContent";
 import { categoryMatchesSelection, homeCategoryValues, getCategoryMeta, homeTopRailDefaults, TOP_RAIL_PARENT } from "@/lib/marketplaceCategories";
@@ -381,7 +380,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
       </div>
 
       {safeSlides.length > 1 ? (
-        <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/25 px-1.5 py-1 backdrop-blur-sm sm:gap-1.5 sm:px-2 sm:py-1.5">
+        <div className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white/90 px-2.5 py-1.5 shadow-sm backdrop-blur-sm sm:gap-1.5">
           {safeSlides.map((slide, index) => (
             <button
               key={slide._id || index}
@@ -390,7 +389,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
                 event.stopPropagation();
                 onSelect(index);
               }}
-              className={`h-1.5 rounded-full transition-all sm:h-2 ${currentIndex === index ? "w-4 bg-white sm:w-5" : "w-1.5 bg-white/55 sm:w-2"}`}
+              className={`h-1.5 rounded-full transition-all ${currentIndex === index ? "w-4 bg-orange-600" : "w-1.5 bg-gray-300"}`}
               aria-label={`Show offer ${index + 1}`}
             />
           ))}
@@ -436,7 +435,7 @@ const MobileRoundCategory = ({ label, category, icon, imageUrl, navigate }) => {
       onClick={() => navigate(`/all-products?category=${encodeURIComponent(category)}`)}
       className="flex min-w-0 flex-col items-center gap-1.5 text-center"
     >
-      <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center overflow-hidden rounded-full bg-white text-2xl shadow-sm ring-1 ring-gray-100">
+      <span className="flex h-[3.35rem] w-[3.35rem] items-center justify-center overflow-hidden rounded-full bg-[#fff7f2] text-2xl shadow-sm ring-[3px] ring-white outline outline-1 outline-gray-100">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={label} className="h-full w-full object-contain p-1.5" />
@@ -448,6 +447,59 @@ const MobileRoundCategory = ({ label, category, icon, imageUrl, navigate }) => {
       </span>
       <span className="line-clamp-2 min-h-7 text-[10px] font-bold leading-[14px] text-gray-950">{label}</span>
     </button>
+  );
+};
+
+const MobileBrandDisplay = ({ brands = [], showcases = [], navigate }) => {
+  const brandItems = [
+    ...brands
+      .filter((brand) => brand?.name && brand.isActive !== false)
+      .map((brand) => ({
+        id: brand._id || brand.slug || brand.name,
+        name: brand.name,
+        imageUrl: brand.logoUrl || "",
+        href: `/all-products?brand=${encodeURIComponent(brand.name)}`,
+      })),
+    ...showcases
+      .filter((item) => (item?.brand || item?.title) && item?.imageUrl)
+      .map((item) => ({
+        id: item._id || item.brand || item.title,
+        name: item.brand || item.title,
+        imageUrl: item.imageUrl,
+        href: getContentHref(item, `/all-products?brand=${encodeURIComponent(item.brand || item.title)}`),
+      })),
+  ];
+
+  const uniqueBrands = uniqueById(
+    brandItems.map((item) => ({ ...item, _id: String(item.id || item.name).toLowerCase() }))
+  ).slice(0, 8);
+
+  if (!uniqueBrands.length) return null;
+
+  return (
+    <section className="mt-5 overflow-hidden rounded-2xl bg-white px-3 py-3 shadow-sm ring-1 ring-gray-100">
+      <div className="scrollbar-none flex items-center gap-5 overflow-x-auto">
+        {uniqueBrands.map((brand) => (
+          <button
+            key={brand._id}
+            type="button"
+            onClick={() => navigate(brand.href)}
+            className="flex h-10 min-w-[4.75rem] shrink-0 items-center justify-center"
+            aria-label={`Shop ${brand.name}`}
+          >
+            {brand.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={brand.imageUrl} alt={brand.name} className="max-h-8 max-w-[5.5rem] object-contain" />
+            ) : (
+              <span className="text-sm font-black text-gray-950">{brand.name}</span>
+            )}
+          </button>
+        ))}
+        <button type="button" onClick={() => navigate("/all-products")} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500">
+          <ChevronRight />
+        </button>
+      </div>
+    </section>
   );
 };
 
@@ -688,6 +740,8 @@ const MobileHome = ({
   homeCategoryRail = [],
   topRailTiles = [],
   recentlyViewedProducts = [],
+  brands = [],
+  brandShowcases = [],
   navigate,
   prefetchRoute,
   formatCurrency,
@@ -746,10 +800,10 @@ const MobileHome = ({
           onSelect={setActiveHeroIndex}
           navigate={navigate}
           priority
-          className="aspect-[2.08/1] rounded-xl bg-gray-100 shadow-sm"
+          className="aspect-[2.08/1] rounded-[1.35rem] bg-gray-100 shadow-sm"
         />
       ) : (
-        <PromoPlaceholder navigate={navigate} className="aspect-[2.08/1] w-full rounded-xl shadow-sm" />
+        <PromoPlaceholder navigate={navigate} className="aspect-[2.08/1] w-full rounded-[1.35rem] shadow-sm" />
       )}
 
       <section className="mt-4 grid grid-cols-5 gap-x-2 gap-y-3">
@@ -762,7 +816,7 @@ const MobileHome = ({
         </button>
       </section>
 
-      <AnimatedTrustStrip className="mt-4" />
+      <MobileBrandDisplay brands={brands} showcases={brandShowcases} navigate={navigate} />
 
       <section className="-mx-3 mt-6 rounded-xl bg-gradient-to-br from-orange-100/90 via-rose-100/75 to-amber-50 px-3 py-3.5">
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -1281,7 +1335,7 @@ const FlashCountdown = ({ deadline, size = "md" }) => {
 };
 
 const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
-  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike, customTopCategories, subcategoriesByParent } = useAppContext();
+  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike, customTopCategories, subcategoriesByParent, brands } = useAppContext();
   const [recentlyViewedIds, setRecentlyViewedIds] = useState([]);
 
   useEffect(() => {
@@ -1371,6 +1425,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const promoSlides = resolvedContent.promoBanners.filter((banner) => banner.imageUrl);
   const featuredCards = resolvedContent.featuredCards.filter((card) => card.imageUrl);
   const sidebarBanners = resolvedContent.sidebarPromoBanners.filter((banner) => banner.imageUrl);
+  const brandShowcases = resolvedContent.brandShowcases || [];
   // A "Deal of the Day" banner is any admin-uploaded promo/sidebar banner
   // pointed at a product (via productId) that currently has a genuinely
   // active flash deal — the countdown shown for it is that specific
@@ -1532,6 +1587,8 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       homeCategoryRail={homeCategoryRail}
       topRailTiles={topRailTiles}
       recentlyViewedProducts={recentlyViewedProducts}
+      brands={brands}
+      brandShowcases={brandShowcases}
       navigate={navigate}
       prefetchRoute={prefetchRoute}
       formatCurrency={formatCurrency}

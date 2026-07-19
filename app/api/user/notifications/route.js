@@ -18,11 +18,19 @@ export async function GET(request) {
             return NextResponse.json({ success: false, message: "User not found" })
         }
 
-        const notifications = [...(user.notifications || [])].sort(
+        const { searchParams } = new URL(request.url)
+        const limit = Math.max(0, Number(searchParams.get("limit")) || 0)
+        const allNotifications = user.notifications || []
+        const unreadCount = allNotifications.filter((notification) => !notification.read).length
+        const notifications = [...allNotifications].sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         )
 
-        return NextResponse.json({ success: true, notifications })
+        return NextResponse.json({
+            success: true,
+            notifications: limit ? notifications.slice(0, limit) : notifications,
+            unreadCount,
+        })
 
     } catch (error) {
         return NextResponse.json({

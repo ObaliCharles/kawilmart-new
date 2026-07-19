@@ -329,11 +329,13 @@ export const AppContextProvider = (props) => {
 
             const token = await getToken()
             const headers = token ? { Authorization: `Bearer ${token}` } : {}
-            const { data } = await axios.get('/api/user/notifications', { headers })
+            const { data } = await axios.get(`/api/user/notifications${full ? "" : "?limit=4"}`, { headers })
 
             if (data.success) {
                 const nextNotifications = data.notifications || []
-                const unreadCount = nextNotifications.filter((notification) => !notification.read).length
+                const unreadCount = typeof data.unreadCount === "number"
+                    ? data.unreadCount
+                    : nextNotifications.filter((notification) => !notification.read).length
                 setUnreadNotificationsCount(unreadCount)
                 setRecentNotifications(full ? nextNotifications : nextNotifications.slice(0, 4))
                 return nextNotifications
