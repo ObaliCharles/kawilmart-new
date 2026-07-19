@@ -1,10 +1,40 @@
 'use client'
 
 import { useAppContext } from "@/context/AppContext";
-import { DELIVERY_MODES, calculateDeliveryFee } from "@/lib/orderLifecycle";
+import { DELIVERY_MODES, PAYMENT_METHODS, calculateDeliveryFee } from "@/lib/orderLifecycle";
 import axios from "axios";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
+
+const PAYMENT_METHOD_SAVE_KEY = "kw_checkout_payment_method";
+
+const PAYMENT_OPTIONS = [
+  {
+    value: PAYMENT_METHODS.COD,
+    label: "Cash on Delivery",
+    hint: "Pay when you receive it",
+    mark: <span className="text-[9px] font-bold text-gray-600">CASH</span>,
+  },
+  {
+    value: PAYMENT_METHODS.MTN_MOMO,
+    label: "MTN Mobile Money",
+    hint: "Pay the rider via MoMo",
+    mark: <span className="rounded-sm bg-[#FFCC00] px-1 py-0.5 text-[8px] font-black leading-none text-black">MTN</span>,
+  },
+  {
+    value: PAYMENT_METHODS.AIRTEL_MONEY,
+    label: "Airtel Money",
+    hint: "Pay the rider via Airtel",
+    mark: <span className="text-[9px] font-black lowercase text-[#E40000]">airtel</span>,
+  },
+];
+
+const createIdempotencyKey = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID().replace(/-/g, "");
+  }
+  return `${Date.now()}${Math.random().toString(36).slice(2, 10)}`;
+};
 
 const OrderSummary = () => {
   const {
@@ -24,7 +54,32 @@ const OrderSummary = () => {
   const [userAddresses, setUserAddresses] = useState([]);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [deliveryMode, setDeliveryMode] = useState(DELIVERY_MODES.DELIVERY);
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS.COD);
+  // One idempotency key per checkout attempt: reused across retries of the
+  // same cart, regenerated after a successful order.
+  const idempotencyKeyRef = useRef(createIdempotencyKey());
   const cartAmount = getCartAmount();
+
+  // Auto-save: restore the shopper's last payment choice.
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(PAYMENT_METHOD_SAVE_KEY);
+      if (saved && Object.values(PAYMENT_METHODS).includes(saved)) {
+        setPaymentMethod(saved);
+      }
+    } catch {
+      // Storage unavailable — default stands.
+    }
+  }, []);
+
+  const choosePaymentMethod = (method) => {
+    setPaymentMethod(method);
+    try {
+      window.localStorage.setItem(PAYMENT_METHOD_SAVE_KEY, method);
+    } catch {
+      // Best-effort persistence only.
+    }
+  };
   const cartItemCount = Object.values(resolvedCartItems).filter((quantity) => quantity > 0).length;
 
   const estimatedDeliveryFee = useMemo(() => {
@@ -102,11 +157,14 @@ const OrderSummary = () => {
           address: selectedAddress._id,
           items: cartItemsArray,
           deliveryMode,
+          paymentMethod,
+          idempotencyKey: idempotencyKeyRef.current,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (data.success) {
+        idempotencyKeyRef.current = createIdempotencyKey();
         setCartItems({});
         toast.success(data.message || "Order placed");
         navigate("/order-placed", { scroll: true });
@@ -158,6 +216,25 @@ const OrderSummary = () => {
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-bold text-gray-950">Summary</h2>
         <span className="text-[11px] text-gray-500">{cartItemCount} item{cartItemCount === 1 ? "" : "s"}</span>
+      </div>
+
+      {/* Step indicator: cart → address → payment → place order */}
+      <div className="mt-2 flex items-center gap-1">
+        {[
+          ["Cart", cartItemCount > 0],
+          ["Address", Boolean(selectedAddress)],
+          ["Payment", Boolean(paymentMethod)],
+        ].map(([label, done], index) => (
+          <React.Fragment key={label}>
+            {index > 0 ? <span className={`h-px flex-1 ${done ? "bg-orange-400" : "bg-gray-200"}`} /> : null}
+            <span className="flex items-center gap-1">
+              <span className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[8px] font-bold ${done ? "bg-orange-600 text-white" : "bg-gray-200 text-gray-500"}`}>
+                {done ? "✓" : index + 1}
+              </span>
+              <span className={`text-[9.5px] font-semibold ${done ? "text-gray-800" : "text-gray-400"}`}>{label}</span>
+            </span>
+          </React.Fragment>
+        ))}
       </div>
 
       <div className="mt-2.5 space-y-2.5">
@@ -236,6 +313,35 @@ const OrderSummary = () => {
                 {label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-gray-400">Payment</label>
+          <div className="space-y-1.5">
+            {PAYMENT_OPTIONS.map((option) => {
+              const isSelected = paymentMethod === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => choosePaymentMethod(option.value)}
+                  disabled={isPlacingOrder}
+                  className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition ${
+                    isSelected ? "bg-orange-50 ring-1 ring-orange-300" : "bg-gray-50 hover:bg-gray-100"
+                  }`}
+                >
+                  <span className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border ${isSelected ? "border-orange-600" : "border-gray-300"}`}>
+                    {isSelected ? <span className="h-2 w-2 rounded-full bg-orange-600" /> : null}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[11px] font-semibold text-gray-900">{option.label}</span>
+                    <span className="block truncate text-[9.5px] text-gray-500">{option.hint}</span>
+                  </span>
+                  <span className="flex h-5 shrink-0 items-center rounded bg-white px-1.5 shadow-sm">{option.mark}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

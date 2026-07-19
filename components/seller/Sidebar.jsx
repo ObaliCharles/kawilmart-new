@@ -17,6 +17,7 @@ const SideBar = () => {
     ];
 
     const shortcuts = [
+        { name: 'Verification', path: '/seller/verification', icon: '✅', accentClassName: 'text-gray-700' },
         ...(isAdmin ? [{ name: 'Admin Panel', path: '/admin', icon: '🛡️', accentClassName: 'text-orange-600 font-medium' }] : []),
         { name: 'Back to Store', path: '/', icon: '🏠', accentClassName: 'text-gray-500' },
     ];

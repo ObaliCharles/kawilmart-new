@@ -21,9 +21,11 @@ export async function GET(request) {
         const rawLimit = parseInt(searchParams.get('limit') || '', 10)
         const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 1000
         const page = parseInt(searchParams.get('page')) || 1
+        const search = searchParams.get('search') || ''
+        const category = searchParams.get('category') || ''
 
         const [products, total] = await Promise.all([
-            getStorefrontProducts({ limit, page, userId }),
+            getStorefrontProducts({ limit, page, userId, search, category }),
             Product.estimatedDocumentCount(),
         ])
 

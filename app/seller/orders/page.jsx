@@ -167,6 +167,11 @@ const Orders = () => {
                                                     <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${getPaymentStatusBadgeClass(order.paymentStatus)}`}>
                                                         {order.paymentStatus}
                                                     </span>
+                                                    {order.paymentMethodLabel ? (
+                                                        <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                                                            {order.paymentMethodLabel}
+                                                        </span>
+                                                    ) : null}
                                                 </div>
                                                 <select
                                                     value={order.paymentStatus || 'Pending'}
@@ -240,6 +245,51 @@ const Orders = () => {
                                                     {flag.replace(/_/g, ' ')}
                                                 </span>
                                             ))}
+                                        </div>
+                                    ) : null}
+
+                                    {order.returnRequest?.status && order.returnRequest.status !== 'NONE' ? (
+                                        <div className="mt-3 rounded-lg bg-amber-50/70 p-2.5">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-gray-950">
+                                                        Return request · <span className="font-medium text-gray-600">{order.returnRequest.reason}</span>
+                                                    </p>
+                                                    {order.returnRequest.note ? (
+                                                        <p className="mt-0.5 text-[11px] text-gray-600">{order.returnRequest.note}</p>
+                                                    ) : null}
+                                                </div>
+                                                {order.actions?.canResolveReturn ? (
+                                                    <div className="flex shrink-0 gap-1.5">
+                                                        <button
+                                                            onClick={() => void updateOrder(order._id, { returnAction: 'APPROVE' }, 'return')}
+                                                            disabled={isUpdatingOrder}
+                                                            className="rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                        <button
+                                                            onClick={() => void updateOrder(order._id, { returnAction: 'REJECT' }, 'return')}
+                                                            disabled={isUpdatingOrder}
+                                                            className="rounded-full bg-rose-50 px-3 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                                                        >
+                                                            Decline
+                                                        </button>
+                                                    </div>
+                                                ) : order.returnRequest.status === 'APPROVED' ? (
+                                                    <button
+                                                        onClick={() => void updateOrder(order._id, { returnAction: 'REFUNDED' }, 'return')}
+                                                        disabled={isUpdatingOrder}
+                                                        className="shrink-0 rounded-full bg-gray-950 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-gray-800 disabled:opacity-60"
+                                                    >
+                                                        Mark refunded
+                                                    </button>
+                                                ) : (
+                                                    <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-gray-600">
+                                                        {order.returnRequest.status}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     ) : null}
                                 </div>

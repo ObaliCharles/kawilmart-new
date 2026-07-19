@@ -5,9 +5,13 @@ import Order from "@/models/Order";
 import User from "@/models/User";
 import {
     ORDER_STATUSES,
+    RETURN_STATUSES,
+    RETURN_WINDOW_DAYS,
     canCustomerConfirmOrder,
+    canCustomerRequestReturn,
     canCustomerReviewSeller,
 } from "@/lib/orderLifecycle";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import {
     createSellerStatusNotification,
     createStatusTrackingEvent,
@@ -34,9 +38,14 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
         }
 
-        const { orderId, action, review } = await request.json();
+        const { orderId, action, review, returnReason, returnNote } = await request.json();
         if (!orderId || !action) {
             return NextResponse.json({ success: false, message: "Order ID and action are required" }, { status: 400 });
+        }
+
+        const rateCheck = checkRateLimit(`customer-action:${userId}`, { limit: 20, windowMs: 60000 });
+        if (!rateCheck.allowed) {
+            return NextResponse.json(rateLimitResponse(rateCheck.retryAfterSeconds), { status: 429 });
         }
 
         await connectDB();
@@ -140,6 +149,53 @@ export async function POST(request) {
             }]);
 
             return NextResponse.json({ success: true, message: "Seller review submitted successfully" });
+        }
+
+        if (action === "REQUEST_RETURN") {
+            if (!canCustomerRequestReturn(order)) {
+                return NextResponse.json({
+                    success: false,
+                    message: `Returns can only be requested within ${RETURN_WINDOW_DAYS} days of delivery`,
+                }, { status: 400 });
+            }
+
+            const reason = typeof returnReason === "string" ? returnReason.trim().slice(0, 120) : "";
+            if (!reason) {
+                return NextResponse.json({ success: false, message: "Please choose a reason for the return" }, { status: 400 });
+            }
+
+            order.returnRequest = {
+                status: RETURN_STATUSES.REQUESTED,
+                reason,
+                note: typeof returnNote === "string" ? returnNote.trim().slice(0, 600) : "",
+                requestedAt: new Date(),
+            };
+            order.trackingEvents = [
+                ...(order.trackingEvents || []),
+                {
+                    type: "system",
+                    title: "Return requested",
+                    description: `Customer requested a return: ${reason}`,
+                    timestamp: new Date(),
+                },
+            ];
+            await order.save();
+
+            if (order.sellerId) {
+                await notifyUsers([{
+                    userId: order.sellerId,
+                    notification: getNotification(
+                        "Return requested",
+                        `A customer requested a return on order #${formatShortOrderId(order._id)} (${reason}).`
+                    ),
+                    emailTitle: `Return requested: #${formatShortOrderId(order._id)}`,
+                    emailMessage: `A customer requested a return on order #${formatShortOrderId(order._id)}. Reason: ${reason}. Review it from your seller orders page.`,
+                    ctaLabel: "Review return request",
+                    ctaPath: "/seller/orders",
+                }]);
+            }
+
+            return NextResponse.json({ success: true, message: "Return request submitted" });
         }
 
         return NextResponse.json({ success: false, message: "Unsupported customer action" }, { status: 400 });

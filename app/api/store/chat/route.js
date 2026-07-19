@@ -5,6 +5,7 @@ import User from "@/models/User";
 import { getRequestUserId } from "@/lib/requestAuth";
 import { notifyUsers } from "@/lib/notifyUsers";
 import { sortMessagesByDate } from "@/lib/supportChat";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 // Direct buyer <-> seller store chat. Each participant keeps their own copy of
 // the thread inside their `messages` array (channel: "direct"), keyed by a
@@ -106,6 +107,11 @@ export async function POST(request) {
     const currentUserId = await getRequestUserId(request);
     if (!currentUserId) {
       return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
+    }
+
+    const rateCheck = checkRateLimit(`store-chat:${currentUserId}`, { limit: 25, windowMs: 60000 });
+    if (!rateCheck.allowed) {
+      return NextResponse.json(rateLimitResponse(rateCheck.retryAfterSeconds), { status: 429 });
     }
 
     const { peerId, content } = await request.json();

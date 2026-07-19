@@ -96,9 +96,38 @@ const AddAddress = () => {
         postalCode: "",
         deliveryPreferences: [],
         isDefault: true,
+        latitude: null,
+        longitude: null,
     });
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [loadingSavedAddresses, setLoadingSavedAddresses] = useState(false);
+    const [capturingLocation, setCapturingLocation] = useState(false);
+
+    const captureGpsLocation = () => {
+        if (capturingLocation) return;
+        if (typeof navigator === "undefined" || !navigator.geolocation) {
+            toast.error("Location is not supported on this device");
+            return;
+        }
+
+        setCapturingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setAddress((current) => ({
+                    ...current,
+                    latitude: Number(position.coords.latitude.toFixed(6)),
+                    longitude: Number(position.coords.longitude.toFixed(6)),
+                }));
+                setCapturingLocation(false);
+                toast.success("Location pinned — riders will find you faster");
+            },
+            () => {
+                setCapturingLocation(false);
+                toast.error("Could not get your location. Check location permissions.");
+            },
+            { enableHighAccuracy: true, timeout: 12000 }
+        );
+    };
 
     const selectedRegionMeta = useMemo(() => getRegionMeta(address.region), [address.region]);
     const selectedDistrictProfile = useMemo(() => getDistrictProfile(address.district), [address.district]);
@@ -196,6 +225,8 @@ const AddAddress = () => {
                 postalCode: address.postalCode.trim(),
                 deliveryPreferences: address.deliveryPreferences,
                 isDefault: address.isDefault,
+                latitude: address.latitude,
+                longitude: address.longitude,
                 state: address.region,
                 city: address.district,
                 area: areaParts.join(", ") || `${address.village}, ${address.district}`,
@@ -399,8 +430,20 @@ const AddAddress = () => {
                                         </div>
                                     </div>
 
-                                    <div className="mt-3 rounded-xl border border-orange-100 bg-orange-50 px-3 py-2.5 text-sm text-orange-700">
-                                        Landmarks help our riders find you easily. If your area is a village or trading centre, add the road name too.
+                                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-orange-100 bg-orange-50 px-3 py-2.5 text-sm text-orange-700">
+                                        <span className="min-w-0 flex-1 text-[13px]">
+                                            {address.latitude != null && address.longitude != null
+                                                ? `GPS pinned: ${address.latitude}, ${address.longitude}`
+                                                : "Landmarks help riders find you. Pin your GPS location for door-level accuracy."}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={captureGpsLocation}
+                                            disabled={capturingLocation}
+                                            className="shrink-0 rounded-full bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-700 disabled:opacity-60"
+                                        >
+                                            {capturingLocation ? "Locating..." : address.latitude != null ? "Update pin" : "📍 Use my location"}
+                                        </button>
                                     </div>
                                 </SectionCard>
 

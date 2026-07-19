@@ -5,7 +5,9 @@ import {
     DELIVERY_MODES,
     ORDER_STATUS_SEQUENCE,
     ORDER_STATUSES,
+    PAYMENT_METHODS,
     PAYMENT_STATUSES,
+    RETURN_STATUSES,
     RIDER_ASSIGNMENT_STATUSES,
     buildOrderFinancials,
     normalizeDeliveryMode,
@@ -50,6 +52,18 @@ const orderSchema = new mongoose.Schema({
         enum: ORDER_STATUS_SEQUENCE,
     },
     paymentStatus: { type: String, default: PAYMENT_STATUSES.PENDING, enum: Object.values(PAYMENT_STATUSES) },
+    paymentMethod: { type: String, default: PAYMENT_METHODS.COD, enum: Object.values(PAYMENT_METHODS) },
+    // Client-generated key so a double-submitted checkout can never create
+    // two orders (unique per user+key; sparse so old orders are unaffected).
+    idempotencyKey: { type: String, default: "" },
+    returnRequest: {
+        status: { type: String, default: RETURN_STATUSES.NONE, enum: Object.values(RETURN_STATUSES) },
+        reason: { type: String, default: "" },
+        note: { type: String, default: "" },
+        requestedAt: { type: Date },
+        resolvedAt: { type: Date },
+        resolutionNote: { type: String, default: "" },
+    },
     deliveryMode: {
         type: String,
         default: DELIVERY_MODES.DELIVERY,
@@ -143,6 +157,12 @@ orderSchema.pre("validate", function normalizeOrderDocument(next) {
 });
 
 // Make variable name consistent with export
+// One order per user per idempotency key (sparse: only when a key is set).
+orderSchema.index(
+    { userId: 1, idempotencyKey: 1 },
+    { unique: true, partialFilterExpression: { idempotencyKey: { $gt: "" } } }
+);
+
 const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
 
 export default Order;

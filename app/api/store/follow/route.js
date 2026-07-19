@@ -2,12 +2,18 @@ import { NextResponse } from "next/server";
 import connectDB from "@/config/db";
 import User from "@/models/User";
 import { getRequestUserId } from "@/lib/requestAuth";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 export async function POST(request) {
   try {
     const currentUserId = await getRequestUserId(request);
     if (!currentUserId) {
       return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
+    }
+
+    const rateCheck = checkRateLimit(`store-follow:${currentUserId}`, { limit: 30, windowMs: 60000 });
+    if (!rateCheck.allowed) {
+      return NextResponse.json(rateLimitResponse(rateCheck.retryAfterSeconds), { status: 429 });
     }
 
     const { sellerId } = await request.json();

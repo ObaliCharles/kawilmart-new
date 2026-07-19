@@ -23,6 +23,30 @@ const defaultReviewState = {
     comment: "",
 };
 
+const RETURN_REASONS = [
+    "Damaged or defective",
+    "Wrong item received",
+    "Not as described",
+    "No longer needed",
+    "Other",
+];
+
+const defaultReturnState = { reason: RETURN_REASONS[0], note: "" };
+
+const returnStatusStyles = {
+    REQUESTED: "bg-amber-50 text-amber-700",
+    APPROVED: "bg-emerald-50 text-emerald-700",
+    REFUNDED: "bg-emerald-100 text-emerald-800",
+    REJECTED: "bg-rose-50 text-rose-700",
+};
+
+const returnStatusLabels = {
+    REQUESTED: "Return requested",
+    APPROVED: "Return approved",
+    REFUNDED: "Refunded",
+    REJECTED: "Return declined",
+};
+
 const scoreOptions = [1, 2, 3, 4, 5];
 
 const formatOrderDate = (value) => new Date(value).toLocaleDateString(undefined, {
@@ -105,6 +129,8 @@ const MyOrders = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [actionOrderId, setActionOrderId] = useState("");
     const [reviewForms, setReviewForms] = useState({});
+    const [returnForms, setReturnForms] = useState({});
+    const [openReturnFormId, setOpenReturnFormId] = useState("");
     const [expandedOrderId, setExpandedOrderId] = useState("");
     const [filter, setFilter] = useState("all");
 
@@ -202,6 +228,26 @@ const MyOrders = () => {
 
     const handleConfirmDelivery = async (orderId) => {
         await runCustomerAction(orderId, { action: "CONFIRM_DELIVERY" }, "Delivery confirmed successfully");
+    };
+
+    const updateReturnForm = (orderId, field, value) => {
+        setReturnForms((current) => ({
+            ...current,
+            [orderId]: { ...(current[orderId] || defaultReturnState), [field]: value },
+        }));
+    };
+
+    const handleRequestReturn = async (orderId) => {
+        const form = returnForms[orderId] || defaultReturnState;
+        const success = await runCustomerAction(orderId, {
+            action: "REQUEST_RETURN",
+            returnReason: form.reason,
+            returnNote: form.note,
+        }, "Return request submitted");
+
+        if (success) {
+            setOpenReturnFormId("");
+        }
     };
 
     const handleSubmitReview = async (orderId) => {
@@ -328,6 +374,16 @@ const MyOrders = () => {
                                                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${getPaymentStatusBadgeClass(order.paymentStatus)}`}>
                                                             {order.paymentStatus}
                                                         </span>
+                                                        {order.paymentMethodLabel ? (
+                                                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                                                                {order.paymentMethodLabel}
+                                                            </span>
+                                                        ) : null}
+                                                        {order.returnRequest?.status && order.returnRequest.status !== "NONE" ? (
+                                                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${returnStatusStyles[order.returnRequest.status] || "bg-gray-100 text-gray-600"}`}>
+                                                                {returnStatusLabels[order.returnRequest.status] || order.returnRequest.status}
+                                                            </span>
+                                                        ) : null}
                                                         <span className="text-[10px] text-gray-400">
                                                             {order.deliveryModeLabel}
                                                         </span>
@@ -502,6 +558,73 @@ const MyOrders = () => {
                                                         </div>
                                                     </div>
                                                 )}
+
+                                                {order.actions?.canRequestReturn ? (
+                                                    <div className="rounded-xl bg-white px-3 py-3">
+                                                        {openReturnFormId === order._id ? (
+                                                            <>
+                                                                <p className="text-sm font-medium text-gray-900">Request a return</p>
+                                                                <select
+                                                                    value={(returnForms[order._id] || defaultReturnState).reason}
+                                                                    onChange={(event) => updateReturnForm(order._id, "reason", event.target.value)}
+                                                                    className="mt-2 w-full rounded-lg bg-gray-50 px-2.5 py-2 text-xs outline-none"
+                                                                >
+                                                                    {RETURN_REASONS.map((reason) => (
+                                                                        <option key={reason} value={reason}>{reason}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <textarea
+                                                                    rows={2}
+                                                                    value={(returnForms[order._id] || defaultReturnState).note}
+                                                                    onChange={(event) => updateReturnForm(order._id, "note", event.target.value)}
+                                                                    className="mt-2 w-full resize-none rounded-lg bg-gray-50 px-2.5 py-2 text-xs outline-none"
+                                                                    placeholder="Tell the seller more (optional)..."
+                                                                />
+                                                                <div className="mt-2 flex justify-end gap-2">
+                                                                    <button
+                                                                        onClick={() => setOpenReturnFormId("")}
+                                                                        className="rounded-full bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-200"
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => void handleRequestReturn(order._id)}
+                                                                        disabled={actionOrderId === order._id}
+                                                                        className="rounded-full bg-gray-950 px-4 py-2 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-70"
+                                                                    >
+                                                                        {actionOrderId === order._id ? 'Sending...' : 'Submit request'}
+                                                                    </button>
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <div>
+                                                                    <p className="text-sm font-medium text-gray-900">Problem with this order?</p>
+                                                                    <p className="text-xs text-gray-500">You can request a return within 7 days of delivery.</p>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => setOpenReturnFormId(order._id)}
+                                                                    className="shrink-0 rounded-full bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200"
+                                                                >
+                                                                    Request return
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : null}
+
+                                                {order.returnRequest?.status && order.returnRequest.status !== "NONE" ? (
+                                                    <div className="rounded-xl bg-white px-3 py-3 text-xs text-gray-600">
+                                                        <p className={`inline-flex rounded-full px-2 py-0.5 font-semibold ${returnStatusStyles[order.returnRequest.status] || "bg-gray-100 text-gray-600"}`}>
+                                                            {returnStatusLabels[order.returnRequest.status] || order.returnRequest.status}
+                                                        </p>
+                                                        <p className="mt-1.5"><span className="text-gray-400">Reason:</span> {order.returnRequest.reason}</p>
+                                                        {order.returnRequest.note ? <p className="mt-0.5 text-gray-500">{order.returnRequest.note}</p> : null}
+                                                        {order.returnRequest.resolutionNote ? (
+                                                            <p className="mt-1"><span className="text-gray-400">Seller:</span> {order.returnRequest.resolutionNote}</p>
+                                                        ) : null}
+                                                    </div>
+                                                ) : null}
 
                                                 {order.sellerReview ? (
                                                     <div className="rounded-xl bg-white px-3 py-3 text-xs text-gray-600">

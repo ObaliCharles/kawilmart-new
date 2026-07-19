@@ -28,7 +28,16 @@ export async function GET(request) {
         if (!isAdmin) return NextResponse.json({ success: false, message: "Unauthorized" });
 
         const client = await clerkClient();
-        const clerkUsers = await client.users.getUserList({ limit: 100 });
+        // Page through Clerk instead of a single 100-user call, so the admin
+        // dashboard keeps working past the first hundred accounts.
+        const clerkUserData = [];
+        const clerkPageSize = 100;
+        for (let offset = 0; offset < 2000; offset += clerkPageSize) {
+            const page = await client.users.getUserList({ limit: clerkPageSize, offset });
+            clerkUserData.push(...page.data);
+            if (page.data.length < clerkPageSize) break;
+        }
+        const clerkUsers = { data: clerkUserData };
 
         await connectDB();
         const [dbUsers, products, orders] = await Promise.all([
@@ -139,6 +148,8 @@ export async function GET(request) {
                 driversLicense: dbUser?.driversLicense,
                 riderAvailability: dbUser?.riderAvailability || 'available',
                 isVerified: dbUser?.isVerified || false,
+                verificationStatus: dbUser?.verificationStatus || (dbUser?.isVerified ? "VERIFIED" : "UNVERIFIED"),
+                verificationDocuments: dbUser?.verificationDocuments || [],
                 notifications: dbUser?.notifications || [],
                 subscription,
                 access,

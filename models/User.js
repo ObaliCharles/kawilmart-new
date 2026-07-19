@@ -97,6 +97,11 @@ const userSchema = new mongoose.Schema({
     riderBillingNotes: { type: String, default: "" },
     // Common fields
     isVerified: { type: Boolean, default: false },
+    verificationStatus: {
+        type: String,
+        enum: ["UNVERIFIED", "PENDING", "VERIFIED", "REJECTED"],
+        default: "UNVERIFIED",
+    },
     verificationDocuments: [{ type: String }],
     followedStores: { type: [String], default: [] },
     storeFollowerIds: { type: [String], default: [] },

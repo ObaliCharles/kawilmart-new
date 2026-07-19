@@ -20,7 +20,9 @@ import { notifyUsers } from "@/lib/notifyUsers";
 import { serializeSellerOrder } from "@/lib/orderSerialization";
 import {
   ORDER_STATUSES,
+  RETURN_STATUSES,
   RIDER_ASSIGNMENT_STATUSES,
+  canSellerResolveReturn,
 } from "@/lib/orderLifecycle";
 import {
   applyOrderStatusTransition,
@@ -134,7 +136,7 @@ export async function PUT(request) {
       return NextResponse.json({ success: false, message: "Unauthorized" });
     }
 
-    const { orderId, riderId, paymentStatus, status } = await request.json();
+    const { orderId, riderId, paymentStatus, status, returnAction, returnResolutionNote } = await request.json();
     if (!orderId) {
       return NextResponse.json({ success: false, message: "Order ID is required" }, { status: 400 });
     }
@@ -329,6 +331,59 @@ export async function PUT(request) {
         customerNotifications.push(createPaymentNotification(normalizedPaymentStatus, order._id));
         updatedFields.push("payment");
       }
+    }
+
+    if (returnAction !== undefined) {
+      const normalizedReturnAction = typeof returnAction === "string" ? returnAction.trim().toUpperCase() : "";
+
+      if (!["APPROVE", "REJECT", "REFUNDED"].includes(normalizedReturnAction)) {
+        return NextResponse.json({ success: false, message: "Invalid return action" }, { status: 400 });
+      }
+
+      const currentReturnStatus = order.returnRequest?.status || RETURN_STATUSES.NONE;
+      const resolutionNote = typeof returnResolutionNote === "string" ? returnResolutionNote.trim().slice(0, 600) : "";
+
+      if (normalizedReturnAction === "REFUNDED") {
+        if (currentReturnStatus !== RETURN_STATUSES.APPROVED) {
+          return NextResponse.json({ success: false, message: "Only approved returns can be marked refunded" }, { status: 400 });
+        }
+        order.returnRequest.status = RETURN_STATUSES.REFUNDED;
+      } else {
+        if (!canSellerResolveReturn(order)) {
+          return NextResponse.json({ success: false, message: "There is no pending return request on this order" }, { status: 400 });
+        }
+        order.returnRequest.status = normalizedReturnAction === "APPROVE"
+          ? RETURN_STATUSES.APPROVED
+          : RETURN_STATUSES.REJECTED;
+      }
+
+      order.returnRequest.resolvedAt = new Date();
+      order.returnRequest.resolutionNote = resolutionNote;
+      order.markModified("returnRequest");
+
+      const returnStatusLabel = order.returnRequest.status === RETURN_STATUSES.APPROVED
+        ? "approved"
+        : order.returnRequest.status === RETURN_STATUSES.REFUNDED
+          ? "refunded"
+          : "declined";
+      order.trackingEvents = [
+        ...(order.trackingEvents || []),
+        {
+          type: "system",
+          title: `Return ${returnStatusLabel}`,
+          description: resolutionNote || `The seller ${returnStatusLabel} the return request.`,
+          timestamp: new Date(),
+        },
+      ];
+
+      customerNotifications.push({
+        type: "order",
+        title: `Return ${returnStatusLabel}`,
+        message: `Your return request on order #${formatShortOrderId(order._id)} was ${returnStatusLabel}.${resolutionNote ? ` Note: ${resolutionNote}` : ""}`,
+        read: false,
+        date: new Date(),
+      });
+      updatedFields.push("return");
     }
 
     if (updatedFields.length === 0) {

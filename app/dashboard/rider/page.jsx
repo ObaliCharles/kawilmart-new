@@ -393,6 +393,21 @@ export default function RiderDashboard() {
                                                                     ? delivery.dropoff.phoneNumber
                                                                     : 'Unlocks after you accept this delivery'}
                                                             </p>
+                                                            {delivery.dropoff?.deliveryNotes ? (
+                                                                <p className="rounded-md bg-white px-2 py-1.5 text-[11px] text-gray-600">
+                                                                    <span className="font-semibold text-gray-800">Note:</span> {delivery.dropoff.deliveryNotes}
+                                                                </p>
+                                                            ) : null}
+                                                            {Number.isFinite(delivery.dropoff?.latitude) && Number.isFinite(delivery.dropoff?.longitude) ? (
+                                                                <a
+                                                                    href={`https://www.google.com/maps/dir/?api=1&destination=${delivery.dropoff.latitude},${delivery.dropoff.longitude}`}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="inline-flex items-center gap-1 rounded-full bg-gray-900 px-2.5 py-1 text-[11px] font-semibold text-white transition hover:bg-black"
+                                                                >
+                                                                    📍 Navigate to GPS pin
+                                                                </a>
+                                                            ) : null}
                                                         </div>
                                                     </div>
 

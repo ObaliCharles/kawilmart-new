@@ -1,11 +1,19 @@
 import connectDB from "@/config/db";
 import NewsletterSubscriber from "@/models/NewsletterSubscriber";
 import { NextResponse } from "next/server";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request) {
     try {
+        // No auth on this endpoint, so limit by IP.
+        const clientIp = (request.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim();
+        const rateCheck = checkRateLimit(`newsletter:${clientIp}`, { limit: 5, windowMs: 10 * 60 * 1000 });
+        if (!rateCheck.allowed) {
+            return NextResponse.json(rateLimitResponse(rateCheck.retryAfterSeconds), { status: 429 });
+        }
+
         const { email } = await request.json();
         const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 

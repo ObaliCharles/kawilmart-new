@@ -52,6 +52,35 @@ export default function AdminUsers() {
         void fetchUsers();
     }, [authReady, getToken, user]);
 
+    const decideVerification = async (sellerId, decision) => {
+        const notes = decision === 'REJECTED'
+            ? (window.prompt('Reason for rejection (sent to the seller):') || '').trim()
+            : '';
+        if (decision === 'REJECTED' && !notes) return;
+
+        setUpdatingId(sellerId);
+        try {
+            const token = await getToken();
+            const { data } = await axios.post('/api/admin/verify-seller',
+                { sellerId, decision, notes },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (data.success) {
+                setUsers((prev) => prev.map((u) => u.id === sellerId
+                    ? { ...u, verificationStatus: decision, isVerified: decision === 'VERIFIED' }
+                    : u
+                ));
+                toast.success(data.message);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.message || err.message);
+        } finally {
+            setUpdatingId(null);
+        }
+    };
+
     const updateRole = async (targetUserId, role) => {
         setUpdatingId(targetUserId);
         try {
@@ -141,13 +170,14 @@ export default function AdminUsers() {
                                 <th className="text-left px-4 py-3 text-gray-500 font-medium">Email</th>
                                 <th className="text-left px-4 py-3 text-gray-500 font-medium">Joined</th>
                                 <th className="text-left px-4 py-3 text-gray-500 font-medium">Current Role</th>
+                                <th className="text-left px-4 py-3 text-gray-500 font-medium">Verification</th>
                                 <th className="text-left px-4 py-3 text-gray-500 font-medium">Change Role</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="text-center py-12 text-gray-400">
+                                    <td colSpan={6} className="text-center py-12 text-gray-400">
                                         <span className="text-4xl block mb-2">👥</span>
                                         No users found
                                     </td>
@@ -183,6 +213,49 @@ export default function AdminUsers() {
                                         <span className={`text-xs font-medium px-2.5 py-1.5 rounded-full capitalize ${roleColors[u.role] || 'bg-gray-100 text-gray-600'}`}>
                                             {roleIcons[u.role]} {u.role}
                                         </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        {u.role === 'seller' || u.role === 'admin' ? (
+                                            <div className="space-y-1">
+                                                <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                                    u.verificationStatus === 'VERIFIED' ? 'bg-emerald-50 text-emerald-700'
+                                                    : u.verificationStatus === 'PENDING' ? 'bg-amber-50 text-amber-700'
+                                                    : u.verificationStatus === 'REJECTED' ? 'bg-rose-50 text-rose-700'
+                                                    : 'bg-gray-100 text-gray-500'
+                                                }`}>
+                                                    {u.verificationStatus || 'UNVERIFIED'}
+                                                </span>
+                                                {u.verificationDocuments?.length ? (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {u.verificationDocuments.slice(0, 3).map((url, index) => (
+                                                            <a key={url} href={url} target="_blank" rel="noreferrer" className="text-[10px] font-medium text-blue-600 hover:underline">
+                                                                Doc {index + 1}
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                ) : null}
+                                                {u.verificationStatus === 'PENDING' ? (
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            onClick={() => decideVerification(u.id, 'VERIFIED')}
+                                                            disabled={updatingId === u.id}
+                                                            className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                        <button
+                                                            onClick={() => decideVerification(u.id, 'REJECTED')}
+                                                            disabled={updatingId === u.id}
+                                                            className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                                                        >
+                                                            Reject
+                                                        </button>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        ) : (
+                                            <span className="text-[10px] text-gray-300">—</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         <select

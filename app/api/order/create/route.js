@@ -7,12 +7,15 @@ import {
   DEFAULT_COMMISSION_RATE,
   DELIVERY_MODES,
   ORDER_STATUSES,
+  PAYMENT_METHOD_LABELS,
   RIDER_ASSIGNMENT_STATUSES,
   buildOrderFinancials,
   calculateDeliveryFee,
   getDeliveryModeLabel,
   normalizeDeliveryMode,
+  normalizePaymentMethod,
 } from "@/lib/orderLifecycle";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { getProductStockSnapshot } from "@/lib/productStock";
 import { getRequestUserId } from "@/lib/requestAuth";
 import { getSellerAccessState } from "@/lib/sellerBilling";
@@ -53,15 +56,40 @@ export async function POST(request) {
   try {
     await connectDB();
     const userId = await getRequestUserId(request);
-    const { address, items, deliveryMode } = await request.json();
+    const { address, items, deliveryMode, paymentMethod, idempotencyKey } = await request.json();
 
     if (!userId) return NextResponse.json({ success: false, message: "No userId found" });
+
+    const rateCheck = checkRateLimit(`order-create:${userId}`, { limit: 6, windowMs: 60000 });
+    if (!rateCheck.allowed) {
+      return NextResponse.json(rateLimitResponse(rateCheck.retryAfterSeconds), { status: 429 });
+    }
+
     if (!address) return NextResponse.json({ success: false, message: "No address provided" });
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ success: false, message: "Cart is empty" });
     }
 
     const normalizedDeliveryMode = normalizeDeliveryMode(deliveryMode);
+    const normalizedPaymentMethod = normalizePaymentMethod(paymentMethod);
+
+    // Idempotent replay: if this checkout key already produced orders (e.g. a
+    // retried request after a network hiccup), acknowledge instead of
+    // creating duplicates. Keys are stored per seller-order as `key:sellerId`,
+    // so a lexicographic prefix range finds any of them via the index.
+    const safeIdempotencyKey = typeof idempotencyKey === "string"
+      ? idempotencyKey.trim().slice(0, 80).replace(/[^a-zA-Z0-9_-]/g, "")
+      : "";
+    if (safeIdempotencyKey) {
+      const existingOrder = await Order.findOne({
+        userId,
+        idempotencyKey: { $gte: `${safeIdempotencyKey}:`, $lt: `${safeIdempotencyKey};` },
+      }).select("_id").lean();
+
+      if (existingOrder) {
+        return NextResponse.json({ success: true, message: "Order already placed" });
+      }
+    }
 
     const addressDoc = await Address.findById(address);
     if (!addressDoc) {
@@ -181,6 +209,8 @@ export async function POST(request) {
           deliveryRequired: normalizedDeliveryMode === DELIVERY_MODES.DELIVERY,
           riderAssignmentStatus: RIDER_ASSIGNMENT_STATUSES.UNASSIGNED,
           customerPhone: addressDoc.phoneNumber || "",
+          paymentMethod: normalizedPaymentMethod,
+          idempotencyKey: safeIdempotencyKey ? `${safeIdempotencyKey}:${sellerId}` : "",
           status: ORDER_STATUSES.PLACED,
           trackingEvents: [createStatusTrackingEvent(ORDER_STATUSES.PLACED)],
           date: Date.now(),
@@ -247,6 +277,7 @@ export async function POST(request) {
       emailDetails: [
         { label: "orders", value: String(createdOrders.length) },
         { label: "items", value: String(totalItems) },
+        { label: "payment", value: PAYMENT_METHOD_LABELS[normalizedPaymentMethod] || normalizedPaymentMethod },
         { label: "total", value: formatCurrency(totalAmount) },
         { label: "delivery_fee", value: formatCurrency(totalDeliveryFee) },
       ],
