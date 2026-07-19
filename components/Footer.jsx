@@ -171,7 +171,7 @@ const Footer = () => {
 
   return (
     <>
-      <footer className="pb-20 text-slate-300 md:hidden">
+      <footer className="pb-16 text-slate-300 md:hidden">
         <div className="w-full bg-[linear-gradient(135deg,#0f172a_0%,#111827_100%)]">
           <div className="px-5 py-6">
             <span className="inline-flex items-center rounded-lg bg-white px-3 py-2">

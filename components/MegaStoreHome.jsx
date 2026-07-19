@@ -238,6 +238,8 @@ const UtilityIcon = ({ type }) => {
     mail: "M4 6h16v12H4V6Zm0 1 8 6 8-6",
     bolt: "m13 2-8 12h6l-1 8 8-12h-6l1-8Z",
     gift: "M20 10v10H4V10m16 0H4m8 0v10M7.5 6.5A2.5 2.5 0 0 0 12 8a2.5 2.5 0 1 0-4.5-1.5Zm9 0A2.5 2.5 0 0 1 12 8a2.5 2.5 0 1 1 4.5-1.5Z",
+    cart: "M3 4h2.4l2 10.1a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 1.9-1.5L20 8H6.2M10 20h.01M17 20h.01",
+    badge: "M12 3.5 14.2 6l3.3.2.2 3.3L20 12l-2.3 2.5-.2 3.3-3.3.2L12 20.5 9.8 18l-3.3-.2-.2-3.3L4 12l2.3-2.5.2-3.3L9.8 6 12 3.5Zm-2.4 8.7 1.6 1.6 3.4-3.7",
   };
 
   return (
@@ -994,7 +996,7 @@ const CompactProduct = ({ product, navigate, prefetchRoute }) => (
     onClick={() => navigate(`/product/${product._id}`)}
     onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
     onFocus={() => prefetchRoute(`/product/${product._id}`)}
-    className="grid min-w-0 grid-cols-[50px_minmax(0,1fr)] items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-left transition hover:border-orange-300"
+    className="grid min-w-0 grid-cols-[50px_minmax(0,1fr)] items-center gap-2 rounded-lg bg-white px-2 py-1.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:bg-gray-50 hover:shadow-[0_12px_26px_rgba(15,23,42,0.08)]"
   >
     <span className="flex h-11 w-11 items-center justify-center bg-white">
       <ProductImage product={product} alt={product.name} width={64} height={64} className="h-full w-full object-contain" />
@@ -1035,6 +1037,322 @@ const DealCard = ({ product, navigate, prefetchRoute, formatCurrency, cardIndex 
         <span className="text-[12px] font-bold text-gray-950">{formatCurrency(offerPrice)}</span>
       </span>
     </button>
+  );
+};
+
+const DesktopServiceStrip = () => {
+  const services = [
+    ["delivery", "Fast Delivery", "Across Uganda"],
+    ["shield", "Secure Payments", "100% Protected"],
+    ["support", "24/7 Support", "We're here to help"],
+    ["returns", "Easy Returns", "7-day return policy"],
+    ["badge", "Verified Sellers", "Quality you can trust"],
+  ];
+
+  return (
+    <section className="grid grid-cols-5 overflow-hidden rounded-xl bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+      {services.map(([icon, title, text], index) => (
+        <div key={title} className={`flex items-center gap-3 px-5 py-4 ${index > 0 ? "border-l border-gray-100" : ""}`}>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-600 shadow-sm">
+            <UtilityIcon type={icon} />
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-[13px] font-extrabold text-gray-950">{title}</span>
+            <span className="mt-0.5 block truncate text-[11px] text-gray-500">{text}</span>
+          </span>
+        </div>
+      ))}
+    </section>
+  );
+};
+
+const DesktopPromoStack = ({ items, navigate, prefetchRoute }) => {
+  const cards = uniqueById(items.filter((item) => item?.imageUrl)).slice(0, 3);
+
+  if (!cards.length) {
+    return (
+      <div className="grid h-[390px] gap-3">
+        {["Fashion offers", "Electronics deals", "Grocery savings"].map((label, index) => (
+          <PromoPlaceholder key={label} navigate={navigate} className="h-full rounded-lg" label={label} href={index === 1 ? "/all-products?category=Phones%20%26%20Tablets" : "/all-products"} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid h-[390px] gap-3">
+      {cards.map((item, index) => (
+        <MarketingBannerTile
+          key={getMarketingBannerKey(item, index)}
+          item={item}
+          navigate={navigate}
+          prefetchRoute={prefetchRoute}
+          priority={index === 0}
+          className="h-full rounded-lg"
+        />
+      ))}
+    </div>
+  );
+};
+
+const DesktopCategoryIcon = ({ category, className = "h-5 w-5" }) => {
+  if (category.imageUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={category.imageUrl} alt="" className="h-full w-full object-contain" />
+    );
+  }
+
+  return <CategoryLineIcon category={category.value} className={className} />;
+};
+
+const DesktopCategorySidebar = ({ categories, navigate }) => {
+  const [activeCategoryValue, setActiveCategoryValue] = useState(null);
+  const visibleCategories = categories.slice(0, 11);
+  const moreCategories = categories.slice(11);
+  const activeCategory = categories.find((category) => category.value === activeCategoryValue) || visibleCategories[0];
+  const activeMeta = getCategoryMeta(activeCategory?.value);
+  const suggestedCategories = [
+    activeCategory,
+    ...moreCategories,
+    ...categories.filter((category) => category.value !== activeCategory?.value),
+  ].filter(Boolean);
+  const seenSuggestions = new Set();
+  const uniqueSuggestions = suggestedCategories.filter((category) => {
+    if (seenSuggestions.has(category.value)) return false;
+    seenSuggestions.add(category.value);
+    return true;
+  }).slice(0, 9);
+
+  return (
+    <aside
+      className="relative z-30 h-[390px] rounded-xl bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
+      onMouseLeave={() => setActiveCategoryValue(null)}
+    >
+      <div className="flex h-full flex-col gap-0.5 overflow-hidden p-2">
+        {visibleCategories.map((category) => {
+          const isActive = activeCategoryValue === category.value;
+
+          return (
+            <button
+              key={category.value}
+              type="button"
+              onMouseEnter={() => setActiveCategoryValue(category.value)}
+              onFocus={() => setActiveCategoryValue(category.value)}
+              onClick={() => navigate(`/all-products?category=${encodeURIComponent(category.value)}`)}
+              className={`flex w-full shrink-0 items-center justify-between rounded-lg px-3 py-2.5 text-left text-[13px] font-semibold transition ${isActive ? "bg-gray-950 text-white shadow-sm" : "text-gray-800 hover:bg-gray-50 hover:text-gray-950"}`}
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden ${isActive ? "text-white" : "text-gray-700"}`}>
+                  <DesktopCategoryIcon category={category} className="h-4 w-4" />
+                </span>
+                <span className="truncate">{category.label}</span>
+              </span>
+              <span className={isActive ? "text-white/80" : "text-gray-400"}><ChevronRight /></span>
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onMouseEnter={() => setActiveCategoryValue("Deals & Clearance")}
+          onFocus={() => setActiveCategoryValue("Deals & Clearance")}
+          onClick={() => navigate("/all-products?filter=flash")}
+          className="mt-auto flex shrink-0 items-center justify-between rounded-lg bg-orange-600 px-3 py-2.5 text-left text-[13px] font-extrabold text-white shadow-sm transition hover:bg-orange-700"
+        >
+          <span className="flex items-center gap-3">
+            <span className="flex h-5 w-5 items-center justify-center"><UtilityIcon type="bolt" /></span>
+            Deals & Clearance
+          </span>
+          <ChevronRight />
+        </button>
+      </div>
+
+      {activeCategoryValue ? (
+        <div className="absolute left-[calc(100%+8px)] top-0 z-50 grid h-[390px] w-[min(58rem,calc(100vw-18rem))] grid-cols-[0.85fr_1.15fr] overflow-hidden rounded-2xl bg-white/98 text-left shadow-[0_28px_80px_rgba(15,23,42,0.20)] backdrop-blur">
+          <div className="bg-gradient-to-br from-gray-950 to-gray-800 p-5 text-white">
+            <div className="flex items-start gap-3 rounded-xl bg-white/10 p-3">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white text-orange-600 shadow-sm">
+                {activeCategoryValue === "Deals & Clearance" ? <UtilityIcon type="bolt" /> : <DesktopCategoryIcon category={activeCategory} className="h-5 w-5" />}
+              </span>
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-extrabold text-white">{activeCategoryValue === "Deals & Clearance" ? "Deals & Clearance" : activeCategory.label}</h3>
+                <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-white/70">{activeCategoryValue === "Deals & Clearance" ? "Limited-time offers and markdowns across KawilMart." : activeMeta.description}</p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-2">
+              {[
+                ["Top deals", activeCategoryValue === "Deals & Clearance" ? "/all-products?filter=flash" : `/all-products?category=${encodeURIComponent(activeCategory.value)}&filter=flash`],
+                ["New arrivals", activeCategoryValue === "Deals & Clearance" ? "/all-products?sort=newest" : `/all-products?category=${encodeURIComponent(activeCategory.value)}&sort=newest`],
+                ["Best sellers", activeCategoryValue === "Deals & Clearance" ? "/all-products?sort=popular" : `/all-products?category=${encodeURIComponent(activeCategory.value)}&sort=popular`],
+                ["Top rated", activeCategoryValue === "Deals & Clearance" ? "/all-products?sort=rating" : `/all-products?category=${encodeURIComponent(activeCategory.value)}&sort=rating`],
+              ].map(([label, href]) => (
+                <button key={label} type="button" onClick={() => navigate(href)} className="flex items-center justify-between rounded-lg bg-white/8 px-3 py-2.5 text-[12px] font-semibold text-white/85 transition hover:bg-white hover:text-gray-950">
+                  {label}
+                  <ChevronRight />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-extrabold text-gray-950">More Categories</h3>
+                <p className="mt-0.5 text-[11px] text-gray-500">Browse nearby departments and fresh picks.</p>
+              </div>
+              <button type="button" onClick={() => navigate("/categories")} className="rounded-full bg-orange-50 px-3 py-1.5 text-[11px] font-bold text-orange-600">See all</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2.5">
+              {uniqueSuggestions.map((category) => (
+                <button key={`flyout-${category.value}`} type="button" onClick={() => navigate(`/all-products?category=${encodeURIComponent(category.value)}`)} className="group flex min-w-0 items-center gap-2 rounded-xl bg-gray-50 p-2.5 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_12px_28px_rgba(15,23,42,0.10)]">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-gray-950 shadow-sm transition group-hover:bg-orange-600 group-hover:text-white">
+                    <DesktopCategoryIcon category={category} className="h-4 w-4" />
+                  </span>
+                  <span className="line-clamp-2 text-[11px] font-bold leading-4 text-gray-900">{category.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </aside>
+  );
+};
+
+const DesktopDealCountdown = ({ deadline }) => {
+  const [remainingMs, setRemainingMs] = useState(() =>
+    Number.isFinite(deadline) && deadline > Date.now() ? deadline - Date.now() : 0
+  );
+
+  useEffect(() => {
+    if (!Number.isFinite(deadline) || deadline <= Date.now()) {
+      setRemainingMs(0);
+      return undefined;
+    }
+
+    setRemainingMs(deadline - Date.now());
+    const interval = window.setInterval(() => {
+      setRemainingMs(Math.max(0, deadline - Date.now()));
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [deadline]);
+
+  const time = getTimeParts(remainingMs || (2 * 60 * 60 * 1000 + 45 * 60 * 1000 + 30 * 1000));
+  const units = [
+    [padTime(time.hours + time.days * 24), "HRS"],
+    [padTime(time.minutes), "MINS"],
+    [padTime(time.seconds), "SECS"],
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {units.map(([value, label]) => (
+        <span key={label} className="rounded-md bg-white/15 px-2 py-2 text-center shadow-inner ring-1 ring-white/10">
+          <span className="block text-2xl font-extrabold leading-none">{value}</span>
+          <span className="mt-1 block text-[10px] font-bold text-white/90">{label}</span>
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const DesktopFlashDealCard = ({ product, navigate, prefetchRoute, formatCurrency }) => {
+  const activity = getProductActivitySnapshot(product);
+  const originalPrice = getPriceValue(product.price);
+  const offerPrice = getPriceValue(product.offerPrice || product.price);
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(`/product/${product._id}`)}
+      onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
+      onFocus={() => prefetchRoute(`/product/${product._id}`)}
+      className="group relative min-w-0 rounded-xl bg-white p-3 text-left shadow-sm transition duration-200 hover:-translate-y-1 hover:bg-white hover:shadow-[0_16px_34px_rgba(15,23,42,0.12)]"
+    >
+      <span className="absolute left-3 top-3 z-20 rounded bg-red-600 px-2 py-1 text-[10px] font-bold leading-none text-white">
+        -{Math.max(activity.priceDropPercent, activity.hasDiscount ? activity.priceDropPercent : 10)}%
+      </span>
+      <span className="flex h-28 items-center justify-center rounded-md bg-gray-50 transition group-hover:bg-orange-50/40">
+        <ProductImage product={product} alt={product.name} width={190} height={160} className="h-full w-full object-contain p-2" />
+      </span>
+      <span className="mt-2 line-clamp-1 text-[12px] font-semibold text-gray-950">{product.name}</span>
+      <span className="mt-0.5 block truncate text-[10.5px] text-gray-500">{product.shortDescription || product.category || "Marketplace deal"}</span>
+      <span className="mt-2 flex items-center gap-2">
+        <span className="text-[12px] font-extrabold text-gray-950">{formatCurrency(offerPrice)}</span>
+        {originalPrice > offerPrice ? <span className="text-[10px] text-gray-400 line-through">{formatCurrency(originalPrice)}</span> : null}
+      </span>
+      <span className="mt-2 flex items-center justify-between text-[10px] text-gray-500">
+        <span className="text-orange-500">★★★★★</span>
+        <span>{activity.hasRating ? activity.displayRating.toFixed(1) : "4.6"} ({activity.reviewCount || 96})</span>
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-orange-50 text-orange-600 transition group-hover:bg-orange-600 group-hover:text-white">
+          <UtilityIcon type="cart" />
+        </span>
+      </span>
+    </button>
+  );
+};
+
+const DesktopFlashDealsPanel = ({ products, deadline, navigate, prefetchRoute, formatCurrency, topRailTiles, sortedProducts }) => {
+  if (!products.length) return null;
+
+  const categoryItems = topRailTiles.slice(0, 5).map((tile) => ({
+    ...tile,
+    product: productForCategory(sortedProducts, tile.category),
+  }));
+
+  return (
+    <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="rounded-lg bg-gradient-to-br from-orange-50 via-rose-50 to-white p-4 ring-1 ring-orange-100">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-xl font-extrabold text-gray-950">
+            <span className="text-orange-600"><UtilityIcon type="bolt" /></span>
+            Flash Deals
+          </h2>
+          <button type="button" onClick={() => navigate("/all-products?filter=flash")} className="text-xs font-bold text-blue-600">
+            See all deals -&gt;
+          </button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-[170px_repeat(3,minmax(0,1fr))] xl:grid-cols-[190px_repeat(5,minmax(0,1fr))]">
+          <div className="flex min-h-[235px] flex-col justify-between rounded-lg bg-gradient-to-br from-orange-500 via-orange-600 to-orange-500 p-4 text-white shadow-[0_12px_28px_rgba(234,88,12,0.20)]">
+            <div>
+              <p className="flex items-center gap-2 text-lg font-extrabold"><UtilityIcon type="bolt" /> Flash Deals</p>
+              <p className="mt-1 text-[12px] font-medium text-white/90">Limited time offer</p>
+            </div>
+            <DesktopDealCountdown deadline={deadline} />
+            <button type="button" onClick={() => navigate("/all-products?filter=flash")} className="rounded-md bg-white px-4 py-2.5 text-[12px] font-extrabold text-orange-600 shadow-sm transition hover:scale-[1.02]">
+              View all deals
+            </button>
+          </div>
+          {products.slice(0, 5).map((product) => (
+            <DesktopFlashDealCard key={`desktop-flash-${product._id}`} product={product} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
+          ))}
+        </div>
+      </div>
+
+      <aside className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-extrabold text-gray-950">Top Categories</h2>
+          <button type="button" onClick={() => navigate("/categories")} className="text-xs font-bold text-blue-600">See all</button>
+        </div>
+        <div className="space-y-3">
+          {categoryItems.map((tile) => (
+            <button key={tile.label} type="button" onClick={() => navigate(`/all-products?category=${encodeURIComponent(tile.category)}`)} className="flex w-full items-center gap-3 text-left">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-orange-50 text-orange-600">
+                {tile.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={tile.imageUrl} alt={tile.label} className="h-full w-full object-contain p-1" />
+                ) : tile.product ? (
+                  <ProductImage product={tile.product} alt={tile.label} width={34} height={34} className="h-full w-full object-contain p-0.5" />
+                ) : (
+                  <CategoryLineIcon category={tile.category} className="h-4 w-4" />
+                )}
+              </span>
+              <span className="truncate text-[13px] font-semibold text-gray-950">{tile.label}</span>
+            </button>
+          ))}
+        </div>
+      </aside>
+    </section>
   );
 };
 
@@ -1225,7 +1543,7 @@ const RecommendedCard = ({ product, navigate, prefetchRoute, formatCurrency }) =
       onClick={() => navigate(`/product/${product._id}`)}
       onMouseEnter={() => prefetchRoute(`/product/${product._id}`)}
       onFocus={() => prefetchRoute(`/product/${product._id}`)}
-      className="rounded-md border border-gray-200 bg-white p-2.5 text-left transition hover:border-orange-300"
+      className="rounded-xl bg-white p-2.5 text-left shadow-sm transition hover:-translate-y-1 hover:bg-gray-50 hover:shadow-[0_16px_34px_rgba(15,23,42,0.10)]"
     >
       <span className="flex aspect-square items-center justify-center">
         <ProductImage product={product} alt={product.name} width={190} height={190} className="h-full w-full object-contain" />
@@ -1521,6 +1839,8 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     _activeDealIndex: activeDealIndex,
   };
   const marketingBanners = [...promoSlides, ...featuredCards];
+  const desktopPromoCards = [...sidebarBanners, ...promoSlides, ...featuredCards];
+  const desktopDealProducts = takeProducts(uniqueById(dealProducts.length ? dealProducts : sortedProducts), 5);
 
   useEffect(() => {
     setVisibleStoreCount(Math.min(8, storeCards.length || 8));
@@ -1594,91 +1914,69 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
       formatCurrency={formatCurrency}
       toggleProductLike={toggleProductLike}
     />
-    <main className="hidden bg-white px-4 pb-16 pt-4 md:block">
+    <main className="hidden bg-[#f8fafc] px-4 pb-16 pt-4 md:block">
       <div className="mx-auto max-w-[1420px]">
-        <section className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)_245px]">
-          <aside className="h-[260px] overflow-hidden rounded-md border border-gray-200 bg-white">
-            <div className="flex h-full flex-col gap-0.5 overflow-y-auto p-2">
-              {homeCategoryRail.map((category) => (
-                <button
-                  key={category.value}
-                  type="button"
-                  onClick={() => navigate(`/all-products?category=${encodeURIComponent(category.value)}`)}
-                  className="flex w-full shrink-0 items-center justify-between rounded-md px-2.5 py-2 text-left text-[12px] font-medium text-gray-800 transition hover:bg-orange-50 hover:text-orange-600"
-                >
-                  <span className="truncate">{category.label}</span>
-                  <span className="text-gray-400"><ChevronRight /></span>
-                </button>
-              ))}
-              <button type="button" onClick={() => navigate("/categories")} className="shrink-0 px-2.5 py-2 text-left text-[12px] font-semibold text-orange-600">+ More categories</button>
-            </div>
-          </aside>
+        <section className="grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)_320px]">
+          <DesktopCategorySidebar categories={homeCategoryRail} navigate={navigate} />
 
           {heroSlides.length ? (
-            <HeroImageSlider
-              slides={heroSlides}
-              currentIndex={activeHeroIndex % Math.max(heroSlides.length || 1, 1)}
-              onSelect={setActiveHeroIndex}
-              navigate={navigate}
-              priority
-              className="h-[260px] rounded-md bg-gray-100"
-            />
+            <div className="relative">
+              <HeroImageSlider
+                slides={heroSlides}
+                currentIndex={activeHeroIndex % Math.max(heroSlides.length || 1, 1)}
+                onSelect={setActiveHeroIndex}
+                navigate={navigate}
+                priority
+                className="h-[390px] rounded-lg bg-gray-100 shadow-sm"
+              />
+              {heroSlides.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setActiveHeroIndex((current) => (current - 1 + heroSlides.length) % heroSlides.length);
+                    }}
+                    className="group absolute left-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm ring-1 ring-black/5 backdrop-blur-sm transition duration-300 hover:scale-110 hover:bg-orange-600 hover:text-white hover:shadow-[0_12px_28px_rgba(234,88,12,0.28)] active:scale-95"
+                    aria-label="Previous offer"
+                  >
+                    <svg className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none"><path d="m15 5-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setActiveHeroIndex((current) => (current + 1) % heroSlides.length);
+                    }}
+                    className="group absolute right-2 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm ring-1 ring-black/5 backdrop-blur-sm transition duration-300 hover:scale-110 hover:bg-orange-600 hover:text-white hover:shadow-[0_12px_28px_rgba(234,88,12,0.28)] active:scale-95"
+                    aria-label="Next offer"
+                  >
+                    <svg className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </button>
+                </>
+              ) : null}
+            </div>
           ) : (
-            <PromoPlaceholder navigate={navigate} className="h-[260px] w-full rounded-md" label="Shop the KawilMart marketplace" />
+            <PromoPlaceholder navigate={navigate} className="h-[390px] w-full rounded-lg" label="Shop the KawilMart marketplace" />
           )}
 
-          {activePromo?.imageUrl ? (
-            <button
-              type="button"
-              onClick={() => navigate(getContentHref(activePromo, "/all-products?filter=flash"))}
-              className="relative block h-[260px] overflow-hidden rounded-md bg-gray-100 text-left"
-            >
-              <Image src={activePromo.imageUrl} alt={activePromo.title || "Promotional offer"} width={420} height={520} className="absolute inset-0 h-full w-full object-cover" />
-            </button>
-          ) : (
-            <PromoPlaceholder navigate={navigate} href="/all-products?filter=flash" className="h-[260px]" label="See today's offers" />
-          )}
+          <DesktopPromoStack items={desktopPromoCards} navigate={navigate} prefetchRoute={prefetchRoute} />
         </section>
 
-        {featuredCards.length ? (
-          <section className="mt-3 grid gap-3 md:grid-cols-3">
-            {featuredCards.slice(0, 3).map((card, index) => (
-              <MarketingBannerTile
-                key={card._id || `hero-feature-${index}`}
-                item={card}
-                navigate={navigate}
-                prefetchRoute={prefetchRoute}
-                className="h-[132px] rounded-md"
-              />
-            ))}
-          </section>
-        ) : null}
+        <div className="mt-4 grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)]">
+          <div aria-hidden="true" />
+          <DesktopServiceStrip />
+        </div>
 
-        {dealProducts.length ? (
-          <section className="mt-6 rounded-xl bg-gradient-to-br from-orange-100/80 via-rose-100/70 to-amber-50/90 px-4 py-4">
-            <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-base font-bold text-gray-950">Flash Deals</h2>
-                <p className="text-[11px] text-gray-500">Active promotions ending soon</p>
-              </div>
-              <div className="flex items-center gap-3">
-                {earliestDealDeadline ? <FlashCountdown deadline={earliestDealDeadline} /> : null}
-                <button
-                  type="button"
-                  onClick={() => navigate("/all-products?filter=flash")}
-                  className="text-xs font-semibold text-orange-600 hover:text-orange-700"
-                >
-                  View all -&gt;
-                </button>
-              </div>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {dealProducts.map((product, index) => (
-                <DealCard key={`deal-${index}-${product._id || product.name}`} product={product} cardIndex={index} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} />
-              ))}
-            </div>
-          </section>
-        ) : null}
+        <DesktopFlashDealsPanel
+          products={desktopDealProducts}
+          deadline={earliestDealDeadline}
+          navigate={navigate}
+          prefetchRoute={prefetchRoute}
+          formatCurrency={formatCurrency}
+          topRailTiles={topRailTiles}
+          sortedProducts={sortedProducts}
+        />
 
         {homeProducts.length ? (
           <section className="mt-6 rounded-md bg-orange-50 p-4">
@@ -1707,13 +2005,6 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
             </div>
           </section>
         ) : null}
-
-        <MarketingBannerGrid
-          items={marketingBanners}
-          navigate={navigate}
-          prefetchRoute={prefetchRoute}
-          className="mt-8"
-        />
 
         <ProductStripRail
           title="Recently viewed"
@@ -1752,7 +2043,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
                   onClick={() => navigate(store.href)}
                   onMouseEnter={() => prefetchRoute(store.href)}
                   onFocus={() => prefetchRoute(store.href)}
-                  className="flex min-h-[4.75rem] w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-3 text-left shadow-sm transition hover:border-orange-300 hover:shadow-md"
+                  className="flex min-h-[4.75rem] w-full items-center gap-3 rounded-2xl bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:bg-gray-50 hover:shadow-[0_14px_30px_rgba(15,23,42,0.10)]"
                 >
                   <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gray-100">
                     {store.avatarUrl ? (

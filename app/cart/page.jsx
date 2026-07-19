@@ -73,7 +73,7 @@ const Cart = () => {
   return (
     <>
       <Navbar hideMobileHeader />
-      <main className="mx-auto min-h-screen max-w-5xl px-3 pb-20 pt-3 sm:px-6 md:py-4 lg:px-8">
+      <main className="mx-auto min-h-screen max-w-5xl px-3 pb-16 pt-3 sm:px-6 md:py-4 lg:px-8">
         <div className="sticky top-0 z-30 -mx-3 mb-2 border-b border-gray-200/80 bg-[#f8fafc]/95 px-3 pb-2 pt-7 backdrop-blur-sm md:hidden">
           <div className="flex items-center justify-between">
             <button type="button" onClick={() => window.history.back()} aria-label="Go back" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-700">

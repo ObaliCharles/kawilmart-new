@@ -800,7 +800,7 @@ const StorePage = () => {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white px-4 py-3 pb-20 sm:px-6 md:px-8 lg:px-10">
+      <main className="min-h-screen bg-white px-4 py-3 pb-16 sm:px-6 md:px-8 lg:px-10">
         <div className="mx-auto max-w-[1480px]">
           <div className="mb-2 text-[10.5px] text-gray-500">
             <span>Home <span className="mx-2 text-gray-400">&gt;</span> Stores <span className="mx-2 text-gray-400">&gt;</span> <span className="font-semibold text-gray-950">{seller?.name || "Store"}</span> <span className="mx-2 text-gray-400">&gt;</span> Products</span>

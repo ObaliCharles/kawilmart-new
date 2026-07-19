@@ -413,22 +413,22 @@ const NotificationPopover = ({ unreadCount, notifications, onNavigate, onMarkAll
 };
 
 const AccountMenuSection = ({ title, items, onNavigate }) => (
-  <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-    <h2 className="border-b border-gray-100 px-4 py-2.5 text-sm font-bold text-gray-600">{title}</h2>
+  <section className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm">
+    <h2 className="border-b border-gray-100 px-3.5 py-2 text-[12px] font-bold text-gray-500">{title}</h2>
     <div className="divide-y divide-gray-100">
       {items.map((item) => (
         <button
           key={item.label}
           type="button"
           onClick={() => onNavigate(item.href)}
-          className="flex w-full items-center gap-3 px-4 py-3 text-left"
+          className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left"
         >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center text-gray-950">
-            <AccountMenuIcon type={item.icon} className="h-5 w-5" />
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center text-gray-950">
+            <AccountMenuIcon type={item.icon} className="h-4 w-4" />
           </span>
-          <span className="min-w-0 flex-1 text-[15px] font-semibold text-gray-950">{item.label}</span>
+          <span className="min-w-0 flex-1 text-[13px] font-semibold text-gray-950">{item.label}</span>
           {item.badge ? (
-            <span className="rounded-lg border border-orange-200 px-2.5 py-1 text-xs font-bold text-orange-600">{item.badge}</span>
+            <span className="rounded-md bg-orange-50 px-2 py-0.5 text-[10px] font-bold text-orange-600">{item.badge}</span>
           ) : null}
           <ChevronRight />
         </button>
@@ -863,51 +863,51 @@ const Navbar = ({ hideMobileHeader = false }) => {
   return (
     <>
       {isMobileAccountOpen && user ? (
-        <div className="fixed inset-x-0 top-0 bottom-[4.75rem] z-50 overflow-y-auto bg-white md:hidden">
-          <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-4 pb-3 pt-8 backdrop-blur">
+        <div className="fixed inset-x-0 top-0 bottom-[3.75rem] z-40 overflow-y-auto bg-white md:hidden">
+          <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-3.5 pb-2.5 pt-7 backdrop-blur">
             <div className="flex items-center justify-between">
-              <button type="button" onClick={() => setIsMobileAccountOpen(false)} aria-label="Close account menu" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-950">
-                <svg className="h-6 w-6" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <button type="button" onClick={() => setIsMobileAccountOpen(false)} aria-label="Close account menu" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-950">
+                <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 24 24" fill="none">
                   <path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
-              <h1 className="text-lg font-extrabold text-gray-950">My Account</h1>
+              <h1 className="text-base font-extrabold text-gray-950">My Account</h1>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => handleAccountNavigate("/inbox")} aria-label="Notifications" className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-950">
-                  <AccountMenuIcon type="bell" className="h-6 w-6" />
+                <button type="button" onClick={() => handleAccountNavigate("/inbox")} aria-label="Notifications" className="relative flex h-8 w-8 items-center justify-center rounded-full text-gray-950">
+                  <AccountMenuIcon type="bell" className="h-5 w-5" />
                   {unreadNotificationsCount > 0 ? (
                     <span className="absolute right-0 top-0 inline-flex min-w-[1.35rem] items-center justify-center rounded-full bg-orange-600 px-1.5 py-1 text-[11px] font-extrabold leading-none text-white">
                       {formatBadgeCount(unreadNotificationsCount)}
                     </span>
                   ) : null}
                 </button>
-                <button type="button" onClick={() => openUserProfile?.()} aria-label="Account settings" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-950">
-                  <AccountMenuIcon type="settings" className="h-6 w-6" />
+                <button type="button" onClick={() => openUserProfile?.()} aria-label="Account settings" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-950">
+                  <AccountMenuIcon type="settings" className="h-5 w-5" />
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="px-4 pb-6 pt-4">
-            <section className="flex items-center gap-3">
+          <div className="px-3.5 pb-5 pt-3">
+            <section className="flex items-center gap-2.5">
               <Image
                 src={user.imageUrl || assets.user_icon}
                 alt={user.fullName || "Account avatar"}
                 width={60}
                 height={60}
-                className="h-[60px] w-[60px] rounded-full object-cover ring-1 ring-gray-200"
+                className="h-12 w-12 rounded-full object-cover ring-1 ring-gray-200"
               />
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-xl font-extrabold text-gray-950">{user.fullName || user.username || "KawilMart shopper"}</h2>
-                <p className="mt-1 truncate text-sm font-medium text-gray-600">{user.primaryEmailAddress?.emailAddress || "No email added"}</p>
-                <p className="mt-1.5 inline-flex items-center gap-2 text-sm font-semibold text-gray-600"><UgandaFlag className="h-5 w-5" />Uganda, UGX</p>
+                <h2 className="truncate text-base font-extrabold text-gray-950">{user.fullName || user.username || "KawilMart shopper"}</h2>
+                <p className="mt-0.5 truncate text-xs font-medium text-gray-600">{user.primaryEmailAddress?.emailAddress || "No email added"}</p>
+                <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600"><UgandaFlag className="h-4 w-4" />Uganda, UGX</p>
               </div>
-              <button type="button" onClick={() => openUserProfile?.()} className="shrink-0 rounded-lg border border-orange-300 px-3 py-2 text-xs font-extrabold text-orange-600">
+              <button type="button" onClick={() => openUserProfile?.()} className="shrink-0 rounded-md bg-orange-50 px-2.5 py-1.5 text-[11px] font-extrabold text-orange-600">
                 View Profile
               </button>
             </section>
 
-            <div className="mt-5 space-y-4">
+            <div className="mt-4 space-y-3">
               {accountSections.map((section) => (
                 <AccountMenuSection key={section.title} title={section.title} items={section.items} onNavigate={handleAccountNavigate} />
               ))}
@@ -915,13 +915,13 @@ const Navbar = ({ hideMobileHeader = false }) => {
               <button
                 type="button"
                 onClick={() => void handleMobileLogout()}
-                className="flex w-full items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-4 py-4 text-left shadow-sm transition hover:bg-rose-100"
+                className="flex w-full items-center justify-between rounded-lg bg-rose-50 px-3.5 py-3 text-left shadow-sm transition hover:bg-rose-100"
               >
                 <span className="flex items-center gap-3">
                   <span className="flex h-7 w-7 items-center justify-center text-rose-600">
                     <AccountMenuIcon type="logout" className="h-5 w-5" />
                   </span>
-                  <span className="text-[15px] font-semibold text-rose-700">Logout</span>
+                  <span className="text-[13px] font-semibold text-rose-700">Logout</span>
                 </span>
                 <ChevronRight />
               </button>
@@ -966,57 +966,57 @@ const Navbar = ({ hideMobileHeader = false }) => {
             </button>
           </form>
           {/* pb clears the bottom dock + raised cart FAB, which stay on top */}
-          <div className="flex-1 overflow-y-auto overscroll-contain pb-28">
+          <div className="flex-1 overflow-y-auto overscroll-contain pb-20">
             <MobileSearchBody {...searchPanelProps} />
           </div>
         </div>
       ) : null}
 
       {isMobileMenuOpen ? (
-        <div className="fixed inset-0 z-[52] bg-black/35 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
-          <aside className="h-full w-[86vw] max-w-[22rem] overflow-y-auto bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-            <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-gray-100 bg-white px-4 py-4">
-              <button type="button" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu" className="flex h-9 w-9 items-center justify-center rounded-full text-gray-950">
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+        <div className="fixed inset-x-0 top-0 bottom-[3.75rem] z-40 bg-black/35 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+          <aside className="h-full w-[82vw] max-w-[20rem] overflow-y-auto bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="sticky top-0 z-10 flex items-center gap-2.5 border-b border-gray-100 bg-white px-3.5 py-3">
+              <button type="button" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-950">
+                <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
               </button>
               <MobileStoreMark />
             </div>
             <div className="divide-y divide-gray-100">
-              <section className="px-4 py-3">
-                <button type="button" onClick={() => goTo('/about')} className="flex w-full items-center justify-between py-3 text-left text-[13px] font-bold uppercase tracking-wide text-gray-500">
+              <section className="px-3.5 py-2">
+                <button type="button" onClick={() => goTo('/about')} className="flex w-full items-center justify-between py-2.5 text-left text-[11px] font-bold uppercase tracking-wide text-gray-500">
                   Need help?
                   <ChevronRight />
                 </button>
-                <button type="button" onClick={() => user ? openMobileAccount() : openSignIn()} className="flex w-full items-center justify-between py-3 text-left text-[13px] font-bold uppercase tracking-wide text-gray-500">
+                <button type="button" onClick={() => user ? openMobileAccount() : openSignIn()} className="flex w-full items-center justify-between py-2.5 text-left text-[11px] font-bold uppercase tracking-wide text-gray-500">
                   My KawilMart account
                   <ChevronRight />
                 </button>
               </section>
-              <section className="px-4 py-3">
+              <section className="px-3.5 py-2">
                 {[
                   ["Orders", "/my-orders", "orders"],
                   ["Inbox", "/inbox", "bell"],
                   ["Wishlist", "/wishlist", "wishlist"],
                   ["Become a Vendor", "/seller", "seller"],
                 ].map(([label, href, icon]) => (
-                  <button key={label} type="button" onClick={() => requireAuthNavigation(href)} className="flex w-full items-center gap-4 py-3 text-left text-[16px] font-medium text-gray-900">
-                    <AccountMenuIcon type={icon} className="h-6 w-6 text-gray-800" />
+                  <button key={label} type="button" onClick={() => requireAuthNavigation(href)} className="flex w-full items-center gap-3 py-2.5 text-left text-sm font-medium text-gray-900">
+                    <AccountMenuIcon type={icon} className="h-5 w-5 text-gray-800" />
                     {label}
                   </button>
                 ))}
               </section>
-              <section className="px-4 py-3">
+              <section className="px-3.5 py-2.5">
                 <div className="mb-2 flex items-center justify-between">
-                  <h2 className="text-[13px] font-bold uppercase tracking-wide text-gray-500">Our categories</h2>
-                  <button type="button" onClick={() => goTo('/categories')} className="text-sm font-semibold text-orange-600">See All</button>
+                  <h2 className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Our categories</h2>
+                  <button type="button" onClick={() => goTo('/categories')} className="text-xs font-semibold text-orange-600">See All</button>
                 </div>
                 {popularCategoryTiles.slice(0, 8).map((category) => (
-                  <button key={category.value} type="button" onClick={() => goTo(buildCategoryHref(category.value))} className="flex w-full items-center gap-4 py-3 text-left text-[16px] font-medium text-gray-900">
+                  <button key={category.value} type="button" onClick={() => goTo(buildCategoryHref(category.value))} className="flex w-full items-center gap-3 py-2.5 text-left text-sm font-medium text-gray-900">
                     <DropdownCategoryThumb
                       category={category.value}
                       imageUrl={category.imageUrl}
-                      boxClassName="h-7 w-7 bg-white text-gray-900"
-                      iconClassName="h-6 w-6"
+                      boxClassName="h-6 w-6 bg-white text-gray-900"
+                      iconClassName="h-5 w-5"
                     />
                     {category.label}
                   </button>
