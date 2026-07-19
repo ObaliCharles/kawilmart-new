@@ -78,31 +78,38 @@ const BannerSlideshow = ({ banners, navigate, className = "" }) => {
   const activeBanner = items[slideIndex % items.length];
 
   return (
-    <section className={`-mx-3 ${className}`}>
-      <div className="h-1.5 bg-gradient-to-r from-orange-600 via-amber-400 to-orange-600" />
-      <div className="bg-white px-3 py-3">
+    <section className={`-mx-3 overflow-hidden bg-gradient-to-br from-gray-950 via-orange-950 to-orange-600 px-3 py-4 text-white shadow-[0_18px_40px_rgba(234,88,12,0.18)] ${className}`}>
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-orange-200">Offers</p>
+          <h2 className="mt-0.5 text-lg font-black leading-tight">Fresh deals for you</h2>
+        </div>
+        <button type="button" onClick={() => navigate("/all-products?filter=flash")} className="rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-bold text-white backdrop-blur-sm">
+          View all
+        </button>
+      </div>
+      <div className="rounded-2xl bg-white/10 p-2 shadow-inner ring-1 ring-white/10 backdrop-blur-sm">
         <div className="overflow-hidden rounded-xl">
           <button
             key={activeBanner._id || activeBanner.imageUrl}
             type="button"
             onClick={() => navigate(getContentHref(activeBanner, "/all-products"))}
-            className="kw-banner-slide relative block aspect-[2.1/1] w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm"
+            className="kw-banner-slide relative block aspect-[2.08/1] w-full overflow-hidden rounded-xl bg-white/10 shadow-sm"
           >
             <ContentImage src={activeBanner.imageUrl} alt={activeBanner.title || "Promotion"} width={720} height={343} className="h-full w-full object-cover" />
           </button>
         </div>
         {items.length > 1 ? (
-          <div className="mt-2 flex items-center justify-center gap-1">
+          <div className="mt-3 flex items-center justify-center gap-1">
             {items.map((item, index) => (
               <span
                 key={`slide-dot-${item._id || item.imageUrl}`}
-                className={`h-1.5 rounded-full transition-all duration-300 ${index === slideIndex % items.length ? "w-4 bg-orange-600" : "w-1.5 bg-gray-200"}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${index === slideIndex % items.length ? "w-5 bg-white" : "w-1.5 bg-white/35"}`}
               />
             ))}
           </div>
         ) : null}
       </div>
-      <div className="h-1.5 bg-gradient-to-r from-orange-600 via-amber-400 to-orange-600" />
     </section>
   );
 };

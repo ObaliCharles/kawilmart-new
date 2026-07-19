@@ -863,7 +863,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
   return (
     <>
       {isMobileAccountOpen && user ? (
-        <div className="fixed inset-x-0 top-0 bottom-[3.75rem] z-40 overflow-y-auto bg-white md:hidden">
+        <div className="fixed inset-x-0 top-0 bottom-[3.75rem] z-[47] overflow-y-auto bg-white md:hidden">
           <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-3.5 pb-2.5 pt-7 backdrop-blur">
             <div className="flex items-center justify-between">
               <button type="button" onClick={() => setIsMobileAccountOpen(false)} aria-label="Close account menu" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-950">
@@ -973,7 +973,7 @@ const Navbar = ({ hideMobileHeader = false }) => {
       ) : null}
 
       {isMobileMenuOpen ? (
-        <div className="fixed inset-x-0 top-0 bottom-[3.75rem] z-40 bg-black/35 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+        <div className="fixed inset-x-0 top-0 bottom-[3.75rem] z-[47] bg-black/35 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
           <aside className="h-full w-[82vw] max-w-[20rem] overflow-y-auto bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="sticky top-0 z-10 flex items-center gap-2.5 border-b border-gray-100 bg-white px-3.5 py-3">
               <button type="button" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-950">
