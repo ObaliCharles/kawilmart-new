@@ -163,6 +163,15 @@ const OrderSummary = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      if (data.success && data.requiresPayment && data.redirectUrl) {
+        // Gateway checkout: the order is not confirmed yet, so leave the cart
+        // and the idempotency key alone — if the shopper abandons the payment
+        // page, retrying reuses the same key instead of duplicating the order.
+        toast.success(data.message || "Redirecting to payment");
+        window.location.href = data.redirectUrl;
+        return;
+      }
+
       if (data.success) {
         idempotencyKeyRef.current = createIdempotencyKey();
         setCartItems({});

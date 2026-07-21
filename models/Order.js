@@ -56,6 +56,14 @@ const orderSchema = new mongoose.Schema({
     // Client-generated key so a double-submitted checkout can never create
     // two orders (unique per user+key; sparse so old orders are unaffected).
     idempotencyKey: { type: String, default: "" },
+    // Gateway reconciliation. paymentReference is the checkout-wide tx_ref
+    // (shared by every seller-order in one cart), paymentTransactionId is the
+    // gateway's own id for the settled transaction.
+    paymentGateway: { type: String, default: "" },
+    paymentReference: { type: String, default: "" },
+    paymentTransactionId: { type: String, default: "" },
+    paymentInitiatedAt: { type: Date },
+    paymentPaidAt: { type: Date },
     returnRequest: {
         status: { type: String, default: RETURN_STATUSES.NONE, enum: Object.values(RETURN_STATUSES) },
         reason: { type: String, default: "" },
@@ -161,6 +169,13 @@ orderSchema.pre("validate", function normalizeOrderDocument(next) {
 orderSchema.index(
     { userId: 1, idempotencyKey: 1 },
     { unique: true, partialFilterExpression: { idempotencyKey: { $gt: "" } } }
+);
+
+// The payment webhook looks orders up by the gateway's tx_ref, which is shared
+// by every seller-order created from the same cart.
+orderSchema.index(
+    { paymentReference: 1 },
+    { partialFilterExpression: { paymentReference: { $gt: "" } } }
 );
 
 const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);

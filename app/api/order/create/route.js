@@ -8,6 +8,7 @@ import {
   DELIVERY_MODES,
   ORDER_STATUSES,
   PAYMENT_METHOD_LABELS,
+  PAYMENT_STATUSES,
   RIDER_ASSIGNMENT_STATUSES,
   buildOrderFinancials,
   calculateDeliveryFee,
@@ -26,6 +27,9 @@ import {
   createStatusTrackingEvent,
 } from "@/lib/orderTracking";
 import { notifyUsers } from "@/lib/notifyUsers";
+import { getActiveGateway, requiresUpfrontPayment } from "@/lib/payments";
+import { getOrSyncDatabaseUser } from "@/lib/clerkUserSync";
+import { randomUUID } from "crypto";
 
 const sendOrderEvents = (createdOrders, userId, address) => {
   return Promise.allSettled(
@@ -49,6 +53,29 @@ const sendOrderEvents = (createdOrders, userId, address) => {
 };
 
 const formatCurrency = (amount) => `UGX ${Number(amount || 0).toLocaleString("en-UG")}`;
+
+// Opens a hosted checkout session for a set of already-created, unpaid orders
+// and returns the URL to send the shopper to. `reference` becomes the gateway's
+// tx_ref and must be unique per attempt.
+const startGatewayPayment = async ({ reference, orders, userId, addressDoc }) => {
+  const gateway = getActiveGateway();
+  const totalAmount = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
+  const customer = await getOrSyncDatabaseUser(userId, { select: "name email", lean: true });
+  const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
+
+  const { redirectUrl } = await gateway.initiate({
+    reference,
+    amount: totalAmount,
+    customer: {
+      name: addressDoc?.fullName || customer?.name || "Customer",
+      email: customer?.email || "",
+      phone: addressDoc?.phoneNumber || "",
+    },
+    redirectUrl: `${baseUrl}/order-placed?ref=${encodeURIComponent(reference)}`,
+  });
+
+  return redirectUrl;
+};
 
 export async function POST(request) {
   const reservedStockAdjustments = [];
@@ -77,23 +104,72 @@ export async function POST(request) {
     // retried request after a network hiccup), acknowledge instead of
     // creating duplicates. Keys are stored per seller-order as `key:sellerId`,
     // so a lexicographic prefix range finds any of them via the index.
-    const safeIdempotencyKey = typeof idempotencyKey === "string"
+    let safeIdempotencyKey = typeof idempotencyKey === "string"
       ? idempotencyKey.trim().slice(0, 80).replace(/[^a-zA-Z0-9_-]/g, "")
       : "";
-    if (safeIdempotencyKey) {
-      const existingOrder = await Order.findOne({
-        userId,
-        idempotencyKey: { $gte: `${safeIdempotencyKey}:`, $lt: `${safeIdempotencyKey};` },
-      }).select("_id").lean();
 
-      if (existingOrder) {
-        return NextResponse.json({ success: true, message: "Order already placed" });
-      }
+    // Gateway payments need a checkout-wide reference to use as tx_ref, and it
+    // has to be the same string the orders are keyed by so the webhook can find
+    // them again. Mint one if the client did not send it.
+    const payUpfront = requiresUpfrontPayment(normalizedPaymentMethod);
+    if (payUpfront && !safeIdempotencyKey) {
+      safeIdempotencyKey = randomUUID().replace(/-/g, "");
     }
-
     const addressDoc = await Address.findById(address);
     if (!addressDoc) {
       return NextResponse.json({ success: false, message: "Selected address not found" });
+    }
+
+    if (safeIdempotencyKey) {
+      const existingOrders = await Order.find({
+        userId,
+        idempotencyKey: { $gte: `${safeIdempotencyKey}:`, $lt: `${safeIdempotencyKey};` },
+      });
+
+      if (existingOrders.length > 0) {
+        // A gateway checkout the shopper never finished (closed the payment
+        // page, timed out). The orders and their stock reservation are still
+        // good, so reuse them and hand back a fresh payment link instead of
+        // dead-ending on "already placed". The reference has to be new because
+        // gateways reject a replayed tx_ref.
+        const isUnpaidGatewayCheckout = existingOrders.every((order) => (
+          order.paymentGateway && order.paymentStatus === PAYMENT_STATUSES.PENDING
+        ));
+
+        if (payUpfront && isUnpaidGatewayCheckout) {
+          const retryReference = `${safeIdempotencyKey}-r${randomUUID().slice(0, 8)}`;
+
+          try {
+            const redirectUrl = await startGatewayPayment({
+              reference: retryReference,
+              orders: existingOrders,
+              userId,
+              addressDoc,
+            });
+
+            await Order.updateMany(
+              { _id: { $in: existingOrders.map((order) => order._id) } },
+              { $set: { paymentReference: retryReference, paymentInitiatedAt: new Date() } }
+            );
+
+            return NextResponse.json({
+              success: true,
+              requiresPayment: true,
+              redirectUrl,
+              reference: retryReference,
+              message: "Redirecting you to complete payment",
+            });
+          } catch (error) {
+            console.error("Payment retry initiation failed:", error);
+            return NextResponse.json({
+              success: false,
+              message: "We could not reach the payment provider. Please try again shortly.",
+            }, { status: 502 });
+          }
+        }
+
+        return NextResponse.json({ success: true, message: "Order already placed" });
+      }
     }
 
     const sellerOrders = new Map();
@@ -211,6 +287,9 @@ export async function POST(request) {
           customerPhone: addressDoc.phoneNumber || "",
           paymentMethod: normalizedPaymentMethod,
           idempotencyKey: safeIdempotencyKey ? `${safeIdempotencyKey}:${sellerId}` : "",
+          paymentGateway: payUpfront ? getActiveGateway().name : "",
+          paymentReference: payUpfront ? safeIdempotencyKey : "",
+          paymentInitiatedAt: payUpfront ? new Date() : undefined,
           status: ORDER_STATUSES.PLACED,
           trackingEvents: [createStatusTrackingEvent(ORDER_STATUSES.PLACED)],
           date: Date.now(),
@@ -247,17 +326,60 @@ export async function POST(request) {
     }
 
     const createdOrders = await Order.create(orderPayloads);
-    reservedStockAdjustments.length = 0;
     const totalItems = createdOrders.reduce(
       (sum, order) => sum + order.items.reduce((orderSum, item) => orderSum + item.quantity, 0),
       0
     );
+    const totalAmount = createdOrders.reduce((sum, order) => sum + (order.amount || 0), 0);
+
+    // Gateway checkout: hand the shopper off to the hosted payment page and
+    // stop here. The cart stays filled, nobody is told the order was placed,
+    // and the seller sees nothing actionable until the webhook confirms the
+    // money — see app/api/webhooks/payments. Stock stays reserved meanwhile so
+    // a paying customer cannot lose the item mid-payment.
+    if (payUpfront) {
+      try {
+        const redirectUrl = await startGatewayPayment({
+          reference: safeIdempotencyKey,
+          orders: createdOrders,
+          userId,
+          addressDoc,
+        });
+
+        reservedStockAdjustments.length = 0;
+
+        return NextResponse.json({
+          success: true,
+          requiresPayment: true,
+          redirectUrl,
+          reference: safeIdempotencyKey,
+          message: "Redirecting you to complete payment",
+        });
+      } catch (error) {
+        // Nothing was charged, so undo the whole checkout rather than leaving
+        // unpayable orders and reserved stock behind.
+        console.error("Payment initiation failed:", error);
+        await Order.deleteMany({ _id: { $in: createdOrders.map((order) => order._id) } });
+        await Promise.allSettled(
+          reservedStockAdjustments.map(([productId, reservedQuantity]) =>
+            Product.updateOne({ _id: productId }, { $inc: { stock: reservedQuantity } })
+          )
+        );
+        reservedStockAdjustments.length = 0;
+
+        return NextResponse.json({
+          success: false,
+          message: "We could not reach the payment provider. Please try again or choose Cash on Delivery.",
+        }, { status: 502 });
+      }
+    }
+
+    reservedStockAdjustments.length = 0;
 
     await User.findByIdAndUpdate(userId, {
       $set: { cartItems: {} },
     });
 
-    const totalAmount = createdOrders.reduce((sum, order) => sum + (order.amount || 0), 0);
     const totalDeliveryFee = createdOrders.reduce((sum, order) => sum + (order.deliveryFee || 0), 0);
     const customerName = addressDoc.fullName || "Customer";
 
