@@ -24,7 +24,11 @@ const productSchema = new mongoose.Schema({
         userId: { type: String, required: true },
         userName: { type: String, required: true },
         rating: { type: Number, required: true, min: 1, max: 5 },
+        title: { type: String, default: "" },
         comment: { type: String },
+        // Set server-side when the reviewer has a delivered/completed order
+        // containing this product. Never accepted from the client.
+        verifiedPurchase: { type: Boolean, default: false },
         date: { type: Date, default: Date.now }
     }],
     averageRating: { type: Number, default: 0 },

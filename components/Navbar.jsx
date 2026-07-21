@@ -880,7 +880,10 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
         { label: "Become a Vendor", href: "/become-a-vendor", icon: "seller" },
         { label: "Chat with Us", href: "/inbox?tab=support", icon: "chat" },
         { label: "Notifications", href: "/inbox", icon: "bell" },
-        { label: "Language & Currency", href: "/about", icon: "globe" },
+        // "Language & Currency" lived here but pointed at /about. The app has
+        // no i18n and prices are UGX-only, so a switcher would be a control
+        // that changes nothing. Re-add it when there is a second locale.
+        { label: "Shopping Help", href: "/help/shopping", icon: "help" },
       ],
     },
   ];

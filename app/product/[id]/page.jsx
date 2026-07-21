@@ -16,12 +16,13 @@ import { getLocationLabel, getProductActivitySnapshot, sortProductsForLiveShowca
 import { getProductStockSnapshot } from "@/lib/productStock";
 import { categoryMatchesSelection } from "@/lib/marketplaceCategories";
 import { recordRecentlyViewed } from "@/lib/recentlyViewed";
+import ProductReviews from "@/components/product/ProductReviews";
 
 const Product = () => {
 
     const { id } = useParams();
 
-    const { products, addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike, triggerCartFly } = useAppContext()
+    const { products, addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike, triggerCartFly, fetchProductData: refreshCatalogue } = useAppContext()
 
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
@@ -184,7 +185,13 @@ const Product = () => {
                     <div className="flex flex-wrap items-center gap-3 text-sm">
                       <ProductRating product={productData} size="lg" />
                       <span className="text-gray-300">|</span>
-                      <button type="button" className="font-semibold text-orange-600">See all reviews</button>
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                        className="font-semibold text-orange-600 transition hover:text-orange-700"
+                      >
+                        See all reviews
+                      </button>
                     </div>
                     <p className="mt-3 text-[13px] text-gray-600">
                       by <span className="font-semibold text-orange-600">{productData.sellerProfile?.name || "KawilMart Seller"}</span>
@@ -287,36 +294,6 @@ const Product = () => {
                         </div>
                     ) : null}
 
-                    {/* Reviews Section */}
-                    {productData.reviews && productData.reviews.length > 0 && (
-                        <div className="mt-8">
-                            <h3 className="text-lg font-medium text-gray-800 mb-4">Customer Reviews ({productData.reviews.length})</h3>
-                            <div className="space-y-4">
-                                {productData.reviews.map((review, index) => (
-                                    <div key={index} className="rounded-xl bg-gray-50/80 p-3.5">
-                                        <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                            <span className="font-medium">{review.userName}</span>
-                                            <div className="flex items-center gap-1">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Image
-                                                        key={i}
-                                                        src={i < review.rating ? assets.star_icon : assets.star_dull_icon}
-                                                        alt="star"
-                                                        className="h-4 w-4"
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <p className="text-gray-600 text-sm">{review.comment}</p>
-                                        <p className="text-xs text-gray-400 mt-2">
-                                            {new Date(review.date).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
                     <div className="mt-6 flex flex-col gap-2.5">
                         <button
                             onClick={handleAddToCart}
@@ -374,6 +351,9 @@ const Product = () => {
                 </div>
               </div>
             </div>
+
+            <ProductReviews product={productData} onReviewsChanged={() => refreshCatalogue({ background: true })} />
+
             <div className="flex flex-col items-center">
                 <div className="flex flex-col items-center mb-4 mt-16">
                     <p className="text-center text-2xl font-medium sm:text-3xl">

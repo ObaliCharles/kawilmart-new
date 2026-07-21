@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { useAppContext } from "@/context/AppContext";
+import { useClerk, useUser } from "@clerk/nextjs";
 
 // Line icons drawn at a single 1.7 stroke weight so the whole page reads as one
 // icon set rather than a pile of mismatched glyphs.
@@ -33,16 +34,17 @@ const QUICK_ACTIONS = [
   { key: "track", label: "Track Order", hint: "Track your order in real time", icon: "track", href: "/my-orders", tone: "text-orange-600 bg-orange-50" },
   { key: "payments", label: "Payments", hint: "Payment methods & mobile money", icon: "payments", href: "/payment-methods", tone: "text-emerald-600 bg-emerald-50" },
   { key: "deliveries", label: "Deliveries", hint: "Shipping info & delivery times", icon: "deliveries", href: "/legal#terms", tone: "text-amber-600 bg-amber-50" },
-  { key: "account", label: "Account", hint: "Manage your account & security", icon: "account", href: "/add-address", tone: "text-sky-600 bg-sky-50" },
-  { key: "shopping", label: "Shopping Help", hint: "Placing orders, carts, coupons", icon: "shopping", href: "/all-products", tone: "text-rose-600 bg-rose-50" },
+  // `clerk` opens the real Clerk account modal rather than routing anywhere.
+  { key: "account", label: "Account", hint: "Manage your account & security", icon: "account", href: "clerk", tone: "text-sky-600 bg-sky-50" },
+  { key: "shopping", label: "Shopping Help", hint: "Placing orders, carts, checkout", icon: "shopping", href: "/help/shopping", tone: "text-rose-600 bg-rose-50" },
   { key: "chat", label: "Live Chat", hint: "Chat with our support team", icon: "chat", href: "/inbox?tab=support", tone: "text-violet-600 bg-violet-50" },
 ];
 
 const HELP_TOPICS = [
   { label: "Orders & Shipping", hint: "Track orders, shipping, delivery options", icon: "track", href: "/my-orders" },
   { label: "Payments & Refunds", hint: "Payment methods, failed payments, refunds", icon: "payments", href: "/payment-methods" },
-  { label: "Account & Security", hint: "Manage account, passwords, security", icon: "account", href: "/add-address" },
-  { label: "Shopping & Checkout", hint: "Placing orders, carts, coupons", icon: "shopping", href: "/cart" },
+  { label: "Account & Security", hint: "Manage account, passwords, security", icon: "account", href: "clerk" },
+  { label: "Shopping & Checkout", hint: "Placing orders, carts, checkout", icon: "shopping", href: "/help/shopping" },
   { label: "Returns & Refunds", hint: "Return process, eligibility & timeline", icon: "returns", href: "/legal#terms" },
   { label: "Seller Support", hint: "For sellers and store owners", icon: "seller", href: "/seller" },
   { label: "Delivery Support", hint: "Delivery issues and complaints", icon: "deliveries", href: "/inbox?tab=support" },
@@ -77,8 +79,8 @@ const FAQS = [
 
 const CONTACT_CHANNELS = [
   { key: "chat", label: "Live Chat", detail: "Average reply: < 1 min", action: "Start Chat", icon: "chat", href: "/inbox?tab=support", tone: "text-orange-600 bg-orange-50" },
-  { key: "phone", label: "Call Us", detail: "Mon – Sun (8AM – 10PM)", action: "+256 700 123456", icon: "phone", href: "tel:+256700123456", tone: "text-emerald-600 bg-emerald-50" },
-  { key: "whatsapp", label: "WhatsApp", detail: "Chat with us on WhatsApp", action: "+256 700 123456", icon: "whatsapp", href: "https://wa.me/256700123456", tone: "text-green-600 bg-green-50" },
+  { key: "phone", label: "Call Us", detail: "Mon – Sun (8AM – 10PM)", action: "0767 934 191", icon: "phone", href: "tel:+256767934191", tone: "text-emerald-600 bg-emerald-50" },
+  { key: "whatsapp", label: "WhatsApp", detail: "Chat with us on WhatsApp", action: "0767 934 191", icon: "whatsapp", href: "https://wa.me/256767934191", tone: "text-green-600 bg-green-50" },
   { key: "mail", label: "Email Us", detail: "We reply within 24 hours", action: "support@kawilmart.ug", icon: "mail", href: "mailto:support@kawilmart.ug", tone: "text-sky-600 bg-sky-50" },
 ];
 
@@ -129,6 +131,8 @@ const FaqItem = ({ faq, open, onToggle }) => (
 
 const HelpCenterPage = () => {
   const { navigate } = useAppContext();
+  const { openUserProfile, openSignIn } = useClerk();
+  const { user } = useUser();
   const [query, setQuery] = useState("");
   const [openFaq, setOpenFaq] = useState(null);
   const [orderNumber, setOrderNumber] = useState("");
@@ -159,6 +163,36 @@ const HelpCenterPage = () => {
     navigate(orderNumber.trim() ? `/my-orders?q=${encodeURIComponent(orderNumber.trim())}` : "/my-orders");
   };
 
+  // "clerk" is a sentinel rather than a route: account details live in Clerk's
+  // own profile modal, so there is nothing of ours to navigate to.
+  const openTarget = (href) => {
+    if (href === "clerk") {
+      if (user) openUserProfile?.();
+      else openSignIn?.();
+      return;
+    }
+    navigate(href);
+  };
+
+  const submitSearch = (event) => {
+    event.preventDefault();
+    if (!normalizedQuery) return;
+
+    if (filteredFaqs.length > 0) {
+      setOpenFaq(filteredFaqs[0].question);
+      return;
+    }
+
+    if (filteredTopics.length > 0) {
+      openTarget(filteredTopics[0].href);
+      return;
+    }
+
+    // Nothing in the help content matched — the shopper is most likely
+    // looking for a product, so hand the query to the catalogue search.
+    navigate(`/all-products?search=${encodeURIComponent(query.trim())}`);
+  };
+
   const openChannel = (href) => {
     if (href.startsWith("/")) {
       navigate(href);
@@ -182,8 +216,11 @@ const HelpCenterPage = () => {
             Find answers, track orders and get the support you need.
           </p>
 
+          {/* The list below filters as you type. Submitting jumps to the first
+              matching topic, and falls back to a product search when nothing in
+              the help content matches — so the button is never a dead end. */}
           <form
-            onSubmit={(event) => event.preventDefault()}
+            onSubmit={submitSearch}
             className="mx-auto mt-5 flex max-w-2xl items-center gap-2 rounded-full bg-white p-1.5 shadow-lg shadow-orange-900/10"
           >
             <span className="pl-2.5 text-gray-400">
@@ -197,9 +234,22 @@ const HelpCenterPage = () => {
               aria-label="Search help articles"
               className="min-w-0 flex-1 bg-transparent py-2 text-[12.5px] text-gray-900 outline-none placeholder:text-gray-400 md:text-[13.5px]"
             />
-            <span className="hidden shrink-0 rounded-full bg-orange-600 px-5 py-2.5 text-[12.5px] font-bold text-white sm:block">
+            {query ? (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+                className="shrink-0 rounded-full px-2 text-[18px] leading-none text-gray-400 transition hover:text-gray-600"
+              >
+                &times;
+              </button>
+            ) : null}
+            <button
+              type="submit"
+              className="hidden shrink-0 rounded-full bg-orange-600 px-5 py-2.5 text-[12.5px] font-bold text-white transition hover:bg-orange-700 sm:block"
+            >
               Search
-            </span>
+            </button>
           </form>
         </div>
       </section>
@@ -211,7 +261,7 @@ const HelpCenterPage = () => {
             <button
               key={action.key}
               type="button"
-              onClick={() => navigate(action.href)}
+              onClick={() => openTarget(action.href)}
               style={{ "--reveal-delay": `${index * 40}ms` }}
               className="reveal-up interactive-lift flex flex-col items-center gap-2 rounded-2xl bg-white px-2 py-3.5 text-center shadow-sm ring-1 ring-gray-100 transition hover:ring-orange-200 md:px-3 md:py-4"
             >
@@ -226,14 +276,25 @@ const HelpCenterPage = () => {
         {hasNoResults ? (
           <Card className="mt-4 text-center">
             <p className="text-[13px] font-semibold text-gray-800">No results for &ldquo;{query}&rdquo;</p>
-            <p className="mt-1 text-[12px] text-gray-500">Try a different word, or reach our team directly below.</p>
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              className="mt-3 rounded-full bg-orange-600 px-5 py-2 text-[12px] font-semibold text-white transition hover:bg-orange-700"
-            >
-              Clear search
-            </button>
+            <p className="mt-1 text-[12px] text-gray-500">
+              Nothing in our help articles matched. It might be a product &mdash; try the shop, or reach our team below.
+            </p>
+            <div className="mt-3 flex flex-col justify-center gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => navigate(`/all-products?search=${encodeURIComponent(query.trim())}`)}
+                className="rounded-full bg-orange-600 px-5 py-2 text-[12px] font-semibold text-white transition hover:bg-orange-700"
+              >
+                Search products for &ldquo;{query.trim()}&rdquo;
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="rounded-full bg-gray-100 px-5 py-2 text-[12px] font-semibold text-gray-700 transition hover:bg-gray-200"
+              >
+                Clear search
+              </button>
+            </div>
           </Card>
         ) : null}
 
@@ -250,7 +311,7 @@ const HelpCenterPage = () => {
                   <button
                     key={topic.label}
                     type="button"
-                    onClick={() => navigate(topic.href)}
+                    onClick={() => openTarget(topic.href)}
                     className="group flex w-full items-center gap-3 rounded-xl px-1 py-2.5 text-left transition hover:bg-orange-50/60"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-50 text-gray-600 transition group-hover:bg-white group-hover:text-orange-600">
