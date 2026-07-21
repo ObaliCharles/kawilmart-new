@@ -5,12 +5,13 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { AdminDashboardPageSkeleton } from '@/components/dashboard/DashboardSkeletons';
 import { getOrderStatusBadgeClass, getOrderStatusDisplay } from '@/lib/orderUi';
+import DashIcon from '@/components/DashIcon';
 
 const StatCard = ({ icon, label, value, sub, color }) => (
     <div className="rounded-xl bg-white p-3.5 ring-1 ring-gray-100 transition hover:shadow-sm">
         <div className="flex items-start gap-3">
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base ${color}`}>
-                {icon}
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${color}`}>
+                <DashIcon name={icon} className="h-[18px] w-[18px]" />
             </div>
             <div className="min-w-0 flex-1">
                 <p className="truncate text-[11px] font-medium text-gray-500">{label}</p>
@@ -61,7 +62,7 @@ export default function AdminDashboard() {
     if (loading) return <AdminDashboardPageSkeleton />;
     if (!stats) return (
         <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-            <span className="text-5xl mb-4">🔒</span>
+            <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100"><DashIcon name="shield" className="h-7 w-7" /></span>
             <p className="text-xl font-semibold">Admin Access Required</p>
             <p className="text-sm mt-2">Your account needs the admin role to view this page.</p>
         </div>
@@ -84,10 +85,10 @@ export default function AdminDashboard() {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-                <StatCard icon="💰" label="Total Revenue" value={formatCurrency(stats.totalRevenue)} sub={`${stats.completedOrders || 0} completed orders`} color="bg-green-50 text-green-600" />
-                <StatCard icon="📦" label="Total Orders" value={stats.totalOrders.toLocaleString()} sub={`${stats.flaggedSellers || 0} flagged sellers`} color="bg-blue-50 text-blue-600" />
-                <StatCard icon="🛍️" label="Products" value={stats.totalProducts.toLocaleString()} sub="Listed in store" color="bg-purple-50 text-purple-600" />
-                <StatCard icon="👥" label="Users" value={stats.totalUsers.toLocaleString()} sub="Registered accounts" color="bg-orange-50 text-orange-600" />
+                <StatCard icon="revenue" label="Total Revenue" value={formatCurrency(stats.totalRevenue)} sub={`${stats.completedOrders || 0} completed orders`} color="bg-green-50 text-green-600" />
+                <StatCard icon="orders" label="Total Orders" value={stats.totalOrders.toLocaleString()} sub={`${stats.flaggedSellers || 0} flagged sellers`} color="bg-blue-50 text-blue-600" />
+                <StatCard icon="bag" label="Products" value={stats.totalProducts.toLocaleString()} sub="Listed in store" color="bg-purple-50 text-purple-600" />
+                <StatCard icon="users" label="Users" value={stats.totalUsers.toLocaleString()} sub="Registered accounts" color="bg-orange-50 text-orange-600" />
             </div>
 
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">

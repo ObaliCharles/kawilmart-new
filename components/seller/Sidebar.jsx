@@ -5,6 +5,7 @@ import { assets } from '../../assets/assets';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
+import DashIcon from '@/components/DashIcon';
 
 const SideBar = () => {
     const pathname = usePathname();
@@ -17,9 +18,9 @@ const SideBar = () => {
     ];
 
     const shortcuts = [
-        { name: 'Verification', path: '/seller/verification', icon: '✅', accentClassName: 'text-gray-700' },
-        ...(isAdmin ? [{ name: 'Admin Panel', path: '/admin', icon: '🛡️', accentClassName: 'text-orange-600 font-medium' }] : []),
-        { name: 'Back to Store', path: '/', icon: '🏠', accentClassName: 'text-gray-500' },
+        { name: 'Verification', path: '/seller/verification', icon: 'verified', accentClassName: 'text-gray-700' },
+        ...(isAdmin ? [{ name: 'Admin Panel', path: '/admin', icon: 'shield', accentClassName: 'text-orange-600 font-medium' }] : []),
+        { name: 'Back to Store', path: '/', icon: 'home', accentClassName: 'text-gray-500' },
     ];
 
     return (
@@ -58,8 +59,8 @@ const SideBar = () => {
                                     ? 'bg-orange-600/10 md:border-r-[6px] border-orange-500/90'
                                     : 'hover:bg-gray-100/90'
                             }`}>
-                                <span className="flex h-6 w-6 shrink-0 items-center justify-center text-lg md:h-7 md:w-7 md:text-xl">
-                                    {item.icon}
+                                <span className={`flex h-6 w-6 shrink-0 items-center justify-center md:h-7 md:w-7 ${item.accentClassName}`}>
+                                    <DashIcon name={item.icon} className="h-5 w-5" />
                                 </span>
                                 <p className={`whitespace-nowrap text-sm md:text-base ${item.accentClassName}`}>
                                     {item.name}

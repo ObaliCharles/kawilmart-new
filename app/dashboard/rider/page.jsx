@@ -168,7 +168,7 @@ export default function RiderDashboard() {
     if (loading) {
         return (
             <>
-                <Navbar />
+                <Navbar hideMobileHeader mobilePageTitle="Rider Dashboard" showMobilePageSearch={false} />
                 <RiderDashboardSkeleton />
             </>
         );
@@ -176,11 +176,11 @@ export default function RiderDashboard() {
 
     return (
         <>
-            <Navbar />
+            <Navbar hideMobileHeader mobilePageTitle="Rider Dashboard" showMobilePageSearch={false} />
             <div className="min-h-screen bg-gray-50 px-3 py-4 sm:px-4 md:px-6 md:py-5">
                 <div className="mx-auto max-w-6xl">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
+                <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="hidden md:block">
                         <div className="flex items-center gap-2">
                             <h1 className="text-lg font-semibold tracking-tight text-gray-950">Deliveries</h1>
                             <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${

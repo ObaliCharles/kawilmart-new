@@ -305,7 +305,7 @@ const InboxPage = () => {
   if (!authReady || loading) {
     return (
       <>
-        <Navbar />
+        <Navbar hideMobileHeader mobilePageTitle="Notifications" />
         <NotificationsPageSkeleton />
         <Footer />
       </>
@@ -315,7 +315,7 @@ const InboxPage = () => {
   if (!user) {
     return (
       <>
-        <Navbar />
+        <Navbar hideMobileHeader mobilePageTitle="Notifications" />
         <main className="mx-auto max-w-lg px-4 py-16 text-center">
           <p className="text-sm text-gray-600">Sign in to view notifications and support.</p>
           <button type="button" onClick={() => navigate("/sign-in")} className="mt-4 rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white">
@@ -329,9 +329,9 @@ const InboxPage = () => {
 
   return (
     <>
-      <Navbar />
+      <Navbar hideMobileHeader mobilePageTitle="Notifications" />
       <main className="mx-auto max-w-2xl px-4 py-5 sm:px-6 md:py-6">
-        <header className="flex items-start justify-between gap-3">
+        <header className="hidden items-start justify-between gap-3 md:flex">
           <div>
             <h1 className="text-lg font-bold text-gray-950">Notifications</h1>
             <p className="text-xs text-gray-500">

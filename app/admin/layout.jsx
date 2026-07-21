@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { assets } from '@/assets/assets';
 import toast from 'react-hot-toast';
 import { DashboardShellSkeleton } from '@/components/dashboard/DashboardSkeletons';
+import DashIcon from '@/components/DashIcon';
 
 const adminUserButtonAppearance = {
     elements: {
@@ -17,17 +18,17 @@ const adminUserButtonAppearance = {
 };
 
 const menuItems = [
-    { name: 'Dashboard', path: '/admin', icon: '📊' },
-    { name: 'All Orders', path: '/admin/orders', icon: '📦' },
-    { name: 'Products', path: '/admin/products', icon: '🛍️' },
-    { name: 'Categories', path: '/admin/categories', icon: '🗂️' },
-    { name: 'Users & Roles', path: '/admin/users', icon: '👥' },
-    { name: 'Management', path: '/admin/management', icon: '⚙️' },
-    { name: 'Billing', path: '/admin/billing', icon: '🧾' },
-    { name: 'Promotions & Content', path: '/admin/promotions', icon: '🎯' },
-    { name: 'Tags', path: '/admin/tags', icon: '🏷️' },
-    { name: 'Top Brands', path: '/admin/brands', icon: '🔖' },
-    { name: 'Analytics', path: '/admin/analytics', icon: '📈' },
+    { name: 'Dashboard', path: '/admin', icon: 'dashboard' },
+    { name: 'All Orders', path: '/admin/orders', icon: 'orders' },
+    { name: 'Products', path: '/admin/products', icon: 'products' },
+    { name: 'Categories', path: '/admin/categories', icon: 'categories' },
+    { name: 'Users & Roles', path: '/admin/users', icon: 'users' },
+    { name: 'Management', path: '/admin/management', icon: 'settings' },
+    { name: 'Billing', path: '/admin/billing', icon: 'billing' },
+    { name: 'Promotions & Content', path: '/admin/promotions', icon: 'promotions' },
+    { name: 'Tags', path: '/admin/tags', icon: 'tags' },
+    { name: 'Top Brands', path: '/admin/brands', icon: 'brands' },
+    { name: 'Analytics', path: '/admin/analytics', icon: 'analytics' },
 ];
 
 const AdminLayout = ({ children }) => {
@@ -44,7 +45,9 @@ const AdminLayout = ({ children }) => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-                    <div className="text-6xl mb-4">🔒</div>
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-600">
+                        <DashIcon name="shield" className="h-8 w-8" />
+                    </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Access Required</h1>
                     <p className="text-gray-600 mb-6">
                         You need admin privileges to access this area.
@@ -80,9 +83,10 @@ const AdminLayout = ({ children }) => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
-                        className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+                        aria-label="Toggle menu"
+                        className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100"
                     >
-                        <span className="text-xl">☰</span>
+                        <DashIcon name="menu" className="h-5 w-5" />
                     </button>
                     <Image
                         src={assets.logo}
@@ -90,8 +94,8 @@ const AdminLayout = ({ children }) => {
                         className="w-24 cursor-pointer"
                         onClick={() => window.location.href = '/'}
                     />
-                    <span className="hidden md:inline-flex items-center gap-1 bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-full ml-2">
-                        🛡️ ADMIN
+                    <span className="hidden md:inline-flex items-center gap-1.5 bg-orange-100 text-orange-700 text-xs font-bold px-2.5 py-1 rounded-full ml-2">
+                        <DashIcon name="shield" className="h-3.5 w-3.5" strokeWidth={2} /> ADMIN
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -128,7 +132,7 @@ const AdminLayout = ({ children }) => {
                                             ? 'bg-orange-600 text-white font-semibold shadow-sm'
                                             : 'text-gray-600 hover:bg-gray-100'
                                     }`}>
-                                        <span className="text-base">{item.icon}</span>
+                                        <DashIcon name={item.icon} className="h-[18px] w-[18px] shrink-0" />
                                         <span className="text-[13px]">{item.name}</span>
                                     </div>
                                 </Link>
@@ -139,13 +143,13 @@ const AdminLayout = ({ children }) => {
                     {/* Bottom links */}
                     <div className="p-4 border-t border-gray-100 space-y-1">
                         <Link href="/seller">
-                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-100 text-sm">
-                                <span>🏪</span> Seller Dashboard
+                            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-100 text-sm">
+                                <DashIcon name="store" className="h-[18px] w-[18px] shrink-0" /> Seller Dashboard
                             </div>
                         </Link>
                         <Link href="/">
-                            <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-100 text-sm">
-                                <span>🏠</span> Back to Store
+                            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-gray-500 hover:bg-gray-100 text-sm">
+                                <DashIcon name="home" className="h-[18px] w-[18px] shrink-0" /> Back to Store
                             </div>
                         </Link>
                     </div>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAppContext } from '@/context/AppContext';
 import toast from 'react-hot-toast';
 import { DashboardShellSkeleton } from '@/components/dashboard/DashboardSkeletons';
+import DashIcon from '@/components/DashIcon';
 
 const RiderLayout = ({ children }) => {
   const { authReady, accessLoaded, loadingUser, isRider, resolvedRole, refreshAccessState } = useAppContext();
@@ -17,7 +18,9 @@ const RiderLayout = ({ children }) => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="text-6xl mb-4">🛵</div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-600">
+            <DashIcon name="rider" className="h-8 w-8" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Rider Access Required</h1>
           <p className="text-gray-600 mb-6">
             Your current role is <strong>{resolvedRole || 'buyer'}</strong>.

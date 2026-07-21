@@ -271,10 +271,10 @@ const MyOrders = () => {
 
     return (
         <>
-            <Navbar />
+            <Navbar hideMobileHeader mobilePageTitle="Orders" />
             <main className="min-h-screen bg-white px-4 py-6 sm:px-6 md:px-10 lg:px-12">
                 <div className="mx-auto max-w-3xl">
-                    <header className="flex items-start justify-between gap-4">
+                    <header className="hidden items-start justify-between gap-4 md:flex">
                         <div>
                             <h1 className="text-xl font-semibold tracking-tight text-gray-950">Orders</h1>
                             <p className="mt-0.5 text-sm text-gray-500">

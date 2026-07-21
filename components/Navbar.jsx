@@ -437,7 +437,25 @@ const AccountMenuSection = ({ title, items, onNavigate }) => (
   </section>
 );
 
-const Navbar = ({ hideMobileHeader = false }) => {
+const MobilePageHeader = ({ title, showSearch, onSearch }) => (
+  <div className="sticky top-0 z-40 border-b border-gray-200/80 bg-[#f8fafc]/95 px-3 pb-2 pt-7 backdrop-blur-sm md:hidden">
+    <div className="grid grid-cols-[2rem_minmax(0,1fr)_2rem] items-center gap-2">
+      <button type="button" onClick={() => window.history.back()} aria-label="Go back" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-700">
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>
+      <h1 className="truncate text-center text-sm font-bold text-gray-950">{title}</h1>
+      {showSearch ? (
+        <button type="button" onClick={onSearch} aria-label="Open search" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-700">
+          <SearchIcon />
+        </button>
+      ) : (
+        <span aria-hidden="true" />
+      )}
+    </div>
+  </div>
+);
+
+const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePageSearch = true }) => {
   const appContext = useAppContext();
   if (!appContext) {
     return null;
@@ -1025,6 +1043,14 @@ const Navbar = ({ hideMobileHeader = false }) => {
             </div>
           </aside>
         </div>
+      ) : null}
+
+      {hideMobileHeader && mobilePageTitle ? (
+        <MobilePageHeader
+          title={mobilePageTitle}
+          showSearch={showMobilePageSearch}
+          onSearch={() => setIsMobileSearchActive(true)}
+        />
       ) : null}
 
       <header className={`sticky top-0 z-40 border-b border-gray-200 bg-white ${hideMobileHeader ? "hidden md:block" : ""}`}>

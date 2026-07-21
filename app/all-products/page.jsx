@@ -817,10 +817,10 @@ function AllProductsInner() {
 
   return (
     <>
-      <Navbar />
+      <Navbar hideMobileHeader mobilePageTitle="All Products" />
       <div className="min-h-screen bg-[#f8fafc] pb-24">
         <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 md:px-6 md:py-5 lg:px-8">
-          <div className="mb-3 flex items-center gap-1.5 text-[11px] text-gray-500">
+          <div className="mb-3 hidden items-center gap-1.5 text-[11px] text-gray-500 md:flex">
           {hasActiveSearch ? (
             <span className="font-semibold text-gray-950">Search results</span>
           ) : (

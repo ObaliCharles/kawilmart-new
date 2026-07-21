@@ -250,10 +250,10 @@ const AddAddress = () => {
 
     return (
         <>
-            <Navbar />
+            <Navbar hideMobileHeader mobilePageTitle="Add Address" />
             <div className="min-h-screen bg-[#fafafa] px-4 py-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
                 <div className="mx-auto max-w-[1540px]">
-                    <div className="mb-4 flex items-center justify-between">
+                    <div className="mb-4 hidden items-center justify-between md:flex">
                         <button
                             type="button"
                             onClick={() => router.back()}
