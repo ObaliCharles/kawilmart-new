@@ -96,7 +96,7 @@ const ItemThumbnails = ({ items }) => {
     const overflow = items.length - visible.length;
 
     return (
-        <div className="flex items-center">
+        <div className="flex shrink-0 items-center">
             {visible.map((item, index) => (
                 <div
                     key={`${item.product?._id || index}-${index}`}
@@ -410,25 +410,29 @@ const MyOrders = () => {
                                         </button>
 
                                         {isExpanded ? (
-                                            <div className="mt-4 space-y-4 rounded-2xl bg-gray-50/80 p-4">
+                                            <div className="mt-4 space-y-4 overflow-hidden rounded-2xl bg-gray-50/80 p-3 sm:p-4">
+                                                {/* Grid and flex children default to min-width:auto, so any long
+                                                    product, seller or rider name refuses to shrink and pushes the
+                                                    panel past the screen edge. min-w-0 on every track and child is
+                                                    what keeps this inside the viewport on small devices. */}
                                                 <div className="grid gap-4 sm:grid-cols-2">
-                                                    <div>
+                                                    <div className="min-w-0">
                                                         <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Items</p>
                                                         <div className="mt-2 space-y-2">
                                                             {order.items.map((item, index) => (
-                                                                <div key={`${order._id}-${index}`} className="flex items-center gap-2.5">
+                                                                <div key={`${order._id}-${index}`} className="flex min-w-0 items-center gap-2.5">
                                                                     {item.product?.image?.[0] ? (
                                                                         <Image
                                                                             src={item.product.image[0]}
                                                                             alt={item.product.name}
                                                                             width={36}
                                                                             height={36}
-                                                                            className="h-9 w-9 rounded-lg object-cover"
+                                                                            className="h-9 w-9 shrink-0 rounded-lg object-cover"
                                                                         />
                                                                     ) : (
-                                                                        <div className="h-9 w-9 rounded-lg bg-gray-200" />
+                                                                        <div className="h-9 w-9 shrink-0 rounded-lg bg-gray-200" />
                                                                     )}
-                                                                    <div className="min-w-0">
+                                                                    <div className="min-w-0 flex-1">
                                                                         <p className="truncate text-sm text-gray-900">{item.product?.name || 'Deleted product'}</p>
                                                                         <p className="text-xs text-gray-500">Qty {item.quantity}</p>
                                                                     </div>
@@ -437,25 +441,25 @@ const MyOrders = () => {
                                                         </div>
                                                     </div>
 
-                                                    <div>
+                                                    <div className="min-w-0">
                                                         <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Delivery</p>
                                                         <div className="mt-2 text-sm text-gray-700">
-                                                            <p className="font-medium text-gray-900">{order.address?.fullName || 'No address'}</p>
-                                                            <p className="mt-0.5 text-xs leading-5 text-gray-500">
+                                                            <p className="truncate font-medium text-gray-900">{order.address?.fullName || 'No address'}</p>
+                                                            <p className="mt-0.5 break-words text-xs leading-5 text-gray-500">
                                                                 {[order.address?.area, order.address?.city, order.address?.state].filter(Boolean).join(', ')}
                                                             </p>
-                                                            <p className="mt-1 text-xs text-gray-500">{order.address?.phoneNumber || order.customerPhone || ''}</p>
+                                                            <p className="mt-1 truncate text-xs text-gray-500">{order.address?.phoneNumber || order.customerPhone || ''}</p>
                                                             <p className="mt-2 text-xs text-gray-500">
                                                                 Fee {formatCurrency(order.deliveryFee)}
                                                             </p>
                                                         </div>
                                                     </div>
 
-                                                    <div>
+                                                    <div className="min-w-0">
                                                         <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Seller</p>
                                                         <div className="mt-2 text-sm">
-                                                            <p className="font-medium text-gray-900">{order.seller?.name || 'Seller'}</p>
-                                                            <p className="mt-0.5 text-xs text-gray-500">
+                                                            <p className="truncate font-medium text-gray-900">{order.seller?.name || 'Seller'}</p>
+                                                            <p className="mt-0.5 break-words text-xs text-gray-500">
                                                                 {order.seller?.contactUnlocked
                                                                     ? (order.seller?.phoneNumber || 'Phone unavailable')
                                                                     : 'Contact unlocks after acceptance'}
@@ -463,16 +467,16 @@ const MyOrders = () => {
                                                         </div>
                                                     </div>
 
-                                                    <div>
+                                                    <div className="min-w-0">
                                                         <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Rider</p>
                                                         <div className="mt-2 text-sm">
-                                                            <div className="flex items-center gap-2">
-                                                                <p className="font-medium text-gray-900">{order.rider?.name || 'Not assigned'}</p>
-                                                                <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${getRiderAssignmentBadgeClass(order.riderAssignmentStatus, order.riderId)}`}>
+                                                            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                                                                <p className="min-w-0 max-w-full truncate font-medium text-gray-900">{order.rider?.name || 'Not assigned'}</p>
+                                                                <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${getRiderAssignmentBadgeClass(order.riderAssignmentStatus, order.riderId)}`}>
                                                                     {order.riderAssignmentStatus}
                                                                 </span>
                                                             </div>
-                                                            <p className="mt-0.5 text-xs text-gray-500">
+                                                            <p className="mt-0.5 break-words text-xs text-gray-500">
                                                                 {order.rider?.contactUnlocked
                                                                     ? (order.rider?.phoneNumber || 'Phone unavailable')
                                                                     : 'Visible after rider accepts'}
@@ -486,13 +490,18 @@ const MyOrders = () => {
                                                         <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Activity</p>
                                                         <div className="mt-2 space-y-2">
                                                             {(order.trackingEvents || []).slice().reverse().slice(0, 5).map((event) => (
-                                                                <div key={event.id} className="flex gap-2 text-xs">
+                                                                <div key={event.id} className="flex min-w-0 gap-2 text-xs">
                                                                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-orange-400" />
-                                                                    <div>
-                                                                        <p className="font-medium text-gray-900">{event.title}</p>
-                                                                        <p className="text-gray-500">{event.description}</p>
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <p className="break-words font-medium text-gray-900">{event.title}</p>
+                                                                        <p className="break-words text-gray-500">{event.description}</p>
                                                                         <p className="mt-0.5 text-[10px] text-gray-400">
-                                                                            {event.timestamp ? new Date(event.timestamp).toLocaleString() : 'Just now'}
+                                                                            {/* toLocaleString() renders a long single-line date that
+                                                                                cannot wrap; the short helpers used elsewhere on this
+                                                                                page fit a narrow column. */}
+                                                                            {event.timestamp
+                                                                                ? `${formatOrderDate(event.timestamp)} at ${formatOrderTime(event.timestamp)}`
+                                                                                : 'Just now'}
                                                                         </p>
                                                                     </div>
                                                                 </div>
@@ -503,7 +512,7 @@ const MyOrders = () => {
 
                                                 {order.actions?.canConfirmDelivery && (
                                                     <div className="flex flex-col gap-2 rounded-xl bg-emerald-50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                                                        <div>
+                                                        <div className="min-w-0">
                                                             <p className="text-sm font-medium text-emerald-900">Confirm you received this order</p>
                                                             <p className="text-xs text-emerald-700">Only confirm after items are in your hands.</p>
                                                         </div>
@@ -598,7 +607,7 @@ const MyOrders = () => {
                                                             </>
                                                         ) : (
                                                             <div className="flex items-center justify-between gap-3">
-                                                                <div>
+                                                                <div className="min-w-0">
                                                                     <p className="text-sm font-medium text-gray-900">Problem with this order?</p>
                                                                     <p className="text-xs text-gray-500">You can request a return within 7 days of delivery.</p>
                                                                 </div>
@@ -618,10 +627,13 @@ const MyOrders = () => {
                                                         <p className={`inline-flex rounded-full px-2 py-0.5 font-semibold ${returnStatusStyles[order.returnRequest.status] || "bg-gray-100 text-gray-600"}`}>
                                                             {returnStatusLabels[order.returnRequest.status] || order.returnRequest.status}
                                                         </p>
-                                                        <p className="mt-1.5"><span className="text-gray-400">Reason:</span> {order.returnRequest.reason}</p>
-                                                        {order.returnRequest.note ? <p className="mt-0.5 text-gray-500">{order.returnRequest.note}</p> : null}
+                                                        {/* All three are free text a user or seller typed, so they
+                                                            need an explicit break — a long unspaced string otherwise
+                                                            widens the card past the screen. */}
+                                                        <p className="mt-1.5 break-words"><span className="text-gray-400">Reason:</span> {order.returnRequest.reason}</p>
+                                                        {order.returnRequest.note ? <p className="mt-0.5 break-words text-gray-500">{order.returnRequest.note}</p> : null}
                                                         {order.returnRequest.resolutionNote ? (
-                                                            <p className="mt-1"><span className="text-gray-400">Seller:</span> {order.returnRequest.resolutionNote}</p>
+                                                            <p className="mt-1 break-words"><span className="text-gray-400">Seller:</span> {order.returnRequest.resolutionNote}</p>
                                                         ) : null}
                                                     </div>
                                                 ) : null}
@@ -633,7 +645,7 @@ const MyOrders = () => {
                                                             {order.sellerReview.reliability}/5 · {order.sellerReview.speed}/5 · {order.sellerReview.communication}/5
                                                         </p>
                                                         {order.sellerReview.comment ? (
-                                                            <p className="mt-1 text-gray-500">{order.sellerReview.comment}</p>
+                                                            <p className="mt-1 break-words text-gray-500">{order.sellerReview.comment}</p>
                                                         ) : null}
                                                     </div>
                                                 ) : null}
