@@ -178,7 +178,11 @@ export default function AdminBrandsPage() {
                 ) : brands.length === 0 ? (
                     <div className="p-4 text-sm text-gray-500">No brands yet. Add one above.</div>
                 ) : (
-                    <table className="w-full text-sm">
+                    /* The parent clips with overflow-hidden for its rounded
+                       corners, so without this scroller the Actions column is
+                       simply unreachable on a phone. */
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[36rem] text-sm">
                         <thead>
                             <tr className="border-b border-gray-100 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                                 <th className="px-4 py-3">Logo</th>
@@ -212,6 +216,7 @@ export default function AdminBrandsPage() {
                             ))}
                         </tbody>
                     </table>
+                    </div>
                 )}
             </div>
         </div>

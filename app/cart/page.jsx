@@ -121,35 +121,50 @@ const Cart = () => {
                 if (quantity <= 0 || !product) return null;
                 const isMutating = cartMutatingItemIds.has(itemId);
 
+                // Two-row layout: the name gets the full width beside the
+                // thumbnail, and the stepper/total sit on their own line.
+                // Laying them all out in one row left ~88px for the name at
+                // 320px, which truncated almost every real product title.
                 return (
-                  <article key={itemId} className={`flex min-w-0 items-center gap-2.5 rounded-lg bg-white p-2.5 ring-1 ring-gray-100 transition-opacity ${isMutating ? "opacity-60" : ""}`}>
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-gray-50">
+                  <article key={itemId} className={`flex min-w-0 gap-2.5 rounded-lg bg-white p-2.5 ring-1 ring-gray-100 transition-opacity ${isMutating ? "opacity-60" : ""}`}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/product/${product._id}`)}
+                      className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-50"
+                      aria-label={`View ${product.name}`}
+                    >
                       <CartProductImage product={product} />
-                    </div>
+                    </button>
+
                     <div className="min-w-0 flex-1">
-                      <h2 className="line-clamp-2 text-[12px] font-semibold leading-[15px] text-gray-950">{product.name}</h2>
-                      <p className="truncate text-[10px] text-gray-500">{formatCurrency(product.offerPrice)} each</p>
-                      {/* Line total lives under the name on narrow screens so a
-                          long UGX amount can never push the row past the card edge. */}
-                      <p className="mt-0.5 text-[12px] font-bold text-gray-950 sm:hidden">{formatCurrency(product.offerPrice * quantity)}</p>
-                    </div>
-                    {/* Stepper reads as one control and keeps 28px tap targets,
-                        which survives down to a 320px viewport. */}
-                    <div className="flex shrink-0 items-center gap-1">
-                      <div className="flex items-center rounded-full bg-gray-100 p-0.5">
-                        <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-7 w-7 items-center justify-center rounded-full text-orange-600 transition active:bg-white disabled:cursor-not-allowed disabled:opacity-50" aria-label="Decrease quantity">
-                          <Image src={assets.decrease_arrow} alt="" className="h-2.5 w-2.5" />
-                        </button>
-                        <span className="min-w-[1.25rem] text-center text-[12px] font-bold tabular-nums text-gray-950">{quantity}</span>
-                        <button type="button" disabled={isMutating} onClick={() => addToCart(product._id)} className="flex h-7 w-7 items-center justify-center rounded-full text-orange-600 transition active:bg-white disabled:cursor-not-allowed disabled:opacity-50" aria-label="Increase quantity">
-                          <Image src={assets.increase_arrow} alt="" className="h-2.5 w-2.5" />
+                      <div className="flex items-start justify-between gap-2">
+                        <h2 className="line-clamp-2 min-w-0 text-[12.5px] font-semibold leading-[16px] text-gray-950">{product.name}</h2>
+                        <button
+                          type="button"
+                          disabled={isMutating}
+                          onClick={() => updateCartQuantity(product._id, 0)}
+                          className="-mr-1 -mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label={`Remove ${product.name}`}
+                        >
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
                         </button>
                       </div>
-                      <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, 0)} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50" aria-label={`Remove ${product.name}`}>
-                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
-                      </button>
+
+                      <p className="mt-0.5 truncate text-[10.5px] text-gray-500">{formatCurrency(product.offerPrice)} each</p>
+
+                      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
+                        <div className="flex shrink-0 items-center rounded-full bg-gray-100 p-0.5">
+                          <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-7 w-7 items-center justify-center rounded-full text-orange-600 transition active:bg-white disabled:cursor-not-allowed disabled:opacity-50" aria-label="Decrease quantity">
+                            <Image src={assets.decrease_arrow} alt="" className="h-2.5 w-2.5" />
+                          </button>
+                          <span className="min-w-[1.5rem] text-center text-[12px] font-bold tabular-nums text-gray-950">{quantity}</span>
+                          <button type="button" disabled={isMutating} onClick={() => addToCart(product._id)} className="flex h-7 w-7 items-center justify-center rounded-full text-orange-600 transition active:bg-white disabled:cursor-not-allowed disabled:opacity-50" aria-label="Increase quantity">
+                            <Image src={assets.increase_arrow} alt="" className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                        <p className="shrink-0 text-[13px] font-bold text-gray-950">{formatCurrency(product.offerPrice * quantity)}</p>
+                      </div>
                     </div>
-                    <p className="hidden w-24 shrink-0 whitespace-nowrap text-right text-[12px] font-bold text-gray-950 sm:block">{formatCurrency(product.offerPrice * quantity)}</p>
                   </article>
                 );
               })}

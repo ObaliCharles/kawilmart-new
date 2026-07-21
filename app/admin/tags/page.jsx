@@ -202,7 +202,10 @@ export default function AdminTagsPage() {
                 ) : tags.length === 0 ? (
                     <div className="p-4 text-sm text-gray-500">No tags yet. Create one above.</div>
                 ) : (
-                    <table className="w-full text-sm">
+                    /* Parent clips with overflow-hidden, so the table needs its
+                       own scroller or the Actions column is unreachable. */
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[34rem] text-sm">
                         <thead>
                             <tr className="border-b border-gray-100 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                                 <th className="px-4 py-3">Tag</th>
@@ -236,6 +239,7 @@ export default function AdminTagsPage() {
                             ))}
                         </tbody>
                     </table>
+                    </div>
                 )}
             </div>
         </div>
