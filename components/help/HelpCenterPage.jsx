@@ -238,9 +238,12 @@ const HelpCenterPage = () => {
         ) : null}
 
         {/* Topics + order tracking + FAQ ----------------------------------- */}
-        <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:gap-4">
+        {/* grid-cols-1 matters: without an explicit track the implicit column
+            is auto-sized, so a wide child stretches the grid past the viewport
+            instead of being constrained by it. */}
+        <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] lg:gap-4">
           {filteredTopics.length > 0 ? (
-            <Card>
+            <Card className="min-w-0">
               <SectionHeading title="Popular Help Topics" />
               <div className="-mx-1">
                 {filteredTopics.map((topic) => (
@@ -266,7 +269,7 @@ const HelpCenterPage = () => {
             </Card>
           ) : null}
 
-          <div className="space-y-3">
+          <div className="min-w-0 space-y-3">
             <Card style={{ "--reveal-delay": "60ms" }}>
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">

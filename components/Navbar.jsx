@@ -854,7 +854,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
       title: "Account & Management",
       items: [
         { label: "My Profile", href: "profile", icon: "profile" },
-        { label: "Address Book", href: "/add-address", icon: "address" },
+        { label: "Address Book", href: "/address-book", icon: "address" },
         { label: "My Payment Methods", href: "/payment-methods", icon: "payment" },
         showAdmin ? { label: "Admin Dashboard", href: "/admin", icon: "admin", badge: "Admin" } : null,
         showSeller ? { label: "Seller Dashboard", href: "/seller", icon: "seller", badge: "Seller" } : null,
@@ -877,7 +877,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
       title: "Support & More",
       items: [
         { label: "Help Center", href: "/help", icon: "help" },
-        { label: "Become a Vendor", href: "/seller", icon: "seller" },
+        { label: "Become a Vendor", href: "/become-a-vendor", icon: "seller" },
         { label: "Chat with Us", href: "/inbox?tab=support", icon: "chat" },
         { label: "Notifications", href: "/inbox", icon: "bell" },
         { label: "Language & Currency", href: "/about", icon: "globe" },
@@ -1040,7 +1040,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
                   ["Orders", "/my-orders", "orders"],
                   ["Inbox", "/inbox", "bell"],
                   ["Wishlist", "/wishlist", "wishlist"],
-                  ["Become a Vendor", "/seller", "seller"],
+                  ["Become a Vendor", "/become-a-vendor", "seller"],
                 ].map(([label, href, icon]) => (
                   <button key={label} type="button" onClick={() => requireAuthNavigation(href)} className="flex w-full items-center gap-3 py-2.5 text-left text-sm font-medium text-gray-900">
                     <AccountMenuIcon type={icon} className="h-5 w-5 text-gray-800" />
@@ -1086,7 +1086,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
               <button type="button" onClick={() => goTo('/seller')} className="transition hover:text-orange-600">Sell on KawilMart</button>
               <button type="button" onClick={() => requireAuthNavigation('/my-orders')} className="transition hover:text-orange-600">Track Order</button>
               <button type="button" onClick={() => navigate('/help')} className="transition hover:text-orange-600">Help Center</button>
-              <button type="button" onClick={() => goTo('/seller')} className="transition hover:text-orange-600">Become a Vendor</button>
+              <button type="button" onClick={() => navigate('/become-a-vendor')} className="transition hover:text-orange-600">Become a Vendor</button>
             </div>
           </div>
         </div>

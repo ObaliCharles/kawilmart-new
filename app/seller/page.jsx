@@ -184,7 +184,7 @@ const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) =>
       <main className="px-4 py-8 md:px-8 md:py-12">
         <div className="mx-auto max-w-6xl space-y-8">
           <section className="overflow-hidden rounded-[2.5rem] border border-orange-100 bg-white/88 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-8 lg:p-10">
-            <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
               <div className="space-y-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-600">Sell on KawilMart</p>
                 <h1 className="max-w-2xl text-4xl font-semibold tracking-[-0.04em] text-gray-950 md:text-5xl lg:text-6xl">
@@ -286,13 +286,13 @@ const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) =>
             </div>
           </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-black/[0.02] backdrop-blur-sm md:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-600">Application procedure</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-gray-950">A simple, guided process</h2>
             <div className="mt-6 space-y-4">
               {applicationSteps.map((item) => (
-                <div key={item.step} className="grid gap-4 rounded-[1.5rem] border border-gray-100 bg-gray-50 p-4 md:grid-cols-[64px_1fr] md:p-5">
+                <div key={item.step} className="grid grid-cols-1 gap-4 rounded-[1.5rem] border border-gray-100 bg-gray-50 p-4 md:grid-cols-[64px_1fr] md:p-5">
                   <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-base font-bold text-white shadow-[0_10px_24px_rgba(234,88,12,0.18)]">
                     {item.step}
                   </div>
@@ -350,7 +350,7 @@ const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) =>
 const SellerOverviewSkeleton = () => (
   <div className="space-y-6" aria-hidden="true">
     <div className="overflow-hidden rounded-3xl border border-orange-100 bg-white p-6 shadow-sm md:p-8">
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-4">
           <div className="h-4 w-32 rounded-full bg-orange-100" />
           <div className="h-9 w-72 max-w-full rounded-2xl bg-gray-100" />

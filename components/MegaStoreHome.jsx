@@ -3,8 +3,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import axios from "axios";
-import toast from "react-hot-toast";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
@@ -675,67 +673,6 @@ const MobileProductCard = ({ product, navigate, prefetchRoute, formatCurrency, t
   );
 };
 
-const NewsletterSection = () => {
-  const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (submitting || !email.trim()) return;
-
-    setSubmitting(true);
-    try {
-      const { data } = await axios.post("/api/newsletter", { email: email.trim() });
-      if (data.success) {
-        toast.success(data.message || "Subscribed successfully");
-        setEmail("");
-      } else {
-        toast.error(data.message || "Could not subscribe right now");
-      }
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Could not subscribe right now");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    // Full-bleed and bottom-flush: negative margins cancel the parent's px-3,
-    // and the parent drops its bottom padding so this sits directly on the
-    // footer with no seam.
-    <section className="-mx-3 mt-6 border-t border-orange-100 bg-gradient-to-br from-orange-50 via-amber-50 to-white px-5 pb-7 pt-5">
-      <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-amber-400 text-white shadow-md">
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M4 6h16v12H4V6Zm0 0 8 7 8-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
-        <div>
-          <h2 className="text-sm font-extrabold text-gray-950">Subscribe to our newsletter</h2>
-          <p className="mt-0.5 text-[12px] leading-5 text-gray-600">Get updates on new arrivals and exclusive offers.</p>
-        </div>
-      </div>
-      <form onSubmit={handleSubmit} className="mt-4 flex overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-orange-100">
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="Enter your email"
-          className="min-w-0 flex-1 px-4 py-3 text-[12px] outline-none"
-        />
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-full bg-gradient-to-r from-orange-600 to-amber-500 px-5 text-[12px] font-bold text-white transition disabled:opacity-70"
-        >
-          {submitting ? "..." : "Subscribe"}
-        </button>
-      </form>
-    </section>
-  );
-};
-
 const MobileHome = ({
   heroSlides,
   activeHeroIndex,
@@ -806,7 +743,7 @@ const MobileHome = ({
   }, [sortedProducts.length, feedCount]);
 
   return (
-    <main className="bg-[#fbfbfb] px-3 pb-0 pt-3 md:hidden">
+    <main className="bg-[#fbfbfb] px-3 pb-6 pt-3 md:hidden">
       {heroSlides.length ? (
         <HeroImageSlider
           slides={heroSlides}
@@ -996,8 +933,6 @@ const MobileHome = ({
           ) : null}
         </section>
       ) : null}
-
-      <NewsletterSection />
     </main>
   );
 };
@@ -1484,7 +1419,7 @@ const HomeStorefrontSkeleton = () => (
 
     <main className="hidden bg-white px-4 pb-16 pt-4 md:block" aria-hidden="true">
       <div className="mx-auto max-w-[1420px]">
-        <section className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)_245px]">
+        <section className="grid grid-cols-1 gap-3 lg:grid-cols-[220px_minmax(0,1fr)_245px]">
           <aside className="h-[260px] rounded-md border border-gray-200 bg-white p-2.5">
             <div className="space-y-2">
               {Array.from({ length: 6 }).map((_, index) => (
@@ -1928,7 +1863,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     />
     <main className="hidden bg-[#f8fafc] px-4 pb-16 pt-4 md:block">
       <div className="mx-auto max-w-[1420px]">
-        <section className="grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)_320px]">
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-[250px_minmax(0,1fr)_320px]">
           <DesktopCategorySidebar categories={homeCategoryRail} navigate={navigate} />
 
           {heroSlides.length ? (

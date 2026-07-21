@@ -11,6 +11,16 @@ export const metadata = {
   description: "Shop fashion, beauty, electronics, home essentials, and more with KawilMart",
 };
 
+// Without this, Android browsers lay the page out at a 980px virtual viewport
+// and scale it down, which reads as "content sticks out to the right" on
+// 360px devices no matter how the CSS is written. Next.js only emits the
+// viewport tag when this export exists.
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

@@ -650,7 +650,7 @@ const LegalCenterPage = () => {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
-        <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12">
           <aside className="hidden border-b border-slate-200 py-6 lg:sticky lg:top-[calc(var(--app-header-h,64px)+3.25rem)] lg:block lg:h-[calc(100dvh-var(--app-header-h,64px)-3.25rem)] lg:overflow-auto lg:border-b-0 lg:border-r lg:pr-8">
             <div className="space-y-1">
               {currentTab.sections.map((section) => (

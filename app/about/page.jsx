@@ -127,7 +127,7 @@ const AboutPage = async () => {
 
         {/* Why we exist — quiet strip */}
         <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-[0.35fr_0.65fr] md:gap-14">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-[0.35fr_0.65fr] md:gap-14">
             <h2 className="reveal-up text-xl font-bold tracking-tight text-gray-950 md:text-2xl">Why we exist</h2>
             <div>
               <p className="reveal-up text-sm leading-7 text-gray-600 md:text-[15px] md:leading-8" style={{ "--reveal-delay": "100ms" }}>

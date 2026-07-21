@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import Link from "next/link";
-import { buildCategoryHref, marketplaceFilterCategories } from "@/lib/marketplaceCategories";
+import { buildCategoryHref, homeCategoryValues } from "@/lib/marketplaceCategories";
 
 // One icon set at a single 1.7 stroke weight keeps the footer reading as one
 // system instead of a pile of mismatched glyphs.
@@ -80,14 +80,14 @@ const footerColumns = [
       ["Sell on KawilMart", "/seller"],
       ["Vendor Dashboard", "/seller"],
       ["Vendor Support", "/help"],
-      ["Become a Vendor", "/seller"],
+      ["Become a Vendor", "/become-a-vendor"],
     ],
   },
   {
     title: "Categories",
     icon: "categories",
     links: [
-      ...marketplaceFilterCategories.slice(0, 6).map((category) => [category, buildCategoryHref(category)]),
+      ...homeCategoryValues.slice(0, 6).map((category) => [category, buildCategoryHref(category)]),
       ["View All Categories", "/categories"],
     ],
   },
@@ -113,15 +113,15 @@ const legalLinks = [
   ["Cookie Policy", "/legal#privacy"],
 ];
 
-// Composed from the standalone bag mark plus live text, so the wordmark sits
-// directly on the dark panel instead of needing a white chip behind it.
+// The same asset the navbar uses. It is dark artwork, so it needs the white
+// plate to stay legible against the navy panel.
 const BrandMark = () => (
-  <Link href="/" className="inline-flex items-center gap-2.5" aria-label="KawilMart home">
-    <Image src={assets.kbag_logo} alt="" width={34} height={39} className="h-8 w-auto object-contain" />
-    <span className="text-[22px] font-extrabold leading-none tracking-tight">
-      <span className="text-white">Kawil</span>
-      <span className="text-orange-500">Mart</span>
-    </span>
+  <Link
+    href="/"
+    className="inline-flex shrink-0 items-center rounded-lg bg-white px-3 py-2"
+    aria-label="KawilMart home"
+  >
+    <Image src={assets.logo} alt="KawilMart" width={120} height={32} className="h-7 w-auto object-contain" priority={false} />
   </Link>
 );
 
@@ -140,20 +140,10 @@ const SocialIconRow = ({ className = "" }) => (
   </div>
 );
 
-// Brand-styled payment marks on white chips so they read as the real Visa /
-// Mastercard / MTN / Airtel logos rather than plain text pills.
+// Only the methods actually accepted today. Card marks were removed because
+// showing Visa/Mastercard we cannot process misleads shoppers at checkout.
 const PaymentMarks = ({ className = "" }) => {
   const marks = [
-    { key: "visa", node: <span className="text-[13px] font-black italic tracking-tight text-[#1A1F71]">VISA</span> },
-    {
-      key: "mastercard",
-      node: (
-        <span className="flex items-center">
-          <span className="h-[18px] w-[18px] rounded-full bg-[#EB001B]" />
-          <span className="-ml-2 h-[18px] w-[18px] rounded-full bg-[#F79E1B] mix-blend-multiply" />
-        </span>
-      ),
-    },
     { key: "mtn", node: <span className="rounded-[3px] bg-[#FFCC00] px-1.5 py-1 text-[10px] font-black leading-none text-black">MTN</span> },
     { key: "airtel", node: <span className="text-[12px] font-black lowercase tracking-tight text-[#E40000]">airtel</span> },
   ];
@@ -269,17 +259,20 @@ const Footer = () => {
        variable so the copyright row can't slip back underneath it. */
     <footer className="bg-[#0f172a] pb-[calc(var(--app-dock-h)+0.5rem)] text-slate-300 md:pb-0">
       <div className="mx-auto max-w-[1500px] px-5 py-8 sm:px-6 lg:px-8 lg:py-12">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,3.2fr)_minmax(0,1.15fr)] lg:gap-10">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,3.2fr)_minmax(0,1.15fr)] lg:gap-10">
           {/* Brand ------------------------------------------------------- */}
           <div className="min-w-0">
+            {/* Socials sit beside the logo only from sm to lg. On a 320px
+                phone the mark plus four 36px buttons overflows the row, and
+                the desktop column is too narrow for them side by side. */}
             <div className="flex items-start justify-between gap-4">
               <BrandMark />
-              <SocialIconRow className="sm:hidden" />
+              <SocialIconRow className="hidden sm:flex lg:hidden" />
             </div>
             <p className="mt-4 max-w-sm text-[13px] leading-6 text-slate-400">
               Uganda&apos;s marketplace for everyday essentials. Shop top brands with convenience and trust.
             </p>
-            <SocialIconRow className="mt-5 hidden sm:flex" />
+            <SocialIconRow className="mt-5 flex sm:hidden lg:flex" />
           </div>
 
           {/* Link columns ------------------------------------------------- */}
@@ -352,7 +345,7 @@ const Footer = () => {
       {/* Trust strip + legal ---------------------------------------------- */}
       <div className="border-t border-white/10">
         <div className="mx-auto max-w-[1500px] px-5 py-6 sm:px-6 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] lg:items-center lg:gap-10">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)] lg:items-center lg:gap-10">
             <div className="grid grid-cols-2 gap-x-5 gap-y-5 lg:grid-cols-4">
               {trustPoints.map((point) => (
                 <div key={point.title} className="flex min-w-0 items-center gap-2.5">

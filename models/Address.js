@@ -1,7 +1,11 @@
 import mongoose from "mongoose";
 
+export const ADDRESS_LABELS = ["Home", "Work", "Other"];
+
 const addressSchema = new mongoose.Schema({
     userId: { type: String, required: true },
+    // Shown as the card title in the address book, with a matching icon.
+    label: { type: String, default: "Home" },
     fullName: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     pincode: { type: String, default: "" },

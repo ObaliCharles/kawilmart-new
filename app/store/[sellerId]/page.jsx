@@ -806,7 +806,7 @@ const StorePage = () => {
             <span>Home <span className="mx-2 text-gray-400">&gt;</span> Stores <span className="mx-2 text-gray-400">&gt;</span> <span className="font-semibold text-gray-950">{seller?.name || "Store"}</span> <span className="mx-2 text-gray-400">&gt;</span> Products</span>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-[230px_minmax(0,1fr)_244px]">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[230px_minmax(0,1fr)_244px]">
             <aside className="hidden lg:block">
               <div className="sticky top-20 space-y-3">
                 <StoreSidebar title="Filters" onClear={clearAllFilters}>

@@ -26,7 +26,7 @@ const CategoryEditorialPanel = ({ section, quickCategories, reverse, navigate, p
 
   return (
     <div className="pattern-category-sketch-soft col-span-full min-w-0 overflow-hidden rounded-[1.75rem] border border-gray-200 sm:rounded-[2rem]">
-      <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid grid-cols-1 gap-0 lg:grid-cols-[1.1fr_0.9fr]">
         <div className={`flex flex-col justify-between border-b border-white/70 p-4 sm:p-6 lg:border-b-0 ${reverse ? "lg:order-2 lg:border-l lg:border-r-0 lg:border-white/70" : "lg:border-r lg:border-white/70"}`}>
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500 shadow-sm sm:gap-3 sm:py-2 sm:text-xs">

@@ -633,7 +633,7 @@ export default function AdminManagement() {
                 <MetricCard label="Overdue" value={tabSummary.overdue} sub="Needs billing follow-up" tone="bg-red-50" />
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
                 <aside className="space-y-4">
                     <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
                         <label className="block">
@@ -832,7 +832,7 @@ export default function AdminManagement() {
                                 </div>
                             </div>
 
-                            <div className="grid gap-4 2xl:grid-cols-[1.15fr_0.85fr]">
+                            <div className="grid grid-cols-1 gap-4 2xl:grid-cols-[1.15fr_0.85fr]">
                                 <div className="space-y-4">
                                     <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
                                         <div className="flex items-center justify-between">

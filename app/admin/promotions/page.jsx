@@ -615,7 +615,7 @@ export default function AdminPromotions() {
                 </div>
                 <p className="mb-4 text-sm text-gray-500">{activeConfig.description}</p>
 
-                <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_0.9fr]">
                     <div className="grid gap-4 sm:grid-cols-2">
                         {bannersForActiveType.length === 0 ? (
                             <p className="text-sm text-gray-400">No {activeConfig.label.toLowerCase()} yet.</p>
@@ -745,7 +745,7 @@ export default function AdminPromotions() {
 
             {/* Newsletter Section */}
             <SectionCard title="Newsletter Section" description="Edit the heading and button label shown above the newsletter form.">
-                <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_0.9fr]">
                     <div className="space-y-3">
                         <FormInput placeholder="Newsletter title" value={newsletterForm.title} onChange={(e) => setNewsletterForm((prev) => ({ ...prev, title: e.target.value }))} />
                         <FormInput placeholder="Newsletter description" value={newsletterForm.description} onChange={(e) => setNewsletterForm((prev) => ({ ...prev, description: e.target.value }))} textarea />

@@ -80,6 +80,7 @@ const AddAddress = () => {
     const { getToken, router } = useAppContext();
 
     const [address, setAddress] = useState({
+        label: "Home",
         fullName: "",
         phoneNumber: "",
         alternatePhone: "",
@@ -209,6 +210,7 @@ const AddAddress = () => {
             ].filter(Boolean);
 
             const payload = {
+                label: address.label,
                 fullName: address.fullName.trim(),
                 phoneNumber: address.phoneNumber.trim(),
                 alternatePhone: address.alternatePhone.trim(),
@@ -239,7 +241,7 @@ const AddAddress = () => {
 
             if (data.success) {
                 toast.success(data.message || "Address saved successfully");
-                router.push("/cart");
+                router.push("/address-book");
             } else {
                 toast.error(data.message || "Unable to save address");
             }
@@ -264,7 +266,7 @@ const AddAddress = () => {
                         </button>
                     </div>
 
-                    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
                         <div className="min-w-0">
                             <div className="mb-6">
                                 <div className="mb-3 flex items-center gap-3">
@@ -284,7 +286,35 @@ const AddAddress = () => {
                             </div>
 
                             <form onSubmit={submitAddress} className="space-y-4">
-                                <SectionCard index={1} title="Recipient Information" icon="phone">
+                                <SectionCard index={1} title="Contact Information" icon="phone">
+                                    {/* Label drives the card icon and title in
+                                        the address book, so it is chosen first. */}
+                                    <div className="mb-3">
+                                        <FieldLabel required>Label this address</FieldLabel>
+                                        <div className="flex flex-wrap gap-2">
+                                            {[
+                                                { value: "Home", icon: "door" },
+                                                { value: "Work", icon: "shield" },
+                                                { value: "Other", icon: "pin" },
+                                            ].map((option) => {
+                                                const active = address.label === option.value;
+                                                return (
+                                                    <button
+                                                        key={option.value}
+                                                        type="button"
+                                                        onClick={() => setAddress((current) => ({ ...current, label: option.value }))}
+                                                        className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[12px] font-semibold transition ${active ? selectedPlaceStyle : unselectedPlaceStyle}`}
+                                                    >
+                                                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                            <path d={iconMap[option.icon]} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                        {option.value}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
                                     <div className="grid gap-3 md:grid-cols-3">
                                         <div>
                                             <FieldLabel required>Full Name</FieldLabel>
@@ -403,7 +433,7 @@ const AddAddress = () => {
                                 </SectionCard>
 
                                 <SectionCard index={3} title="Exact Delivery Address" icon="door">
-                                    <div className="grid gap-3 md:grid-cols-[minmax(14rem,17rem)_minmax(0,1fr)]">
+                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(14rem,17rem)_minmax(0,1fr)]">
                                         <div>
                                             <FieldLabel required>House / Plot / Building Name</FieldLabel>
                                             <Input
@@ -451,7 +481,7 @@ const AddAddress = () => {
                                 </SectionCard>
 
                                 <SectionCard index={4} title="Delivery Instructions" icon="truck">
-                                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
+                                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
                                         <div>
                                             <FieldLabel>Delivery Preferences</FieldLabel>
                                             <div className="flex flex-wrap gap-2">

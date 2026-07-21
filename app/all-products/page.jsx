@@ -660,14 +660,18 @@ function AllProductsInner() {
     setSelectedTags((prev) => (prev.includes(slug) ? prev.filter((tag) => tag !== slug) : [...prev, slug]));
   };
 
+  // On phones the panel is `static`-anchored, so it positions against the
+  // filter bar (which is `relative`) and spans its full width. Anchoring a
+  // fixed 12rem panel to the chip itself pushed it off the right edge for any
+  // chip past the halfway point. From sm up there is room to anchor normally.
   const DropdownFilter = ({ label, valueLabel, children }) => (
-    <details className="group relative">
+    <details className="group static sm:relative">
       <summary className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-800 shadow-sm transition hover:border-orange-300 hover:text-orange-600 [&::-webkit-details-marker]:hidden">
         <span>{label}</span>
         {valueLabel ? <span className="max-w-20 truncate rounded-full bg-orange-50 px-1.5 py-0 text-[9px] text-orange-700">{valueLabel}</span> : null}
         <span className="text-gray-400 transition group-open:rotate-180 text-xs">⌄</span>
       </summary>
-      <div className="absolute left-0 top-9 z-40 w-48 rounded-md border border-gray-200 bg-white p-1.5 shadow-xl">
+      <div className="absolute inset-x-0 top-[calc(100%+0.25rem)] z-40 max-h-64 overflow-y-auto rounded-md border border-gray-200 bg-white p-1.5 shadow-xl sm:inset-x-auto sm:left-0 sm:top-9 sm:w-48">
         {children}
       </div>
     </details>
@@ -920,7 +924,7 @@ function AllProductsInner() {
         </div>
 
         {/* Filter bar - compact */}
-        <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-gray-200 pb-2">
+        <div className="relative mb-3 flex flex-wrap items-center gap-1.5 border-b border-gray-200 pb-2">
           <div className="flex flex-wrap gap-1.5">
             <DropdownFilter
               label="Condition"

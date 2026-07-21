@@ -227,7 +227,7 @@ export default function AdminBillingPage() {
         <MetricCard label="Paid" value={formatCurrency(summary?.paidTotal || 0)} sub={`${summary?.paidInvoices || 0} settled invoices`} tone="bg-emerald-50" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px_220px]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_260px_220px]">
         <label className="block">
           <span className="mb-2 block text-sm font-medium text-gray-700">Search invoice or seller</span>
           <input
