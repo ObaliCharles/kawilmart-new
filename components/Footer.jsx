@@ -12,7 +12,7 @@ const footerColumns = [
   {
     title: "Customer Service",
     links: [
-      ["Help Center", "/about"],
+      ["Help Center", "/help"],
       ["How to Buy", "/all-products"],
       ["Shipping & Delivery", "/legal#terms"],
       ["Returns & Refunds", "/legal#terms"],
@@ -171,7 +171,9 @@ const Footer = () => {
 
   return (
     <>
-      <footer className="pb-16 text-slate-300 md:hidden">
+      {/* Bottom padding clears the fixed mobile dock; tied to the dock's own
+          height variable so the copyright row can't slip back underneath it. */}
+      <footer className="pb-[calc(var(--app-dock-h)+0.5rem)] text-slate-300 md:hidden">
         <div className="w-full bg-[linear-gradient(135deg,#0f172a_0%,#111827_100%)]">
           <div className="px-5 py-6">
             <span className="inline-flex items-center rounded-lg bg-white px-3 py-2">

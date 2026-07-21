@@ -8,6 +8,10 @@
   --motion-fast: 120ms;
   --motion-base: 140ms;
   --motion-snappy: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Height of the fixed mobile bottom dock in components/Navbar.jsx.
+     Full-height mobile panes subtract this so they sit flush on the dock
+     instead of leaving a gap. Update here if the dock's padding changes. */
+  --app-dock-h: 3.75rem;
 }
 
 @keyframes skeleton-shimmer {

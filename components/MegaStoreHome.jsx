@@ -486,25 +486,27 @@ const MobileBrandDisplay = ({ brands = [], showcases = [], navigate }) => {
   if (!uniqueBrands.length) return null;
 
   return (
-    <section className="mt-5 overflow-hidden rounded-2xl bg-white px-3 py-3 shadow-sm ring-1 ring-gray-100">
-      <div className="scrollbar-none flex items-center gap-5 overflow-x-auto">
+    <section className="mt-4 overflow-hidden rounded-2xl bg-white px-2.5 py-2 shadow-sm ring-1 ring-gray-100">
+      {/* Sized so four logos plus a sliver of the fifth land inside a 360px
+          viewport — the peek is what tells the shopper the row scrolls. */}
+      <div className="scrollbar-none flex items-center gap-2.5 overflow-x-auto">
         {uniqueBrands.map((brand) => (
           <button
             key={brand._id}
             type="button"
             onClick={() => navigate(brand.href)}
-            className="flex h-10 min-w-[4.75rem] shrink-0 items-center justify-center"
+            className="flex h-9 min-w-[3.75rem] shrink-0 items-center justify-center"
             aria-label={`Shop ${brand.name}`}
           >
             {brand.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={brand.imageUrl} alt={brand.name} className="max-h-8 max-w-[5.5rem] object-contain" />
+              <img src={brand.imageUrl} alt={brand.name} className="max-h-6 max-w-[3.5rem] object-contain" />
             ) : (
-              <span className="text-sm font-black text-gray-950">{brand.name}</span>
+              <span className="truncate text-[11px] font-black text-gray-950">{brand.name}</span>
             )}
           </button>
         ))}
-        <button type="button" onClick={() => navigate("/all-products")} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500">
+        <button type="button" onClick={() => navigate("/all-products")} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-500">
           <ChevronRight />
         </button>
       </div>
@@ -698,7 +700,10 @@ const NewsletterSection = () => {
   };
 
   return (
-    <section className="mt-6 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50 to-white p-5 shadow-sm ring-1 ring-orange-100">
+    // Full-bleed and bottom-flush: negative margins cancel the parent's px-3,
+    // and the parent drops its bottom padding so this sits directly on the
+    // footer with no seam.
+    <section className="-mx-3 mt-6 border-t border-orange-100 bg-gradient-to-br from-orange-50 via-amber-50 to-white px-5 pb-7 pt-5">
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-amber-400 text-white shadow-md">
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -801,7 +806,7 @@ const MobileHome = ({
   }, [sortedProducts.length, feedCount]);
 
   return (
-    <main className="bg-[#fbfbfb] px-3 pb-8 pt-3 md:hidden">
+    <main className="bg-[#fbfbfb] px-3 pb-0 pt-3 md:hidden">
       {heroSlides.length ? (
         <HeroImageSlider
           slides={heroSlides}

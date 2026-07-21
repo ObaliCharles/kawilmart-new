@@ -73,7 +73,10 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
         <MegaStoreHome siteContent={siteContent} initialProducts={initialProducts} />
       </div>
 
-      <main className="flex h-[calc(100dvh-4.75rem)] min-h-0 overflow-hidden bg-[#f5f7fb] lg:hidden">
+      {/* Fills exactly the space above the fixed bottom dock, so the rail's
+          bottom edge meets the dock with no gap. Driven by --app-dock-h rather
+          than a hardcoded height, which is what drifted when the dock shrank. */}
+      <main className="flex h-[calc(100dvh-var(--app-dock-h))] min-h-0 overflow-hidden bg-[#f5f7fb] lg:hidden">
         <aside className="category-rail-scroll h-full w-[5.45rem] shrink-0 overflow-y-auto border-r border-gray-100 bg-white shadow-[4px_0_18px_rgba(15,23,42,0.04)] min-[390px]:w-[5.85rem]">
           <div className="flex flex-col">
             {departments.map((department) => {

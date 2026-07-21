@@ -73,14 +73,24 @@ const Cart = () => {
   return (
     <>
       <Navbar hideMobileHeader />
-      <main className="mx-auto min-h-screen max-w-5xl px-3 pb-16 pt-3 sm:px-6 md:py-4 lg:px-8">
-        <div className="sticky top-0 z-30 -mx-3 mb-2 border-b border-gray-200/80 bg-[#f8fafc]/95 px-3 pb-2 pt-7 backdrop-blur-sm md:hidden">
-          <div className="flex items-center justify-between">
-            <button type="button" onClick={() => window.history.back()} aria-label="Go back" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-700">
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      <main className="mx-auto min-h-screen max-w-5xl px-3 pb-8 pt-0 sm:px-6 md:py-4 lg:px-8">
+        {/* Matches the compact MobilePageHeader in Navbar. The negative margin
+            has to track the main's padding at every breakpoint or the bar stops
+            being full-bleed between sm and md. */}
+        <div className="sticky top-0 z-30 -mx-3 mb-2 border-b border-gray-200/80 bg-[#f8fafc]/95 px-3 pb-1.5 pt-2.5 backdrop-blur-sm sm:-mx-6 sm:px-6 md:hidden">
+          <div className="flex items-center justify-between gap-2">
+            <button type="button" onClick={() => window.history.back()} aria-label="Go back" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-700">
+              <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
-            <h1 className="text-sm font-bold text-gray-950">Checkout ({cartCount})</h1>
-            <button type="button" onClick={() => visibleCartItemIds.forEach((id) => updateCartQuantity(id, 0))} className="text-[11px] font-medium text-gray-500">Clear</button>
+            <h1 className="truncate text-[13px] font-bold text-gray-950">Checkout ({cartCount})</h1>
+            <button
+              type="button"
+              onClick={() => visibleCartItemIds.forEach((id) => updateCartQuantity(id, 0))}
+              disabled={visibleCartItemIds.length === 0}
+              className="shrink-0 text-[11px] font-medium text-gray-500 disabled:opacity-40"
+            >
+              Clear
+            </button>
           </div>
         </div>
 
@@ -90,7 +100,9 @@ const Cart = () => {
             <p className="text-[11px] text-gray-500">{cartCount} item{cartCount === 1 ? "" : "s"}</p>
           </header>
 
-          <div className="grid gap-3 md:gap-4 lg:grid-cols-[minmax(0,1fr)_17.5rem]">
+          {/* Two-pane from md up — tablets have the width for it, and waiting
+              until lg left an awkward full-width summary on iPad portrait. */}
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem] md:gap-4 lg:grid-cols-[minmax(0,1fr)_17.5rem]">
             <section className="space-y-2">
               {isCartHydrating && Array.from({ length: Math.max(1, Math.min(visibleCartItemIds.length || 2, 3)) }).map((_, i) => (
                 <CartItemSkeleton key={i} />
@@ -110,35 +122,40 @@ const Cart = () => {
                 const isMutating = cartMutatingItemIds.has(itemId);
 
                 return (
-                  <article key={itemId} className={`flex min-w-0 items-center gap-2 rounded-lg bg-white p-2 ring-1 ring-gray-100 transition-opacity ${isMutating ? "opacity-60" : ""}`}>
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gray-50">
+                  <article key={itemId} className={`flex min-w-0 items-center gap-2.5 rounded-lg bg-white p-2.5 ring-1 ring-gray-100 transition-opacity ${isMutating ? "opacity-60" : ""}`}>
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-gray-50">
                       <CartProductImage product={product} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h2 className="line-clamp-1 text-[11px] font-semibold text-gray-950">{product.name}</h2>
-                      <p className="truncate text-[10px] text-gray-500">{formatCurrency(product.offerPrice)} · Qty {quantity}</p>
+                      <h2 className="line-clamp-2 text-[12px] font-semibold leading-[15px] text-gray-950">{product.name}</h2>
+                      <p className="truncate text-[10px] text-gray-500">{formatCurrency(product.offerPrice)} each</p>
                       {/* Line total lives under the name on narrow screens so a
                           long UGX amount can never push the row past the card edge. */}
-                      <p className="text-[11px] font-bold text-gray-950 sm:hidden">{formatCurrency(product.offerPrice * quantity)}</p>
+                      <p className="mt-0.5 text-[12px] font-bold text-gray-950 sm:hidden">{formatCurrency(product.offerPrice * quantity)}</p>
                     </div>
-                    <div className="flex shrink-0 items-center gap-0.5">
-                      <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100 text-orange-600 disabled:cursor-not-allowed disabled:opacity-50" aria-label="Decrease">
-                        <Image src={assets.decrease_arrow} alt="" className="h-2 w-2" />
-                      </button>
-                      <button type="button" disabled={isMutating} onClick={() => addToCart(product._id)} className="flex h-6 w-6 items-center justify-center rounded-md bg-gray-100 text-orange-600 disabled:cursor-not-allowed disabled:opacity-50" aria-label="Increase">
-                        <Image src={assets.increase_arrow} alt="" className="h-2 w-2" />
-                      </button>
-                      <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, 0)} className="ml-0.5 flex h-6 w-6 items-center justify-center text-gray-400 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50" aria-label="Remove">
-                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+                    {/* Stepper reads as one control and keeps 28px tap targets,
+                        which survives down to a 320px viewport. */}
+                    <div className="flex shrink-0 items-center gap-1">
+                      <div className="flex items-center rounded-full bg-gray-100 p-0.5">
+                        <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, quantity - 1)} className="flex h-7 w-7 items-center justify-center rounded-full text-orange-600 transition active:bg-white disabled:cursor-not-allowed disabled:opacity-50" aria-label="Decrease quantity">
+                          <Image src={assets.decrease_arrow} alt="" className="h-2.5 w-2.5" />
+                        </button>
+                        <span className="min-w-[1.25rem] text-center text-[12px] font-bold tabular-nums text-gray-950">{quantity}</span>
+                        <button type="button" disabled={isMutating} onClick={() => addToCart(product._id)} className="flex h-7 w-7 items-center justify-center rounded-full text-orange-600 transition active:bg-white disabled:cursor-not-allowed disabled:opacity-50" aria-label="Increase quantity">
+                          <Image src={assets.increase_arrow} alt="" className="h-2.5 w-2.5" />
+                        </button>
+                      </div>
+                      <button type="button" disabled={isMutating} onClick={() => updateCartQuantity(product._id, 0)} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50" aria-label={`Remove ${product.name}`}>
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
                       </button>
                     </div>
-                    <p className="hidden shrink-0 whitespace-nowrap text-right text-[11px] font-bold text-gray-950 sm:block">{formatCurrency(product.offerPrice * quantity)}</p>
+                    <p className="hidden w-24 shrink-0 whitespace-nowrap text-right text-[12px] font-bold text-gray-950 sm:block">{formatCurrency(product.offerPrice * quantity)}</p>
                   </article>
                 );
               })}
             </section>
 
-            <div className="lg:sticky lg:top-4 lg:self-start">
+            <div className="md:sticky md:top-4 md:self-start">
               <OrderSummary />
             </div>
           </div>

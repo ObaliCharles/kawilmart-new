@@ -625,15 +625,17 @@ const LegalCenterPage = () => {
             KawilMart Privacy & Terms
           </p>
           <h1 className="mt-3 max-w-4xl text-2xl font-semibold leading-tight text-slate-900 sm:text-3xl md:text-4xl">
-            Policy pages arranged like a help document, but written for KawilMart's real marketplace logic.
+            Everything that governs how KawilMart works &mdash; in plain language.
           </h1>
-          <p className="mt-4 max-w-3xl text-[13px] leading-6 text-slate-600 sm:text-sm sm:leading-7 md:text-base">
-            Browse by topic, jump through the left document rail, and read each policy section in a cleaner, more focused layout.
+          <p className="mt-3 max-w-2xl text-[13px] leading-6 text-slate-600 sm:text-sm sm:leading-7 md:text-base">
+            Pick a topic below to read the policy that applies to it.
           </p>
         </div>
       </div>
 
-      <div className="sticky top-[64px] z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+      {/* Pinned directly under the navbar using its measured height, so this
+          rail cannot drift out of alignment when the header is restyled. */}
+      <div className="sticky top-[var(--app-header-h,64px)] z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl gap-4 overflow-x-auto px-4 sm:gap-8 sm:px-6 md:px-10 lg:px-16">
           {legalTabs.map((tab) => (
             <TabLink
@@ -649,7 +651,7 @@ const LegalCenterPage = () => {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 lg:px-16">
         <div className="grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12">
-          <aside className="hidden border-b border-slate-200 py-6 lg:sticky lg:top-[133px] lg:block lg:h-[calc(100vh-133px)] lg:overflow-auto lg:border-b-0 lg:border-r lg:pr-8">
+          <aside className="hidden border-b border-slate-200 py-6 lg:sticky lg:top-[calc(var(--app-header-h,64px)+3.25rem)] lg:block lg:h-[calc(100dvh-var(--app-header-h,64px)-3.25rem)] lg:overflow-auto lg:border-b-0 lg:border-r lg:pr-8">
             <div className="space-y-1">
               {currentTab.sections.map((section) => (
                 <SidebarLink
@@ -681,7 +683,9 @@ const LegalCenterPage = () => {
                 </a>
               ))}
             </div>
-            <article id={currentTab.key} className="scroll-mt-44">
+            {/* Keyed on the tab so switching topics replays the entrance
+                animation instead of swapping content instantly. */}
+            <article key={currentTab.key} id={currentTab.key} className="animate-page-enter scroll-mt-44">
               <div className="border-b border-slate-200 pb-8 text-center sm:pb-10">
                 <DocumentIllustration accent={currentTab.label} />
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-orange-600 sm:text-xs sm:tracking-[0.28em]">
@@ -704,10 +708,12 @@ const LegalCenterPage = () => {
                     </p>
                     <a
                       href={currentTab.cta.href}
-                      className="mt-4 inline-flex items-center gap-2 border-b border-orange-500 pb-1 text-[13px] font-medium text-orange-600 sm:text-sm"
+                      className="group mt-4 inline-flex items-center gap-2 border-b border-orange-500 pb-1 text-[13px] font-medium text-orange-600 transition hover:gap-3 sm:text-sm"
                     >
                       {currentTab.cta.label}
-                      <span aria-hidden="true">+</span>
+                      <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M5 12h14m0 0-5-5m5 5-5 5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </a>
                   </div>
                 ) : null}
@@ -718,7 +724,8 @@ const LegalCenterPage = () => {
                   <section
                     key={section.id}
                     id={section.id}
-                    className={`scroll-mt-44 ${index === 0 ? "pt-8 sm:pt-10" : "border-t border-slate-200 pt-8 sm:pt-10"} pb-8 sm:pb-10`}
+                    style={{ "--reveal-delay": `${Math.min(index, 5) * 60}ms` }}
+                    className={`reveal-up scroll-mt-44 ${index === 0 ? "pt-8 sm:pt-10" : "border-t border-slate-200 pt-8 sm:pt-10"} pb-8 sm:pb-10`}
                   >
                     <div className="max-w-3xl">
                       <h3 className="text-xl font-semibold text-slate-900 sm:text-2xl">{section.title}</h3>

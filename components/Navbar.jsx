@@ -289,8 +289,8 @@ const StoreLogo = () => (
 );
 
 const MobileStoreMark = () => (
-  <span className="flex h-10 items-center" aria-label="KawilMart">
-    <Image src={assets.logo} alt="KawilMart" width={142} height={42} className="h-9 w-auto object-contain" priority />
+  <span className="flex h-8 items-center" aria-label="KawilMart">
+    <Image src={assets.logo} alt="KawilMart" width={142} height={42} className="h-[26px] w-auto object-contain" priority />
   </span>
 );
 
@@ -438,14 +438,14 @@ const AccountMenuSection = ({ title, items, onNavigate }) => (
 );
 
 const MobilePageHeader = ({ title, showSearch, onSearch }) => (
-  <div className="sticky top-0 z-40 border-b border-gray-200/80 bg-[#f8fafc]/95 px-3 pb-2 pt-7 backdrop-blur-sm md:hidden">
-    <div className="grid grid-cols-[2rem_minmax(0,1fr)_2rem] items-center gap-2">
-      <button type="button" onClick={() => window.history.back()} aria-label="Go back" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-700">
-        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  <div className="sticky top-0 z-40 border-b border-gray-200/80 bg-[#f8fafc]/95 px-3 pb-1.5 pt-2.5 backdrop-blur-sm md:hidden">
+    <div className="grid grid-cols-[1.75rem_minmax(0,1fr)_1.75rem] items-center gap-2">
+      <button type="button" onClick={() => window.history.back()} aria-label="Go back" className="flex h-7 w-7 items-center justify-center rounded-full text-gray-700">
+        <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none"><path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>
-      <h1 className="truncate text-center text-sm font-bold text-gray-950">{title}</h1>
+      <h1 className="truncate text-center text-[13px] font-bold text-gray-950">{title}</h1>
       {showSearch ? (
-        <button type="button" onClick={onSearch} aria-label="Open search" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-700">
+        <button type="button" onClick={onSearch} aria-label="Open search" className="flex h-7 w-7 items-center justify-center rounded-full text-gray-700">
           <SearchIcon />
         </button>
       ) : (
@@ -480,6 +480,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
     brands,
     customTopCategories,
   } = appContext;
+  const headerRef = useRef(null);
   const { user, isLoaded: isUserLoaded } = useUser();
   const { isLoaded: isAuthLoaded } = useAuth();
   const { openSignIn, openUserProfile, signOut } = useClerk();
@@ -771,6 +772,28 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
     };
   }, [isMobileAccountOpen, isMobileMenuOpen, isMobileSearchActive]);
 
+  // Publishes the sticky header's real height as --app-header-h so pages that
+  // pin their own bars beneath it (the legal center's tab rail, for one) can
+  // offset off a live measurement instead of a magic number that silently
+  // breaks every time the navbar's padding changes.
+  useEffect(() => {
+    const node = headerRef.current;
+    if (!node || typeof ResizeObserver === 'undefined') return undefined;
+
+    const publishHeight = () => {
+      const height = node.getBoundingClientRect().height;
+      if (height > 0) {
+        document.documentElement.style.setProperty('--app-header-h', `${Math.round(height)}px`);
+      }
+    };
+
+    publishHeight();
+    const observer = new ResizeObserver(publishHeight);
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [hideMobileHeader]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
 
@@ -832,7 +855,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
       items: [
         { label: "My Profile", href: "profile", icon: "profile" },
         { label: "Address Book", href: "/add-address", icon: "address" },
-        { label: "My Payment Methods", href: "/cart", icon: "payment" },
+        { label: "My Payment Methods", href: "/payment-methods", icon: "payment" },
         showAdmin ? { label: "Admin Dashboard", href: "/admin", icon: "admin", badge: "Admin" } : null,
         showSeller ? { label: "Seller Dashboard", href: "/seller", icon: "seller", badge: "Seller" } : null,
         showRider ? { label: "Delivery Dashboard", href: "/dashboard/rider", icon: "delivery", badge: "Rider" } : null,
@@ -843,15 +866,17 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
       items: [
         { label: "My Orders", href: "/my-orders", icon: "orders" },
         { label: "Track Order", href: "/my-orders", icon: "track" },
-        showRider ? { label: "Deliveries", href: "/dashboard/rider", icon: "delivery" } : { label: "Deliveries", href: "/my-orders", icon: "delivery" },
+        // Riders get their own dashboard here; for everyone else this pointed
+        // at /my-orders and was a straight duplicate of the row above it.
+        showRider ? { label: "Deliveries", href: "/dashboard/rider", icon: "delivery" } : null,
         { label: "Returns & Refunds", href: "/legal#terms", icon: "returns" },
         { label: "Wishlist", href: "/wishlist", icon: "wishlist" },
-      ],
+      ].filter(Boolean),
     },
     {
       title: "Support & More",
       items: [
-        { label: "Help Center", href: "/about", icon: "help" },
+        { label: "Help Center", href: "/help", icon: "help" },
         { label: "Become a Vendor", href: "/seller", icon: "seller" },
         { label: "Chat with Us", href: "/inbox?tab=support", icon: "chat" },
         { label: "Notifications", href: "/inbox", icon: "bell" },
@@ -881,7 +906,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
   return (
     <>
       {isMobileAccountOpen && user ? (
-        <div className="fixed inset-x-0 top-0 bottom-[3.75rem] z-[47] overflow-y-auto bg-white md:hidden">
+        <div className="fixed inset-x-0 top-0 bottom-[var(--app-dock-h)] z-[47] overflow-y-auto bg-white md:hidden">
           <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 px-3.5 pb-2.5 pt-7 backdrop-blur">
             <div className="flex items-center justify-between">
               <button type="button" onClick={() => setIsMobileAccountOpen(false)} aria-label="Close account menu" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-950">
@@ -991,7 +1016,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
       ) : null}
 
       {isMobileMenuOpen ? (
-        <div className="fixed inset-x-0 top-0 bottom-[3.75rem] z-[47] bg-black/35 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+        <div className="fixed inset-x-0 top-0 bottom-[var(--app-dock-h)] z-[47] bg-black/35 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
           <aside className="h-full w-[82vw] max-w-[20rem] overflow-y-auto bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="sticky top-0 z-10 flex items-center gap-2.5 border-b border-gray-100 bg-white px-3.5 py-3">
               <button type="button" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu" className="flex h-8 w-8 items-center justify-center rounded-full text-gray-950">
@@ -1053,14 +1078,14 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
         />
       ) : null}
 
-      <header className={`sticky top-0 z-40 border-b border-gray-200 bg-white ${hideMobileHeader ? "hidden md:block" : ""}`}>
+      <header ref={headerRef} className={`sticky top-0 z-40 border-b border-gray-200 bg-white ${hideMobileHeader ? "hidden md:block" : ""}`}>
         <div className="hidden border-b border-gray-100 text-xs text-gray-600 lg:block">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
             <span className="font-medium text-gray-700">Uganda's marketplace for everyday essentials</span>
             <div className="flex items-center gap-10">
               <button type="button" onClick={() => goTo('/seller')} className="transition hover:text-orange-600">Sell on KawilMart</button>
               <button type="button" onClick={() => requireAuthNavigation('/my-orders')} className="transition hover:text-orange-600">Track Order</button>
-              <button type="button" onClick={() => navigate('/about')} className="transition hover:text-orange-600">Help Center</button>
+              <button type="button" onClick={() => navigate('/help')} className="transition hover:text-orange-600">Help Center</button>
               <button type="button" onClick={() => goTo('/seller')} className="transition hover:text-orange-600">Become a Vendor</button>
             </div>
           </div>
@@ -1155,13 +1180,13 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
           <button
             type="button"
             onClick={() => setIsMobileSearchActive(true)}
-            className="relative order-last flex h-11 w-full min-w-0 items-center rounded-full border border-gray-200 bg-white px-3 text-left shadow-sm md:hidden"
+            className="relative order-last flex h-9 w-full min-w-0 items-center rounded-full border border-gray-200 bg-white px-3 text-left shadow-sm md:hidden"
             aria-label="Open search"
           >
             <span className="shrink-0 text-gray-400"><SearchIcon /></span>
             <span className="relative min-w-0 flex-1 px-2">
-              <AnimatedSearchHint visible={!searchQuery && hasPlaceholderWords} words={searchPlaceholderNames} textSize="text-xs" />
-              <span className={`block truncate py-2 text-xs ${searchQuery ? "text-gray-900" : hasPlaceholderWords ? "text-transparent" : "text-gray-400"}`}>
+              <AnimatedSearchHint visible={!searchQuery && hasPlaceholderWords} words={searchPlaceholderNames} textSize="text-[11.5px]" />
+              <span className={`block truncate py-1.5 text-[11.5px] ${searchQuery ? "text-gray-900" : hasPlaceholderWords ? "text-transparent" : "text-gray-400"}`}>
                 {searchQuery || (hasPlaceholderWords ? "." : "Search for products, brands...")}
               </span>
             </span>

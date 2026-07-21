@@ -1,11 +1,9 @@
 'use client'
 
-import { assets } from "@/assets/assets";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { useAppContext } from "@/context/AppContext";
 import { getDistrictProfile, getRegionMeta, ugandaRegions } from "@/lib/ugandaLocations";
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -29,6 +27,8 @@ const iconMap = {
     fragile: "M9 3h6l2 5-5 13-5-13 2-5Zm3 5v6m-2 0h4",
     check: "M20 6 9 17l-5-5",
     pin: "M12 21s6-5.5 6-11a6 6 0 1 0-12 0c0 5.5 6 11 6 11Zm0-8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z",
+    clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-13v5l3.5 2",
+    bookmark: "M6.5 4h11v16l-5.5-4-5.5 4V4Z",
 };
 
 const SectionCard = ({ index, title, icon = "pin", children }) => (
@@ -275,9 +275,9 @@ const AddAddress = () => {
                                         </svg>
                                     </span>
                                     <div>
-                                        <h1 className="text-2xl font-extrabold tracking-tight text-gray-950 sm:text-[2.35rem]">Add Delivery Address</h1>
-                                <p className="mt-1 text-[12px] leading-6 text-gray-500 sm:text-[13px]">
-                                            Provide accurate details so we can deliver your order to the right place.
+                                        <h1 className="text-xl font-extrabold tracking-tight text-gray-950 sm:text-[1.75rem]">Add Delivery Address</h1>
+                                        <p className="mt-0.5 text-[12px] leading-5 text-gray-500 sm:text-[13px]">
+                                            Accurate details get your order to the right door.
                                         </p>
                                     </div>
                                 </div>
@@ -440,9 +440,12 @@ const AddAddress = () => {
                                             type="button"
                                             onClick={captureGpsLocation}
                                             disabled={capturingLocation}
-                                            className="shrink-0 rounded-full bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-700 disabled:opacity-60"
+                                            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-orange-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-700 disabled:opacity-60"
                                         >
-                                            {capturingLocation ? "Locating..." : address.latitude != null ? "Update pin" : "📍 Use my location"}
+                                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <path d={iconMap.pin} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                            {capturingLocation ? "Locating..." : address.latitude != null ? "Update pin" : "Use my location"}
                                         </button>
                                     </div>
                                 </SectionCard>
@@ -514,106 +517,26 @@ const AddAddress = () => {
                             </form>
                         </div>
 
-                        <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
-                            <div className="overflow-hidden rounded-[1.35rem] border border-orange-100 bg-[#fff7ef] p-4 shadow-[0_16px_34px_rgba(15,23,42,0.05)]">
-                                <div className="text-center">
-                                    <h2 className="text-[1.2rem] font-extrabold text-gray-950">We deliver across Uganda!</h2>
-                                    <p className="mx-auto mt-2 max-w-xs text-[13px] leading-6 text-gray-600">
-                                        From cities to villages, we’ve got you covered.
-                                    </p>
-                                </div>
-
-                                <div className="mt-4 overflow-hidden rounded-[1.35rem] bg-gradient-to-b from-orange-50 to-white p-3">
-                                    <Image
-                                        src={assets.my_location_image}
-                                        alt="Uganda delivery illustration"
-                                        className="h-auto w-full object-contain"
-                                        priority
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="rounded-[1.35rem] border border-gray-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
-                                <h3 className="text-[15px] font-extrabold text-emerald-600">Why accurate details matter</h3>
-                                <div className="mt-3.5 space-y-3.5">
-                                    {[
-                                        {
-                                            title: "Faster Delivery",
-                                            body: "Accurate details help our riders reach you quickly.",
-                                            icon: "shield",
-                                            tone: "bg-emerald-50 text-emerald-600",
-                                        },
-                                        {
-                                            title: "Easy to Find",
-                                            body: "Landmarks and clear instructions make delivery easy.",
-                                            icon: "pin",
-                                            tone: "bg-orange-50 text-orange-600",
-                                        },
-                                        {
-                                            title: "Safe & Secure",
-                                            body: "Your order is in safe hands from our team to yours.",
-                                            icon: "shield",
-                                            tone: "bg-emerald-50 text-emerald-600",
-                                        },
-                                    ].map((item) => (
-                                        <div key={item.title} className="flex items-start gap-3">
-                                            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.tone}`}>
-                                                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                    <path d={iconMap[item.icon]} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </span>
-                                            <div className="min-w-0">
-                                                <p className="font-bold text-gray-950">{item.title}</p>
-                                                <p className="mt-1 text-[13px] leading-6 text-gray-500">{item.body}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="rounded-[1.35rem] border border-emerald-100 bg-emerald-50/80 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.03)]">
-                                <div className="flex items-start gap-3">
-                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
-                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d={iconMap.check} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </span>
-                                    <div>
-                                        <p className="text-[15px] font-extrabold text-emerald-700">Yes! We deliver to this area</p>
-                                        <p className="mt-1 text-[13px] leading-6 text-emerald-700/90">You can place orders in this location.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="rounded-[1.35rem] border border-gray-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
-                                <h3 className="text-[15px] font-extrabold text-gray-950">Selected area details</h3>
-                                <div className="mt-3.5 space-y-3.5 text-sm">
-                                    <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Region</p>
-                                        <p className="mt-1 font-semibold text-gray-950">{selectedRegionMeta.label}</p>
-                                        <p className="mt-1 text-gray-500">{selectedRegionMeta.description}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">District</p>
-                                        <p className="mt-1 font-semibold text-gray-950">{address.district}</p>
-                                        <p className="mt-1 text-gray-500">Common localities: {selectedDistrictProfile.localities.slice(0, 4).join(", ")}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Helpful note</p>
-                                        <p className="mt-1 text-gray-500">{selectedDistrictProfile.note}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="rounded-[1.35rem] border border-gray-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
+                        <aside className="space-y-3 xl:sticky xl:top-6 xl:self-start">
+                            {/* Saved addresses lead: this panel is the actual
+                                "address book", so it should not sit below three
+                                cards of marketing copy. */}
+                            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
                                 <div className="flex items-center justify-between gap-3">
-                                    <h3 className="text-[15px] font-extrabold text-gray-950">Saved addresses</h3>
+                                    <h3 className="flex items-center gap-2 text-[14px] font-extrabold text-gray-950">
+                                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
+                                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <path d={iconMap.bookmark} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </span>
+                                        Saved addresses
+                                    </h3>
                                     <span className="text-[11px] font-semibold text-gray-400">
                                         {loadingSavedAddresses ? "Loading..." : `${savedAddresses.length} saved`}
                                     </span>
                                 </div>
 
-                                <div className="mt-3 space-y-2.5">
+                                <div className="mt-3 space-y-2">
                                     {savedAddresses.length > 0 ? (
                                         savedAddresses.map((saved) => (
                                             <button
@@ -635,20 +558,93 @@ const AddAddress = () => {
                                                     landmark: saved.landmark || current.landmark,
                                                     postalCode: saved.postalCode || current.postalCode,
                                                 }))}
-                                                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-left transition hover:border-orange-200 hover:bg-orange-50"
+                                                className="flex w-full items-center gap-2.5 rounded-xl border border-gray-200 px-3 py-2.5 text-left transition hover:border-orange-300 hover:bg-orange-50"
                                             >
-                                                <p className="text-[13px] font-bold text-gray-950">{saved.fullName}</p>
-                                                <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-gray-500">
-                                                    {[saved.area, saved.city, saved.state].filter(Boolean).join(", ")}
-                                                </p>
+                                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-50 text-gray-500">
+                                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                        <path d={iconMap.pin} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                </span>
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="block truncate text-[12.5px] font-bold text-gray-950">{saved.fullName}</span>
+                                                    <span className="block truncate text-[11.5px] text-gray-500">
+                                                        {[saved.area, saved.city, saved.state].filter(Boolean).join(", ")}
+                                                    </span>
+                                                </span>
+                                                <span className="shrink-0 text-[11px] font-semibold text-orange-600">Use</span>
                                             </button>
                                         ))
                                     ) : (
                                         <p className="rounded-xl border border-dashed border-gray-200 px-3 py-3 text-[12px] leading-5 text-gray-500">
-                                            No saved addresses yet. Add one below and it will appear here.
+                                            No saved addresses yet. The one you add here will appear in this list.
                                         </p>
                                     )}
                                 </div>
+                            </div>
+
+                            {/* Area context, condensed from three separate cards
+                                into one. Localities render as chips so the list
+                                stays scannable instead of a comma run-on. */}
+                            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
+                                <div className="flex items-center justify-between gap-2">
+                                    <h3 className="text-[14px] font-extrabold text-gray-950">Delivery area</h3>
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10.5px] font-bold text-emerald-700">
+                                        <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d={iconMap.check} stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        We deliver here
+                                    </span>
+                                </div>
+
+                                <dl className="mt-3 grid grid-cols-2 gap-2">
+                                    <div className="rounded-xl bg-gray-50 px-3 py-2">
+                                        <dt className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Region</dt>
+                                        <dd className="mt-0.5 truncate text-[12.5px] font-bold text-gray-950">{selectedRegionMeta.label}</dd>
+                                    </div>
+                                    <div className="rounded-xl bg-gray-50 px-3 py-2">
+                                        <dt className="text-[10px] font-bold uppercase tracking-wide text-gray-400">District</dt>
+                                        <dd className="mt-0.5 truncate text-[12.5px] font-bold text-gray-950">{address.district}</dd>
+                                    </div>
+                                </dl>
+
+                                {selectedDistrictProfile.localities.length > 0 ? (
+                                    <div className="mt-2.5">
+                                        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Common areas</p>
+                                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                            {selectedDistrictProfile.localities.slice(0, 5).map((locality) => (
+                                                <button
+                                                    key={locality}
+                                                    type="button"
+                                                    onClick={() => setAddress((current) => ({ ...current, village: locality }))}
+                                                    className="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-600 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+                                                >
+                                                    {locality}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </div>
+
+                            {/* Three tips, three distinct icons, one line each. */}
+                            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
+                                <h3 className="text-[14px] font-extrabold text-gray-950">Getting it right</h3>
+                                <ul className="mt-3 space-y-2.5">
+                                    {[
+                                        { icon: "clock", tone: "bg-sky-50 text-sky-600", body: "A precise village and landmark cuts delivery time." },
+                                        { icon: "pin", tone: "bg-orange-50 text-orange-600", body: "Pin your GPS for door-level accuracy." },
+                                        { icon: "phone", tone: "bg-emerald-50 text-emerald-600", body: "Riders call before arriving — keep your number reachable." },
+                                    ].map((item) => (
+                                        <li key={item.icon} className="flex items-start gap-2.5">
+                                            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${item.tone}`}>
+                                                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                    <path d={iconMap[item.icon]} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            </span>
+                                            <span className="text-[12px] leading-[17px] text-gray-600">{item.body}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
                         </aside>
                     </div>
