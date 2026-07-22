@@ -1029,7 +1029,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
             </div>
             <div className="divide-y divide-gray-100">
               <section className="px-3.5 py-2">
-                <button type="button" onClick={() => goTo('/about')} className="flex w-full items-center justify-between py-2.5 text-left text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                <button type="button" onClick={() => goTo('/help')} className="flex w-full items-center justify-between py-2.5 text-left text-[11px] font-bold uppercase tracking-wide text-gray-500">
                   Need help?
                   <ChevronRight />
                 </button>
