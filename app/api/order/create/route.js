@@ -56,14 +56,14 @@ const formatCurrency = (amount) => `UGX ${Number(amount || 0).toLocaleString("en
 
 // Opens a hosted checkout session for a set of already-created, unpaid orders
 // and returns the URL to send the shopper to. `reference` becomes the gateway's
-// tx_ref and must be unique per attempt.
+// merchant reference and must be unique per attempt.
 const startGatewayPayment = async ({ reference, orders, userId, addressDoc }) => {
   const gateway = getActiveGateway();
   const totalAmount = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
   const customer = await getOrSyncDatabaseUser(userId, { select: "name email", lean: true });
   const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
 
-  const { redirectUrl } = await gateway.initiate({
+  const { redirectUrl, transactionId } = await gateway.initiate({
     reference,
     amount: totalAmount,
     customer: {
@@ -73,6 +73,16 @@ const startGatewayPayment = async ({ reference, orders, userId, addressDoc }) =>
     },
     redirectUrl: `${baseUrl}/order-placed?ref=${encodeURIComponent(reference)}`,
   });
+
+  // Pesapal hands back its order_tracking_id here, and that id is the only
+  // thing its status endpoint accepts. Storing it now means the return page can
+  // settle the order even if the IPN never arrives.
+  if (transactionId) {
+    await Order.updateMany(
+      { _id: { $in: orders.map((order) => order._id) } },
+      { $set: { paymentTransactionId: String(transactionId) } }
+    );
+  }
 
   return redirectUrl;
 };
