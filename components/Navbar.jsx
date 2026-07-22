@@ -1249,10 +1249,11 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
                 {openDropdown === 'help' ? (
                   <div className="absolute left-0 top-full z-50 w-52 rounded-lg border border-gray-200 bg-white p-2 text-sm font-medium shadow-xl">
                     {[
-                      ['Help Center', '/about'],
+                      ['Help Center', '/help'],
                       ['Track Order', '/my-orders'],
                       ['Returns & Refunds', '/legal#terms'],
-                      ['Contact Us', '/about'],
+                      ['Shopping Guides', '/guides'],
+                      ['Contact Us', '/inbox?tab=support'],
                     ].map(([label, href]) => (
                       <button key={label} type="button" onClick={() => goTo(href)} className="block w-full rounded-md px-3 py-2 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-600">
                         {label}
