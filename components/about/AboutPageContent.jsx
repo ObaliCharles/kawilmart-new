@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
+import obaliPhoto from "@/assets/obali.png";
+import laloyoPhoto from "@/assets/laloyo.png";
+import rubangakenePhoto from "@/assets/rubangakene.png";
 
 // One line-icon set at a single 1.7 stroke weight. No emoji anywhere — every
 // glyph here is drawn so it inherits brand colour and scales cleanly.
@@ -61,9 +64,9 @@ const REASONS = [
 ];
 
 const TEAM = [
-  { name: "Obali Junior Charles", role: "CEO & Co-founder", short: "Charles" },
-  { name: "Laloyomaber Joshua", role: "CTO & Co-founder", short: "Joshua" },
-  { name: "Rubangakene Emmy Ongwen", role: "Operations Head", short: "Emmy" },
+  { name: "Obali Junior Charles", role: "CEO & Co-founder", short: "Charles", photo: obaliPhoto },
+  { name: "Laloyomaber Joshua", role: "CTO & Co-founder", short: "Joshua", photo: laloyoPhoto },
+  { name: "Rubangakene Emmy Ongwen", role: "Operations Head", short: "Emmy", photo: rubangakenePhoto },
   { name: "Customer Happiness", role: "Support Lead", short: "Support" },
 ];
 
@@ -275,9 +278,21 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
               style={{ "--reveal-delay": `${index * 60}ms` }}
               className="reveal-up flex min-w-0 flex-col items-center rounded-2xl bg-white p-4 text-center shadow-sm ring-1 ring-gray-100"
             >
-              <span className={`flex h-16 w-16 items-center justify-center rounded-full text-[18px] font-black ${AVATAR_TONES[index % AVATAR_TONES.length]}`}>
-                {initialsFor(member.name)}
-              </span>
+              {member.photo ? (
+                <span className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-white shadow-sm">
+                  <Image
+                    src={member.photo}
+                    alt={member.name}
+                    width={64}
+                    height={64}
+                    className="h-full w-full object-cover"
+                  />
+                </span>
+              ) : (
+                <span className={`flex h-16 w-16 items-center justify-center rounded-full text-[18px] font-black ${AVATAR_TONES[index % AVATAR_TONES.length]}`}>
+                  {initialsFor(member.name)}
+                </span>
+              )}
               <h3 className="mt-2.5 w-full truncate text-[12.5px] font-bold text-gray-950 md:text-[13.5px]">{member.name}</h3>
               <p className="mt-0.5 w-full truncate text-[11px] text-gray-500">{member.role}</p>
               <div className="mt-2 flex items-center gap-2 text-gray-400">
