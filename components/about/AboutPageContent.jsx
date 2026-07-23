@@ -63,7 +63,7 @@ const REASONS = [
 const TEAM = [
   { name: "Obali Junior Charles", role: "CEO & Co-founder", short: "Charles" },
   { name: "Laloyomaber Joshua", role: "CTO & Co-founder", short: "Joshua" },
-  { name: "Rubangakene Emmy", role: "Operations Head", short: "Emmy" },
+  { name: "Rubangakene Emmy Ongwen", role: "Operations Head", short: "Emmy" },
   { name: "Customer Happiness", role: "Support Lead", short: "Support" },
 ];
 
