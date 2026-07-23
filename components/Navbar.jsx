@@ -1078,6 +1078,23 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
                   </button>
                 ))}
               </section>
+              {/* Company pages sit after the categories, led by About as
+                  requested. These are public routes, so no auth gate. */}
+              <section className="px-3.5 py-2">
+                <h2 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-500">Company</h2>
+                {[
+                  ["About", "/about", "profile"],
+                  ["Careers", "/careers", "settings"],
+                  ["Press & Media", "/press", "globe"],
+                  ["Partners", "/affiliates", "chat"],
+                  ["Shopping Guides", "/guides", "help"],
+                ].map(([label, href, icon]) => (
+                  <button key={label} type="button" onClick={() => goTo(href)} className="flex w-full items-center gap-3 py-2.5 text-left text-sm font-medium text-gray-900">
+                    <AccountMenuIcon type={icon} className="h-5 w-5 text-gray-800" />
+                    {label}
+                  </button>
+                ))}
+              </section>
             </div>
           </aside>
         </div>
