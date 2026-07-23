@@ -1,6 +1,6 @@
 'use client'
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, createContext, startTransition, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, startTransition, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { toast } from 'react-hot-toast';
@@ -150,6 +150,11 @@ export const AppContextProvider = (props) => {
     const [loadingProducts, setLoadingProducts] = useState(true)
     const [loadingUser, setLoadingUser] = useState(false)
     const [isRouteLoading, setIsRouteLoading] = useState(false)
+    // Failsafe timer for the route loader. RouteStateSync clears the loading
+    // flag when the URL actually changes, but if a navigation resolves without
+    // a pathname/search change React can observe (e.g. a suspended segment that
+    // remounts the syncer), this guarantees the overlay can never stay stuck.
+    const routeLoadingFailsafeRef = useRef(null)
     const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0)
     const [recentNotifications, setRecentNotifications] = useState([])
     const notificationsRefreshInFlight = useRef(false)
@@ -746,6 +751,18 @@ export const AppContextProvider = (props) => {
         const { scroll = true } = options
         setIsRouteLoading(true)
 
+        // Safety net: even if RouteStateSync never fires (suspended segment,
+        // aborted push), the loader releases on its own so the page is never
+        // left dimmed behind a blur until a manual refresh.
+        if (typeof window !== 'undefined') {
+            if (routeLoadingFailsafeRef.current) {
+                window.clearTimeout(routeLoadingFailsafeRef.current)
+            }
+            routeLoadingFailsafeRef.current = window.setTimeout(() => {
+                setIsRouteLoading(false)
+            }, 4000)
+        }
+
         router.push(nextHref, { scroll })
     }
 
@@ -762,6 +779,10 @@ export const AppContextProvider = (props) => {
     }, [router])
 
     const handleRouteSettled = useCallback(() => {
+        if (typeof window !== 'undefined' && routeLoadingFailsafeRef.current) {
+            window.clearTimeout(routeLoadingFailsafeRef.current)
+            routeLoadingFailsafeRef.current = null
+        }
         setIsRouteLoading(false)
     }, [])
 
@@ -969,9 +990,11 @@ export const AppContextProvider = (props) => {
 
     return (
         <AppContext.Provider value={value}>
-            <Suspense fallback={null}>
-                <RouteStateSync onRouteSettled={handleRouteSettled} />
-            </Suspense>
+            {/* Not wrapped in its own Suspense: a suspended navigation must not
+                unmount the syncer, or the route loader would never be cleared
+                and the page would sit dimmed until a manual refresh. The root
+                layout already provides the Suspense boundary these hooks need. */}
+            <RouteStateSync onRouteSettled={handleRouteSettled} />
             {props.children}
             <CartFlyAnimation
                 flyToCartRequest={flyToCartRequest}

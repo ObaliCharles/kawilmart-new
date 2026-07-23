@@ -318,9 +318,10 @@ body {
   }
 }
 
-.route-shell-loading {
-  pointer-events: none;
-}
+/* The page stays fully interactive during a route change now — only the slim
+   top progress bar signals loading. Disabling pointer events here used to make
+   the whole app unclickable for the duration of every navigation, and when the
+   loading flag got stuck it left the page frozen until a manual refresh. */
 
 @media (prefers-reduced-motion: reduce) {
   *,

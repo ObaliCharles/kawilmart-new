@@ -1,6 +1,6 @@
 "use client"
 
-import React, { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { assets, BagIcon, BoxIcon, CartIcon, HomeIcon } from "@/assets/assets";
 import Link from "next/link"
 import { useAppContext } from "@/context/AppContext";
@@ -900,10 +900,20 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
 
   const handleMobileLogout = async () => {
     setIsMobileAccountOpen(false);
-    await signOut?.();
-    startTransition(() => {
-      navigate('/');
-    });
+    // Let Clerk own the redirect: it navigates to "/" only after the session
+    // is actually torn down, so the app never briefly renders the signed-in
+    // UI on the next page. The old code called navigate('/') immediately after
+    // signOut(), before Clerk's `user` had flipped to null — which is why the
+    // account state used to linger until a manual refresh.
+    try {
+      await signOut?.({ redirectUrl: '/' });
+    } catch {
+      // If Clerk's redirect is unavailable for any reason, fall back to a hard
+      // navigation so the user is never stranded in a half-logged-out state.
+      if (typeof window !== 'undefined') {
+        window.location.assign('/');
+      }
+    }
   };
 
   return (

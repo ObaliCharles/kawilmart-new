@@ -1,29 +1,9 @@
-'use client'
-
-import { useAppContext } from '@/context/AppContext'
-import { useEffect, useState } from 'react'
-
+// Thin wrapper that just sets the app background. Route-change feedback is
+// handled by the slim top progress bar in RouteLoader plus Next's own
+// loading.js skeleton — this shell no longer dims, fades, or disables clicks on
+// the page, which used to make even a fast, prefetched navigation feel delayed.
 const RouteShell = ({ children }) => {
-  const { isRouteLoading } = useAppContext()
-  const [contentVisible, setContentVisible] = useState(true)
-
-  useEffect(() => {
-    if (isRouteLoading) {
-      setContentVisible(false)
-    } else {
-      // Small delay to ensure smooth transition
-      const timer = setTimeout(() => setContentVisible(true), 30)
-      return () => clearTimeout(timer)
-    }
-  }, [isRouteLoading])
-
-  return (
-    <div className={`min-h-screen bg-[#f8fafc] transition-opacity duration-100 ${isRouteLoading ? 'route-shell-loading' : ''}`}>
-      <div className={`transition-opacity duration-150 ${contentVisible ? 'opacity-100' : 'opacity-50'}`}>
-        {children}
-      </div>
-    </div>
-  )
+  return <div className="min-h-screen bg-[#f8fafc]">{children}</div>
 }
 
 export default RouteShell
