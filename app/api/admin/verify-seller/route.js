@@ -44,7 +44,7 @@ export async function POST(request) {
             },
             emailTitle: approved ? "Wilwa: store verified" : "Wilwa: verification update",
             emailMessage: approved
-                ? "Congratulations — your Wilwa store is now verified."
+                ? "Congratulations! Your Wilwa store is now verified."
                 : "Your verification request was reviewed and not approved. Open your seller dashboard to re-submit.",
             ctaLabel: "Open seller dashboard",
             ctaPath: "/seller/verification",

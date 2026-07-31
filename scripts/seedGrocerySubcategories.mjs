@@ -2,11 +2,11 @@
 // Household / Personal Care / Baby Care" subcategories as real Category
 // documents under the "Home & Living" top-level category, since that grouping
 // used to be hardcoded in three different files instead of coming from the
-// database. Safe to re-run — skips any subcategory that already exists.
+// database. Safe to re-run. Skips any subcategory that already exists.
 //
 // This does NOT retag any existing products. After running it, use
 // /admin/categories to review, and edit each grocery product in the seller
-// form to assign it to the right subcategory — that's what makes items
+// form to assign it to the right subcategory. That's what makes items
 // actually appear in these tiles again.
 //
 // Usage: node scripts/seedGrocerySubcategories.mjs

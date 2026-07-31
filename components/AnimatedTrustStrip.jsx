@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from "react";
 
-// Premium animated trust strip — the web equivalent of a Rive/Lottie strip:
+// Premium animated trust strip. The web equivalent of a Rive/Lottie strip:
 // one guarantee visible at a time, its scene animates in vector (inline SVG,
 // transform/opacity-only keyframes → compositor-friendly 60fps), pauses,
 // fades into the next. No images, no GIFs, no dependencies.

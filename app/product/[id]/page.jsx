@@ -228,7 +228,7 @@ const Product = () => {
                         </div>
                     ) : null}
 
-                    {/* Compact product + seller facts — one soft panel, no tables */}
+                    {/* Compact product + seller facts. One soft panel, no tables */}
                     <div className="mt-5 rounded-xl bg-gray-50/80 p-3.5">
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[12px]">
                             <div className="col-span-2 flex flex-wrap items-center gap-2">

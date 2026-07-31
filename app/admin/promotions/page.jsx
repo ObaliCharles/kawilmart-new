@@ -18,7 +18,7 @@ const linkTypeOptions = [
 ];
 
 const bannerTypeConfigs = [
-    { type: 'hero', label: 'Hero Slides', description: 'Large homepage slides linked to a product, category, store, or URL. Upload a wide banner (~15:4, e.g. 1920×512) so it fits the hero cleanly — the image is shown as uploaded.', aspect: 15 / 4, hasSecondaryCta: true, hasDescription: false, hasOffer: true, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Primary button text', defaultCta: 'Shop Now' },
+    { type: 'hero', label: 'Hero Slides', description: 'Large homepage slides linked to a product, category, store, or URL. Upload a wide banner (~15:4, e.g. 1920×512) so it fits the hero cleanly. The image is shown as uploaded.', aspect: 15 / 4, hasSecondaryCta: true, hasDescription: false, hasOffer: true, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Primary button text', defaultCta: 'Shop Now' },
     { type: 'featured', label: 'Featured Cards', description: 'Cards shown beneath popular products.', aspect: 4 / 3, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'Buy now' },
     { type: 'promo', label: 'Homepage Promo Offers', description: 'Right-side hero promotion images that rotate on the storefront.', aspect: 4 / 3, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'Get offer' },
     { type: 'sidebarPromo', label: 'Sidebar Promo Banners', description: 'Small promo banners shown in sidebar placements.', aspect: 1, hasSecondaryCta: false, hasDescription: true, hasOffer: false, hasPlacement: false, hasBrand: false, hasTarget: true, ctaLabel: 'Button text', defaultCta: 'View offer' },
@@ -596,7 +596,7 @@ export default function AdminPromotions() {
             </SectionCard>
 
             {/* Banners */}
-            <SectionCard title="Banners" description="Manage every homepage and category banner from one place — with scheduling and drafts.">
+            <SectionCard title="Banners" description="Manage every homepage and category banner from one place, with scheduling and drafts.">
                 <div className="mb-5 flex flex-wrap gap-2 border-b border-gray-100 pb-4">
                     {bannerTypeConfigs.map((config) => (
                         <button
@@ -732,7 +732,7 @@ export default function AdminPromotions() {
                                     checked={bannerForm.showOverlay}
                                     onChange={(e) => setBannerForm((prev) => ({ ...prev, showOverlay: e.target.checked }))}
                                 />
-                                Show title/CTA text over the image (off by default — banners are pure clickable images)
+                                Show title/CTA text over the image (off by default, since banners are pure clickable images)
                             </label>
 
                             <ActionButton onClick={() => void saveBanner()} disabled={savingContent} variant="primary" className="w-full">

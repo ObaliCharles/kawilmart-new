@@ -22,7 +22,7 @@ const addressSchema = new mongoose.Schema({
     roadStreet: { type: String, default: "" },
     landmark: { type: String, default: "" },
     deliveryNotes: { type: String, default: "" },
-    // GPS pin captured via browser geolocation — helps riders find the door.
+    // GPS pin captured via browser geolocation. Helps riders find the door.
     latitude: { type: Number, default: null },
     longitude: { type: Number, default: null },
     isDefault: { type: Boolean, default: false },

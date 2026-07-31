@@ -13,7 +13,7 @@ import { registerPesapalIpn } from "@/lib/payments";
 // Admin-only, because it authenticates against Pesapal with our secret and
 // mutates the merchant account's registered notification URLs.
 //
-// The IPN URL registered is always <base>/api/webhooks/payments — the same
+// The IPN URL registered is always <base>/api/webhooks/payments. The same
 // endpoint that actually receives Pesapal's GET notifications. `base` comes
 // from the request body if provided, otherwise APP_BASE_URL / NEXT_PUBLIC_APP_URL.
 // It MUST be a public https URL Pesapal can reach; localhost will not work.

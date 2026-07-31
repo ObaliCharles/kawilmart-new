@@ -254,7 +254,7 @@ export default function AdminUsers() {
                                                 ) : null}
                                             </div>
                                         ) : (
-                                            <span className="text-[10px] text-gray-300">—</span>
+                                            <span className="text-[10px] text-gray-300">-</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3">

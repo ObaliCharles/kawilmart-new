@@ -68,7 +68,7 @@ export default function AdminAnalyticsPage() {
             <div className="rounded-xl bg-orange-50/60 p-4">
                 <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-gray-950">Platform Revenue</h2>
-                    <p className="text-xs text-gray-500">What Wilwa earns — separate from GMV (total sales passing through sellers)</p>
+                    <p className="text-xs text-gray-500">What Wilwa earns, separate from GMV (total sales passing through sellers)</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                     {[

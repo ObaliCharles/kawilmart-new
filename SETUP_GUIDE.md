@@ -1,15 +1,15 @@
-# Wilwa — New Features Setup Guide
+# Wilwa: New Features Setup Guide
 
 ## ✅ What Was Added
 
 ### 1. Homepage Enhancements
-- **ShopByCategory** — 8 category tiles with emoji icons, click-to-filter navigation
-- **FlashDeals** — Live countdown timer, discount badges, "% claimed" bars, auto-pulls most-discounted products
+- **ShopByCategory**: 8 category tiles with emoji icons, click-to-filter navigation
+- **FlashDeals**: Live countdown timer, discount badges, "% claimed" bars, auto-pulls most-discounted products
 
 ### 2. All Products Page (`/all-products`)
-- **Category sidebar filter** — All, Earphone, Headphone, Watch, Smartphone, Laptop, Camera, Accessories
-- **Price range filter** — 6 tiers in UGX
-- **Sort options** — Price low/high, Newest, Best Discount
+- **Category sidebar filter**: All, Earphone, Headphone, Watch, Smartphone, Laptop, Camera, Accessories
+- **Price range filter**: 6 tiers in UGX
+- **Sort options**: Price low/high, Newest, Best Discount
 - **Inline search box**
 - **Active filter tags** with × removal
 - **Mobile filter drawer**
@@ -18,7 +18,7 @@
 ### 3. ProductCard Upgrades
 - **Shop location** (📍 Kampala, UG etc.) displayed on every card
 - **Discount % badge** on product images
-- **"Add to Cart" button fixed** — now actually calls addToCart() properly
+- **"Add to Cart" button fixed**: now actually calls addToCart() properly
 - **Strikethrough original price** when on sale
 
 ### 4. Navbar Upgrades
@@ -32,10 +32,10 @@
 - **Order Status Breakdown**
 - **Category Distribution**
 - **Recent Orders table**
-- **All Orders** (`/admin/orders`) — Full order table with live status update dropdown
-- **Users & Roles** (`/admin/users`) — View all users, change roles (buyer/seller/rider/admin)
-- **Products** (`/admin/products`) — Browse all products, filter by category
-- **Analytics** (`/admin/analytics`) — KPIs, charts, category breakdown
+- **All Orders** (`/admin/orders`): Full order table with live status update dropdown
+- **Users & Roles** (`/admin/users`): View all users, change roles (buyer/seller/rider/admin)
+- **Products** (`/admin/products`): Browse all products, filter by category
+- **Analytics** (`/admin/analytics`): KPIs, charts, category breakdown
 
 ### 6. Rider Dashboard (`/dashboard/rider`)
 - **Active/Completed tabs** with counts
@@ -79,8 +79,8 @@ Once you have at least one admin set via Method 1:
 ## 🛡️ Route Protection
 
 The middleware now automatically protects:
-- `/admin/**` — Requires `role: admin`
-- `/dashboard/rider/**` — Requires `role: rider` or `admin`
+- `/admin/**`: Requires `role: admin`
+- `/dashboard/rider/**`: Requires `role: rider` or `admin`
 - Non-admins/riders are redirected to `/`
 
 ---
@@ -161,4 +161,4 @@ Notes:
 
 - **Flash Deals** auto-detects products where `price > offerPrice`. Make sure sellers set both fields when adding products.
 
-- **Rider commission** is shown as 5% of order amount — adjust in `app/dashboard/rider/page.jsx` line with `* 0.05`.
+- **Rider commission** is shown as 5% of order amount. Adjust in `app/dashboard/rider/page.jsx` line with `* 0.05`.

@@ -7,8 +7,8 @@ import { getActiveGateway } from "@/lib/payments";
 import { settleTransaction } from "@/lib/paymentSettlement";
 
 // Called by the order-placed page when a shopper returns from the hosted
-// payment page. Gateway callbacks can be delayed, retried or dropped entirely —
-// Pesapal's IPN especially — so rather than trusting it to arrive we re-verify
+// payment page. Gateway callbacks can be delayed, retried or dropped entirely.
+// Pesapal's IPN especially, so rather than trusting it to arrive we re-verify
 // here too. Settlement is idempotent, so whichever path lands first wins and
 // the other becomes a no-op.
 export async function GET(request) {

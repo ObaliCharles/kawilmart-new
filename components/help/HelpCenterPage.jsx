@@ -61,7 +61,7 @@ const FAQS = [
   },
   {
     question: "How do I pay with Airtel Money?",
-    answer: "Select Airtel Money at checkout. Like MTN, it is settled on delivery — the rider confirms payment before handing your items over.",
+    answer: "Select Airtel Money at checkout. Like MTN, it is settled on delivery. The rider confirms payment before handing your items over.",
   },
   {
     question: "How long does delivery take?",
@@ -188,7 +188,7 @@ const HelpCenterPage = () => {
       return;
     }
 
-    // Nothing in the help content matched — the shopper is most likely
+    // Nothing in the help content matched. The shopper is most likely
     // looking for a product, so hand the query to the catalogue search.
     navigate(`/all-products?search=${encodeURIComponent(query.trim())}`);
   };
@@ -218,7 +218,7 @@ const HelpCenterPage = () => {
 
           {/* The list below filters as you type. Submitting jumps to the first
               matching topic, and falls back to a product search when nothing in
-              the help content matches — so the button is never a dead end. */}
+              the help content matches, so the button is never a dead end. */}
           <form
             onSubmit={submitSearch}
             className="mx-auto mt-5 flex max-w-2xl items-center gap-2 rounded-full bg-white p-1.5 shadow-lg shadow-orange-900/10"
@@ -415,7 +415,7 @@ const HelpCenterPage = () => {
             <div className="min-w-0">
               <h2 className="text-[15px] font-bold text-gray-950">Your Support Conversation</h2>
               <p className="mt-1 text-[11.5px] leading-[17px] text-gray-500">
-                Messages with our team live in your inbox — open it to continue where you left off or start a new request.
+                Messages with our team live in your inbox. Open it to continue where you left off or start a new request.
               </p>
             </div>
             <button

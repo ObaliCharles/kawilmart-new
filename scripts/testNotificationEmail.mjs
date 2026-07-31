@@ -8,7 +8,7 @@
 // Reads the same env vars as lib/email.js (EMAIL_ENABLED, RESEND_API_KEY,
 // EMAIL_FROM, EMAIL_REPLY_TO, APP_BASE_URL). It temporarily forces
 // EMAIL_ENABLED=true so you can test while the app itself is still switched
-// off — everything else must be configured for real.
+// off. Everything else must be configured for real.
 
 import "dotenv/config";
 
@@ -58,7 +58,7 @@ const result = await sendEmail({
 
 if (result.success) {
     console.log(`\n✅ Sent to ${recipient}. Check the inbox (and spam folder on the first send).`);
-    console.log("   Confirm the Wilwa logo renders in the header — a broken image means APP_BASE_URL is not publicly reachable.");
+    console.log("   Confirm the Wilwa logo renders in the header. A broken image means APP_BASE_URL is not publicly reachable.");
     process.exit(0);
 }
 

@@ -224,7 +224,7 @@ export default function AdminOrders() {
                                                 <p>{order.address.city}, {order.address.state}</p>
                                                 <p>{order.address.phoneNumber}</p>
                                             </>
-                                        ) : '—'}
+                                        ) : '-'}
                                     </td>
                                     <td className="px-4 py-3 font-semibold text-gray-800">
                                         {formatCurrency(order.amount)}

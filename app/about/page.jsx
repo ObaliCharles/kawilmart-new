@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Wilwa | About Us",
   description:
-    "Wilwa is Uganda's marketplace for everyday essentials — connecting trusted local sellers with smart buyers.",
+    "Wilwa is Uganda's marketplace for everyday essentials, connecting trusted local sellers with smart buyers.",
 };
 
 // Testimonials come from real product reviews only. If nobody has reviewed

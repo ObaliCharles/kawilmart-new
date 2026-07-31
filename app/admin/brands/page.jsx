@@ -199,7 +199,7 @@ export default function AdminBrandsPage() {
                                             // eslint-disable-next-line @next/next/no-img-element
                                             <img src={brand.logoUrl} alt={brand.name} className="h-8 w-16 object-contain" />
                                         ) : (
-                                            <span className="text-xs text-gray-400">—</span>
+                                            <span className="text-xs text-gray-400">-</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 font-medium text-gray-900">{brand.name}</td>

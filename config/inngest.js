@@ -108,8 +108,8 @@ export const createMonthlySellerInvoices = inngest.createFunction(
 
 // Keeps the stored `status` field on Banner documents in sync with their
 // computed lifecycle (scheduled/active/expired) so the admin list reflects
-// reality without recomputation. Not load-bearing for correctness — public
-// reads always recompute status at request time — this just keeps the
+// reality without recomputation. Not load-bearing for correctness. Public
+// reads always recompute status at request time. This just keeps the
 // admin UI's stored badge fresh between edits.
 export const syncBannerStatuses = inngest.createFunction(
     {
@@ -139,7 +139,7 @@ export const syncBannerStatuses = inngest.createFunction(
 // Flips isFlashDeal/promotionType back off on Product documents whose flash
 // deal has passed its end date. The client already computes flash-deal
 // activity live from the dates (lib/liveCommerce.js getFlashDealSnapshot),
-// so shoppers never see an expired deal — this cron just makes the stored
+// so shoppers never see an expired deal. This cron just makes the stored
 // record match reality for anything reading the raw field directly (admin
 // list, other future consumers) and keeps expired flags from lingering
 // forever.

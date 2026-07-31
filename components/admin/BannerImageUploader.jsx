@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 const MAX_UPLOAD_MB = 5;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-// Upload-and-display only — no cropping. The picked image is used as-is (just
+// Upload-and-display only, no cropping. The picked image is used as-is (just
 // lightly compressed for performance); the live site sizes it with CSS +
 // Cloudinary transforms per banner type. `aspect` is kept only as a hint for
 // the preview box so admins can see roughly how the banner will be framed.
@@ -66,7 +66,7 @@ const BannerImageUploader = ({ imageUrl, onImageReady, aspect = 16 / 9, label = 
             <p className="text-xs font-medium text-gray-600">
                 {processing ? 'Processing…' : `Drag & drop ${label.toLowerCase()} here, or click to browse`}
             </p>
-            <p className="text-[10px] text-gray-400">JPEG, PNG, or WebP — up to {MAX_UPLOAD_MB}MB. Displayed as uploaded.</p>
+            <p className="text-[10px] text-gray-400">JPEG, PNG, or WebP, up to {MAX_UPLOAD_MB}MB. Displayed as uploaded.</p>
             <input
                 ref={fileInputRef}
                 type="file"

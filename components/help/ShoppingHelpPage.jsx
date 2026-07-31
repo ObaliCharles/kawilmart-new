@@ -3,7 +3,7 @@
 import React from "react";
 import { useAppContext } from "@/context/AppContext";
 
-// Every step below describes what the app actually does today — cash and
+// Every step below describes what the app actually does today. Cash and
 // mobile money are both collected on delivery, orders split per seller, and
 // the return window is the 7 days enforced in lib/orderLifecycle.
 const Icon = ({ type, className = "h-5 w-5" }) => {
@@ -49,7 +49,7 @@ const steps = [
   {
     icon: "pay",
     title: "Pay on delivery",
-    body: "Choose Cash, MTN Mobile Money or Airtel Money. All three are collected when your order reaches you — nothing is charged when you place it.",
+    body: "Choose Cash, MTN Mobile Money or Airtel Money. All three are collected when your order reaches you. Nothing is charged when you place it.",
     cta: { label: "Payment methods", href: "/payment-methods" },
   },
   {

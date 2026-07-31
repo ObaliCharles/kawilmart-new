@@ -81,7 +81,7 @@ export async function DELETE(request, { params }) {
         const wasDefault = address.isDefault;
         await Address.deleteOne({ _id: id, userId });
 
-        // Never leave the account without a default — promote the next one so
+        // Never leave the account without a default. Promote the next one so
         // checkout always has an address preselected.
         if (wasDefault) {
             const replacement = await Address.findOne({ userId });

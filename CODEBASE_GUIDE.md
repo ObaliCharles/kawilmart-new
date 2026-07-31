@@ -1,4 +1,4 @@
-# 🏪 Wilwa — Complete Codebase Guide
+# 🏪 Wilwa: Complete Codebase Guide
 
 ## 📋 Table of Contents
 1. [Overview & Architecture](#1-overview--architecture)
@@ -91,14 +91,14 @@ Wilwa-main/
 
 ## 3. App Pages (Frontend Routes)
 
-### 📍 `/` — Home Page
+### 📍 `/`: Home Page
 **File: `app/page.jsx`**
 - Server component
 - Fetches `siteContent` (from MongoDB SiteContent) and `initialProducts` (from API)
 - Renders: `Navbar` → `MegaStoreHome` → `Footer`
 - Control styling in `components/MegaStoreHome.jsx`
 
-### 📍 `/all-products` — All Products / Search / Filter
+### 📍 `/all-products`: All Products / Search / Filter
 **File: `app/all-products/page.jsx`** (1663 lines)
 - **CLIENT COMPONENT** (has `'use client'`)
 - **Full filtering system**: Category, Price Range, Brand, Condition, Rating, Search
@@ -108,56 +108,56 @@ Wilwa-main/
 - **Supermarket mode** when category is "Home & Living"
 - URL query params supported: `?category=`, `?search=`, `?seller=`, `?brand=`, `?filter=`, `?sort=`
 
-### 📍 `/cart` — Shopping Cart
+### 📍 `/cart`: Shopping Cart
 **File: `app/cart/page.jsx`**
 - Displays cart items
 - Manages quantities, totals
 
-### 📍 `/product/[id]` — Product Details
+### 📍 `/product/[id]`: Product Details
 **File: `app/product/`**
 - Dynamic route for individual products
 - Shows full product details, images, pricing
 
-### 📍 `/categories` — Category Browser
+### 📍 `/categories`: Category Browser
 **File: `app/categories/`**
 - Browse products by category
 
-### 📍 `/sign-in`, `/sign-up` — Auth Pages
+### 📍 `/sign-in`, `/sign-up`: Auth Pages
 - Clerk-hosted authentication pages
 
-### 📍 `/dashboard` — User Dashboard
+### 📍 `/dashboard`: User Dashboard
 - User profile, settings, account management
 
-### 📍 `/my-orders` — Order History
+### 📍 `/my-orders`: Order History
 - View past orders, order status
 
-### 📍 `/admin` — Admin Dashboard
-**Protected** — requires `admin` role
+### 📍 `/admin`: Admin Dashboard
+**Protected**: requires `admin` role
 - Manage products, users, orders, promotions, analytics, billing
 
-### 📍 `/seller` — Seller Dashboard
-**Protected** — requires `seller` role
+### 📍 `/seller`: Seller Dashboard
+**Protected**: requires `seller` role
 - Manage seller products, inventory, orders
 
-### 📍 `/add-address` — Add Delivery Address
+### 📍 `/add-address`: Add Delivery Address
 - Address form for user's shipping address
 
-### 📍 `/notifications` — Notification Center
+### 📍 `/notifications`: Notification Center
 - View all notifications
 
-### 📍 `/inbox` — Messages / Support
+### 📍 `/inbox`: Messages / Support
 - Customer support chat/messages
 
-### 📍 `/order-placed` — Order Success
+### 📍 `/order-placed`: Order Success
 - Shown after successfully placing an order
 
-### 📍 `/about` — About Us
+### 📍 `/about`: About Us
 - Company info page
 
-### 📍 `/legal` — Legal Pages
+### 📍 `/legal`: Legal Pages
 - Privacy Policy, Terms of Service, etc.
 
-### 📍 `/store` — Store Front
+### 📍 `/store`: Store Front
 - Vendor/store-specific page
 
 ---
@@ -165,18 +165,18 @@ Wilwa-main/
 ## 4. Components
 
 ### 🧩 `components/Navbar.jsx`
-- **Top navigation bar** — visible on most pages
+- **Top navigation bar**: visible on most pages
 - Contains: logo, search bar, categories dropdown, cart icon, user menu
 - **Styling**: Tailwind classes inside this file
 - To change: edit the JSX in this file
 
 ### 🧩 `components/MegaStoreHome.jsx`
-- **Main homepage content** — the large component rendered on `/`
+- **Main homepage content**: the large component rendered on `/`
 - Contains featured products, banners, flash deals, category sections
 - **This is where you change homepage layout/design**
 
 ### 🧩 `components/Footer.jsx`
-- **Site footer** — links, social media, newsletter signup
+- **Site footer**: links, social media, newsletter signup
 
 ### 🧩 `components/ProductCard.jsx`
 - **Reusable product card** used across the site
@@ -187,7 +187,7 @@ Wilwa-main/
 - Controls the big promotional banner images
 
 ### 🧩 `components/RouteShell.jsx`
-- **Page wrapper** — wraps all page content
+- **Page wrapper**: wraps all page content
 - Provides layout structure, page transitions
 
 ### 🧩 `components/RouteLoader.jsx`
@@ -366,11 +366,11 @@ All API routes live in **`app/api/`** and follow Next.js App Router convention.
 
 ### ⚙️ `package.json`
 - **Scripts:**
-  - `npm run dev` — Start dev server
-  - `npm run dev:turbo` — Start with Turbopack
-  - `npm run build` — Production build
-  - `npm start` — Start production server
-  - `npm run lint` — Run ESLint
+  - `npm run dev`: Start dev server
+  - `npm run dev:turbo`: Start with Turbopack
+  - `npm run build`: Production build
+  - `npm start`: Start production server
+  - `npm run lint`: Run ESLint
 
 ### ⚙️ `config/db.js`
 - **MongoDB connection** via Mongoose
@@ -398,8 +398,8 @@ All API routes live in **`app/api/`** and follow Next.js App Router convention.
 - Admin: `order_icon.svg`, `box_icon.svg`, `redirect_icon.svg`, `user_icon.svg`, `product_list_icon.svg`
 
 ### 📦 Data
-- **`assets/productData.js`** — Static product data (may be fallback)
-- **`assets/assets.js`** — Asset index/export file
+- **`assets/productData.js`**: Static product data (may be fallback)
+- **`assets/assets.js`**: Asset index/export file
 
 ---
 
@@ -433,12 +433,12 @@ All API routes live in **`app/api/`** and follow Next.js App Router convention.
 - **Info:** Blue (`#3b82f6`)
 
 ### Key CSS Classes Used
-- `page-enter` — Page entrance animation
-- `interactive-lift` — Hover lift effect on cards
-- `skeleton-shimmer` — Loading shimmer effect
-- `pattern-category-sketch` — Decorative category background
-- `animate-fade-in`, `animate-slide-up` — Entrance animations
-- `filter-scroll` — Custom scrollbar for filter panels
+- `page-enter`: Page entrance animation
+- `interactive-lift`: Hover lift effect on cards
+- `skeleton-shimmer`: Loading shimmer effect
+- `pattern-category-sketch`: Decorative category background
+- `animate-fade-in`, `animate-slide-up`: Entrance animations
+- `filter-scroll`: Custom scrollbar for filter panels
 
 ---
 
@@ -447,13 +447,13 @@ All API routes live in **`app/api/`** and follow Next.js App Router convention.
 ### 🎯 Frontend Control
 
 #### Change Homepage Content
-Edit `components/MegaStoreHome.jsx` — this is the main landing page. You can:
+Edit `components/MegaStoreHome.jsx`. This is the main landing page. You can:
 - Reorder sections
 - Change banners, featured products
 - Add/remove sections
 
 #### Change All Products Page
-Edit `app/all-products/page.jsx` — controls:
+Edit `app/all-products/page.jsx` to control:
 - Filter options (categories, price ranges, brands)
 - Sort options
 - Search behavior
@@ -487,7 +487,7 @@ Each page in `app/` folder corresponds to its route:
 ### 🎯 Backend Control
 
 #### Change Database Connection
-Edit `config/db.js` — MongoDB connection string
+Edit `config/db.js`: MongoDB connection string
 
 #### Add New API Endpoint
 Create a new folder in `app/api/` with a `route.js` file:
@@ -496,15 +496,15 @@ app/api/your-endpoint/route.js
 ```
 
 #### Change Database Models
-Edit files in `models/` — each file is a Mongoose schema
+Edit files in `models/`: each file is a Mongoose schema
 
 ### 🎯 Auth Control
 
 #### Change Protected Routes
-Edit `middleware.ts` — add/remove route patterns from matchers
+Edit `middleware.ts`: add/remove route patterns from matchers
 
 #### Change User Roles
-Edit `middleware.ts` lines 28-36 — role checking logic
+Edit `middleware.ts` lines 28-36: role checking logic
 
 ### 🎯 Running the Project
 

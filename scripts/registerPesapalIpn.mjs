@@ -7,8 +7,8 @@
 //   node scripts/registerPesapalIpn.mjs                       (uses APP_BASE_URL)
 //   node scripts/registerPesapalIpn.mjs https://your-tunnel.dev
 //
-// Re-running creates another registration rather than replacing the old one —
-// harmless, but keep the id you actually paste into .env.
+// Re-running creates another registration rather than replacing the old one.
+// Harmless, but keep the id you actually paste into .env.
 //
 // Requires PESAPAL_CONSUMER_KEY, PESAPAL_CONSUMER_SECRET and PESAPAL_ENV.
 
@@ -34,7 +34,7 @@ if (!baseUrl || !/^https?:\/\//.test(baseUrl)) {
 }
 
 if (baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1")) {
-    console.error("Pesapal must be able to reach this URL from the internet — localhost will not work.");
+    console.error("Pesapal must be able to reach this URL from the internet. Localhost will not work.");
     console.error("Start a tunnel first:  npx cloudflared tunnel --url http://localhost:3000");
     process.exit(1);
 }

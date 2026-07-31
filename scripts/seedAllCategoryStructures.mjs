@@ -1,6 +1,6 @@
 // Optional one-off seed: loads the full existing (previously hardcoded)
 // subcategory structure into the Category collection as real, editable
-// records — so you start from the structure the site already had instead of
+// records, so you start from the structure the site already had instead of
 // building every subcategory by hand. Idempotent: skips any subcategory that
 // already exists for a parent, so it will NOT overwrite or duplicate anything
 // you've already added or edited in /admin/categories.

@@ -628,7 +628,7 @@ const MyOrders = () => {
                                                             {returnStatusLabels[order.returnRequest.status] || order.returnRequest.status}
                                                         </p>
                                                         {/* All three are free text a user or seller typed, so they
-                                                            need an explicit break — a long unspaced string otherwise
+                                                            need an explicit break. A long unspaced string otherwise
                                                             widens the card past the screen. */}
                                                         <p className="mt-1.5 break-words"><span className="text-gray-400">Reason:</span> {order.returnRequest.reason}</p>
                                                         {order.returnRequest.note ? <p className="mt-0.5 break-words text-gray-500">{order.returnRequest.note}</p> : null}

@@ -33,7 +33,7 @@ const partnerTypes = [
   {
     icon: "creator",
     title: "Creators & reviewers",
-    body: "You make content for a Ugandan audience — unboxings, reviews, hauls, tech or beauty. We agree a scope and a fee per campaign, and supply products, imagery and any codes involved.",
+    body: "You make content for a Ugandan audience: unboxings, reviews, hauls, tech or beauty. We agree a scope and a fee per campaign, and supply products, imagery and any codes involved.",
     fit: "Best if you post regularly and can show your audience numbers.",
   },
   {
@@ -51,7 +51,7 @@ const partnerTypes = [
   {
     icon: "store",
     title: "Sellers",
-    body: "The most direct way to earn on Wilwa is to sell on it. Open a store, list your stock, and keep the margin on every order you fulfil — no partnership agreement needed.",
+    body: "The most direct way to earn on Wilwa is to sell on it. Open a store, list your stock, and keep the margin on every order you fulfil. No partnership agreement needed.",
     fit: "Self-serve and live right now.",
     cta: { label: "Become a vendor", href: "/become-a-vendor" },
   },
@@ -64,7 +64,7 @@ const steps = [
   },
   {
     title: "We come back with terms",
-    body: "Usually within a few working days. Scope, what each side does, how and when you get paid — written down before anything starts.",
+    body: "Usually within a few working days. Scope, what each side does, how and when you get paid: all written down before anything starts.",
   },
   {
     title: "Run it and get paid",
@@ -73,7 +73,7 @@ const steps = [
 ];
 
 const commitments = [
-  "No joining fee, ever — if anyone asks you to pay to become a Wilwa partner, it is not us.",
+  "No joining fee, ever. If anyone asks you to pay to become a Wilwa partner, it is not us.",
   "Terms in writing before you promote anything, including how payment is calculated.",
   "You are told which products are in stock, so you never send your audience to an empty page.",
   "You keep editorial control. We will not ask you to claim something about a product that is not true.",
@@ -170,7 +170,7 @@ const AffiliatesPage = () => {
                 </button>
               ) : (
                 <a
-                  href={`mailto:${PARTNERS_EMAIL}?subject=${encodeURIComponent(`Partnership — ${type.title}`)}`}
+                  href={`mailto:${PARTNERS_EMAIL}?subject=${encodeURIComponent(`Partnership: ${type.title}`)}`}
                   className="mt-2.5 inline-flex items-center gap-1 self-start text-[11.5px] font-bold text-orange-600 transition hover:gap-1.5 hover:text-orange-700"
                 >
                   Apply as {type.title.toLowerCase()}

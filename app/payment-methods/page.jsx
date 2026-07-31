@@ -72,7 +72,7 @@ const PaymentMethodsPage = () => {
         setPreferredMethod(saved);
       }
     } catch {
-      // Storage unavailable — the default stands.
+      // Storage unavailable. The default stands.
     }
   }, []);
 
@@ -153,7 +153,7 @@ const PaymentMethodsPage = () => {
               <h2 className="text-[13px] font-bold text-gray-950">How payment works</h2>
               <ul className="mt-2.5 space-y-2.5">
                 {[
-                  "Your preferred method is preselected at checkout — you can still switch it per order.",
+                  "Your preferred method is preselected at checkout. You can still switch it per order.",
                   "Mobile money is collected on delivery. Have the amount ready on your phone when the rider arrives.",
                   "You only pay once your order is in your hands. Nothing is charged when you place it.",
                 ].map((line) => (

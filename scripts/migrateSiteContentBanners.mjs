@@ -1,12 +1,12 @@
 // One-off migration: copies banner-shaped data out of the singleton SiteContent
-// document into standalone Banner documents. Safe to re-run — it skips any
+// document into standalone Banner documents. Safe to re-run. It skips any
 // SiteContent sub-item that already has a matching Banner (matched by type +
 // title + imageUrl) rather than blindly duplicating on a second run.
 //
 // Usage: node -r dotenv/config scripts/migrateSiteContentBanners.mjs
 // (or:   node scripts/migrateSiteContentBanners.mjs   if MONGODB_URI is already exported)
 //
-// This does NOT delete anything from SiteContent — the original banner
+// This does NOT delete anything from SiteContent. The original banner
 // sub-arrays are left in place as a free rollback path.
 
 import "dotenv/config";
@@ -128,7 +128,7 @@ const run = async () => {
 
     const siteContent = await SiteContent.findOne({ key: "homepage" }).lean();
     if (!siteContent) {
-        console.log("No SiteContent document found — nothing to migrate.");
+        console.log("No SiteContent document found. Nothing to migrate.");
         await mongoose.disconnect();
         return;
     }

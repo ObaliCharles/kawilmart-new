@@ -40,7 +40,7 @@ const ProductCard = ({ product }) => {
     const isOutOfStock = stockSnapshot.status === 'out';
     const { rating, reviewCount, hasRating, filledStars } = getProductRatingSnapshot(product);
     const soldCount = Math.max(0, Number(product.soldCount) || 0);
-    // Only admin-set merchandising tags render as badges — computed "system"
+    // Only admin-set merchandising tags render as badges. Computed "system"
     // labels (New Arrival / flash-deal / trending) are intentionally not shown
     // on the card.
     const badgeTags = (Array.isArray(product.tags)

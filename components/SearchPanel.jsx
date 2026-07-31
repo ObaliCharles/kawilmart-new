@@ -106,7 +106,7 @@ const TrendingSection = ({ trendingTerms, onPickTerm }) => (
   </div>
 );
 
-// Compact visual category tiles — uploaded PNG (or icon) on top, label under.
+// Compact visual category tiles. Uploaded PNG (or icon) on top, label under.
 const PopularCategoriesCards = ({ popularCategories, onPickCategory, columns = "grid-cols-4" }) => (
   <div>
     <SectionTitle>Popular Categories</SectionTitle>

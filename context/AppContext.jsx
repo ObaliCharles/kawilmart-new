@@ -555,7 +555,7 @@ export const AppContextProvider = (props) => {
     // rapid calls in the same tick each build on the other's optimistic
     // update instead of both computing from the same stale snapshot. Each
     // call also captures a sequence number and only applies its server
-    // response if no newer cart request has been issued since — otherwise
+    // response if no newer cart request has been issued since. Otherwise
     // a slow response can overwrite a faster, more recent one ("last
     // response wins" instead of "last request wins").
     const addToCart = async (itemId) => {

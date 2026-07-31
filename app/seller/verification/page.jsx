@@ -130,7 +130,7 @@ const SellerVerificationPage = () => {
                                     <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={uploading} onChange={handleUpload} />
                                 </label>
                             ) : (
-                                <p className="mt-3 text-xs font-medium text-emerald-700">Your store is verified — no further action needed.</p>
+                                <p className="mt-3 text-xs font-medium text-emerald-700">Your store is verified. No further action needed.</p>
                             )}
                         </div>
                     </>

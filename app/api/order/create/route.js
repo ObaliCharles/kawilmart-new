@@ -345,7 +345,7 @@ export async function POST(request) {
     // Gateway checkout: hand the shopper off to the hosted payment page and
     // stop here. The cart stays filled, nobody is told the order was placed,
     // and the seller sees nothing actionable until the webhook confirms the
-    // money — see app/api/webhooks/payments. Stock stays reserved meanwhile so
+    // money. See app/api/webhooks/payments. Stock stays reserved meanwhile so
     // a paying customer cannot lose the item mid-payment.
     if (payUpfront) {
       try {

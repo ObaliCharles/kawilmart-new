@@ -15,7 +15,7 @@ import { getRecentlyViewedIds } from "@/lib/recentlyViewed";
 
 const takeProducts = (products, count) => products.slice(0, count);
 
-// Compact horizontal product strip — used for "Recently viewed" and other
+// Compact horizontal product strip. Used for "Recently viewed" and other
 // lightweight rails. Scrolls sideways; each tile links to the product.
 const ProductStripRail = ({ title, products, navigate, prefetchRoute, formatCurrency, className = "" }) => {
   if (!products.length) return null;
@@ -44,7 +44,7 @@ const ProductStripRail = ({ title, products, navigate, prefetchRoute, formatCurr
   );
 };
 
-// Banner slideshow: exactly ONE banner visible at a time (each shown once —
+// Banner slideshow: exactly ONE banner visible at a time (each shown once,
 // no duplication), held for 10 seconds, then sliding smoothly to the next,
 // looping forever. Framed by colored bars top and bottom.
 const BANNER_SLIDESHOW_HOLD_MS = 10000;
@@ -407,7 +407,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
 };
 
 // A neutral, branded empty-state for banner slots that have no admin-uploaded
-// banner yet. This deliberately does NOT fall back to a product photo — that
+// banner yet. This deliberately does NOT fall back to a product photo. That
 // was the cause of the "same picture in every container" bug, since every
 // empty slot reused the first product image. Renders the same regardless of
 // catalog, keeps the layout intact, and stays clickable.
@@ -426,7 +426,7 @@ const PromoPlaceholder = ({ navigate, href = "/all-products", className = "", la
   </button>
 );
 
-// No products[0] fallback — an unmatched category returns null so its tile
+// No products[0] fallback. An unmatched category returns null so its tile
 // shows an icon instead of an unrelated product's photo.
 const productForCategory = (products, category) => (
   products.find((product) => categoryMatchesSelection(product.category, category)) || null
@@ -486,7 +486,7 @@ const MobileBrandDisplay = ({ brands = [], showcases = [], navigate }) => {
   return (
     <section className="mt-4 overflow-hidden rounded-2xl bg-white px-2.5 py-2 shadow-sm ring-1 ring-gray-100">
       {/* Sized so four logos plus a sliver of the fifth land inside a 360px
-          viewport — the peek is what tells the shopper the row scrolls. */}
+          viewport. The peek is what tells the shopper the row scrolls. */}
       <div className="scrollbar-none flex items-center gap-2.5 overflow-x-auto">
         {uniqueBrands.map((brand) => (
           <button
@@ -700,7 +700,7 @@ const MobileHome = ({
 }) => {
   const heroFallback = sortedProducts[0];
   const activeDealIndex = activePromo?._activeDealIndex || 0;
-  // No fallback to an arbitrary product — Deal of the Day only shows when a
+  // No fallback to an arbitrary product. Deal of the Day only shows when a
   // real active flash deal exists, otherwise the section is hidden.
   const activeDealOfDayBanner = dealOfDayBanners.length
     ? dealOfDayBanners[activeDealIndex % dealOfDayBanners.length]
@@ -712,7 +712,7 @@ const MobileHome = ({
   const topStoreCards = storeCards;
   const promoHref = getContentHref(activePromo, "/all-products?sort=newest");
   const hasRealPromo = Boolean(activePromo?.imageUrl);
-  // Slideshow pool: featured + sidebar banners ONLY — promo cards are never
+  // Slideshow pool: featured + sidebar banners ONLY. Promo cards are never
   // included (they belong to the promocard), and anything matching a promo
   // slide's image is filtered so no banner can ever appear twice on the page.
   const promoImageUrls = new Set(
@@ -850,7 +850,7 @@ const MobileHome = ({
           className="relative mt-6 h-44 cursor-pointer overflow-hidden rounded-lg bg-[#101923] text-white shadow-sm"
         >
           {/* Keyed by product so each rotation crossfades in at the exact
-              same card size — no jumping between deals. */}
+              same card size, no jumping between deals. */}
           <div key={dealOfDay._id} className="animate-deal-swap flex h-full w-full items-stretch">
             {activeDealOfDayBanner ? (
               <>
@@ -1608,7 +1608,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   }, []);
   const resolvedContent = useMemo(() => resolveSiteContent(siteContent), [siteContent]);
   // Real top-level categories (the static marketplace list plus any the admin
-  // added), each with its icon/image — replaces the old hardcoded category
+  // added), each with its icon/image. Replaces the old hardcoded category
   // rails so what shows is always real, admin-manageable categories. Admins
   // attach an uploaded PNG to any static category by creating a top-level
   // Category record of the same name with an image; it's merged in here.
@@ -1633,7 +1633,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   }, [customTopCategories]);
   // "Top Categories" quick-pick rail: static defaults (T-Shirt, Shoes, ...)
   // merged with admin-managed records stored under the TOP_RAIL_PARENT
-  // sentinel — an uploaded PNG on a matching record replaces the tile image,
+  // sentinel. An uploaded PNG on a matching record replaces the tile image,
   // and extra records become additional tiles.
   const topRailTiles = useMemo(() => {
     const railRecords = (subcategoriesByParent?.get(TOP_RAIL_PARENT) || [])
@@ -1673,7 +1673,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const sortedProducts = sortProductsForLiveShowcase(storefrontProducts);
   const heroProduct = sortedProducts[0];
   // Flash Deals only ever shows products that are genuinely flagged as an
-  // active flash deal (real discount, within its start/end window — see
+  // active flash deal (real discount, within its start/end window, see
   // getProductActivitySnapshot). Products merely marked "featured" or
   // "discount" promotionType are a different concept and must not appear
   // here, or the countdown has nothing real to count down to.
@@ -1693,7 +1693,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const brandShowcases = resolvedContent.brandShowcases || [];
   // A "Deal of the Day" banner is any admin-uploaded promo/sidebar banner
   // pointed at a product (via productId) that currently has a genuinely
-  // active flash deal — the countdown shown for it is that specific
+  // active flash deal. The countdown shown for it is that specific
   // product's own deal, not a generic site-wide timer.
   const dealOfDayBanners = [...promoSlides, ...sidebarBanners].filter((banner) => {
     if (!banner.productId) return false;

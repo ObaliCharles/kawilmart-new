@@ -222,7 +222,7 @@ export default function RiderDashboard() {
                         </div>
                         <p className="max-w-sm text-[11px] text-gray-400 sm:text-right">
                             {activeAcceptedTrips > 0
-                                ? `You still have ${activeAcceptedTrips} active ${activeAcceptedTrips === 1 ? 'trip' : 'trips'} — finish ${activeAcceptedTrips === 1 ? 'it' : 'them'} before marking yourself ready.`
+                                ? `You still have ${activeAcceptedTrips} active ${activeAcceptedTrips === 1 ? 'trip' : 'trips'}. Finish ${activeAcceptedTrips === 1 ? 'it' : 'them'} before marking yourself ready.`
                                 : 'Tell sellers and admins whether you can take delivery work.'}
                         </p>
                     </div>

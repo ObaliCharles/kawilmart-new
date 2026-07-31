@@ -8,7 +8,7 @@ import obaliPhoto from "@/assets/obali.png";
 import laloyoPhoto from "@/assets/laloyo.png";
 import rubangakenePhoto from "@/assets/rubangakene.png";
 
-// One line-icon set at a single 1.7 stroke weight. No emoji anywhere — every
+// One line-icon set at a single 1.7 stroke weight. No emoji anywhere. Every
 // glyph here is drawn so it inherits brand colour and scales cleanly.
 const Icon = ({ type, className = "h-5 w-5" }) => {
   const paths = {
@@ -310,7 +310,7 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <SectionTitle>Our Journey</SectionTitle>
 
-          {/* Horizontal rail on desktop, accordion on phones — four blocks of
+          {/* Horizontal rail on desktop, accordion on phones. Four blocks of
               copy side by side is unreadable at 360px. */}
           <div className="mt-8 hidden md:block">
             <div className="relative">

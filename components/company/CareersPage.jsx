@@ -50,7 +50,7 @@ const values = [
 ];
 
 // These are the functions the marketplace needs staffed, not a list of live
-// vacancies — so the page says so plainly instead of implying open headcount.
+// vacancies, so the page says so plainly instead of implying open headcount.
 const teams = [
   {
     icon: "code",
@@ -97,7 +97,7 @@ const applicationSteps = [
   },
   {
     title: "Tell us what you have done",
-    body: "A CV or a link is enough. What we read closest is a short note on something you built, sold, fixed or ran — and what it changed.",
+    body: "A CV or a link is enough. What we read closest is a short note on something you built, sold, fixed or ran, and what it changed.",
   },
   {
     title: "A conversation",
@@ -147,7 +147,7 @@ const CareersPage = () => {
 
           <div className="mt-5 flex flex-wrap gap-2">
             <a
-              href={`mailto:${CAREERS_EMAIL}?subject=${encodeURIComponent("Careers — application")}`}
+              href={`mailto:${CAREERS_EMAIL}?subject=${encodeURIComponent("Careers: application")}`}
               className="rounded-full bg-white px-5 py-2.5 text-[12.5px] font-bold text-orange-700 transition hover:bg-orange-50"
             >
               Send an application
@@ -210,7 +210,7 @@ const CareersPage = () => {
                     ))}
                   </div>
                   <a
-                    href={`mailto:${CAREERS_EMAIL}?subject=${encodeURIComponent(`Careers — ${team.title}`)}`}
+                    href={`mailto:${CAREERS_EMAIL}?subject=${encodeURIComponent(`Careers: ${team.title}`)}`}
                     className="mt-2.5 inline-flex items-center gap-1 text-[11.5px] font-bold text-orange-600 transition hover:gap-1.5 hover:text-orange-700"
                   >
                     Apply for {team.title.toLowerCase()}
@@ -253,7 +253,7 @@ const CareersPage = () => {
 
             <div className="mt-3.5 space-y-2">
               <a
-                href={`mailto:${CAREERS_EMAIL}?subject=${encodeURIComponent("Careers — application")}`}
+                href={`mailto:${CAREERS_EMAIL}?subject=${encodeURIComponent("Careers: application")}`}
                 className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 transition hover:border-orange-400/40 hover:bg-white/10"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-600/20 text-orange-400">

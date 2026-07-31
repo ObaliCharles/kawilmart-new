@@ -5,7 +5,7 @@ import { useAppContext } from "@/context/AppContext";
 
 // A hub, not a blog: every card leads somewhere that already exists in the app
 // rather than to an article we would have to invent. The advice itself matches
-// how the marketplace behaves — pay on delivery, per-seller orders, 7-day
+// how the marketplace behaves. Pay on delivery, per-seller orders, 7-day
 // returns, ratings drawn from verified purchases.
 const Icon = ({ type, className = "h-5 w-5" }) => {
   const paths = {
@@ -35,7 +35,7 @@ const guides = [
   {
     icon: "pay",
     title: "Paying with mobile money",
-    body: "Pick Cash, MTN Mobile Money or Airtel Money at checkout. All three are collected when the rider hands your order over — nothing leaves your wallet when you place it. Have the exact amount ready in your MoMo balance so the handover is quick.",
+    body: "Pick Cash, MTN Mobile Money or Airtel Money at checkout. All three are collected when the rider hands your order over. Nothing leaves your wallet when you place it. Have the exact amount ready in your MoMo balance so the handover is quick.",
     action: "Payment methods",
     href: "/payment-methods",
     tone: "text-emerald-600 bg-emerald-50",
@@ -59,7 +59,7 @@ const guides = [
   {
     icon: "star",
     title: "Reading ratings before you buy",
-    body: "Ratings on a product come from people who bought it, and reviews from a confirmed order carry a verified badge. Read the three- and four-star reviews first — they describe the trade-offs that five-star ones skip.",
+    body: "Ratings on a product come from people who bought it, and reviews from a confirmed order carry a verified badge. Read the three- and four-star reviews first. They describe the trade-offs that five-star ones skip.",
     action: "Browse products",
     href: "/all-products",
     tone: "text-orange-600 bg-orange-50",
@@ -75,7 +75,7 @@ const guides = [
   {
     icon: "grid",
     title: "Finding things faster",
-    body: "Search by product, brand or category from the top bar, then narrow with the price, brand, rating and condition filters. Save anything you are undecided on to your wishlist — it follows your account between phone and desktop.",
+    body: "Search by product, brand or category from the top bar, then narrow with the price, brand, rating and condition filters. Save anything you are undecided on to your wishlist. It follows your account between phone and desktop.",
     action: "All categories",
     href: "/categories",
     tone: "text-violet-600 bg-violet-50",
@@ -85,7 +85,7 @@ const guides = [
 const safetyChecks = [
   {
     ok: true,
-    text: "Keep the whole order inside Wilwa — chat, payment and delivery. That is what makes a return or refund enforceable.",
+    text: "Keep the whole order inside Wilwa: chat, payment and delivery. That is what makes a return or refund enforceable.",
   },
   {
     ok: true,
@@ -105,7 +105,7 @@ const safetyChecks = [
   },
   {
     ok: false,
-    text: "We will never call to ask for your password, PIN or a one-time code. Anyone who does is not us — report them.",
+    text: "We will never call to ask for your password, PIN or a one-time code. Anyone who does is not us. Report them.",
   },
 ];
 

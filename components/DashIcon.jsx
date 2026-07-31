@@ -1,7 +1,7 @@
 import React from "react";
 
 // Shared professional line-icon set (Lucide-style 24px stroke paths) used
-// across admin, seller, and rider dashboards — replaces the emoji glyphs that
+// across admin, seller, and rider dashboards. Replaces the emoji glyphs that
 // previously stood in for navigation and stat icons.
 const ICON_PATHS = {
   dashboard: "M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z",

@@ -3,10 +3,10 @@ import { useEffect, useRef } from "react";
 
 // Renders the flying product thumbnail on top of everything else, animating
 // it from wherever "Add to cart" was tapped to the cart icon in the nav.
-// Purely a visual flourish — the actual cart mutation already happened by
+// Purely a visual flourish. The actual cart mutation already happened by
 // the time this runs (see addToCart in AppContext).
 // Takes its state as props (rather than useAppContext) because it is mounted
-// directly inside AppContext's own provider — consuming the hook here would
+// directly inside AppContext's own provider. Consuming the hook here would
 // create a circular import between the context module and this component.
 const CartFlyAnimation = ({ flyToCartRequest, clearFlyToCartRequest, cartIconRef, bumpCartIcon }) => {
   const nodeRef = useRef(null);

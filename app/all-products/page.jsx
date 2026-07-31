@@ -150,7 +150,7 @@ const getBrandLabel = (product) => {
 };
 
 const getTileProducts = (products, tile, fallbackCategory, count = 4) => {
-  // A real DB subcategory tile matches exactly (category + subcategory) —
+  // A real DB subcategory tile matches exactly (category + subcategory),
   // no keyword guessing, no fallback to unrelated products in this category.
   if (tile?.subcategory) {
     const exactMatches = products.filter((product) => (
@@ -844,7 +844,7 @@ function AllProductsInner() {
           )}
         </div>
 
-        {/* Subcategory hero — admin-uploaded background + name */}
+        {/* Subcategory hero. Admin-uploaded background + name */}
         {selectedSubcategory ? (
           <section className="relative mb-3 flex min-h-[110px] items-end overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-amber-400 p-4 text-white sm:min-h-[150px]">
             {selectedSubcategoryRecord?.heroImage ? (

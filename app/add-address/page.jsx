@@ -120,7 +120,7 @@ const AddAddress = () => {
                     longitude: Number(position.coords.longitude.toFixed(6)),
                 }));
                 setCapturingLocation(false);
-                toast.success("Location pinned — riders will find you faster");
+                toast.success("Location pinned. Riders will find you faster");
             },
             () => {
                 setCapturingLocation(false);
@@ -663,7 +663,7 @@ const AddAddress = () => {
                                     {[
                                         { icon: "clock", tone: "bg-sky-50 text-sky-600", body: "A precise village and landmark cuts delivery time." },
                                         { icon: "pin", tone: "bg-orange-50 text-orange-600", body: "Pin your GPS for door-level accuracy." },
-                                        { icon: "phone", tone: "bg-emerald-50 text-emerald-600", body: "Riders call before arriving — keep your number reachable." },
+                                        { icon: "phone", tone: "bg-emerald-50 text-emerald-600", body: "Riders call before arriving, so keep your number reachable." },
                                     ].map((item) => (
                                         <li key={item.icon} className="flex items-start gap-2.5">
                                             <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${item.tone}`}>

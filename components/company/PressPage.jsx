@@ -7,7 +7,7 @@ import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import { marketplaceFilterCategories } from "@/lib/marketplaceCategories";
 
-// Every fact below is checked against what the product actually does — payment
+// Every fact below is checked against what the product actually does. Payment
 // options from lib/orderLifecycle, the per-seller order split from checkout,
 // the 7-day return window from the order pages. No press releases are invented
 // here: if we have not published one, the page says so.
@@ -18,7 +18,7 @@ const LOGO_FILE = "/wilwa-email-logo.png";
 const BOILERPLATE =
   "Wilwa is a Ugandan online marketplace for everyday essentials, connecting local sellers with buyers " +
   "across the country. Shoppers browse products from independent vendors in one catalogue and pay the way " +
-  "they already do — cash, MTN Mobile Money or Airtel Money, all collected on delivery. Sellers get their " +
+  "they already do: cash, MTN Mobile Money or Airtel Money, all collected on delivery. Sellers get their " +
   "own storefront and dashboard to list stock, manage orders and track earnings.";
 
 const Icon = ({ type, className = "h-5 w-5" }) => {
@@ -61,7 +61,7 @@ const fastFacts = [
     icon: "pay",
     label: "How buyers pay",
     value: "Cash, MTN MoMo, Airtel Money",
-    detail: "All three are collected on delivery — nothing is charged at the moment the order is placed.",
+    detail: "All three are collected on delivery. Nothing is charged at the moment the order is placed.",
   },
   {
     icon: "grid",
@@ -116,7 +116,7 @@ const PressPage = () => {
       toast.success("Copied to clipboard");
       setTimeout(() => setCopied((current) => (current === key ? "" : current)), 2000);
     } catch {
-      toast.error("Could not copy — select the text and copy manually");
+      toast.error("Could not copy. Select the text and copy manually");
     }
   };
 

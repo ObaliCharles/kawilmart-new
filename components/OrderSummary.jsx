@@ -68,7 +68,7 @@ const OrderSummary = () => {
         setPaymentMethod(saved);
       }
     } catch {
-      // Storage unavailable — default stands.
+      // Storage unavailable. Default stands.
     }
   }, []);
 
@@ -165,7 +165,7 @@ const OrderSummary = () => {
 
       if (data.success && data.requiresPayment && data.redirectUrl) {
         // Gateway checkout: the order is not confirmed yet, so leave the cart
-        // and the idempotency key alone — if the shopper abandons the payment
+        // and the idempotency key alone. If the shopper abandons the payment
         // page, retrying reuses the same key instead of duplicating the order.
         toast.success(data.message || "Redirecting to payment");
         window.location.href = data.redirectUrl;
@@ -269,7 +269,7 @@ const OrderSummary = () => {
                 {selectedAddress
                   ? `${selectedAddress.fullName} · ${formatAddressLine(selectedAddress)}`
                   : userAddresses.length === 0
-                    ? "No address — add one"
+                    ? "No address. Add one"
                     : "Select address"}
               </span>
               <svg className={`h-3 w-3 shrink-0 text-gray-400 ${isDropdownOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">

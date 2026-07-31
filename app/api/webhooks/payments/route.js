@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getActiveGateway } from "@/lib/payments";
 import { settleTransaction } from "@/lib/paymentSettlement";
 
-// Shared by both verbs. Gateways differ in how they notify — Flutterwave POSTs
-// a signed JSON body, Pesapal GETs an unsigned query string — but the handling
+// Shared by both verbs. Gateways differ in how they notify. Flutterwave POSTs
+// a signed JSON body, Pesapal GETs an unsigned query string, but the handling
 // is identical because neither payload is trusted: we take only the transaction
 // id from it and ask the gateway what really happened.
 const handleNotification = async (request, { body = null } = {}) => {
@@ -46,7 +46,7 @@ export async function POST(request) {
         return await handleNotification(request, { body });
     } catch (error) {
         console.error("Payment webhook error:", error);
-        // 500 asks the gateway to retry — better than silently losing a payment.
+        // 500 asks the gateway to retry. Better than silently losing a payment.
         return NextResponse.json({ success: false, message: "Webhook processing failed" }, { status: 500 });
     }
 }

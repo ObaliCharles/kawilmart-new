@@ -11,7 +11,7 @@ const categoryHref = (category, subcategory) => {
 };
 
 // Subcategory tile: shows the admin-uploaded PNG, then emoji, then a generic
-// glyph. Never a product photo — that caused the "one product's image shows on
+// glyph. Never a product photo. That caused the "one product's image shows on
 // every tile" repetition.
 const CategoryTile = ({ label, icon, imageUrl, onClick }) => (
   <button

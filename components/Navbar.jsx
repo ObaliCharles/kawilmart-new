@@ -124,7 +124,7 @@ const SearchIcon = () => (
 // Animated placeholder overlay: shows "Search "<product name>"" where the
 // name rotates and each new name rolls up + fades in (via .animate-search-hint,
 // re-mounted by the `key`). Owns its own 2.6s ticker so the rotation only
-// re-renders this tiny overlay — not the entire Navbar.
+// re-renders this tiny overlay, not the entire Navbar.
 const AnimatedSearchHint = ({ visible, words = [], textSize = "text-[13px]" }) => {
   const [wordIndex, setWordIndex] = useState(0);
 
@@ -500,7 +500,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
   const showRider = isRider || userRole === 'rider';
   const showSeller = isSeller || userRole === 'seller' || userRole === 'admin';
 
-  // Smart search placeholder — cycles through real product names instead of
+  // Smart search placeholder. Cycles through real product names instead of
   // static text, so the search bar hints at what's actually in the catalog.
   const searchPlaceholderNames = useMemo(() => {
     const names = products.map((product) => product?.name).filter(Boolean);
@@ -534,7 +534,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
 
     // Admin-added top-level categories can share names with the static
     // defaults (e.g. a "Fashion" record created just to hold an uploaded
-    // icon) — de-duplicate case-insensitively so search never lists a
+    // icon). De-duplicate case-insensitively so search never lists a
     // category twice (also keeps React keys unique).
     const seenCategoryValues = new Set();
     const categoryOptions = [
@@ -581,7 +581,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
   );
 
   // Trending searches derived from the real catalog (top categories + top
-  // brands by listing count) — never hardcoded, so it can't drift from what
+  // brands by listing count), never hardcoded, so it can't drift from what
   // actually exists in the store.
   const trendingSearchTerms = useMemo(() => {
     const categoryCounts = new Map();
@@ -599,7 +599,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
   }, [products, brands]);
 
   // Admin-uploaded category PNGs by category name (same images the homepage
-  // rail uses) — shared by the search panel and the hover category dropdowns.
+  // rail uses). Shared by the search panel and the hover category dropdowns.
   const categoryImagesByName = useMemo(
     () => new Map((customTopCategories || []).map((category) => [category.name, category.imageUrl || ""])),
     [customTopCategories]
@@ -903,7 +903,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
     // Let Clerk own the redirect: it navigates to "/" only after the session
     // is actually torn down, so the app never briefly renders the signed-in
     // UI on the next page. The old code called navigate('/') immediately after
-    // signOut(), before Clerk's `user` had flipped to null — which is why the
+    // signOut(), before Clerk's `user` had flipped to null, which is why the
     // account state used to linger until a manual refresh.
     try {
       await signOut?.({ redirectUrl: '/' });
@@ -1324,7 +1324,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
             </button>
           ))}
 
-          {/* Cart: raised circular FAB — the centerpiece of the dock and the
+          {/* Cart: raised circular FAB. The centerpiece of the dock and the
               landing target for the fly-to-cart animation. */}
           <div className="relative flex min-h-10 flex-col items-center justify-end gap-0.5">
             <button

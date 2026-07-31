@@ -52,7 +52,7 @@ export default function AdminCategoriesPage() {
     );
 
     // Records that back the homepage "Top Categories" rail tiles (T-Shirt,
-    // Shoes, Watches, ...) — stored under the TOP_RAIL_PARENT sentinel.
+    // Shoes, Watches, ...). Stored under the TOP_RAIL_PARENT sentinel.
     const topRailRecords = useMemo(
         () => categories.filter((category) => category.parentValue === TOP_RAIL_PARENT),
         [categories]
@@ -234,8 +234,8 @@ export default function AdminCategoriesPage() {
                 <h1 className="text-lg font-semibold tracking-tight text-gray-950">Categories</h1>
                 <p className="mt-0.5 text-xs text-gray-500">
                     Manage subcategories (departments) shown under each top-level category, and add new top-level
-                    categories when needed. This is the single source of truth for category browsing across the site —
-                    products get tagged to a subcategory from here in the product form.
+                    categories when needed. This is the single source of truth for category browsing across the site.
+                    Products get tagged to a subcategory from here in the product form.
                 </p>
             </div>
 
@@ -309,7 +309,7 @@ export default function AdminCategoriesPage() {
                         className="mt-1 w-full rounded-lg bg-gray-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-200"
                     >
                         <option value="">Top-level category (no parent)</option>
-                        <option value={TOP_RAIL_PARENT}>🏠 Homepage — Top Categories rail (small PNG tiles)</option>
+                        <option value={TOP_RAIL_PARENT}>🏠 Homepage: Top Categories rail (small PNG tiles)</option>
                         {parentOptions.map((option) => (
                             <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
@@ -358,7 +358,7 @@ export default function AdminCategoriesPage() {
                 <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 text-sm text-gray-500">Loading categories...</div>
             ) : (
                 <div className="space-y-4">
-                    {/* Default (built-in) categories — attach an image/icon to any of them */}
+                    {/* Default (built-in) categories. Attach an image/icon to any of them */}
                     <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
                         <div className="border-b border-gray-100 px-4 py-3">
                             <h2 className="text-sm font-bold text-gray-900">Default categories</h2>
@@ -395,10 +395,10 @@ export default function AdminCategoriesPage() {
                     {/* Homepage Top Categories rail (T-Shirt, Shoes, Watches, ...) */}
                     <div className="overflow-hidden rounded-xl bg-white ring-1 ring-gray-100">
                         <div className="border-b border-gray-100 px-4 py-3">
-                            <h2 className="text-sm font-bold text-gray-900">Homepage — Top Categories rail</h2>
+                            <h2 className="text-sm font-bold text-gray-900">Homepage: Top Categories rail</h2>
                             <p className="mt-0.5 text-[11px] text-gray-400">
                                 The quick-pick tiles on the mobile homepage (T-Shirt, Shirt, Shoes, Watches, Bag...). Upload a small PNG for each;
-                                add more tiles via the form with &quot;Homepage — Top Categories rail&quot; as the parent.
+                                add more tiles via the form with &quot;Homepage: Top Categories rail&quot; as the parent.
                             </p>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2">
@@ -498,7 +498,7 @@ export default function AdminCategoriesPage() {
 
                     {categories.length === 0 && (
                         <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 text-sm text-gray-500">
-                            No subcategories yet. Add one above — pick a top-level category as its parent.
+                            No subcategories yet. Add one above, then pick a top-level category as its parent.
                         </div>
                     )}
                 </div>

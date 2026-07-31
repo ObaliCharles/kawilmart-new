@@ -41,7 +41,7 @@ const OrderPlacedContent = () => {
         return true
       }
     } catch {
-      // Keep waiting — a transient error here should not tell the shopper
+      // Keep waiting. A transient error here should not tell the shopper
       // their payment failed when it may well have succeeded.
     }
 
@@ -87,7 +87,7 @@ const OrderPlacedContent = () => {
     },
     checking: {
       title: 'Confirming Your Payment',
-      body: 'We are checking with your mobile money provider. This usually takes a few seconds — please do not close this page.',
+      body: 'We are checking with your mobile money provider. This usually takes a few seconds. Please do not close this page.',
       spinner: true,
     },
     paid: {
@@ -102,7 +102,7 @@ const OrderPlacedContent = () => {
     },
     slow: {
       title: 'Still Confirming',
-      body: 'Your payment is taking longer than usual to confirm. It will update automatically — you can check the status on your orders page.',
+      body: 'Your payment is taking longer than usual to confirm. It will update automatically. You can check the status on your orders page.',
       spinner: false,
     },
   }[status]

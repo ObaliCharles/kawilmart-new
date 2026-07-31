@@ -86,7 +86,7 @@ const Cart = () => {
             <p className="text-[11px] text-gray-500">{cartCount} item{cartCount === 1 ? "" : "s"}</p>
           </header>
 
-          {/* Two-pane from md up — tablets have the width for it, and waiting
+          {/* Two-pane from md up. Tablets have the width for it, and waiting
               until lg left an awkward full-width summary on iPad portrait. */}
           <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_16rem] md:gap-4 lg:grid-cols-[minmax(0,1fr)_17.5rem]">
             <section className="space-y-2">
