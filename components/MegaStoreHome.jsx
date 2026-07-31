@@ -212,7 +212,7 @@ const ContentImage = ({ src, alt, className, width, height, priority = false }) 
       {!loaded ? <Skeleton className="absolute inset-0 z-0 h-full w-full rounded-[inherit]" /> : null}
       <Image
         src={imageSrc || fallbackImage}
-        alt={alt || "KawilMart offer"}
+        alt={alt || "Wilwa offer"}
         width={width}
         height={height}
         className="relative z-0 h-full w-full object-cover"
@@ -364,7 +364,7 @@ const HeroImageSlider = ({ slides, currentIndex, onSelect, navigate, className =
             >
               <ContentImage
                 src={slide.imageUrl}
-                alt={slide.title || `KawilMart offer ${index + 1}`}
+                alt={slide.title || `Wilwa offer ${index + 1}`}
                 width={1200}
                 height={520}
                 priority={priority && index === 0}
@@ -420,7 +420,7 @@ const PromoPlaceholder = ({ navigate, href = "/all-products", className = "", la
     <span className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/10" aria-hidden="true" />
     <span className="absolute -bottom-12 -left-6 h-28 w-28 rounded-full bg-white/10" aria-hidden="true" />
     <span className="relative z-10 flex flex-col items-center gap-2 px-4 text-center">
-      <Image src={assets.logo} alt="KawilMart" width={40} height={40} className="h-8 w-auto brightness-0 invert" />
+      <Image src={assets.logo} alt="Wilwa" width={40} height={40} className="h-8 w-auto brightness-0 invert" />
       <span className="text-xs font-bold text-white sm:text-sm">{label}</span>
     </span>
   </button>
@@ -1123,7 +1123,7 @@ const DesktopCategorySidebar = ({ categories, navigate }) => {
               </span>
               <div className="min-w-0">
                 <h3 className="truncate text-base font-extrabold text-white">{activeCategoryValue === "Deals & Clearance" ? "Deals & Clearance" : activeCategory.label}</h3>
-                <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-white/70">{activeCategoryValue === "Deals & Clearance" ? "Limited-time offers and markdowns across KawilMart." : activeMeta.description}</p>
+                <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-white/70">{activeCategoryValue === "Deals & Clearance" ? "Limited-time offers and markdowns across Wilwa." : activeMeta.description}</p>
               </div>
             </div>
             <div className="mt-4 grid gap-2">
@@ -1904,7 +1904,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
               ) : null}
             </div>
           ) : (
-            <PromoPlaceholder navigate={navigate} className="h-[390px] w-full rounded-lg" label="Shop the KawilMart marketplace" />
+            <PromoPlaceholder navigate={navigate} className="h-[390px] w-full rounded-lg" label="Shop the Wilwa marketplace" />
           )}
 
           <DesktopPromoStack items={desktopPromoCards} navigate={navigate} prefetchRoute={prefetchRoute} />

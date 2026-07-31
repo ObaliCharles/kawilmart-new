@@ -3,9 +3,9 @@ import Navbar from "@/components/Navbar";
 import PressPage from "@/components/company/PressPage";
 
 export const metadata = {
-  title: "KawilMart | Press & Media",
+  title: "Wilwa | Press & Media",
   description:
-    "Media enquiries, brand assets and fast facts about KawilMart, Uganda's marketplace for everyday essentials.",
+    "Media enquiries, brand assets and fast facts about Wilwa, Uganda's marketplace for everyday essentials.",
 };
 
 const Press = () => (

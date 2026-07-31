@@ -3,9 +3,9 @@ import Navbar from "@/components/Navbar";
 import HelpCenterPage from "@/components/help/HelpCenterPage";
 
 export const metadata = {
-  title: "KawilMart | Help Center",
+  title: "Wilwa | Help Center",
   description:
-    "Track orders, manage payments, resolve delivery issues, and reach KawilMart support.",
+    "Track orders, manage payments, resolve delivery issues, and reach Wilwa support.",
 };
 
 const HelpPage = () => {

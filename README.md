@@ -1,6 +1,6 @@
-# KawilMart
+# Wilwa
 
-KawilMart is a full-stack **Next.js marketplace platform** built for Northern Uganda. It supports buyers, sellers, riders, and admins with product management, order operations, billing workflows, notifications, and support chat.
+Wilwa is a full-stack **Next.js marketplace platform** built for Northern Uganda. It supports buyers, sellers, riders, and admins with product management, order operations, billing workflows, notifications, and support chat.
 
 ---
 
@@ -19,8 +19,8 @@ KawilMart is a full-stack **Next.js marketplace platform** built for Northern Ug
 1. Clone the repo
 
     ```bash
-    git clone https://github.com/ObaliCharles/KawilMart.git
-    cd KawilMart
+    git clone https://github.com/ObaliCharles/Wilwa.git
+    cd Wilwa
     ```
 
 2. Copy the environment template and fill in your real keys
@@ -93,4 +93,4 @@ This project is licensed under the **dancecode License**.
 
 ## 🌟 Contributors
 
-Thanks to everyone who contributes to **KawilMart**.
+Thanks to everyone who contributes to **Wilwa**.

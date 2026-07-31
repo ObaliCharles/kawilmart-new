@@ -402,7 +402,7 @@ export async function POST(request) {
         read: false,
         date: new Date(),
       },
-      emailTitle: createdOrders.length > 1 ? "Your KawilMart orders were placed" : "Your KawilMart order was placed",
+      emailTitle: createdOrders.length > 1 ? "Your Wilwa orders were placed" : "Your Wilwa order was placed",
       emailMessage: `We received your ${getDeliveryModeLabel(normalizedDeliveryMode)} order for ${totalItems} item${totalItems === 1 ? "" : "s"} totaling ${formatCurrency(totalAmount)}. You can track progress from your orders page.`,
       ctaLabel: "Track my order",
       ctaPath: "/my-orders",

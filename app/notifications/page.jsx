@@ -557,7 +557,7 @@ const InboxPage = () => {
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center justify-between gap-2">
                           <span className={`truncate text-sm ${thread.unreadCount ? "font-semibold text-gray-950" : "font-medium text-gray-800"}`}>
-                            {thread.peer?.name || "KawilMart user"}
+                            {thread.peer?.name || "Wilwa user"}
                           </span>
                           <span className="shrink-0 text-[10px] text-gray-400">{formatWhen(thread.lastMessage?.date)}</span>
                         </span>
@@ -589,7 +589,7 @@ const InboxPage = () => {
         ) : (
           <div className="mt-4 space-y-3">
             <div className="rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-gray-100">
-              <p className="text-xs font-semibold text-gray-950">{supportParticipant?.name || "KawilMart Support"}</p>
+              <p className="text-xs font-semibold text-gray-950">{supportParticipant?.name || "Wilwa Support"}</p>
               <p className="mt-0.5 text-[11px] text-gray-500">Orders, account, seller access, and general help.</p>
             </div>
 

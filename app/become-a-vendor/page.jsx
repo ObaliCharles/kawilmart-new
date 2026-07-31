@@ -128,7 +128,7 @@ const BecomeVendorPage = () => {
               <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                 <Icon type="check" className="h-6 w-6" />
               </span>
-              <h2 className="mt-3 text-[15px] font-bold text-gray-950">You already sell on KawilMart</h2>
+              <h2 className="mt-3 text-[15px] font-bold text-gray-950">You already sell on Wilwa</h2>
               <p className="mt-1 text-[12.5px] text-gray-500">Head to your dashboard to manage products and orders.</p>
               <button
                 type="button"

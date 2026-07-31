@@ -13,10 +13,10 @@ import { marketplaceFilterCategories } from "@/lib/marketplaceCategories";
 // here: if we have not published one, the page says so.
 const PRESS_EMAIL = "support@kawilmart.ug";
 const PRESS_PHONE = "+256767934191";
-const LOGO_FILE = "/kawilmart-email-logo.png";
+const LOGO_FILE = "/wilwa-email-logo.png";
 
 const BOILERPLATE =
-  "KawilMart is a Ugandan online marketplace for everyday essentials, connecting local sellers with buyers " +
+  "Wilwa is a Ugandan online marketplace for everyday essentials, connecting local sellers with buyers " +
   "across the country. Shoppers browse products from independent vendors in one catalogue and pay the way " +
   "they already do — cash, MTN Mobile Money or Airtel Money, all collected on delivery. Sellers get their " +
   "own storefront and dashboard to list stock, manage orders and track earnings.";
@@ -84,7 +84,7 @@ const fastFacts = [
 ];
 
 const brandColours = [
-  { name: "KawilMart Orange", hex: "#EA580C", note: "Primary action colour", swatch: "bg-[#EA580C]" },
+  { name: "Wilwa Orange", hex: "#EA580C", note: "Primary action colour", swatch: "bg-[#EA580C]" },
   { name: "Deep Navy", hex: "#0F172A", note: "Footer and dark surfaces", swatch: "bg-[#0F172A]" },
   { name: "Amber", hex: "#F59E0B", note: "Gradient partner to orange", swatch: "bg-[#F59E0B]" },
   { name: "Page Grey", hex: "#F6F7FB", note: "App background", swatch: "bg-[#F6F7FB] ring-1 ring-gray-200" },
@@ -93,10 +93,10 @@ const brandColours = [
 const usageRules = [
   { ok: true, text: "Use the logo with clear space around it, at least the height of the mark." },
   { ok: true, text: "Place the logo on white or light backgrounds, or on a white plate over dark ones." },
-  { ok: true, text: "Write the name as one word with a capital K and M: KawilMart." },
+  { ok: true, text: "Write the name as one word with a single capital W: Wilwa." },
   { ok: false, text: "Do not stretch, recolour, rotate or add effects to the mark." },
-  { ok: false, text: "Do not write it as Kawil Mart, KawilMart Ltd, or KAWILMART in body copy." },
-  { ok: false, text: "Do not imply KawilMart endorses a product, seller or story without written confirmation." },
+  { ok: false, text: "Do not write it as Wil Wa, Wilwa Ltd, or WILWA in body copy." },
+  { ok: false, text: "Do not imply Wilwa endorses a product, seller or story without written confirmation." },
 ];
 
 const Card = ({ className = "", children, style }) => (
@@ -132,7 +132,7 @@ const PressPage = () => {
             Press &amp; Media
           </h1>
           <p className="mt-2 max-w-2xl text-[12.5px] leading-5 text-white/85 md:text-[15px]">
-            Writing about KawilMart? Here are the facts, the brand assets and the person to talk to. We reply to
+            Writing about Wilwa? Here are the facts, the brand assets and the person to talk to. We reply to
             media enquiries within one working day.
           </p>
 
@@ -205,7 +205,7 @@ const PressPage = () => {
             <p className="mt-1 text-[11.5px] text-gray-500">PNG, transparent background. Use it as supplied.</p>
 
             <div className="mt-3 flex items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-6">
-              <Image src={assets.logo} alt="KawilMart logo" width={200} height={54} className="h-10 w-auto object-contain" />
+              <Image src={assets.logo} alt="Wilwa logo" width={200} height={54} className="h-10 w-auto object-contain" />
             </div>
 
             <a
@@ -319,7 +319,7 @@ const PressPage = () => {
                 onClick={() => navigate("/about")}
                 className="rounded-full bg-orange-600 px-4 py-2.5 text-[12px] font-bold text-white transition hover:bg-orange-700"
               >
-                About KawilMart
+                About Wilwa
               </button>
               <button
                 type="button"

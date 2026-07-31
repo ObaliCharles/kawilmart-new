@@ -194,7 +194,7 @@ const Product = () => {
                       </button>
                     </div>
                     <p className="mt-3 text-[13px] text-gray-600">
-                      by <span className="font-semibold text-orange-600">{productData.sellerProfile?.name || "KawilMart Seller"}</span>
+                      by <span className="font-semibold text-orange-600">{productData.sellerProfile?.name || "Wilwa Seller"}</span>
                     </p>
                     <hr className="my-5 border-gray-100" />
                     <ProductActivityChips product={productData} maxItems={4} className="mb-4" />
@@ -337,7 +337,7 @@ const Product = () => {
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-gray-500">
                       <span className="inline-flex items-center gap-1.5">
                         <svg className="h-3.5 w-3.5 text-emerald-600" viewBox="0 0 24 24" fill="none"><path d="M4 7 12 3l8 4-8 4-8-4Zm0 0v10l8 4 8-4V7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        Delivered by KawilMart riders
+                        Delivered by Wilwa riders
                       </span>
                       <span className="inline-flex items-center gap-1.5">
                         <svg className="h-3.5 w-3.5 text-orange-600" viewBox="0 0 24 24" fill="none"><path d="M4 7v5h5M20 17v-5h-5M6.4 9A7 7 0 0 1 18 7.8M17.6 15A7 7 0 0 1 6 16.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>

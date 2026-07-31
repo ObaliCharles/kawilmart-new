@@ -67,7 +67,7 @@ export async function POST(request) {
 
         const entry = {
             userId,
-            userName: reviewer?.name || "KawilMart shopper",
+            userName: reviewer?.name || "Wilwa shopper",
             rating: safeRating,
             title: String(title || "").trim().slice(0, 90),
             comment: String(comment || "").trim().slice(0, 1000),

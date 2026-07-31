@@ -285,12 +285,12 @@ const CategoryDropdown = ({ categories, activeCategory, setActiveCategory, goTo,
 };
 
 const StoreLogo = () => (
-  <Image className="h-auto w-28 md:w-32" src={assets.logo} alt="KawilMart" priority />
+  <Image className="h-auto w-28 md:w-32" src={assets.logo} alt="Wilwa" priority />
 );
 
 const MobileStoreMark = () => (
-  <span className="flex h-8 items-center" aria-label="KawilMart">
-    <Image src={assets.logo} alt="KawilMart" width={142} height={42} className="h-[26px] w-auto object-contain" priority />
+  <span className="flex h-8 items-center" aria-label="Wilwa">
+    <Image src={assets.logo} alt="Wilwa" width={142} height={42} className="h-[26px] w-auto object-contain" priority />
   </span>
 );
 
@@ -954,7 +954,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
                 className="h-12 w-12 rounded-full object-cover ring-1 ring-gray-200"
               />
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-base font-extrabold text-gray-950">{user.fullName || user.username || "KawilMart shopper"}</h2>
+                <h2 className="truncate text-base font-extrabold text-gray-950">{user.fullName || user.username || "Wilwa shopper"}</h2>
                 <p className="mt-0.5 truncate text-xs font-medium text-gray-600">{user.primaryEmailAddress?.emailAddress || "No email added"}</p>
                 <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600"><UgandaFlag className="h-4 w-4" />Uganda, UGX</p>
               </div>
@@ -1044,7 +1044,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
                   <ChevronRight />
                 </button>
                 <button type="button" onClick={() => user ? openMobileAccount() : openSignIn()} className="flex w-full items-center justify-between py-2.5 text-left text-[11px] font-bold uppercase tracking-wide text-gray-500">
-                  My KawilMart account
+                  My Wilwa account
                   <ChevronRight />
                 </button>
               </section>
@@ -1113,7 +1113,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
             <span className="font-medium text-gray-700">Uganda's marketplace for everyday essentials</span>
             <div className="flex items-center gap-10">
-              <button type="button" onClick={() => goTo('/seller')} className="transition hover:text-orange-600">Sell on KawilMart</button>
+              <button type="button" onClick={() => goTo('/seller')} className="transition hover:text-orange-600">Sell on Wilwa</button>
               <button type="button" onClick={() => requireAuthNavigation('/my-orders')} className="transition hover:text-orange-600">Track Order</button>
               <button type="button" onClick={() => navigate('/help')} className="transition hover:text-orange-600">Help Center</button>
               <button type="button" onClick={() => navigate('/become-a-vendor')} className="transition hover:text-orange-600">Become a Vendor</button>

@@ -6,10 +6,10 @@ const legalTabs = [
   {
     key: "overview",
     label: "Overview",
-    eyebrow: "KawilMart Legal Center",
-    title: "A cleaner way to understand how KawilMart works, what we expect, and how we protect people on the platform.",
+    eyebrow: "Wilwa Legal Center",
+    title: "A cleaner way to understand how Wilwa works, what we expect, and how we protect people on the platform.",
     intro:
-      "This legal center is organized like a product guide instead of a wall of text. It explains KawilMart's current marketplace setup across buyers, sellers, riders, orders, support, and privacy.",
+      "This legal center is organized like a product guide instead of a wall of text. It explains Wilwa's current marketplace setup across buyers, sellers, riders, orders, support, and privacy.",
     cta: {
       href: "/inbox?tab=support",
       label: "Open Support Inbox",
@@ -21,7 +21,7 @@ const legalTabs = [
         label: "Introduction",
         title: "Introduction",
         paragraphs: [
-          "KawilMart is a marketplace platform built for Northern Uganda. We help shoppers discover products from local sellers, place orders, choose delivery or pickup, and track order progress in one place.",
+          "Wilwa is a marketplace platform built for Northern Uganda. We help shoppers discover products from local sellers, place orders, choose delivery or pickup, and track order progress in one place.",
           "This legal center is written to match the app as it exists today, including cash on delivery, seller-specific order splitting, rider assignment, support inbox messaging, and role-based dashboards.",
         ],
       },
@@ -30,16 +30,16 @@ const legalTabs = [
         label: "Marketplace model",
         title: "How the platform operates",
         rows: [
-          ["Payment flow", "KawilMart currently uses cash on delivery as the active checkout model."],
+          ["Payment flow", "Wilwa currently uses cash on delivery as the active checkout model."],
           ["Fulfillment", "Customers can choose delivery or pickup depending on the order setup."],
           ["Order structure", "A single cart may become multiple seller-specific orders if products belong to different sellers."],
-          ["Support flow", "Users can reach KawilMart through the in-app support inbox, email, or phone."],
+          ["Support flow", "Users can reach Wilwa through the in-app support inbox, email, or phone."],
         ],
       },
       {
         id: "platform-roles",
         label: "Platform roles",
-        title: "Who does what on KawilMart",
+        title: "Who does what on Wilwa",
         rows: [
           ["Buyers", "Browse products, save addresses, place orders, confirm deliveries, and review sellers after eligible orders."],
           ["Sellers", "List products, maintain stock, accept and prepare orders, and manage store activity inside the seller dashboard."],
@@ -52,8 +52,8 @@ const legalTabs = [
         label: "Policy updates",
         title: "How updates are handled",
         paragraphs: [
-          "As KawilMart grows, these policies may be updated to reflect new features, stronger safety controls, or changes in applicable law and operations.",
-          "When updates are material, KawilMart may communicate them through the app, email, support, or visible policy changes on this page.",
+          "As Wilwa grows, these policies may be updated to reflect new features, stronger safety controls, or changes in applicable law and operations.",
+          "When updates are material, Wilwa may communicate them through the app, email, support, or visible policy changes on this page.",
         ],
       },
     ],
@@ -61,10 +61,10 @@ const legalTabs = [
   {
     key: "privacy",
     label: "Privacy Policy",
-    eyebrow: "KawilMart Privacy Policy",
-    title: "When you use KawilMart, you trust us with order, account, and support information. We take that responsibility seriously.",
+    eyebrow: "Wilwa Privacy Policy",
+    title: "When you use Wilwa, you trust us with order, account, and support information. We take that responsibility seriously.",
     intro:
-      "This section explains what information KawilMart collects, why we collect it, how we use it in the live marketplace, and the controls available to users.",
+      "This section explains what information Wilwa collects, why we collect it, how we use it in the live marketplace, and the controls available to users.",
     cta: {
       href: "/inbox?tab=support",
       label: "Contact Support About Privacy",
@@ -76,14 +76,14 @@ const legalTabs = [
         label: "Introduction",
         title: "Introduction",
         paragraphs: [
-          "KawilMart collects information that helps the marketplace function safely and reliably. That includes account data, order details, saved addresses, notifications, support conversations, and limited technical information used to secure the platform.",
-          "We do not describe features here that the current app does not support. This policy is aligned with the actual codebase and operational flows in KawilMart today.",
+          "Wilwa collects information that helps the marketplace function safely and reliably. That includes account data, order details, saved addresses, notifications, support conversations, and limited technical information used to secure the platform.",
+          "We do not describe features here that the current app does not support. This policy is aligned with the actual codebase and operational flows in Wilwa today.",
         ],
       },
       {
         id: "information-we-collect",
-        label: "Information KawilMart collects",
-        title: "Information KawilMart collects",
+        label: "Information Wilwa collects",
+        title: "Information Wilwa collects",
         rows: [
           ["Account and identity data", "Name, email address, role metadata, profile image, and account status used for authentication and access control."],
           ["Order and address data", "Saved addresses, phone numbers, cart contents, product choices, order records, delivery mode, and tracking status."],
@@ -94,8 +94,8 @@ const legalTabs = [
       },
       {
         id: "why-we-collect-data",
-        label: "Why KawilMart collects data",
-        title: "Why KawilMart collects data",
+        label: "Why Wilwa collects data",
+        title: "Why Wilwa collects data",
         bullets: [
           "To create and secure accounts for buyers, sellers, riders, and admins.",
           "To process seller-specific orders and calculate delivery fees based on seller location and address details.",
@@ -110,7 +110,7 @@ const legalTabs = [
         title: "Your privacy controls",
         bullets: [
           "You can update certain account and address details directly in the app.",
-          "You can contact KawilMart to request help with correcting inaccurate information.",
+          "You can contact Wilwa to request help with correcting inaccurate information.",
           "You can ask for account review, deletion support, or data-related guidance through the support inbox.",
           "Some communication settings and operational messages are tied to active orders and may still be required for service use.",
         ],
@@ -120,7 +120,7 @@ const legalTabs = [
         label: "Sharing your information",
         title: "Sharing your information",
         paragraphs: [
-          "KawilMart does not sell personal data. We share limited information only when needed to operate the marketplace, such as showing a seller what they need to fulfill an order or giving a rider only the contact details they need after assignment acceptance.",
+          "Wilwa does not sell personal data. We share limited information only when needed to operate the marketplace, such as showing a seller what they need to fulfill an order or giving a rider only the contact details they need after assignment acceptance.",
           "We may also use trusted service providers for authentication, email, SMS, hosting, or operational infrastructure. Where required, we may disclose information for legal compliance or security investigations.",
         ],
       },
@@ -129,7 +129,7 @@ const legalTabs = [
         label: "Security and retention",
         title: "Keeping your information secure",
         paragraphs: [
-          "KawilMart uses platform-level authentication, access controls, and operational review processes to reduce misuse and unauthorized access.",
+          "Wilwa uses platform-level authentication, access controls, and operational review processes to reduce misuse and unauthorized access.",
           "We retain information for as long as reasonably necessary to operate the marketplace, support users, investigate issues, maintain records, and satisfy legal, security, or accounting obligations.",
         ],
       },
@@ -138,7 +138,7 @@ const legalTabs = [
         label: "About this policy",
         title: "About this policy",
         paragraphs: [
-          "This privacy policy describes the current KawilMart marketplace. If the app gains new capabilities later, the policy may be updated so that the legal center continues to match the product people are actually using.",
+          "This privacy policy describes the current Wilwa marketplace. If the app gains new capabilities later, the policy may be updated so that the legal center continues to match the product people are actually using.",
         ],
       },
     ],
@@ -146,14 +146,14 @@ const legalTabs = [
   {
     key: "terms",
     label: "Terms of Service",
-    eyebrow: "KawilMart Terms of Service",
-    title: "These terms explain the rules for using KawilMart as a buyer, seller, rider, admin, or visitor.",
+    eyebrow: "Wilwa Terms of Service",
+    title: "These terms explain the rules for using Wilwa as a buyer, seller, rider, admin, or visitor.",
     intro:
-      "By using KawilMart, you agree to use the platform responsibly, provide accurate information, and follow the role-specific expectations that keep the marketplace safe and workable.",
+      "By using Wilwa, you agree to use the platform responsibly, provide accurate information, and follow the role-specific expectations that keep the marketplace safe and workable.",
     cta: {
       href: "/legal#marketplace-rules",
       label: "Jump to Marketplace Rules",
-      description: "See the conduct rules that apply across KawilMart.",
+      description: "See the conduct rules that apply across Wilwa.",
     },
     sections: [
       {
@@ -161,8 +161,8 @@ const legalTabs = [
         label: "Introduction",
         title: "Introduction",
         paragraphs: [
-          "KawilMart provides the digital infrastructure that connects customers, sellers, riders, and admins. Sellers remain responsible for their listings, stock, pricing, and fulfillment commitments.",
-          "Use of the platform is conditioned on lawful, honest, and respectful behavior. If you do not agree to these terms, you should not use KawilMart.",
+          "Wilwa provides the digital infrastructure that connects customers, sellers, riders, and admins. Sellers remain responsible for their listings, stock, pricing, and fulfillment commitments.",
+          "Use of the platform is conditioned on lawful, honest, and respectful behavior. If you do not agree to these terms, you should not use Wilwa.",
         ],
       },
       {
@@ -172,7 +172,7 @@ const legalTabs = [
         bullets: [
           "You must provide accurate and current information when creating or maintaining an account.",
           "You are responsible for protecting your login credentials and for activity under your account.",
-          "KawilMart may restrict or suspend accounts that appear fraudulent, abusive, compromised, or non-compliant.",
+          "Wilwa may restrict or suspend accounts that appear fraudulent, abusive, compromised, or non-compliant.",
           "Some marketplace roles may require added verification, supporting details, or admin review before full access is granted.",
         ],
       },
@@ -181,7 +181,7 @@ const legalTabs = [
         label: "Orders and fulfillment",
         title: "Orders, cash on delivery, and fulfillment",
         rows: [
-          ["Checkout", "KawilMart currently supports cash on delivery as the active payment flow."],
+          ["Checkout", "Wilwa currently supports cash on delivery as the active payment flow."],
           ["Delivery mode", "Orders may be marked for delivery or pickup depending on customer choice and marketplace logic."],
           ["Order acceptance", "Seller contact unlocks after the seller accepts the order; rider contact unlocks after rider acceptance for delivery orders."],
           ["Stock protection", "An order may be blocked or adjusted if stock changes during checkout or if the seller account is unavailable."],
@@ -195,7 +195,7 @@ const legalTabs = [
           "Only list goods you are allowed to sell and can fulfill accurately.",
           "Keep stock, pricing, descriptions, and images truthful and current.",
           "Prepare accepted orders promptly for pickup or rider handoff.",
-          "Maintain any verification, compliance, business, and billing details required by KawilMart.",
+          "Maintain any verification, compliance, business, and billing details required by Wilwa.",
         ],
       },
       {
@@ -206,7 +206,7 @@ const legalTabs = [
           "Provide a reachable phone number and accurate delivery or pickup information.",
           "Only place cash on delivery orders when you are prepared to complete them.",
           "Use reviews, order confirmation, and support tools honestly and only for genuine marketplace issues.",
-          "Follow return, cancellation, replacement, or dispute instructions when KawilMart support requests additional evidence.",
+          "Follow return, cancellation, replacement, or dispute instructions when Wilwa support requests additional evidence.",
         ],
       },
       {
@@ -217,7 +217,7 @@ const legalTabs = [
           "Keep rider availability status truthful and respond to assignments responsibly.",
           "Only use contact information for the active delivery you were assigned to.",
           "Do not falsely mark deliveries as completed or misuse order information.",
-          "Comply with road safety, local law, and any rider verification or conduct requirements KawilMart applies.",
+          "Comply with road safety, local law, and any rider verification or conduct requirements Wilwa applies.",
         ],
       },
       {
@@ -237,8 +237,8 @@ const legalTabs = [
         label: "Enforcement and updates",
         title: "Enforcement and updates",
         paragraphs: [
-          "KawilMart may limit listings, pause features, suspend accounts, or preserve records where marketplace safety, dispute review, compliance, or fraud analysis requires it.",
-          "These terms may evolve as KawilMart evolves. Continued use after a material update may be treated as acceptance of the revised terms where permitted by law.",
+          "Wilwa may limit listings, pause features, suspend accounts, or preserve records where marketplace safety, dispute review, compliance, or fraud analysis requires it.",
+          "These terms may evolve as Wilwa evolves. Continued use after a material update may be treated as acceptance of the revised terms where permitted by law.",
         ],
       },
     ],
@@ -247,13 +247,13 @@ const legalTabs = [
     key: "roles",
     label: "Marketplace Roles",
     eyebrow: "Marketplace Role Guide",
-    title: "KawilMart works best when each role understands its responsibilities and where platform control begins and ends.",
+    title: "Wilwa works best when each role understands its responsibilities and where platform control begins and ends.",
     intro:
-      "This role guide gives a clearer operational view of sellers, buyers, riders, and KawilMart support teams in the marketplace.",
+      "This role guide gives a clearer operational view of sellers, buyers, riders, and Wilwa support teams in the marketplace.",
     cta: {
       href: "/seller",
       label: "Open Seller Area",
-      description: "Already working as a seller on KawilMart?",
+      description: "Already working as a seller on Wilwa?",
     },
     sections: [
       {
@@ -261,7 +261,7 @@ const legalTabs = [
         label: "Introduction",
         title: "Introduction",
         paragraphs: [
-          "KawilMart is designed around distinct marketplace roles. Each role sees different tools, notifications, and responsibilities in the app.",
+          "Wilwa is designed around distinct marketplace roles. Each role sees different tools, notifications, and responsibilities in the app.",
         ],
       },
       {
@@ -273,7 +273,7 @@ const legalTabs = [
         ],
         bullets: [
           "Product publishing and editing can be limited if seller access is inactive or under review.",
-          "Seller billing, subscription access, and invoice documents are handled inside KawilMart's seller operations flow.",
+          "Seller billing, subscription access, and invoice documents are handled inside Wilwa's seller operations flow.",
           "Sellers may receive ratings from buyers after qualifying completed orders.",
         ],
       },
@@ -282,7 +282,7 @@ const legalTabs = [
         label: "Buyers",
         title: "Buyers",
         paragraphs: [
-          "Buyers use KawilMart to browse products, place orders, save delivery addresses, and track marketplace activity from checkout to delivery confirmation.",
+          "Buyers use Wilwa to browse products, place orders, save delivery addresses, and track marketplace activity from checkout to delivery confirmation.",
         ],
         bullets: [
           "Customers can choose delivery or pickup where supported.",
@@ -308,7 +308,7 @@ const legalTabs = [
         label: "Admins and support",
         title: "Admins and support",
         paragraphs: [
-          "KawilMart admins and support teams may review disputes, manage access, communicate operational updates, and step in when marketplace fairness or security requires intervention.",
+          "Wilwa admins and support teams may review disputes, manage access, communicate operational updates, and step in when marketplace fairness or security requires intervention.",
           "That review can include order history, tracking events, support messages, listing records, and account-level signals relevant to the issue.",
         ],
       },
@@ -317,13 +317,13 @@ const legalTabs = [
   {
     key: "faq",
     label: "FAQ",
-    eyebrow: "KawilMart Legal FAQ",
+    eyebrow: "Wilwa Legal FAQ",
     title: "Quick answers to common policy and marketplace questions.",
     intro:
-      "This FAQ focuses on the features and workflows KawilMart currently runs, including cash on delivery, rider assignment, seller access controls, and privacy support.",
+      "This FAQ focuses on the features and workflows Wilwa currently runs, including cash on delivery, rider assignment, seller access controls, and privacy support.",
     cta: {
       href: "mailto:kawilmart@gmail.com",
-      label: "Email KawilMart",
+      label: "Email Wilwa",
       description: "Prefer email instead of the support inbox?",
     },
     sections: [
@@ -332,7 +332,7 @@ const legalTabs = [
         label: "Introduction",
         title: "Introduction",
         paragraphs: [
-          "These answers are written to be practical, short, and aligned with the current KawilMart product.",
+          "These answers are written to be practical, short, and aligned with the current Wilwa product.",
         ],
       },
       {
@@ -343,12 +343,12 @@ const legalTabs = [
           {
             question: "Why can one checkout become multiple orders?",
             answer:
-              "Because KawilMart can split the cart into seller-specific orders when products come from different sellers.",
+              "Because Wilwa can split the cart into seller-specific orders when products come from different sellers.",
           },
           {
             question: "How do I pay today?",
             answer:
-              "KawilMart's active checkout model is cash on delivery.",
+              "Wilwa's active checkout model is cash on delivery.",
           },
           {
             question: "Can I choose pickup instead of delivery?",
@@ -363,14 +363,14 @@ const legalTabs = [
         title: "Sellers and billing",
         qa: [
           {
-            question: "Can KawilMart pause a seller account?",
+            question: "Can Wilwa pause a seller account?",
             answer:
               "Yes. Seller product activity or store access can be limited when subscription, compliance, fraud, or operational review requires it.",
           },
           {
             question: "Are seller invoices part of the platform?",
             answer:
-              "Yes. KawilMart includes seller billing and invoice-related workflows in the current codebase.",
+              "Yes. Wilwa includes seller billing and invoice-related workflows in the current codebase.",
           },
         ],
       },
@@ -397,14 +397,14 @@ const legalTabs = [
         title: "Privacy and accounts",
         qa: [
           {
-            question: "Does KawilMart sell my personal data?",
+            question: "Does Wilwa sell my personal data?",
             answer:
-              "No. KawilMart does not sell personal data. Limited information is shared only where needed to operate the marketplace or comply with law.",
+              "No. Wilwa does not sell personal data. Limited information is shared only where needed to operate the marketplace or comply with law.",
           },
           {
             question: "How do I ask for privacy help?",
             answer:
-              "Use the KawilMart support inbox or contact the public support channels listed in the footer and legal center.",
+              "Use the Wilwa support inbox or contact the public support channels listed in the footer and legal center.",
           },
         ],
       },
@@ -622,10 +622,10 @@ const LegalCenterPage = () => {
       <div className="border-b border-slate-200" style={titleBarStyle}>
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 md:px-10 lg:px-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-orange-600 sm:text-xs sm:tracking-[0.28em]">
-            KawilMart Privacy & Terms
+            Wilwa Privacy & Terms
           </p>
           <h1 className="mt-3 max-w-4xl text-2xl font-semibold leading-tight text-slate-900 sm:text-3xl md:text-4xl">
-            Everything that governs how KawilMart works &mdash; in plain language.
+            Everything that governs how Wilwa works &mdash; in plain language.
           </h1>
           <p className="mt-3 max-w-2xl text-[13px] leading-6 text-slate-600 sm:text-sm sm:leading-7 md:text-base">
             Pick a topic below to read the policy that applies to it.
@@ -701,7 +701,7 @@ const LegalCenterPage = () => {
                 {currentTab.cta ? (
                   <div className="mx-auto mt-6 max-w-xl border border-orange-200 bg-orange-50/60 px-4 py-4 text-left sm:mt-8 sm:px-5 sm:py-5">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-600 sm:text-xs sm:tracking-[0.24em]">
-                      KawilMart shortcut
+                      Wilwa shortcut
                     </p>
                     <p className="mt-2 text-[13px] leading-6 text-slate-600 sm:text-sm sm:leading-7">
                       {currentTab.cta.description}

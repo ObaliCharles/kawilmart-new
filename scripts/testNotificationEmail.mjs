@@ -38,10 +38,10 @@ if (missing.length) {
 }
 
 const payload = createNotificationEmail({
-    recipientName: "KawilMart Tester",
+    recipientName: "Wilwa Tester",
     title: "Email delivery is working",
-    message: "If you are reading this in your inbox, KawilMart notification emails are correctly configured and ready to switch on.",
-    ctaLabel: "Open KawilMart",
+    message: "If you are reading this in your inbox, Wilwa notification emails are correctly configured and ready to switch on.",
+    ctaLabel: "Open Wilwa",
     ctaPath: "/",
     details: [
         { label: "provider", value: process.env.EMAIL_PROVIDER || "resend" },
@@ -58,7 +58,7 @@ const result = await sendEmail({
 
 if (result.success) {
     console.log(`\n✅ Sent to ${recipient}. Check the inbox (and spam folder on the first send).`);
-    console.log("   Confirm the KawilMart logo renders in the header — a broken image means APP_BASE_URL is not publicly reachable.");
+    console.log("   Confirm the Wilwa logo renders in the header — a broken image means APP_BASE_URL is not publicly reachable.");
     process.exit(0);
 }
 

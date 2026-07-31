@@ -211,12 +211,12 @@ export async function POST(request) {
                 notification: {
                     type: "system",
                     title: "Role updated",
-                    message: `Your KawilMart role is now ${formatRoleLabel(role)}.`,
+                    message: `Your Wilwa role is now ${formatRoleLabel(role)}.`,
                     read: false,
                     date: new Date(),
                 },
-                emailTitle: "KawilMart role updated",
-                emailMessage: `Your KawilMart role was updated from ${formatRoleLabel(previousRole || "buyer")} to ${formatRoleLabel(role)}.`,
+                emailTitle: "Wilwa role updated",
+                emailMessage: `Your Wilwa role was updated from ${formatRoleLabel(previousRole || "buyer")} to ${formatRoleLabel(role)}.`,
                 ctaLabel: "Open dashboard",
                 ctaPath: getDashboardPathForRole(role),
             }]);

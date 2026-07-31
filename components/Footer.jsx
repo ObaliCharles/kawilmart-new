@@ -77,7 +77,7 @@ const footerColumns = [
     title: "Vendor",
     icon: "vendor",
     links: [
-      ["Sell on KawilMart", "/seller"],
+      ["Sell on Wilwa", "/seller"],
       ["Vendor Dashboard", "/seller"],
       ["Vendor Support", "/help"],
       ["Become a Vendor", "/become-a-vendor"],
@@ -119,9 +119,9 @@ const BrandMark = () => (
   <Link
     href="/"
     className="inline-flex shrink-0 items-center rounded-lg bg-white px-3 py-2"
-    aria-label="KawilMart home"
+    aria-label="Wilwa home"
   >
-    <Image src={assets.logo} alt="KawilMart" width={120} height={32} className="h-7 w-auto object-contain" priority={false} />
+    <Image src={assets.logo} alt="Wilwa" width={120} height={32} className="h-7 w-auto object-contain" priority={false} />
   </Link>
 );
 
@@ -361,7 +361,7 @@ const Footer = () => {
             </div>
 
             <div className="text-[12px] text-slate-400 lg:text-right">
-              <p>&copy; {currentYear} KawilMart. All rights reserved.</p>
+              <p>&copy; {currentYear} Wilwa. All rights reserved.</p>
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 lg:justify-end">
                 {legalLinks.map(([label, href], index) => (
                   <React.Fragment key={label}>

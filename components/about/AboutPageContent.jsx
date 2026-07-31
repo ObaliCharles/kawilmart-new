@@ -73,7 +73,7 @@ const TEAM = [
 // Years past the present are labelled "Ahead" so aspirations never read as
 // things that already happened.
 const JOURNEY = [
-  { year: "2025", title: "The Beginning", body: "KawilMart was founded with a small team and big dreams.", status: "done" },
+  { year: "2025", title: "The Beginning", body: "Wilwa was founded with a small team and big dreams.", status: "done" },
   { year: "2026", title: "Growing Strong", body: "Expanding our seller network and improving delivery across the country.", status: "now" },
   { year: "2027", title: "New Milestones", body: "Introducing new features and a further improved customer experience.", status: "ahead" },
   { year: "2028", title: "The Future", body: "Continuing to innovate and make shopping better for everyone.", status: "ahead" },
@@ -134,14 +134,14 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
 
         <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-20">
           <p className="animate-page-enter text-[11px] font-bold uppercase tracking-[0.18em] text-orange-400">
-            {about?.eyebrow || "About KawilMart"}
+            {about?.eyebrow || "About Wilwa"}
           </p>
           <h1 className="mt-2.5 max-w-2xl text-[26px] font-black leading-[1.15] tracking-tight md:text-[44px]">
             More than a marketplace,
             <span className="block text-orange-400">we&apos;re a community.</span>
           </h1>
           <p className="mt-3.5 max-w-xl text-[13px] leading-6 text-white/80 md:text-[15px]">
-            {about?.intro || "KawilMart was created to simplify shopping in Uganda by connecting trusted sellers with smart buyers."}
+            {about?.intro || "Wilwa was created to simplify shopping in Uganda by connecting trusted sellers with smart buyers."}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2.5">
@@ -170,7 +170,7 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
           <div className="reveal-up relative overflow-hidden rounded-2xl">
             <Image
               src={assets.boy_with_laptop_image}
-              alt="The KawilMart team at work"
+              alt="The Wilwa team at work"
               width={640}
               height={420}
               className="h-52 w-full object-cover md:h-72"
@@ -233,7 +233,7 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
 
       {/* Why choose ------------------------------------------------------- */}
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14">
-        <SectionTitle>Why Choose KawilMart?</SectionTitle>
+        <SectionTitle>Why Choose Wilwa?</SectionTitle>
         <div className="mt-6 grid grid-cols-3 gap-x-3 gap-y-6 md:grid-cols-6">
           {REASONS.map((reason, index) => (
             <div
@@ -444,7 +444,7 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
                   Ready to Experience the Best of Online Shopping?
                 </h2>
                 <p className="mt-1 text-[12.5px] leading-[19px] text-white/85">
-                  Join shoppers and trusted sellers building Uganda&apos;s marketplace on KawilMart.
+                  Join shoppers and trusted sellers building Uganda&apos;s marketplace on Wilwa.
                 </p>
               </div>
             </div>

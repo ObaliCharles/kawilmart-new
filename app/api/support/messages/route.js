@@ -68,7 +68,7 @@ const getSupportParticipant = ({ isAdmin, targetUser = null }) => {
 
     return {
         id: "support",
-        name: "KawilMart Support",
+        name: "Wilwa Support",
         email: "",
         imageUrl: "",
         isVerified: true,
@@ -183,7 +183,7 @@ export async function POST(request) {
             recipientId: isAdmin ? targetUserId : "support",
             ownerUserId: targetUserId,
             senderRole: inferSupportRole(senderUser || targetUser, isAdmin),
-            senderLabel: senderUser?.businessName || senderUser?.name || (isAdmin ? "KawilMart Support" : "Customer"),
+            senderLabel: senderUser?.businessName || senderUser?.name || (isAdmin ? "Wilwa Support" : "Customer"),
             subject: safeSubject || (isAdmin ? "Support reply" : "Support request"),
             content: safeContent,
         });
@@ -202,7 +202,7 @@ export async function POST(request) {
                         read: false,
                         date: new Date(),
                     },
-                    emailTitle: safeSubject || "KawilMart support replied",
+                    emailTitle: safeSubject || "Wilwa support replied",
                     emailMessage: safeContent,
                     ctaLabel: "Open support chat",
                     ctaPath: "/inbox?tab=support",

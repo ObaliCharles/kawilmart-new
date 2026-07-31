@@ -3,9 +3,9 @@ import Navbar from "@/components/Navbar";
 import AffiliatesPage from "@/components/company/AffiliatesPage";
 
 export const metadata = {
-  title: "KawilMart | Partners & Affiliates",
+  title: "Wilwa | Partners & Affiliates",
   description:
-    "Work with KawilMart as a creator, referrer or business partner — how partnerships are agreed, run and paid.",
+    "Work with Wilwa as a creator, referrer or business partner — how partnerships are agreed, run and paid.",
 };
 
 const Affiliates = () => (

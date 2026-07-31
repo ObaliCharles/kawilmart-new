@@ -119,7 +119,7 @@ const ShoppingHelpPage = () => {
       <section className="bg-gradient-to-br from-orange-600 via-orange-500 to-amber-500 px-4 pb-8 pt-7 text-white sm:px-6 md:pb-10 md:pt-10">
         <div className="mx-auto max-w-4xl">
           <h1 className="animate-page-enter text-[24px] font-black leading-tight tracking-tight md:text-[34px]">
-            Shopping on KawilMart
+            Shopping on Wilwa
           </h1>
           <p className="mt-2 max-w-2xl text-[12.5px] leading-5 text-white/85 md:text-[15px]">
             From finding a product to confirming delivery &mdash; here is exactly how it works.

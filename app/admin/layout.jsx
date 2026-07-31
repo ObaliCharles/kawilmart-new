@@ -90,7 +90,7 @@ const AdminLayout = ({ children }) => {
                     </button>
                     <Image
                         src={assets.logo}
-                        alt="KawilMart"
+                        alt="Wilwa"
                         className="w-24 cursor-pointer"
                         onClick={() => window.location.href = '/'}
                     />

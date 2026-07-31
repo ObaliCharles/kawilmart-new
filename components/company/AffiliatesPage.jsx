@@ -45,13 +45,13 @@ const partnerTypes = [
   {
     icon: "business",
     title: "Businesses & institutions",
-    body: "Schools, offices, NGOs and estates buying in volume, or platforms that want KawilMart products available to their own users. Terms are set case by case.",
+    body: "Schools, offices, NGOs and estates buying in volume, or platforms that want Wilwa products available to their own users. Terms are set case by case.",
     fit: "Best for bulk orders or an ongoing supply arrangement.",
   },
   {
     icon: "store",
     title: "Sellers",
-    body: "The most direct way to earn on KawilMart is to sell on it. Open a store, list your stock, and keep the margin on every order you fulfil — no partnership agreement needed.",
+    body: "The most direct way to earn on Wilwa is to sell on it. Open a store, list your stock, and keep the margin on every order you fulfil — no partnership agreement needed.",
     fit: "Self-serve and live right now.",
     cta: { label: "Become a vendor", href: "/become-a-vendor" },
   },
@@ -73,7 +73,7 @@ const steps = [
 ];
 
 const commitments = [
-  "No joining fee, ever — if anyone asks you to pay to become a KawilMart partner, it is not us.",
+  "No joining fee, ever — if anyone asks you to pay to become a Wilwa partner, it is not us.",
   "Terms in writing before you promote anything, including how payment is calculated.",
   "You are told which products are in stock, so you never send your audience to an empty page.",
   "You keep editorial control. We will not ask you to claim something about a product that is not true.",
@@ -97,7 +97,7 @@ const AffiliatesPage = () => {
 
         <div className="relative mx-auto max-w-5xl">
           <h1 className="animate-page-enter text-[26px] font-black leading-tight tracking-tight md:text-[40px]">
-            Partner with KawilMart
+            Partner with Wilwa
           </h1>
           <p className="mt-2 max-w-2xl text-[12.5px] leading-5 text-white/85 md:text-[15px]">
             Creators, referrers and businesses who want to earn from Uganda&apos;s marketplace. Every partnership is
@@ -116,7 +116,7 @@ const AffiliatesPage = () => {
               onClick={() => navigate("/become-a-vendor")}
               className="rounded-full border border-white/30 bg-white/10 px-5 py-2.5 text-[12.5px] font-bold text-white transition hover:bg-white/20"
             >
-              Or sell on KawilMart
+              Or sell on Wilwa
             </button>
           </div>
         </div>

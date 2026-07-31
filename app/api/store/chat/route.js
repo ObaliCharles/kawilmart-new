@@ -26,7 +26,7 @@ const serializeDm = (message = {}) => ({
 
 const getPeerSummary = (peer) => ({
   id: String(peer?._id || ""),
-  name: peer?.businessName || peer?.name || "KawilMart user",
+  name: peer?.businessName || peer?.name || "Wilwa user",
   imageUrl: peer?.imageUrl || "",
   isSeller: Boolean(peer?.businessName),
 });
@@ -136,7 +136,7 @@ export async function POST(request) {
     }
 
     const dmKey = buildDmKey(currentUserId, peerId);
-    const senderLabel = sender.businessName || sender.name || "KawilMart user";
+    const senderLabel = sender.businessName || sender.name || "Wilwa user";
     const baseRecord = {
       messageId: new mongoose.Types.ObjectId().toString(),
       from: String(currentUserId),
@@ -172,7 +172,7 @@ export async function POST(request) {
           read: false,
           date: new Date(),
         },
-        emailTitle: `New KawilMart message from ${senderLabel}`,
+        emailTitle: `New Wilwa message from ${senderLabel}`,
         emailMessage: trimmedContent,
         ctaLabel: "Open chat",
         ctaPath: `/inbox?tab=chats&peer=${encodeURIComponent(String(currentUserId))}`,

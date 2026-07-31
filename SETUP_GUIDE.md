@@ -1,4 +1,4 @@
-# KawilMart — New Features Setup Guide
+# Wilwa — New Features Setup Guide
 
 ## ✅ What Was Added
 
@@ -142,7 +142,7 @@ To enable outgoing emails, add these environment variables:
 ```bash
 EMAIL_PROVIDER=resend
 RESEND_API_KEY=your_resend_api_key
-EMAIL_FROM=KawilMart <notifications@yourdomain.com>
+EMAIL_FROM=Wilwa <notifications@yourdomain.com>
 EMAIL_REPLY_TO=support@yourdomain.com
 APP_BASE_URL=https://yourdomain.com
 ```

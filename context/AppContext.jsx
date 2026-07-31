@@ -8,7 +8,7 @@ import { getApiErrorMessage, sanitizeApiErrorMessage } from "@/lib/apiErrors";
 import { areCartItemsEqual, countCartItems, filterCartItemsByProductIds, normalizeCartItems } from "@/lib/cart";
 import CartFlyAnimation from "@/components/CartFlyAnimation";
 
-const PRODUCT_CACHE_KEY = 'kawilmart_products_cache_v2';
+const PRODUCT_CACHE_KEY = 'wilwa_products_cache_v2';
 const PRODUCT_CACHE_TTL_MS = 5 * 60 * 1000;
 
 const noop = () => {}

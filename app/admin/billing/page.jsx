@@ -206,7 +206,7 @@ export default function AdminBillingPage() {
             type="button"
             onClick={() => void downloadAdminDocument(
               `/api/admin/invoices/download?periodKey=${encodeURIComponent(activeDownloadPeriod)}`,
-              `kawilmart-admin-billing-report-${activeDownloadPeriod || 'month'}.html`
+              `wilwa-admin-billing-report-${activeDownloadPeriod || 'month'}.html`
             )}
             disabled={downloadingMonthlyReport || !activeDownloadPeriod}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${

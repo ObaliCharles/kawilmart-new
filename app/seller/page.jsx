@@ -92,7 +92,7 @@ const applicationSteps = [
   {
     step: "03",
     title: "Wait for review",
-    text: "The KawilMart team checks your details, confirms your role, and unlocks seller access when approved.",
+    text: "The Wilwa team checks your details, confirms your role, and unlocks seller access when approved.",
   },
   {
     step: "04",
@@ -186,7 +186,7 @@ const SellerApplicationLanding = ({ user, resolvedRole, refreshAccessState }) =>
           <section className="overflow-hidden rounded-[2.5rem] border border-orange-100 bg-white/88 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-8 lg:p-10">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
               <div className="space-y-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-600">Sell on KawilMart</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-600">Sell on Wilwa</p>
                 <h1 className="max-w-2xl text-4xl font-semibold tracking-[-0.04em] text-gray-950 md:text-5xl lg:text-6xl">
                   Apply to become a vendor and start selling from a polished storefront.
                 </h1>
@@ -672,7 +672,7 @@ const AddProductInner = () => {
       await downloadAuthenticatedFile({
         url: `/api/seller/invoices/download?periodKey=${encodeURIComponent(invoiceDownloadPeriod)}`,
         token,
-        fallbackFilename: `kawilmart-seller-invoice-${invoiceDownloadPeriod}.html`,
+        fallbackFilename: `wilwa-seller-invoice-${invoiceDownloadPeriod}.html`,
       });
       toast.success('Invoice download started');
     } catch (error) {
@@ -945,7 +945,7 @@ const AddProductInner = () => {
                       </div>
                     )) : (
                       <div className="rounded-2xl border border-dashed border-gray-200 px-4 py-10 text-center text-sm text-gray-500">
-                        No issued invoices yet. Your monthly billing records will appear here once KawilMart generates them.
+                        No issued invoices yet. Your monthly billing records will appear here once Wilwa generates them.
                       </div>
                     )}
                   </div>
@@ -972,7 +972,7 @@ const AddProductInner = () => {
                   <div className="mt-5 rounded-2xl border border-orange-100 bg-orange-50/60 p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">Download invoice</p>
                     <p className="mt-1 text-sm text-gray-600">
-                      Choose a month to export your billing document. If that month has not been officially issued yet, KawilMart downloads a live preview using the same seller billing rules.
+                      Choose a month to export your billing document. If that month has not been officially issued yet, Wilwa downloads a live preview using the same seller billing rules.
                     </p>
                     <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                       <select

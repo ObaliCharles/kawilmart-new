@@ -1,4 +1,4 @@
-# 🏪 KawilMart — Complete Codebase Guide
+# 🏪 Wilwa — Complete Codebase Guide
 
 ## 📋 Table of Contents
 1. [Overview & Architecture](#1-overview--architecture)
@@ -40,7 +40,7 @@ Browser → Clerk Auth → Next.js App Router → API Routes (app/api/) → Mong
 ## 2. Project Structure
 
 ```
-KawilMart-main/
+Wilwa-main/
 ├── app/                    # Next.js App Router pages & API routes
 │   ├── layout.js           # Root layout (Clerk, AppContext, Toaster)
 │   ├── page.jsx            # Home page

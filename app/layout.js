@@ -7,8 +7,8 @@ import RouteLoader from "@/components/RouteLoader";
 import RouteShell from "@/components/RouteShell";
 
 export const metadata = {
-  title: "KawilMart | Northern Uganda's Trusted Online Store",
-  description: "Shop fashion, beauty, electronics, home essentials, and more with KawilMart",
+  title: "Wilwa | Northern Uganda's Trusted Online Store",
+  description: "Shop fashion, beauty, electronics, home essentials, and more with Wilwa",
 };
 
 // Without this, Android browsers lay the page out at a 980px virtual viewport

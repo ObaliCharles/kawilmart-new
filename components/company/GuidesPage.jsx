@@ -85,7 +85,7 @@ const guides = [
 const safetyChecks = [
   {
     ok: true,
-    text: "Keep the whole order inside KawilMart — chat, payment and delivery. That is what makes a return or refund enforceable.",
+    text: "Keep the whole order inside Wilwa — chat, payment and delivery. That is what makes a return or refund enforceable.",
   },
   {
     ok: true,
@@ -130,7 +130,7 @@ const GuidesPage = () => {
             Shopping guides
           </h1>
           <p className="mt-2 max-w-2xl text-[12.5px] leading-5 text-white/85 md:text-[15px]">
-            Short, practical guides to buying on KawilMart &mdash; paying, delivery, returns, and how to spot a
+            Short, practical guides to buying on Wilwa &mdash; paying, delivery, returns, and how to spot a
             seller worth ordering from.
           </p>
         </div>
@@ -146,7 +146,7 @@ const GuidesPage = () => {
               </span>
               <div className="min-w-0">
                 <span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-orange-600">Start here</span>
-                <h2 className="mt-0.5 text-[15px] font-bold text-gray-950">How shopping on KawilMart works</h2>
+                <h2 className="mt-0.5 text-[15px] font-bold text-gray-950">How shopping on Wilwa works</h2>
                 <p className="mt-1 text-[12.5px] leading-[19px] text-gray-600">
                   The whole journey in six steps &mdash; from finding a product to confirming it arrived.
                 </p>

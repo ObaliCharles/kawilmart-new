@@ -8,9 +8,9 @@ import { getResolvedSiteContent } from "@/lib/getSiteContent";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "KawilMart | About Us",
+  title: "Wilwa | About Us",
   description:
-    "KawilMart is Uganda's marketplace for everyday essentials — connecting trusted local sellers with smart buyers.",
+    "Wilwa is Uganda's marketplace for everyday essentials — connecting trusted local sellers with smart buyers.",
 };
 
 // Testimonials come from real product reviews only. If nobody has reviewed
@@ -32,7 +32,7 @@ const getRealTestimonials = async () => {
         const comment = String(review.comment || "").trim();
         if (Number(review.rating) >= 4 && comment.length >= 30) {
           testimonials.push({
-            name: review.userName || "KawilMart shopper",
+            name: review.userName || "Wilwa shopper",
             rating: Number(review.rating),
             comment,
             product: product.name,

@@ -155,7 +155,7 @@ export default function RiderDashboard() {
             await downloadAuthenticatedFile({
                 url: `/api/rider/invoices/download?periodKey=${encodeURIComponent(statementPeriodKey)}`,
                 token,
-                fallbackFilename: `kawilmart-rider-statement-${statementPeriodKey}.html`,
+                fallbackFilename: `wilwa-rider-statement-${statementPeriodKey}.html`,
             });
             toast.success('Statement download started');
         } catch (error) {

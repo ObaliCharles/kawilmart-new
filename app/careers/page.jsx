@@ -3,9 +3,9 @@ import Navbar from "@/components/Navbar";
 import CareersPage from "@/components/company/CareersPage";
 
 export const metadata = {
-  title: "KawilMart | Careers",
+  title: "Wilwa | Careers",
   description:
-    "Help build Uganda's marketplace for everyday essentials. See how to join the KawilMart team.",
+    "Help build Uganda's marketplace for everyday essentials. See how to join the Wilwa team.",
 };
 
 const Careers = () => (

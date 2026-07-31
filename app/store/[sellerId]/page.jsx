@@ -721,7 +721,7 @@ const StorePage = () => {
         </div>
         <div className="flex items-center gap-3">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">★</span>
-          <span>{rating ? `${rating.toFixed(1)} rating from ${reviews} reviews` : "New store on KawilMart"}</span>
+          <span>{rating ? `${rating.toFixed(1)} rating from ${reviews} reviews` : "New store on Wilwa"}</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">⤴</span>
@@ -749,7 +749,7 @@ const StorePage = () => {
           )}
         </span>
         <div>
-          <p className="text-[12.5px] font-semibold text-gray-950">{seller?.name || "KawilMart Store"}</p>
+          <p className="text-[12.5px] font-semibold text-gray-950">{seller?.name || "Wilwa Store"}</p>
           <p className="text-xs text-gray-500">{seller?.location || leadProduct?.sellerLocation || "Location pending"}</p>
           <SellerTrustBadge sellerProfile={seller} className="mt-1.5" />
         </div>
@@ -852,7 +852,7 @@ const StorePage = () => {
                       </span>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <h1 className="text-[1.05rem] font-extrabold leading-tight sm:text-[1.3rem]">{seller?.name || "KawilMart Store"}</h1>
+                          <h1 className="text-[1.05rem] font-extrabold leading-tight sm:text-[1.3rem]">{seller?.name || "Wilwa Store"}</h1>
                           <SellerTrustBadge sellerProfile={seller} />
                         </div>
                         <div className="mt-1 flex items-center gap-1.5 text-[11px] text-white/90">
@@ -1012,7 +1012,7 @@ const StorePage = () => {
                     </div>
                     <div className="rounded-2xl border border-gray-100 bg-white px-3 py-2.5 shadow-sm">
                       <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-gray-400">Support</p>
-                      <p className="mt-0.5 text-[11px] font-semibold text-gray-900">{seller?.supportEmail || seller?.email || "Via KawilMart"}</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-gray-900">{seller?.supportEmail || seller?.email || "Via Wilwa"}</p>
                       <p className="mt-0.5 text-[10px] text-gray-500">Contact after checkout or inbox.</p>
                     </div>
                     <div className="rounded-2xl border border-gray-100 bg-white px-3 py-2.5 shadow-sm">

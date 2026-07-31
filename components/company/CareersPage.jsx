@@ -107,7 +107,7 @@ const applicationSteps = [
 
 const otherPaths = [
   {
-    title: "Sell on KawilMart",
+    title: "Sell on Wilwa",
     body: "Have stock or a shop already? Open a store and sell to buyers across the country.",
     action: "Become a vendor",
     href: "/become-a-vendor",
@@ -120,8 +120,8 @@ const otherPaths = [
   },
   {
     title: "Get to know us first",
-    body: "What KawilMart is, who it is for, and how the marketplace works.",
-    action: "About KawilMart",
+    body: "What Wilwa is, who it is for, and how the marketplace works.",
+    action: "About Wilwa",
     href: "/about",
   },
 ];
@@ -141,7 +141,7 @@ const CareersPage = () => {
             Help build Uganda&apos;s marketplace
           </h1>
           <p className="mt-2 max-w-2xl text-[12.5px] leading-5 text-white/85 md:text-[15px]">
-            KawilMart connects local sellers with buyers across the country &mdash; everyday essentials, paid for the
+            Wilwa connects local sellers with buyers across the country &mdash; everyday essentials, paid for the
             way people here actually pay. If that is work you want to do, we would like to hear from you.
           </p>
 
@@ -157,7 +157,7 @@ const CareersPage = () => {
               onClick={() => navigate("/about")}
               className="rounded-full border border-white/30 bg-white/10 px-5 py-2.5 text-[12.5px] font-bold text-white transition hover:bg-white/20"
             >
-              About KawilMart
+              About Wilwa
             </button>
           </div>
         </div>
@@ -290,7 +290,7 @@ const CareersPage = () => {
         {/* Other ways in ---------------------------------------------------- */}
         <section className="reveal-up mt-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
           <h2 className="text-[15px] font-bold text-gray-950">Not looking for a job?</h2>
-          <p className="mt-1 text-[11.5px] text-gray-500">There is more than one way to work with KawilMart.</p>
+          <p className="mt-1 text-[11.5px] text-gray-500">There is more than one way to work with Wilwa.</p>
 
           <div className="mt-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
             {otherPaths.map((path) => (

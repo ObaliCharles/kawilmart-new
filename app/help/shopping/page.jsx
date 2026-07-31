@@ -3,8 +3,8 @@ import Navbar from "@/components/Navbar";
 import ShoppingHelpPage from "@/components/help/ShoppingHelpPage";
 
 export const metadata = {
-  title: "KawilMart | Shopping Help",
-  description: "How to search, add to cart, choose delivery, pay, and track your KawilMart order.",
+  title: "Wilwa | Shopping Help",
+  description: "How to search, add to cart, choose delivery, pay, and track your Wilwa order.",
 };
 
 const ShoppingHelp = () => (

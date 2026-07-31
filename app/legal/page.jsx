@@ -3,9 +3,9 @@ import Navbar from "@/components/Navbar";
 import LegalCenterPage from "@/components/legal/LegalCenterPage";
 
 export const metadata = {
-  title: "KawilMart | Legal Center",
+  title: "Wilwa | Legal Center",
   description:
-    "Explore KawilMart's privacy policy, terms of service, marketplace role rules, and frequently asked questions.",
+    "Explore Wilwa's privacy policy, terms of service, marketplace role rules, and frequently asked questions.",
 };
 
 const LegalPage = () => {
