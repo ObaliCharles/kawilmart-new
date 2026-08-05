@@ -102,20 +102,22 @@ const TrackOrderPage = () => {
               </button>
             </section>
           ) : (
-            <section className="mt-4 grid gap-4 lg:grid-cols-[19rem_minmax(0,1fr)]">
-              <aside className="reveal-up rounded-2xl bg-white p-3 shadow-sm ring-1 ring-gray-100">
+            <section className="mt-4 grid items-start gap-4 lg:grid-cols-[19rem_minmax(0,1fr)]">
+              <aside className="reveal-up min-w-0 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-gray-100">
                 <h2 className="px-1 text-xs font-black uppercase tracking-[0.12em] text-gray-400">Orders</h2>
-                <div className="mt-2 space-y-1.5">
+                {/* Horizontal rail on small screens so the detail panel stays reachable; vertical list from lg up. */}
+                <div className="scrollbar-none mt-2 flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1.5 lg:overflow-x-visible lg:pb-0">
                   {orders.map((order) => (
                     <button
                       key={order._id}
                       type="button"
+                      aria-pressed={selectedOrder?._id === order._id}
                       onClick={() => setSelectedOrderId(order._id)}
-                      className={`w-full rounded-xl p-3 text-left ${selectedOrder?._id === order._id ? "bg-gray-950 text-white shadow-lg" : "bg-gray-50 text-gray-800 hover:bg-orange-50"}`}
+                      className={`w-56 shrink-0 rounded-xl p-3 text-left transition lg:w-full ${selectedOrder?._id === order._id ? "bg-gray-950 text-white shadow-lg" : "bg-gray-50 text-gray-800 hover:bg-orange-50"}`}
                     >
                       <span className="flex items-center justify-between gap-2">
                         <span className="text-sm font-bold"><OrderCode order={order} /></span>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${selectedOrder?._id === order._id ? "bg-white/15 text-white" : getOrderStatusBadgeClass(order.status)}`}>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${selectedOrder?._id === order._id ? "bg-white/15 text-white" : getOrderStatusBadgeClass(order.status)}`}>
                           {getOrderStatusDisplay(order.status)}
                         </span>
                       </span>
@@ -129,28 +131,29 @@ const TrackOrderPage = () => {
                 <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-orange-600"><OrderCode order={selectedOrder} /></p>
-                    <h2 className="mt-1 truncate text-xl font-black text-gray-950">{selectedOrder.items?.[0]?.product?.name || "Your order"}</h2>
+                    <h2 className="mt-1 truncate text-lg font-black text-gray-950 sm:text-xl">{selectedOrder.items?.[0]?.product?.name || "Your order"}</h2>
                     <p className="mt-1 text-xs text-gray-500">{formatDateTime(selectedOrder.date)} · {selectedOrder.deliveryModeLabel}</p>
                   </div>
-                  <div className="shrink-0 rounded-xl bg-gray-50 px-4 py-3 text-right">
+                  <div className="flex shrink-0 items-center justify-between gap-3 rounded-xl bg-gray-50 px-4 py-3 sm:block sm:text-right">
                     <p className="text-[11px] text-gray-500">Total</p>
                     <p className="text-lg font-black text-gray-950">{formatCurrency(selectedOrder.amount)}</p>
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-3 md:grid-cols-6">
+                {/* flex-1 keeps the bar full-width for any number of steps, at every breakpoint. */}
+                <div className="mt-5 flex gap-1.5 sm:gap-3">
                   {CUSTOMER_TRACKING_STEPS.map((step, index) => {
                     const isDone = index <= currentStepIndex && selectedOrder.status !== "CANCELLED";
                     return (
-                      <div key={step.label} className="min-w-0">
+                      <div key={step.label} className="min-w-0 flex-1">
                         <div className={`h-1 rounded-full ${isDone ? "bg-orange-600" : "bg-gray-200"}`} />
-                        <p className={`mt-2 text-[11px] font-bold ${isDone ? "text-gray-950" : "text-gray-400"}`}>{step.label}</p>
+                        <p className={`mt-2 text-[10px] font-bold leading-tight sm:text-[11px] ${isDone ? "text-gray-950" : "text-gray-400"}`}>{step.label}</p>
                       </div>
                     );
                   })}
                 </div>
 
-                <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_17rem]">
+                <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1fr)_16rem]">
                   <div>
                     <h3 className="text-sm font-black text-gray-950">Tracking activity</h3>
                     <div className="mt-3 space-y-3">
@@ -169,9 +172,9 @@ const TrackOrderPage = () => {
                     </div>
                   </div>
 
-                  <aside className="rounded-2xl bg-gray-50 p-4">
+                  <aside className="min-w-0 rounded-2xl bg-gray-50 p-4">
                     <h3 className="text-sm font-black text-gray-950">Delivery details</h3>
-                    <div className="mt-3 space-y-3 text-xs text-gray-600">
+                    <div className="mt-3 space-y-3 break-words text-xs text-gray-600">
                       <p><span className="font-bold text-gray-950">Seller:</span> {selectedOrder.seller?.name || "Seller"}</p>
                       <p><span className="font-bold text-gray-950">Rider:</span> {selectedOrder.rider?.name || "Not assigned yet"}</p>
                       <p><span className="font-bold text-gray-950">Address:</span> {[selectedOrder.address?.area, selectedOrder.address?.city, selectedOrder.address?.state].filter(Boolean).join(", ") || "Pickup or address pending"}</p>
