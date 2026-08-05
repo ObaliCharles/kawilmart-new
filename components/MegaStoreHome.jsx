@@ -1117,7 +1117,7 @@ const DesktopCategorySidebar = ({ categories, navigate }) => {
       </div>
 
       {activeCategoryValue ? (
-        <div className="absolute left-[calc(100%+8px)] top-0 z-50 grid h-[390px] w-[min(58rem,calc(100vw-18rem))] grid-cols-[0.85fr_1.15fr] overflow-hidden rounded-2xl bg-white/98 text-left shadow-[0_28px_80px_rgba(15,23,42,0.20)] backdrop-blur">
+        <div className="absolute left-[calc(100%-1px)] top-0 z-50 grid h-[390px] w-[min(50rem,calc(100vw-19rem))] grid-cols-[0.78fr_1.22fr] overflow-hidden rounded-r-2xl border border-gray-100 bg-white/98 text-left shadow-[0_28px_80px_rgba(15,23,42,0.20)] backdrop-blur animate-slide-up">
           <div className="bg-gradient-to-br from-gray-950 to-gray-800 p-5 text-white">
             <div className="flex items-start gap-3 rounded-xl bg-white/10 p-3">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white text-orange-600 shadow-sm">
@@ -1145,8 +1145,8 @@ const DesktopCategorySidebar = ({ categories, navigate }) => {
           <div className="p-5">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-extrabold text-gray-950">More Categories</h3>
-                <p className="mt-0.5 text-[11px] text-gray-500">Browse nearby departments and fresh picks.</p>
+                <h3 className="text-base font-extrabold text-gray-950">Explore departments</h3>
+                <p className="mt-0.5 text-[11px] text-gray-500">Quick jumps into related shelves and current picks.</p>
               </div>
               <button type="button" onClick={() => navigate("/categories")} className="rounded-full bg-orange-50 px-3 py-1.5 text-[11px] font-bold text-orange-600">See all</button>
             </div>

@@ -100,7 +100,7 @@ const usageRules = [
 ];
 
 const Card = ({ className = "", children, style }) => (
-  <section style={style} className={`reveal-up rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 ${className}`}>
+  <section style={style} className={`reveal-up premium-card p-4 ${className}`}>
     {children}
   </section>
 );
@@ -162,7 +162,7 @@ const PressPage = () => {
 
           <div className="mt-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {fastFacts.map((fact) => (
-              <article key={fact.label} className="min-w-0 rounded-2xl border border-gray-100 bg-gray-50/60 p-3.5">
+              <article key={fact.label} className="min-w-0 premium-card p-3.5">
                 <div className="flex items-center gap-2">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-orange-600 shadow-sm">
                     <Icon type={fact.icon} className="h-[17px] w-[17px]" />

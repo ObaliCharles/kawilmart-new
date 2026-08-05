@@ -2,10 +2,19 @@
 
 import { SignIn } from '@clerk/nextjs';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function SignInPage() {
+const getSafeRedirectUrl = (value) => {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) {
+    return '/';
+  }
+
+  return value;
+};
+
+function SignInContent() {
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect_url') || '/';
+  const redirectUrl = getSafeRedirectUrl(searchParams.get('redirect_url'));
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
@@ -14,5 +23,13 @@ export default function SignInPage() {
         <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" fallbackRedirectUrl={redirectUrl} forceRedirectUrl={redirectUrl} />
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <SignInContent />
+    </Suspense>
   );
 }

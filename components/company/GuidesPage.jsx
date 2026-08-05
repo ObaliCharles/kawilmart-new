@@ -110,7 +110,7 @@ const safetyChecks = [
 ];
 
 const Card = ({ className = "", children, style }) => (
-  <section style={style} className={`reveal-up rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 ${className}`}>
+  <section style={style} className={`reveal-up premium-card p-4 ${className}`}>
     {children}
   </section>
 );
@@ -169,7 +169,7 @@ const GuidesPage = () => {
             <article
               key={guide.title}
               style={{ "--reveal-delay": `${Math.min(index, 5) * 50}ms` }}
-              className="reveal-up flex min-w-0 flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100"
+              className="reveal-up premium-card flex min-w-0 flex-col p-4"
             >
               <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${guide.tone}`}>
                 <Icon type={guide.icon} />

@@ -14,6 +14,27 @@ const GUEST_CART_KEY = 'wilwa_guest_cart_v1';
 
 const noop = () => {}
 
+const readGuestCart = () => {
+    if (typeof window === 'undefined') return {}
+
+    try {
+        return normalizeCartItems(JSON.parse(window.localStorage.getItem(GUEST_CART_KEY) || '{}'))
+    } catch {
+        return {}
+    }
+}
+
+const writeGuestCart = (nextCartItems) => {
+    if (typeof window === 'undefined') return
+
+    const normalized = normalizeCartItems(nextCartItems)
+    if (Object.keys(normalized).length) {
+        window.localStorage.setItem(GUEST_CART_KEY, JSON.stringify(normalized))
+    } else {
+        window.localStorage.removeItem(GUEST_CART_KEY)
+    }
+}
+
 const defaultAppContextValue = {
     user: null,
     getToken: async () => null,
@@ -178,27 +199,6 @@ export const AppContextProvider = (props) => {
             timestamp: Date.now(),
             products: nextProducts,
         }))
-    }
-
-    const readGuestCart = () => {
-        if (typeof window === 'undefined') return {}
-
-        try {
-            return normalizeCartItems(JSON.parse(window.localStorage.getItem(GUEST_CART_KEY) || '{}'))
-        } catch {
-            return {}
-        }
-    }
-
-    const writeGuestCart = (nextCartItems) => {
-        if (typeof window === 'undefined') return
-
-        const normalized = normalizeCartItems(nextCartItems)
-        if (Object.keys(normalized).length) {
-            window.localStorage.setItem(GUEST_CART_KEY, JSON.stringify(normalized))
-        } else {
-            window.localStorage.removeItem(GUEST_CART_KEY)
-        }
     }
 
     const applyRoleAccess = (role) => {

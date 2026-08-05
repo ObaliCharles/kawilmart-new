@@ -170,7 +170,7 @@ const CareersPage = () => {
             <article
               key={value.title}
               style={{ "--reveal-delay": `${index * 60}ms` }}
-              className="reveal-up min-w-0 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100"
+              className="reveal-up premium-card min-w-0 p-4"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
                 <Icon type={value.icon} />
@@ -182,7 +182,7 @@ const CareersPage = () => {
         </section>
 
         {/* Teams ----------------------------------------------------------- */}
-        <section className="reveal-up mt-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+        <section className="reveal-up premium-card mt-4 p-4">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <h2 className="text-[15px] font-bold text-gray-950">Where we hire</h2>
             <p className="text-[11.5px] text-gray-500">
@@ -194,7 +194,7 @@ const CareersPage = () => {
             {teams.map((team) => (
               <article
                 key={team.title}
-                className="flex min-w-0 gap-3 rounded-2xl border border-gray-100 bg-gray-50/60 p-3.5 transition hover:border-orange-200 hover:bg-orange-50/40"
+                className="flex min-w-0 gap-3 premium-card p-3.5 transition hover:border-orange-200 hover:bg-orange-50/40"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-orange-600 shadow-sm">
                   <Icon type={team.icon} className="h-[18px] w-[18px]" />
@@ -224,7 +224,7 @@ const CareersPage = () => {
 
         {/* How to apply ---------------------------------------------------- */}
         <section className="reveal-up mt-3 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-          <div className="min-w-0 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+          <div className="min-w-0 premium-card p-4">
             <h2 className="text-[15px] font-bold text-gray-950">How to apply</h2>
             <p className="mt-1 text-[11.5px] text-gray-500">
               There is no form to fill in. One email is the whole process.
@@ -288,7 +288,7 @@ const CareersPage = () => {
         </section>
 
         {/* Other ways in ---------------------------------------------------- */}
-        <section className="reveal-up mt-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+        <section className="reveal-up premium-card mt-3 p-4">
           <h2 className="text-[15px] font-bold text-gray-950">Not looking for a job?</h2>
           <p className="mt-1 text-[11.5px] text-gray-500">There is more than one way to work with Wilwa.</p>
 
@@ -298,7 +298,7 @@ const CareersPage = () => {
                 key={path.title}
                 type="button"
                 onClick={() => navigate(path.href)}
-                className="interactive-lift flex min-w-0 flex-col rounded-2xl border border-gray-100 bg-gray-50/60 p-3.5 text-left transition hover:border-orange-200 hover:bg-orange-50/50"
+                className="interactive-lift flex min-w-0 flex-col premium-card p-3.5 text-left transition hover:border-orange-200 hover:bg-orange-50/50"
               >
                 <span className="text-[12.5px] font-bold text-gray-950">{path.title}</span>
                 <span className="mt-1 flex-1 text-[11.5px] leading-[17px] text-gray-600">{path.body}</span>

@@ -87,7 +87,7 @@ const goodToKnow = [
 const StepCard = ({ step, index, onNavigate }) => (
   <li
     style={{ "--reveal-delay": `${Math.min(index, 5) * 60}ms` }}
-    className="reveal-up flex min-w-0 gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100"
+    className="reveal-up premium-card flex min-w-0 gap-3 p-4"
   >
     <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
       <Icon type={step.icon} />
@@ -134,7 +134,7 @@ const ShoppingHelpPage = () => {
           ))}
         </ol>
 
-        <section className="reveal-up mt-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+        <section className="reveal-up premium-card mt-4 p-4">
           <h2 className="text-[15px] font-bold text-gray-950">Good to know</h2>
           <ul className="mt-3 space-y-3">
             {goodToKnow.map((item) => (
@@ -151,7 +151,7 @@ const ShoppingHelpPage = () => {
           </ul>
         </section>
 
-        <section className="reveal-up mt-3 flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:flex-row sm:items-center sm:justify-between">
+        <section className="reveal-up premium-card mt-3 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
               <Icon type="chat" />

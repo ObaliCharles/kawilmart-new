@@ -206,7 +206,7 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
               <article
                 key={pillar.title}
                 style={{ "--reveal-delay": `${index * 70}ms` }}
-                className="reveal-up rounded-2xl bg-white p-5 shadow-sm ring-1 ring-orange-100/70"
+                className="reveal-up premium-card p-5"
               >
                 <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${pillar.tone}`}>
                   <Icon type={pillar.icon} className="h-[22px] w-[22px]" />
@@ -276,7 +276,7 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
             <article
               key={member.name}
               style={{ "--reveal-delay": `${index * 60}ms` }}
-              className="reveal-up flex min-w-0 flex-col items-center rounded-2xl bg-white p-4 text-center shadow-sm ring-1 ring-gray-100"
+              className="reveal-up premium-card flex min-w-0 flex-col items-center p-4 text-center"
             >
               {member.photo ? (
                 <span className="h-16 w-16 overflow-hidden rounded-full ring-2 ring-white shadow-sm">
@@ -366,7 +366,7 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14">
         <div className={`grid gap-4 ${activeTestimonial ? "md:grid-cols-2" : ""}`}>
           {activeTestimonial ? (
-            <div className="reveal-up rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+            <div className="reveal-up premium-card p-5">
               <SectionTitle className="!text-left !text-[15px] md:!text-[18px]">What Our Customers Say</SectionTitle>
 
               <div className="mt-4 min-h-[9rem]">
@@ -412,7 +412,7 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
             </div>
           ) : null}
 
-          <div className="reveal-up rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+          <div className="reveal-up premium-card p-5">
             <SectionTitle className="!text-left !text-[15px] md:!text-[18px]">Payments We Accept</SectionTitle>
             <p className="mt-2 text-[12px] leading-[18px] text-gray-500">
               Mobile money and cash on delivery, collected when your order arrives.

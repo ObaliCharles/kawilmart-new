@@ -1144,7 +1144,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
 
       <header
         ref={headerRef}
-        className={`sticky top-0 z-40 border-b border-gray-200 bg-white transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${isNavHidden ? "-translate-y-[calc(100%+1px)]" : "translate-y-0"} ${hideMobileHeader ? "hidden md:block" : ""}`}
+        className={`sticky top-0 z-40 border-b border-gray-200 bg-white ${hideMobileHeader ? "hidden md:block" : ""}`}
       >
         <div className="hidden border-b border-gray-100 text-xs text-gray-600 lg:block">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
