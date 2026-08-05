@@ -10,6 +10,7 @@ import CartFlyAnimation from "@/components/CartFlyAnimation";
 
 const PRODUCT_CACHE_KEY = 'wilwa_products_cache_v2';
 const PRODUCT_CACHE_TTL_MS = 5 * 60 * 1000;
+const GUEST_CART_KEY = 'wilwa_guest_cart_v1';
 
 const noop = () => {}
 
@@ -158,6 +159,7 @@ export const AppContextProvider = (props) => {
     const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0)
     const [recentNotifications, setRecentNotifications] = useState([])
     const notificationsRefreshInFlight = useRef(false)
+    const notificationsRefreshQueued = useRef(false)
     const normalizedCartItems = normalizeCartItems(cartItems)
     const visibleProductIds = useMemo(
         () => products.map((product) => String(product?._id || "")).filter(Boolean),
@@ -176,6 +178,27 @@ export const AppContextProvider = (props) => {
             timestamp: Date.now(),
             products: nextProducts,
         }))
+    }
+
+    const readGuestCart = () => {
+        if (typeof window === 'undefined') return {}
+
+        try {
+            return normalizeCartItems(JSON.parse(window.localStorage.getItem(GUEST_CART_KEY) || '{}'))
+        } catch {
+            return {}
+        }
+    }
+
+    const writeGuestCart = (nextCartItems) => {
+        if (typeof window === 'undefined') return
+
+        const normalized = normalizeCartItems(nextCartItems)
+        if (Object.keys(normalized).length) {
+            window.localStorage.setItem(GUEST_CART_KEY, JSON.stringify(normalized))
+        } else {
+            window.localStorage.removeItem(GUEST_CART_KEY)
+        }
     }
 
     const applyRoleAccess = (role) => {
@@ -278,7 +301,10 @@ export const AppContextProvider = (props) => {
                 setUserData(userResponse.data.user)
 
                 const serverCartItems = normalizeCartItems(userResponse.data.user.cartItems)
-                const guestCartItems = normalizeCartItems(cartItemsRef.current)
+                const guestCartItems = normalizeCartItems({
+                    ...readGuestCart(),
+                    ...cartItemsRef.current,
+                })
                 const hasGuestItems = Object.keys(guestCartItems).length > 0
 
                 if (hasGuestItems) {
@@ -299,6 +325,7 @@ export const AppContextProvider = (props) => {
                             const persisted = normalizeCartItems(result.cartItems || mergedCartItems)
                             cartItemsRef.current = persisted
                             setCartItems(persisted)
+                            writeGuestCart({})
                         }
                     } catch {
                         // Keep the optimistic merge locally; the next cart mutation will persist it.
@@ -306,6 +333,7 @@ export const AppContextProvider = (props) => {
                 } else {
                     cartItemsRef.current = serverCartItems
                     setCartItems(serverCartItems)
+                    writeGuestCart({})
                 }
             } else {
                 toast.error(sanitizeApiErrorMessage(userResponse.data.message, "Unable to load account profile"))
@@ -320,10 +348,12 @@ export const AppContextProvider = (props) => {
 
     const refreshNotifications = useCallback(async ({ silent = true, full = false } = {}) => {
         if (notificationsRefreshInFlight.current) {
+            notificationsRefreshQueued.current = true
             return []
         }
 
         notificationsRefreshInFlight.current = true
+        notificationsRefreshQueued.current = false
 
         try {
             if (!authReady || !user) {
@@ -357,6 +387,12 @@ export const AppContextProvider = (props) => {
             return []
         } finally {
             notificationsRefreshInFlight.current = false
+            if (notificationsRefreshQueued.current) {
+                notificationsRefreshQueued.current = false
+                window.setTimeout(() => {
+                    void refreshNotifications({ silent: true, full })
+                }, 0)
+            }
         }
     }, [authReady, getToken, user])
 
@@ -524,6 +560,7 @@ export const AppContextProvider = (props) => {
         const normalizedNextCartData = normalizeCartItems(nextCartData)
 
         if (!user) {
+            writeGuestCart(normalizedNextCartData)
             return {
                 success: true,
                 cartItems: normalizedNextCartData,
@@ -637,6 +674,7 @@ export const AppContextProvider = (props) => {
         }
 
         markCartItemMutating(itemId, false)
+        writeGuestCart(cartData)
         toast.success("Item added to cart")
         return { success: true, cartData }
     }
@@ -684,6 +722,7 @@ export const AppContextProvider = (props) => {
             }
         } else {
             markCartItemMutating(itemId, false)
+            writeGuestCart(cartData)
         }
     }
 
@@ -874,7 +913,9 @@ export const AppContextProvider = (props) => {
             refreshUnreadNotifications({ silent: true });
         } else {
             setUserData(false);
-            setCartItems({});
+            const guestCart = readGuestCart()
+            cartItemsRef.current = guestCart
+            setCartItems(guestCart);
             setUnreadNotificationsCount(0);
             applyRoleAccess(null);
             setAccessLoaded(true);
@@ -938,6 +979,7 @@ export const AppContextProvider = (props) => {
         setCartItems(filteredCartItems)
 
         if (!user) {
+            writeGuestCart(filteredCartItems)
             return () => {
                 cancelled = true
             }

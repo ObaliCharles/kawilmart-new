@@ -620,6 +620,8 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
 
   const [recentSearches, setRecentSearches] = useState([]);
   const [isMobileSearchActive, setIsMobileSearchActive] = useState(false);
+  const [isNavHidden, setIsNavHidden] = useState(false);
+  const lastScrollYRef = useRef(0);
   useEffect(() => {
     setRecentSearches(getRecentSearches());
   }, []);
@@ -737,7 +739,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
 
   const requireAuthNavigation = (href) => {
     if (!isAuthenticated) {
-      openSignIn();
+      navigate(`/sign-in?redirect_url=${encodeURIComponent(href)}`);
       return;
     }
 
@@ -771,6 +773,38 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
       document.body.style.overflow = '';
     };
   }, [isMobileAccountOpen, isMobileMenuOpen, isMobileSearchActive]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    let ticking = false;
+    const shouldPinNav = () => Boolean(openDropdown || searchFocused || isMobileAccountOpen || isMobileSearchActive || isMobileMenuOpen);
+
+    const syncNavVisibility = () => {
+      const currentY = Math.max(0, window.scrollY || 0);
+      const delta = currentY - lastScrollYRef.current;
+
+      if (shouldPinNav() || currentY < 80) {
+        setIsNavHidden(false);
+      } else if (Math.abs(delta) > 8) {
+        setIsNavHidden(delta > 0 && currentY > 150);
+      }
+
+      lastScrollYRef.current = currentY;
+      ticking = false;
+    };
+
+    const handleScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(syncNavVisibility);
+      }
+    };
+
+    syncNavVisibility();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobileAccountOpen, isMobileMenuOpen, isMobileSearchActive, openDropdown, searchFocused]);
 
   // Publishes the sticky header's real height as --app-header-h so pages that
   // pin their own bars beneath it (the legal center's tab rail, for one) can
@@ -811,7 +845,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
   }, []);
 
   useEffect(() => {
-    const routes = ['/', '/categories', '/all-products', '/cart', '/my-orders', '/inbox'];
+    const routes = ['/', '/categories', '/all-products', '/cart', '/my-orders', '/track-order', '/inbox'];
     if (showSeller) routes.push('/seller');
     if (showAdmin) routes.push('/admin');
     if (showRider) routes.push('/dashboard/rider');
@@ -865,7 +899,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
       title: "Orders & Services",
       items: [
         { label: "My Orders", href: "/my-orders", icon: "orders" },
-        { label: "Track Order", href: "/my-orders", icon: "track" },
+        { label: "Track Order", href: "/track-order", icon: "track" },
         // Riders get their own dashboard here; for everyone else this pointed
         // at /my-orders and was a straight duplicate of the row above it.
         showRider ? { label: "Deliveries", href: "/dashboard/rider", icon: "delivery" } : null,
@@ -1108,13 +1142,16 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
         />
       ) : null}
 
-      <header ref={headerRef} className={`sticky top-0 z-40 border-b border-gray-200 bg-white ${hideMobileHeader ? "hidden md:block" : ""}`}>
+      <header
+        ref={headerRef}
+        className={`sticky top-0 z-40 border-b border-gray-200 bg-white transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${isNavHidden ? "-translate-y-[calc(100%+1px)]" : "translate-y-0"} ${hideMobileHeader ? "hidden md:block" : ""}`}
+      >
         <div className="hidden border-b border-gray-100 text-xs text-gray-600 lg:block">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
             <span className="font-medium text-gray-700">Uganda's marketplace for everyday essentials</span>
             <div className="flex items-center gap-10">
               <button type="button" onClick={() => goTo('/seller')} className="transition hover:text-orange-600">Sell on Wilwa</button>
-              <button type="button" onClick={() => requireAuthNavigation('/my-orders')} className="transition hover:text-orange-600">Track Order</button>
+              <button type="button" onClick={() => requireAuthNavigation('/track-order')} className="transition hover:text-orange-600">Track Order</button>
               <button type="button" onClick={() => navigate('/help')} className="transition hover:text-orange-600">Help Center</button>
               <button type="button" onClick={() => navigate('/become-a-vendor')} className="transition hover:text-orange-600">Become a Vendor</button>
             </div>
@@ -1277,7 +1314,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
                   <div className="absolute left-0 top-full z-50 w-52 rounded-lg border border-gray-200 bg-white p-2 text-sm font-medium shadow-xl">
                     {[
                       ['Help Center', '/help'],
-                      ['Track Order', '/my-orders'],
+                      ['Track Order', '/track-order'],
                       ['Returns & Refunds', '/legal#terms'],
                       ['Shopping Guides', '/guides'],
                       ['Contact Us', '/inbox?tab=support'],
@@ -1307,7 +1344,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
         </div>
       </header>
 
-      <nav className="fixed inset-x-0 bottom-0 z-[48] bg-white/95 px-4 pb-1.5 pt-1.5 shadow-[0_-8px_24px_rgba(15,23,42,0.10)] backdrop-blur md:hidden">
+      <nav className={`fixed inset-x-0 bottom-0 z-[48] bg-white/95 px-4 pb-1.5 pt-1.5 shadow-[0_-8px_24px_rgba(15,23,42,0.10)] backdrop-blur transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform md:hidden ${isNavHidden ? "translate-y-[calc(100%+1rem)]" : "translate-y-0"}`}>
         <div className="relative mx-auto grid max-w-sm grid-cols-5 rounded-[1.25rem] border border-gray-100 bg-white px-1 py-1 text-[10px] font-semibold text-gray-500 shadow-sm">
           {[
             { key: "home", label: "Home", href: "/", icon: <DockIcon type="home" /> },
@@ -1355,7 +1392,7 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
             <button
               key={item.label}
               type="button"
-              onClick={() => item.href ? navigate(item.href) : openSignIn()}
+              onClick={() => item.href ? requireAuthNavigation(item.href) : openSignIn()}
               className={`relative flex min-h-10 flex-col items-center justify-center gap-0.5 rounded-xl transition ${isDockActive(item) ? "bg-orange-50 text-orange-600" : "text-gray-500"}`}
             >
               {React.cloneElement(item.icon, { className: "h-5 w-5" })}

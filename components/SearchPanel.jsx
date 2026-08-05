@@ -158,7 +158,7 @@ const PopularCategoriesList = ({ popularCategories, onPickCategory, onViewAllCat
   </div>
 );
 
-const PopularBrandsSection = ({ brands, onPickBrand, columns = "grid-cols-3" }) => (
+const PopularBrandsSection = ({ brands, onPickBrand, columns = "grid-cols-3", compact = false }) => (
   <div>
     <SectionTitle>Popular Brands</SectionTitle>
     <div className={`grid gap-1.5 ${columns}`}>
@@ -167,13 +167,13 @@ const PopularBrandsSection = ({ brands, onPickBrand, columns = "grid-cols-3" }) 
           key={brand.slug || brand.name}
           type="button"
           onMouseDown={stopBlur(() => onPickBrand(brand))}
-          className="flex h-8 min-w-0 items-center justify-center rounded-lg border border-gray-200 bg-white px-1.5 transition hover:border-orange-300"
+          className={`flex min-w-0 items-center justify-center rounded-lg border border-gray-200 bg-white transition hover:border-orange-300 ${compact ? "h-7 px-1" : "h-8 px-1.5"}`}
         >
           {brand.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={brand.logoUrl} alt={brand.name} className="max-h-4.5 max-w-full object-contain" />
+            <img src={brand.logoUrl} alt={brand.name} className={`${compact ? "max-h-3.5" : "max-h-4"} max-w-full object-contain`} />
           ) : (
-            <span className="truncate text-[10.5px] font-bold text-gray-800">{brand.name}</span>
+            <span className={`truncate font-bold text-gray-800 ${compact ? "text-[9.5px]" : "text-[10.5px]"}`}>{brand.name}</span>
           )}
         </button>
       ))}
@@ -394,7 +394,7 @@ export const MobileSearchBody = ({
       ) : null}
       {trendingTerms.length ? <TrendingSection trendingTerms={trendingTerms} onPickTerm={onPickTerm} /> : null}
       <PopularCategoriesCards popularCategories={popularCategories} onPickCategory={onPickCategory} columns="grid-cols-4" />
-      {featuredBrands.length ? <PopularBrandsSection brands={featuredBrands} onPickBrand={onPickBrand} columns="grid-cols-3" /> : null}
+      {featuredBrands.length ? <PopularBrandsSection brands={featuredBrands} onPickBrand={onPickBrand} columns="grid-cols-4" compact /> : null}
     </div>
   );
 };

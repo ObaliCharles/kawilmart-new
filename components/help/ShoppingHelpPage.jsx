@@ -56,7 +56,7 @@ const steps = [
     icon: "track",
     title: "Track it to your door",
     body: "Follow your order in My Orders through Placed, Accepted, Processing, Ready, Out for delivery and Delivered. Rider contact appears once they accept the job.",
-    cta: { label: "My orders", href: "/my-orders" },
+    cta: { label: "Track order", href: "/track-order" },
   },
   {
     icon: "confirm",

@@ -113,11 +113,11 @@ const footerColumns = [
     icon: "service",
     links: [
       ["Help Center", "/help", "help"],
-      ["How to Buy", "/all-products", "buy"],
+      ["How to Buy", "/help/shopping", "buy"],
       ["Shipping & Delivery", "/legal#terms", "shipping"],
       ["Returns & Refunds", "/legal#terms", "returns"],
       ["Contact Us", "mailto:kawilmart@gmail.com", "contact"],
-      ["Track Order", "/my-orders", "track"],
+      ["Track Order", "/track-order", "track"],
     ],
   },
   {
@@ -186,15 +186,13 @@ const legalLinks = [
   ["Cookie Policy", "/legal#privacy"],
 ];
 
-// The same asset the navbar uses. It is dark artwork, so it needs the white
-// plate to stay legible against the navy panel.
 const BrandMark = () => (
   <Link
     href="/"
-    className="inline-flex shrink-0 items-center rounded-lg bg-white px-3 py-2"
+    className="inline-flex shrink-0 items-center"
     aria-label="Wilwa home"
   >
-    <Image src={assets.logo} alt="Wilwa" width={120} height={32} className="h-7 w-auto object-contain" priority={false} />
+    <Image src={assets.logo_dark_theme} alt="Wilwa" width={132} height={40} className="h-9 w-auto object-contain" priority={false} />
   </Link>
 );
 

@@ -129,7 +129,7 @@ const OrderSummary = () => {
 
     if (!user) {
       toast.error("Please sign in to place an order");
-      navigate("/sign-in");
+      navigate("/sign-in?redirect_url=/cart");
       return;
     }
 

@@ -1,4 +1,5 @@
 import logo from "./logo.svg";
+import logo_dark_theme from "./logo-dark-theme.png";
 import kbag_logo from "./kbag_logo.svg";
 import search_icon from "./search_icon.svg";
 import user_icon from "./user_icon.svg";
@@ -51,6 +52,7 @@ import product_details_page_apple_earphone_image5 from "./product_details_page_a
 
 export const assets = {
   logo,
+  logo_dark_theme,
   kbag_logo,
   search_icon,
   user_icon,

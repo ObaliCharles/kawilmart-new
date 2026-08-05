@@ -123,7 +123,7 @@ const ItemThumbnails = ({ items }) => {
 };
 
 const MyOrders = () => {
-    const { getToken, user, authReady, formatCurrency } = useAppContext();
+    const { getToken, user, authReady, formatCurrency, navigate } = useAppContext();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -163,7 +163,11 @@ const MyOrders = () => {
     useEffect(() => {
         if (authReady && user) {
             void fetchOrders();
+        } else if (authReady && !user) {
+            navigate("/sign-in?redirect_url=/my-orders");
+            setLoading(false);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authReady, user]);
 
     const hasActiveOrders = orders.some((order) => !isTerminalOrderStatus(order.status));

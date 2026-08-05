@@ -68,8 +68,8 @@ const guides = [
     icon: "track",
     title: "Tracking an order to your door",
     body: "Every order moves through Placed, Accepted, Processing, Ready, Out for delivery and Delivered. The rider's contact appears once they accept the job, and you confirm receipt yourself once the items are in your hands.",
-    action: "My orders",
-    href: "/my-orders",
+    action: "Track order",
+    href: "/track-order",
     tone: "text-sky-600 bg-sky-50",
   },
   {

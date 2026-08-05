@@ -769,25 +769,27 @@ const MobileHome = ({
 
       <MobileBrandDisplay brands={brands} showcases={brandShowcases} navigate={navigate} />
 
-      <section className="-mx-3 mt-6 rounded-xl bg-gradient-to-br from-orange-100/90 via-rose-100/75 to-amber-50 px-3 py-3.5">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <h2 className="text-base font-extrabold text-gray-950">Flash Sale</h2>
-            <p className="mt-0.5 text-[10px] text-gray-500">Limited-time deals</p>
+      {dealProducts.length ? (
+        <section className="-mx-3 mt-6 rounded-xl bg-gradient-to-br from-orange-100/90 via-rose-100/75 to-amber-50 px-3 py-3.5">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h2 className="text-base font-extrabold text-gray-950">Flash Sale</h2>
+              <p className="mt-0.5 text-[10px] text-gray-500">Limited-time deals</p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              {dealDeadline ? <FlashCountdown deadline={dealDeadline} size="sm" /> : null}
+              <button type="button" onClick={() => navigate("/all-products?filter=flash")} className="text-[11px] font-bold text-orange-600">
+                View all -&gt;
+              </button>
+            </div>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1.5">
-            {dealDeadline ? <FlashCountdown deadline={dealDeadline} size="sm" /> : null}
-            <button type="button" onClick={() => navigate("/all-products?filter=flash")} className="text-[11px] font-bold text-orange-600">
-              View all -&gt;
-            </button>
+          <div className="-mx-3 flex gap-2.5 overflow-x-auto px-3 pb-1">
+            {dealProducts.slice(0, 6).map((product, index) => (
+              <MobileFlashCard key={`mobile-flash-${index}-${product._id || product.name}`} product={product} cardIndex={index} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} toggleProductLike={toggleProductLike} />
+            ))}
           </div>
-        </div>
-        <div className="-mx-3 flex gap-2.5 overflow-x-auto px-3 pb-1">
-          {(dealProducts.length ? dealProducts : sortedProducts).slice(0, 6).map((product, index) => (
-            <MobileFlashCard key={`mobile-flash-${index}-${product._id || product.name}`} product={product} cardIndex={index} navigate={navigate} prefetchRoute={prefetchRoute} formatCurrency={formatCurrency} toggleProductLike={toggleProductLike} />
-          ))}
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       <section className="mt-8">
         <SectionHeader title="Today's For You!" onViewAll={() => navigate("/all-products")} />
@@ -1602,9 +1604,18 @@ const FlashCountdown = ({ deadline, size = "md" }) => {
 const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, toggleProductLike, customTopCategories, subcategoriesByParent, brands } = useAppContext();
   const [recentlyViewedIds, setRecentlyViewedIds] = useState([]);
+  const [flashClockTick, setFlashClockTick] = useState(0);
 
   useEffect(() => {
     setRecentlyViewedIds(getRecentlyViewedIds());
+  }, []);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setFlashClockTick((tick) => tick + 1);
+    }, 1000);
+
+    return () => window.clearInterval(interval);
   }, []);
   const resolvedContent = useMemo(() => resolveSiteContent(siteContent), [siteContent]);
   // Real top-level categories (the static marketplace list plus any the admin
@@ -1677,7 +1688,10 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   // getProductActivitySnapshot). Products merely marked "featured" or
   // "discount" promotionType are a different concept and must not appear
   // here, or the countdown has nothing real to count down to.
-  const flashDealProducts = sortedProducts.filter((product) => getProductActivitySnapshot(product).flashDealActive);
+  const flashDealProducts = useMemo(
+    () => sortedProducts.filter((product) => getProductActivitySnapshot(product).flashDealActive),
+    [flashClockTick, sortedProducts]
+  );
   const dealProducts = takeProducts(
     uniqueById(flashDealProducts)
       .sort((leftProduct, rightProduct) => (Number(rightProduct.date) || 0) - (Number(leftProduct.date) || 0)),
@@ -1787,7 +1801,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   };
   const marketingBanners = [...promoSlides, ...featuredCards];
   const desktopPromoCards = [...sidebarBanners, ...promoSlides, ...featuredCards];
-  const desktopDealProducts = takeProducts(uniqueById(dealProducts.length ? dealProducts : sortedProducts), 5);
+  const desktopDealProducts = takeProducts(uniqueById(dealProducts), 5);
 
   useEffect(() => {
     setVisibleStoreCount(Math.min(8, storeCards.length || 8));
