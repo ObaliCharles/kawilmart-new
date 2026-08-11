@@ -27,7 +27,7 @@ import {
   createStatusTrackingEvent,
 } from "@/lib/orderTracking";
 import { notifyUsers } from "@/lib/notifyUsers";
-import { getActiveGateway, requiresUpfrontPayment } from "@/lib/payments";
+import { getActiveGateway, isOnlinePaymentMethod, requiresUpfrontPayment } from "@/lib/payments";
 import { getOrSyncDatabaseUser } from "@/lib/clerkUserSync";
 import { randomUUID } from "crypto";
 
@@ -61,7 +61,16 @@ const startGatewayPayment = async ({ reference, orders, userId, addressDoc, meth
   const gateway = getActiveGateway();
   const totalAmount = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
   const customer = await getOrSyncDatabaseUser(userId, { select: "name email", lean: true });
-  const baseUrl = (process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
+  // Falls back to the URL Vercel injects, so a deployment that forgot
+  // APP_BASE_URL still sends shoppers back to itself over https rather than
+  // failing the gateway's https check. Production domain first, so a payment
+  // started on a preview build still returns to the stable URL.
+  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  const baseUrl = (
+    process.env.APP_BASE_URL
+    || process.env.NEXT_PUBLIC_APP_URL
+    || (vercelUrl ? `https://${vercelUrl}` : "")
+  ).replace(/\/$/, "");
 
   const { redirectUrl, transactionId } = await gateway.initiate({
     reference,
@@ -126,6 +135,24 @@ export async function POST(request) {
     // reference), and it has to be the same string the orders are keyed by so
     // the webhook can find them again. Mint one if the client did not send it.
     const payUpfront = requiresUpfrontPayment(normalizedPaymentMethod);
+
+    // A mobile-money checkout that quietly becomes collect-on-delivery is the
+    // single most confusing failure here: the shopper picks MTN/Airtel, the
+    // order is placed, and nothing says the gateway was never reachable. Name
+    // the missing configuration in the logs instead of failing silently.
+    if (isOnlinePaymentMethod(normalizedPaymentMethod) && !payUpfront) {
+      const missing = [
+        !process.env.PAYMENT_GATEWAY && "PAYMENT_GATEWAY",
+        !process.env.FLW_CLIENT_ID && "FLW_CLIENT_ID",
+        !process.env.FLW_CLIENT_SECRET && "FLW_CLIENT_SECRET",
+      ].filter(Boolean);
+
+      console.warn(
+        `Order ${normalizedPaymentMethod}: no payment gateway is active, so this order is being placed as collect-on-delivery.`
+        + (missing.length ? ` Missing env: ${missing.join(", ")}.` : " Gateway is configured but reported itself unusable — check the logs above.")
+      );
+    }
+
     if (payUpfront && !safeIdempotencyKey) {
       safeIdempotencyKey = randomUUID().replace(/-/g, "");
     }
