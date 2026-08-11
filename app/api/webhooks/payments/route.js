@@ -13,6 +13,20 @@ const handleNotification = async (request, { body = null, rawBody = "" } = {}) =
         return NextResponse.json({ success: false, message: "No payment gateway configured" }, { status: 503 });
     }
 
+    // A server that cannot check signatures at all is a configuration problem,
+    // not a bad caller. Saying so separately turns an unexplainable 401 into an
+    // actionable message, and 503 keeps the gateway retrying, so the payment
+    // still settles once the secret is filled in.
+    if (typeof gateway.canVerifyWebhook === "function" && !gateway.canVerifyWebhook()) {
+        console.error(
+            "Webhook rejected: no webhook secret configured on this server. Set FLW_WEBHOOK_HASH to the same secret hash as the Flutterwave dashboard webhook."
+        );
+        return NextResponse.json({
+            success: false,
+            message: "Webhook secret is not configured on the server",
+        }, { status: 503 });
+    }
+
     // Signatures are computed over the exact bytes received, so the raw text is
     // passed through rather than a re-serialised copy of the parsed body.
     if (!gateway.verifyWebhook(request.headers, rawBody)) {
