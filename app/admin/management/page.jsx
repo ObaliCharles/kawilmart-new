@@ -23,6 +23,13 @@ const MANAGEMENT_TABS = {
         emptyLabel: 'No riders matched your search.',
         searchPlaceholder: 'Search by rider, email, location, vehicle...',
     },
+    applications: {
+        key: 'applications',
+        label: 'Applications',
+        singular: 'Application',
+        emptyLabel: 'No vendor applications matched your search.',
+        searchPlaceholder: 'Search by applicant, business, email, location...',
+    },
 };
 
 const badgeToneClasses = {
@@ -45,6 +52,13 @@ const accountToneClasses = {
     active: 'bg-emerald-50 text-emerald-700',
     pending: 'bg-amber-50 text-amber-700',
     suspended: 'bg-red-50 text-red-700',
+};
+
+const applicationToneClasses = {
+    pending: 'bg-amber-50 text-amber-700',
+    reviewing: 'bg-sky-50 text-sky-700',
+    approved: 'bg-emerald-50 text-emerald-700',
+    rejected: 'bg-red-50 text-red-700',
 };
 
 const supportPriorityToneClasses = {
@@ -113,7 +127,9 @@ const normalizeDateInput = (value) => {
     return date.toISOString().slice(0, 10);
 };
 
-const getManagementTab = (value) => (value === 'rider' ? 'rider' : 'seller');
+const getManagementTab = (value) => (
+    value === 'rider' || value === 'applications' ? value : 'seller'
+);
 
 const formatDateTime = (value) => {
     if (!value) {
@@ -293,10 +309,13 @@ export default function AdminManagement() {
     const searchParams = useSearchParams();
     const { getToken, user, authReady, formatCurrency } = useAppContext();
     const [users, setUsers] = useState([]);
+    const [vendorApplications, setVendorApplications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [applicationsLoading, setApplicationsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState(() => getManagementTab(searchParams.get('tab')));
     const [selectedEntityId, setSelectedEntityId] = useState('');
+    const [updatingApplicationId, setUpdatingApplicationId] = useState('');
     const [entityDraft, setEntityDraft] = useState(emptyManagementDraft);
     const [saving, setSaving] = useState(false);
     const [supportMessages, setSupportMessages] = useState([]);
@@ -313,6 +332,27 @@ export default function AdminManagement() {
         const params = new URLSearchParams(searchParams.toString());
         params.set('tab', resolvedTab);
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
+
+    const fetchVendorApplications = async () => {
+        try {
+            setApplicationsLoading(true);
+            const token = await getToken();
+            const { data } = await axios.get('/api/admin/vendor-applications', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!data.success) {
+                toast.error(data.message || 'Failed to load vendor applications');
+                return;
+            }
+
+            setVendorApplications(data.applications || []);
+        } catch (error) {
+            toast.error(error.message || 'Failed to load vendor applications');
+        } finally {
+            setApplicationsLoading(false);
+        }
     };
 
     const fetchUsers = async (preferredId) => {
@@ -369,7 +409,10 @@ export default function AdminManagement() {
             return;
         }
 
-        void fetchUsers();
+        void Promise.all([
+            fetchUsers(),
+            fetchVendorApplications(),
+        ]);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authReady, user]);
 
@@ -381,6 +424,23 @@ export default function AdminManagement() {
     }, [activeTab, searchParams]);
 
     const currentTabConfig = MANAGEMENT_TABS[activeTab];
+
+    const filteredApplications = useMemo(() => {
+        const safeQuery = searchQuery.trim().toLowerCase();
+        if (!safeQuery) {
+            return vendorApplications;
+        }
+
+        return vendorApplications.filter((application) => [
+            application.fullName,
+            application.email,
+            application.phoneNumber,
+            application.businessName,
+            application.businessLocation,
+            application.whatYouSell,
+            application.status,
+        ].some((value) => String(value || '').toLowerCase().includes(safeQuery)));
+    }, [searchQuery, vendorApplications]);
 
     const tabEntities = useMemo(() => (
         users.filter((entry) => entry.role === activeTab)
@@ -446,6 +506,42 @@ export default function AdminManagement() {
         activeAccess: tabEntities.filter((entry) => entry.access?.hasAccess).length,
         overdue: tabEntities.filter((entry) => entry.subscription?.status === 'overdue').length,
     }), [tabEntities]);
+
+    const applicationSummary = useMemo(() => ({
+        total: vendorApplications.length,
+        pending: vendorApplications.filter((entry) => entry.status === 'pending').length,
+        reviewing: vendorApplications.filter((entry) => entry.status === 'reviewing').length,
+        approved: vendorApplications.filter((entry) => entry.status === 'approved').length,
+    }), [vendorApplications]);
+
+    const updateApplicationStatus = async (applicationId, status) => {
+        try {
+            setUpdatingApplicationId(applicationId);
+            const token = await getToken();
+            const { data } = await axios.patch('/api/admin/vendor-applications', {
+                applicationId,
+                status,
+            }, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!data.success) {
+                toast.error(data.message || 'Failed to update application');
+                return;
+            }
+
+            toast.success('Application updated');
+            setVendorApplications((current) =>
+                current.map((application) =>
+                    application._id === applicationId ? data.application : application
+                )
+            );
+        } catch (error) {
+            toast.error(error.message || 'Failed to update application');
+        } finally {
+            setUpdatingApplicationId('');
+        }
+    };
 
     const updateDraftField = (field, value) => {
         setEntityDraft((current) => ({
@@ -616,9 +712,22 @@ export default function AdminManagement() {
                     >
                         Riders
                     </TabButton>
+                    <TabButton
+                        active={activeTab === 'applications'}
+                        onClick={() => handleTabChange('applications')}
+                        badge={applicationSummary.pending || undefined}
+                    >
+                        Applications
+                    </TabButton>
                     <button
                         type="button"
-                        onClick={() => fetchUsers(selectedEntity?.id || '')}
+                        onClick={() => {
+                            if (activeTab === 'applications') {
+                                void fetchVendorApplications();
+                                return;
+                            }
+                            void fetchUsers(selectedEntity?.id || '');
+                        }}
                         className="inline-flex items-center justify-center rounded-full bg-gray-100 px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-200"
                     >
                         Refresh
@@ -626,14 +735,109 @@ export default function AdminManagement() {
                 </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <MetricCard label={currentTabConfig.label} value={tabSummary.total} sub="Managed accounts" />
-                <MetricCard label="Verified" value={tabSummary.verified} sub="Approved accounts" tone="bg-emerald-50" />
-                <MetricCard label="Access Active" value={tabSummary.activeAccess} sub="Can operate right now" tone="bg-sky-50" />
-                <MetricCard label="Overdue" value={tabSummary.overdue} sub="Needs billing follow-up" tone="bg-red-50" />
-            </div>
+            {activeTab === 'applications' ? (
+                <>
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <MetricCard label="Applications" value={applicationSummary.total} sub="Submitted vendor requests" />
+                        <MetricCard label="Pending" value={applicationSummary.pending} sub="Waiting for first review" tone="bg-amber-50" />
+                        <MetricCard label="Reviewing" value={applicationSummary.reviewing} sub="In active follow-up" tone="bg-sky-50" />
+                        <MetricCard label="Approved" value={applicationSummary.approved} sub="Ready to onboard" tone="bg-emerald-50" />
+                    </div>
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+                    <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+                        <label className="block">
+                            <span className="mb-2 block text-sm font-medium text-gray-700">Find an application</span>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(event) => setSearchQuery(event.target.value)}
+                                placeholder={currentTabConfig.searchPlaceholder}
+                                className="w-full rounded-lg bg-gray-50 px-3 py-2.5 text-sm outline-none transition focus:bg-white focus:ring-2 focus:ring-orange-200"
+                            />
+                        </label>
+                    </div>
+
+                    <div className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-gray-100">
+                        {applicationsLoading ? (
+                            <div className="px-4 py-14 text-center text-sm text-gray-400">
+                                Loading vendor applications...
+                            </div>
+                        ) : filteredApplications.length === 0 ? (
+                            <div className="rounded-2xl border border-dashed border-gray-200 px-4 py-14 text-center text-sm text-gray-500">
+                                {currentTabConfig.emptyLabel}
+                            </div>
+                        ) : (
+                            <div className="grid gap-3 xl:grid-cols-2">
+                                {filteredApplications.map((application) => {
+                                    const updating = updatingApplicationId === application._id;
+
+                                    return (
+                                        <article key={application._id} className="rounded-2xl border border-gray-200 bg-white p-4 transition hover:border-orange-200 hover:shadow-sm">
+                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                                <div className="min-w-0">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <h2 className="text-base font-semibold text-gray-900">{application.businessName}</h2>
+                                                        <StatusPill className={applicationToneClasses[application.status] || applicationToneClasses.pending}>
+                                                            {application.status}
+                                                        </StatusPill>
+                                                    </div>
+                                                    <p className="mt-1 text-sm text-gray-600">{application.fullName}</p>
+                                                    <p className="text-xs text-gray-400">
+                                                        {application.email}
+                                                        {application.phoneNumber ? ` · ${application.phoneNumber}` : ''}
+                                                    </p>
+                                                    <p className="mt-2 text-xs font-medium text-gray-500">{application.businessLocation}</p>
+                                                </div>
+                                                <p className="shrink-0 text-xs text-gray-400">{formatDateTime(application.date)}</p>
+                                            </div>
+
+                                            <div className="mt-4 grid gap-3 rounded-2xl bg-gray-50 p-4 text-sm text-gray-600">
+                                                <div>
+                                                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Products</p>
+                                                    <p className="mt-1 whitespace-pre-wrap leading-6">{application.whatYouSell}</p>
+                                                </div>
+                                                {application.notes ? (
+                                                    <div>
+                                                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Notes</p>
+                                                        <p className="mt-1 whitespace-pre-wrap leading-6">{application.notes}</p>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+
+                                            <div className="mt-4 flex flex-wrap gap-2">
+                                                {['reviewing', 'approved', 'rejected', 'pending'].map((status) => (
+                                                    <button
+                                                        key={`${application._id}-${status}`}
+                                                        type="button"
+                                                        onClick={() => updateApplicationStatus(application._id, status)}
+                                                        disabled={updating || application.status === status}
+                                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition ${
+                                                            application.status === status
+                                                                ? 'cursor-not-allowed bg-gray-900 text-white'
+                                                                : 'bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-700'
+                                                        } ${updating ? 'opacity-60' : ''}`}
+                                                    >
+                                                        {updating && application.status !== status ? 'Updating...' : status}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </article>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </>
+            ) : (
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <MetricCard label={currentTabConfig.label} value={tabSummary.total} sub="Managed accounts" />
+                    <MetricCard label="Verified" value={tabSummary.verified} sub="Approved accounts" tone="bg-emerald-50" />
+                    <MetricCard label="Access Active" value={tabSummary.activeAccess} sub="Can operate right now" tone="bg-sky-50" />
+                    <MetricCard label="Overdue" value={tabSummary.overdue} sub="Needs billing follow-up" tone="bg-red-50" />
+                </div>
+            )}
+
+            {activeTab !== 'applications' ? <div className="grid grid-cols-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
                 <aside className="space-y-4">
                     <div className="rounded-xl bg-white ring-1 ring-gray-100 p-4 shadow-sm">
                         <label className="block">
@@ -1394,7 +1598,7 @@ export default function AdminManagement() {
                         </>
                     )}
                 </section>
-            </div>
+            </div> : null}
         </div>
     );
 }

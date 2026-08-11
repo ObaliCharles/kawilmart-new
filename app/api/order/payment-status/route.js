@@ -7,10 +7,9 @@ import { getActiveGateway } from "@/lib/payments";
 import { settleTransaction } from "@/lib/paymentSettlement";
 
 // Called by the order-placed page when a shopper returns from the hosted
-// payment page. Gateway callbacks can be delayed, retried or dropped entirely.
-// Pesapal's IPN especially, so rather than trusting it to arrive we re-verify
-// here too. Settlement is idempotent, so whichever path lands first wins and
-// the other becomes a no-op.
+// payment page. Gateway callbacks can be delayed, retried or dropped entirely,
+// so rather than trusting one to arrive we re-verify here too. Settlement is
+// idempotent, so whichever path lands first wins and the other becomes a no-op.
 export async function GET(request) {
     try {
         const userId = await getRequestUserId(request);
@@ -20,7 +19,8 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const reference = (searchParams.get("reference") || "").trim();
-        // Pesapal appends its own tracking id to the callback URL.
+        // Whatever transaction handle the gateway appended to the callback URL
+        // (Flutterwave's transaction_id, Pesapal's OrderTrackingId).
         const trackingId = (searchParams.get("trackingId") || "").trim();
 
         if (!reference) {
@@ -41,9 +41,13 @@ export async function GET(request) {
 
         const stillPending = orders.some((order) => order.paymentStatus === PAYMENT_STATUSES.PENDING);
         const gateway = getActiveGateway();
-        const resolvedTrackingId = trackingId || orders.find((order) => order.paymentTransactionId)?.paymentTransactionId;
+        const resolvedTrackingId = trackingId || orders.find((order) => order.paymentTransactionId)?.paymentTransactionId || "";
+        // Flutterwave mints no transaction id until the shopper pays, so with no
+        // id yet we still settle by our own reference rather than waiting on the
+        // webhook. settleTransaction picks whichever handle the gateway supports.
+        const canSettle = Boolean(resolvedTrackingId) || Boolean(gateway?.verifyByReference);
 
-        if (stillPending && gateway && resolvedTrackingId) {
+        if (stillPending && gateway && canSettle) {
             await settleTransaction({
                 gateway,
                 transactionId: resolvedTrackingId,

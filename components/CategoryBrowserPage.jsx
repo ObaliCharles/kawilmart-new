@@ -1,9 +1,8 @@
 'use client'
 
 import { useMemo, useState } from "react";
-import MegaStoreHome from "@/components/MegaStoreHome";
 import { useAppContext } from "@/context/AppContext";
-import { homeCategoryValues, getCategoryMeta, categoryMatchesSelection, buildCategoryHref } from "@/lib/marketplaceCategories";
+import { buildTopCategoryRail, categoryMatchesSelection, buildCategoryHref } from "@/lib/marketplaceCategories";
 
 const categoryHref = (category, subcategory) => {
   if (!subcategory) return buildCategoryHref(category);
@@ -35,22 +34,26 @@ const CategoryTile = ({ label, icon, imageUrl, onClick }) => (
   </button>
 );
 
-const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
+// Department glyph for the desktop directory: admin-uploaded PNG first, then
+// the category emoji, then a neutral placeholder — same precedence as the
+// mobile tiles, so both views stay visually in sync.
+const DepartmentIcon = ({ label, icon, imageUrl }) => (
+  <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50 ring-1 ring-gray-100">
+    {imageUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={imageUrl} alt="" className="h-full w-full object-contain p-1.5" />
+    ) : (
+      <span className="text-lg" aria-hidden="true">{icon || "🏷️"}</span>
+    )}
+    <span className="sr-only">{label}</span>
+  </span>
+);
+
+const CategoryBrowserPage = ({ initialProducts = [] }) => {
   const { products, navigate, customTopCategories, subcategoriesByParent } = useAppContext();
   const storefrontProducts = products.length ? products : initialProducts;
 
-  const departments = useMemo(() => {
-    const staticDepartments = homeCategoryValues.map((value) => {
-      const meta = getCategoryMeta(value);
-      return { value, label: meta.label, icon: meta.icon };
-    });
-    const customDepartments = customTopCategories.map((category) => ({
-      value: category.name,
-      label: category.name,
-      icon: category.icon || "📦",
-    }));
-    return [...staticDepartments, ...customDepartments];
-  }, [customTopCategories]);
+  const departments = useMemo(() => buildTopCategoryRail(customTopCategories), [customTopCategories]);
 
   const [selectedDepartmentValue, setSelectedDepartmentValue] = useState(null);
   const currentDepartment = departments.find((department) => department.value === selectedDepartmentValue) || departments[0];
@@ -59,19 +62,116 @@ const CategoryBrowserPage = ({ siteContent, initialProducts = [] }) => {
     navigate(categoryHref(category, subcategory));
   };
 
-  const currentSubcategories = (subcategoriesByParent.get(currentDepartment?.value) || [])
+  const subcategoriesFor = (departmentValue) => (subcategoriesByParent.get(departmentValue) || [])
     .filter((subcategory) => subcategory.isActive !== false)
     .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
-  const categoryProductCount = currentDepartment
-    ? storefrontProducts.filter((product) => categoryMatchesSelection(product?.category, currentDepartment.value)).length
-    : 0;
+  const currentSubcategories = subcategoriesFor(currentDepartment?.value);
+
+  // One pass over the catalogue instead of a filter per department.
+  const countsByDepartment = useMemo(() => {
+    const counts = new Map(departments.map((department) => [department.value, 0]));
+    storefrontProducts.forEach((product) => {
+      departments.forEach((department) => {
+        if (categoryMatchesSelection(product?.category, department.value)) {
+          counts.set(department.value, (counts.get(department.value) || 0) + 1);
+        }
+      });
+    });
+    return counts;
+  }, [departments, storefrontProducts]);
+
+  const categoryProductCount = countsByDepartment.get(currentDepartment?.value) || 0;
 
   return (
     <>
-      <div className="hidden lg:block">
-        <MegaStoreHome siteContent={siteContent} initialProducts={initialProducts} />
-      </div>
+      {/* Desktop/tablet: the full category directory reached from the hero
+          sidebar's "View more". Mobile keeps its own rail experience below. */}
+      <main className="hidden bg-[#f8fafc] px-4 pb-16 pt-5 lg:block">
+        <div className="mx-auto max-w-[1420px]">
+          <nav aria-label="Breadcrumb" className="text-[12px] font-medium text-gray-500">
+            <button type="button" onClick={() => navigate("/")} className="rounded transition-colors hover:text-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
+              Home
+            </button>
+            <span className="px-1.5 text-gray-300">/</span>
+            <span className="font-semibold text-gray-900">All Categories</span>
+          </nav>
+
+          <header className="mt-3 flex flex-wrap items-end justify-between gap-3 border-b border-gray-200 pb-4">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black tracking-tight text-gray-950">All Categories</h1>
+              <p className="mt-1 text-sm text-gray-500">
+                Browse every department and jump straight to the shelf you need.
+              </p>
+            </div>
+            <p className="shrink-0 text-[12px] font-semibold text-gray-500">
+              {departments.length} department{departments.length === 1 ? "" : "s"}
+            </p>
+          </header>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+            {departments.map((department) => {
+              const subcategories = subcategoriesFor(department.value);
+              const count = countsByDepartment.get(department.value) || 0;
+
+              return (
+                <section
+                  key={department.value}
+                  className="flex min-w-0 flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 transition-shadow duration-200 hover:shadow-[0_14px_34px_rgba(15,23,42,0.08)]"
+                >
+                  <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
+                    <DepartmentIcon label={department.label} icon={department.icon} imageUrl={department.imageUrl} />
+                    <div className="min-w-0 flex-1">
+                      <h2 className="truncate text-[15px] font-black text-gray-950">{department.label}</h2>
+                      <p className="text-[11px] font-medium text-gray-500">
+                        {count} item{count === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => goToCategory(department.value)}
+                      className="group shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold text-orange-600 transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                    >
+                      See all
+                      <span className="ml-0.5 inline-block transition-transform duration-150 group-hover:translate-x-0.5">›</span>
+                    </button>
+                  </div>
+
+                  {subcategories.length ? (
+                    <ul className="mt-2 grid grid-cols-2 gap-x-3">
+                      {subcategories.slice(0, 10).map((subcategory) => (
+                        <li key={subcategory._id} className="min-w-0">
+                          <button
+                            type="button"
+                            onClick={() => goToCategory(department.value, subcategory.name)}
+                            className="block w-full truncate rounded px-1 py-1.5 text-left text-[12.5px] text-gray-600 transition-colors hover:text-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                          >
+                            {subcategory.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-3 flex-1 text-[12.5px] text-gray-500">
+                      No subcategories yet — browse the full department.
+                    </p>
+                  )}
+
+                  {subcategories.length > 10 ? (
+                    <button
+                      type="button"
+                      onClick={() => goToCategory(department.value)}
+                      className="mt-1 self-start rounded px-1 py-1 text-[11.5px] font-bold text-orange-600 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                    >
+                      +{subcategories.length - 10} more in {department.label}
+                    </button>
+                  ) : null}
+                </section>
+              );
+            })}
+          </div>
+        </div>
+      </main>
 
       {/* Fills exactly the space above the fixed bottom dock, so the rail's
           bottom edge meets the dock with no gap. Driven by --app-dock-h rather

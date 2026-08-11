@@ -13,10 +13,17 @@ const OrderPlacedContent = () => {
   const { router, getToken, fetchUserData } = useAppContext()
   const searchParams = useSearchParams()
 
-  // Our own reference, plus Pesapal's tracking id which it appends to the
-  // callback URL when it sends the shopper back.
-  const reference = searchParams.get('ref') || searchParams.get('OrderMerchantReference') || ''
-  const trackingId = searchParams.get('OrderTrackingId') || ''
+  // Our own reference, plus whatever transaction handle the gateway appends to
+  // the callback URL: Flutterwave sends tx_ref/transaction_id, Pesapal sends
+  // OrderMerchantReference/OrderTrackingId. Reading both keeps this page
+  // working whichever gateway PAYMENT_GATEWAY points at.
+  const reference =
+    searchParams.get('ref') ||
+    searchParams.get('tx_ref') ||
+    searchParams.get('OrderMerchantReference') ||
+    ''
+  const trackingId =
+    searchParams.get('transaction_id') || searchParams.get('OrderTrackingId') || ''
 
   const [status, setStatus] = useState(reference ? 'checking' : 'placed')
   const pollsRef = useRef(0)

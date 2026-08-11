@@ -6,9 +6,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { assets } from "@/assets/assets";
 import { useAppContext } from "@/context/AppContext";
 import CategoryLineIcon from "@/components/CategoryLineIcon";
+import CategoryMegaMenu from "@/components/CategoryMegaMenu";
 import Skeleton from "@/components/Skeleton";
 import { resolveSiteContent } from "@/lib/defaultSiteContent";
-import { categoryMatchesSelection, homeCategoryValues, getCategoryMeta, homeTopRailDefaults, TOP_RAIL_PARENT } from "@/lib/marketplaceCategories";
+import { buildTopCategoryRail, categoryMatchesSelection, homeTopRailDefaults, TOP_RAIL_PARENT } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, sortProductsForLiveShowcase } from "@/lib/liveCommerce";
 import { getProductStockSnapshot } from "@/lib/productStock";
 import { getRecentlyViewedIds } from "@/lib/recentlyViewed";
@@ -1055,114 +1056,79 @@ const DesktopCategoryIcon = ({ category, className = "h-5 w-5" }) => {
   return <CategoryLineIcon category={category.value} className={className} />;
 };
 
-const DesktopCategorySidebar = ({ categories, navigate }) => {
-  const [activeCategoryValue, setActiveCategoryValue] = useState(null);
-  const visibleCategories = categories.slice(0, 11);
-  const moreCategories = categories.slice(11);
-  const activeCategory = categories.find((category) => category.value === activeCategoryValue) || visibleCategories[0];
-  const activeMeta = getCategoryMeta(activeCategory?.value);
-  const suggestedCategories = [
-    activeCategory,
-    ...moreCategories,
-    ...categories.filter((category) => category.value !== activeCategory?.value),
-  ].filter(Boolean);
-  const seenSuggestions = new Set();
-  const uniqueSuggestions = suggestedCategories.filter((category) => {
-    if (seenSuggestions.has(category.value)) return false;
-    seenSuggestions.add(category.value);
-    return true;
-  }).slice(0, 9);
+// Fixed-width category panel beside the hero. Hovering a row only changes that
+// row: the panel never widens, opens a flyout, or covers the hero, so the hero
+// stays put. Everything beyond the rows that fit lives behind "View more",
+// which opens the CategoryMegaMenu overlay on top of the marketplace.
+const SIDEBAR_CATEGORY_COUNT = 8;
+
+const DesktopCategorySidebar = ({ categories, navigate, prefetchRoute }) => {
+  const visibleCategories = categories.slice(0, SIDEBAR_CATEGORY_COUNT);
+  const hiddenCount = Math.max(categories.length - visibleCategories.length, 0);
+  const [browserOpen, setBrowserOpen] = useState(false);
 
   return (
     <aside
-      className="relative z-30 h-[390px] rounded-xl bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
-      onMouseLeave={() => setActiveCategoryValue(null)}
+      aria-label="Product categories"
+      className="z-30 flex flex-col rounded-xl bg-white p-2 shadow-[0_10px_30px_rgba(15,23,42,0.06)] lg:h-[390px]"
     >
-      <div className="flex h-full flex-col gap-0.5 overflow-hidden p-2">
-        {visibleCategories.map((category) => {
-          const isActive = activeCategoryValue === category.value;
+      <h2 className="px-3 pb-1.5 pt-1 text-[10px] font-black uppercase tracking-[0.14em] text-gray-400">
+        Categories
+      </h2>
 
-          return (
-            <button
-              key={category.value}
-              type="button"
-              onMouseEnter={() => setActiveCategoryValue(category.value)}
-              onFocus={() => setActiveCategoryValue(category.value)}
-              onClick={() => navigate(`/all-products?category=${encodeURIComponent(category.value)}`)}
-              className={`flex w-full shrink-0 items-center justify-between rounded-lg px-3 py-2.5 text-left text-[13px] font-semibold transition ${isActive ? "bg-gray-950 text-white shadow-sm" : "text-gray-800 hover:bg-gray-50 hover:text-gray-950"}`}
-            >
-              <span className="flex min-w-0 items-center gap-3">
-                <span className={`flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden ${isActive ? "text-white" : "text-gray-700"}`}>
-                  <DesktopCategoryIcon category={category} className="h-4 w-4" />
-                </span>
-                <span className="truncate">{category.label}</span>
+      {/* overflow-hidden so a row can never spill over the buttons below if the
+          category data or panel height changes. */}
+      <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
+        {visibleCategories.map((category) => (
+          <button
+            key={category.value}
+            type="button"
+            onMouseEnter={() => prefetchRoute(`/all-products?category=${encodeURIComponent(category.value)}`)}
+            onClick={() => navigate(`/all-products?category=${encodeURIComponent(category.value)}`)}
+            className="group flex w-full shrink-0 items-center justify-between rounded-lg px-3 py-1 text-left text-[13px] font-semibold text-gray-800 transition-colors hover:bg-gray-50 hover:text-gray-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+          >
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden text-gray-700 transition-colors group-hover:text-orange-600">
+                <DesktopCategoryIcon category={category} className="h-4 w-4" />
               </span>
-              <span className={isActive ? "text-white/80" : "text-gray-400"}><ChevronRight /></span>
-            </button>
-          );
-        })}
+              <span className="truncate">{category.label}</span>
+            </span>
+            <span className="shrink-0 text-gray-300 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-orange-600">
+              <ChevronRight />
+            </span>
+          </button>
+        ))}
+      </nav>
+
+      <button
+        type="button"
+        onClick={() => navigate("/all-products?filter=flash")}
+        className="mt-1 flex shrink-0 items-center justify-between rounded-lg bg-orange-600 px-3 py-2 text-left text-[13px] font-extrabold text-white shadow-sm transition hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+      >
+        <span className="flex items-center gap-3">
+          <span className="flex h-5 w-5 items-center justify-center"><UtilityIcon type="bolt" /></span>
+          Deals &amp; Clearance
+        </span>
+        <ChevronRight />
+      </button>
+
+      {/* Opens the browser as an overlay on top of the marketplace rather than
+          routing away, so the shopper keeps their place on the page. */}
+      <div className="mt-1 shrink-0 border-t border-gray-100 pt-1">
         <button
           type="button"
-          onMouseEnter={() => setActiveCategoryValue("Deals & Clearance")}
-          onFocus={() => setActiveCategoryValue("Deals & Clearance")}
-          onClick={() => navigate("/all-products?filter=flash")}
-          className="mt-auto flex shrink-0 items-center justify-between rounded-lg bg-orange-600 px-3 py-2.5 text-left text-[13px] font-extrabold text-white shadow-sm transition hover:bg-orange-700"
+          onClick={() => setBrowserOpen(true)}
+          aria-haspopup="dialog"
+          aria-expanded={browserOpen}
+          className="group flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-bold text-orange-600 transition-colors hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
         >
-          <span className="flex items-center gap-3">
-            <span className="flex h-5 w-5 items-center justify-center"><UtilityIcon type="bolt" /></span>
-            Deals & Clearance
-          </span>
-          <ChevronRight />
+          View more
+          {hiddenCount ? <span className="text-[11px] font-semibold text-gray-400">({hiddenCount})</span> : null}
+          <span className="transition-transform duration-150 group-hover:translate-x-0.5"><ChevronRight /></span>
         </button>
       </div>
 
-      {activeCategoryValue ? (
-        <div className="absolute left-[calc(100%-1px)] top-0 z-50 grid h-[390px] w-[min(50rem,calc(100vw-19rem))] grid-cols-[0.78fr_1.22fr] overflow-hidden rounded-r-2xl border border-gray-100 bg-white/98 text-left shadow-[0_28px_80px_rgba(15,23,42,0.20)] backdrop-blur animate-slide-up">
-          <div className="bg-gradient-to-br from-gray-950 to-gray-800 p-5 text-white">
-            <div className="flex items-start gap-3 rounded-xl bg-white/10 p-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white text-orange-600 shadow-sm">
-                {activeCategoryValue === "Deals & Clearance" ? <UtilityIcon type="bolt" /> : <DesktopCategoryIcon category={activeCategory} className="h-5 w-5" />}
-              </span>
-              <div className="min-w-0">
-                <h3 className="truncate text-base font-extrabold text-white">{activeCategoryValue === "Deals & Clearance" ? "Deals & Clearance" : activeCategory.label}</h3>
-                <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-white/70">{activeCategoryValue === "Deals & Clearance" ? "Limited-time offers and markdowns across Wilwa." : activeMeta.description}</p>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-2">
-              {[
-                ["Top deals", activeCategoryValue === "Deals & Clearance" ? "/all-products?filter=flash" : `/all-products?category=${encodeURIComponent(activeCategory.value)}&filter=flash`],
-                ["New arrivals", activeCategoryValue === "Deals & Clearance" ? "/all-products?sort=newest" : `/all-products?category=${encodeURIComponent(activeCategory.value)}&sort=newest`],
-                ["Best sellers", activeCategoryValue === "Deals & Clearance" ? "/all-products?sort=popular" : `/all-products?category=${encodeURIComponent(activeCategory.value)}&sort=popular`],
-                ["Top rated", activeCategoryValue === "Deals & Clearance" ? "/all-products?sort=rating" : `/all-products?category=${encodeURIComponent(activeCategory.value)}&sort=rating`],
-              ].map(([label, href]) => (
-                <button key={label} type="button" onClick={() => navigate(href)} className="flex items-center justify-between rounded-lg bg-white/8 px-3 py-2.5 text-[12px] font-semibold text-white/85 transition hover:bg-white hover:text-gray-950">
-                  {label}
-                  <ChevronRight />
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-extrabold text-gray-950">Explore departments</h3>
-                <p className="mt-0.5 text-[11px] text-gray-500">Quick jumps into related shelves and current picks.</p>
-              </div>
-              <button type="button" onClick={() => navigate("/categories")} className="rounded-full bg-orange-50 px-3 py-1.5 text-[11px] font-bold text-orange-600">See all</button>
-            </div>
-            <div className="grid grid-cols-3 gap-2.5">
-              {uniqueSuggestions.map((category) => (
-                <button key={`flyout-${category.value}`} type="button" onClick={() => navigate(`/all-products?category=${encodeURIComponent(category.value)}`)} className="group flex min-w-0 items-center gap-2 rounded-xl bg-gray-50 p-2.5 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_12px_28px_rgba(15,23,42,0.10)]">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-gray-950 shadow-sm transition group-hover:bg-orange-600 group-hover:text-white">
-                    <DesktopCategoryIcon category={category} className="h-4 w-4" />
-                  </span>
-                  <span className="line-clamp-2 text-[11px] font-bold leading-4 text-gray-900">{category.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <CategoryMegaMenu open={browserOpen} onClose={() => setBrowserOpen(false)} />
     </aside>
   );
 };
@@ -1623,25 +1589,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
   // rails so what shows is always real, admin-manageable categories. Admins
   // attach an uploaded PNG to any static category by creating a top-level
   // Category record of the same name with an image; it's merged in here.
-  const homeCategoryRail = useMemo(() => {
-    const dbByName = new Map((customTopCategories || []).map((category) => [category.name, category]));
-    const usedNames = new Set();
-    const staticRail = homeCategoryValues.map((value) => {
-      const meta = getCategoryMeta(value);
-      const dbMatch = dbByName.get(value);
-      if (dbMatch) usedNames.add(value);
-      return { label: meta.label, value, icon: dbMatch?.icon || meta.icon, imageUrl: dbMatch?.imageUrl || "" };
-    });
-    const customRail = (customTopCategories || [])
-      .filter((category) => !usedNames.has(category.name))
-      .map((category) => ({
-        label: category.name,
-        value: category.name,
-        icon: category.icon || "📦",
-        imageUrl: category.imageUrl || "",
-      }));
-    return [...staticRail, ...customRail];
-  }, [customTopCategories]);
+  const homeCategoryRail = useMemo(() => buildTopCategoryRail(customTopCategories), [customTopCategories]);
   // "Top Categories" quick-pick rail: static defaults (T-Shirt, Shoes, ...)
   // merged with admin-managed records stored under the TOP_RAIL_PARENT
   // sentinel. An uploaded PNG on a matching record replaces the tile image,
@@ -1878,7 +1826,7 @@ const MegaStoreHome = ({ siteContent, initialProducts = [] }) => {
     <main className="hidden bg-[#f8fafc] px-4 pb-16 pt-4 md:block">
       <div className="mx-auto max-w-[1420px]">
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-[250px_minmax(0,1fr)_320px]">
-          <DesktopCategorySidebar categories={homeCategoryRail} navigate={navigate} />
+          <DesktopCategorySidebar categories={homeCategoryRail} navigate={navigate} prefetchRoute={prefetchRoute} />
 
           {heroSlides.length ? (
             <div className="relative">

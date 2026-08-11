@@ -74,9 +74,10 @@ const startGatewayPayment = async ({ reference, orders, userId, addressDoc }) =>
     redirectUrl: `${baseUrl}/order-placed?ref=${encodeURIComponent(reference)}`,
   });
 
-  // Pesapal hands back its order_tracking_id here, and that id is the only
-  // thing its status endpoint accepts. Storing it now means the return page can
-  // settle the order even if the IPN never arrives.
+  // Some gateways (Pesapal) hand back a transaction id at checkout creation;
+  // storing it means the return page can settle even if the callback never
+  // arrives. Flutterwave returns none until the shopper actually pays, so there
+  // settlement falls back to verifying our own reference instead.
   if (transactionId) {
     await Order.updateMany(
       { _id: { $in: orders.map((order) => order._id) } },
