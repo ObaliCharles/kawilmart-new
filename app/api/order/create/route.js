@@ -57,7 +57,7 @@ const formatCurrency = (amount) => `UGX ${Number(amount || 0).toLocaleString("en
 // Opens a hosted checkout session for a set of already-created, unpaid orders
 // and returns the URL to send the shopper to. `reference` becomes the gateway's
 // merchant reference and must be unique per attempt.
-const startGatewayPayment = async ({ reference, orders, userId, addressDoc }) => {
+const startGatewayPayment = async ({ reference, orders, userId, addressDoc, method }) => {
   const gateway = getActiveGateway();
   const totalAmount = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
   const customer = await getOrSyncDatabaseUser(userId, { select: "name email", lean: true });
@@ -66,6 +66,9 @@ const startGatewayPayment = async ({ reference, orders, userId, addressDoc }) =>
   const { redirectUrl, transactionId } = await gateway.initiate({
     reference,
     amount: totalAmount,
+    // Which mobile-money network to charge; the gateway needs it to register
+    // the payment method before the charge.
+    method,
     customer: {
       name: addressDoc?.fullName || customer?.name || "Customer",
       email: customer?.email || "",

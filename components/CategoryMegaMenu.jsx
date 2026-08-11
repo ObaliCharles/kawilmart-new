@@ -90,7 +90,7 @@ const CategoryMegaMenu = ({ open, onClose }) => {
         type="button"
         aria-label="Close categories"
         onClick={onClose}
-        className="absolute inset-0 h-full w-full cursor-default bg-gray-950/40 backdrop-blur-[2px]"
+        className="animate-fade-in absolute inset-0 h-full w-full cursor-default bg-gray-950/40 backdrop-blur-[2px]"
       />
 
       <div className="pointer-events-none absolute inset-0 flex items-start justify-center p-6">
@@ -100,7 +100,7 @@ const CategoryMegaMenu = ({ open, onClose }) => {
           aria-modal="true"
           aria-label="All categories"
           tabIndex={-1}
-          className="pointer-events-auto relative mt-10 flex max-h-[min(34rem,calc(100vh-8rem))] w-full max-w-[68rem] overflow-hidden rounded-2xl bg-white shadow-[0_32px_90px_rgba(15,23,42,0.28)] focus:outline-none"
+          className="animate-slide-up pointer-events-auto relative mt-10 flex h-[min(34rem,calc(100vh-8rem))] w-full max-w-[68rem] overflow-hidden rounded-2xl bg-white shadow-[0_32px_90px_rgba(15,23,42,0.28)] focus:outline-none"
         >
           <button
             type="button"
@@ -117,7 +117,7 @@ const CategoryMegaMenu = ({ open, onClose }) => {
               right; clicking opens the department itself. */}
           <nav
             aria-label="Departments"
-            className="category-rail-scroll h-full w-[16rem] shrink-0 overflow-y-auto border-r border-gray-100 py-2"
+            className="category-rail-scroll min-h-0 w-[16rem] shrink-0 overflow-y-auto overscroll-contain border-r border-gray-100 py-2"
           >
             {departments.map((department) => {
               const isActive = department.value === activeDepartment?.value;
@@ -154,7 +154,7 @@ const CategoryMegaMenu = ({ open, onClose }) => {
           </nav>
 
           {/* Right pane: the selected department's shelves. */}
-          <section className="scrollbar-none min-w-0 flex-1 overflow-y-auto px-6 py-5">
+          <section className="scrollbar-none min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
             <div className="mb-4 flex items-center justify-between gap-4 pr-10">
               <h2 className="truncate text-lg font-black text-gray-950">{activeDepartment?.label}</h2>
               <button
