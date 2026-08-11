@@ -54,6 +54,19 @@ const sendOrderEvents = (createdOrders, userId, address) => {
 
 const formatCurrency = (amount) => `UGX ${Number(amount || 0).toLocaleString("en-UG")}`;
 
+const normalizeBaseUrl = (value = "") => String(value || "").trim().replace(/\/$/, "");
+
+const resolvePaymentReturnBaseUrl = () => {
+  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  const candidates = [
+    process.env.APP_BASE_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    vercelUrl ? `https://${vercelUrl}` : "",
+  ].map(normalizeBaseUrl).filter(Boolean);
+
+  return candidates.find((url) => /^https:/i.test(url)) || candidates[0] || "";
+};
+
 // Opens a hosted checkout session for a set of already-created, unpaid orders
 // and returns the URL to send the shopper to. `reference` becomes the gateway's
 // merchant reference and must be unique per attempt.
@@ -61,16 +74,10 @@ const startGatewayPayment = async ({ reference, orders, userId, addressDoc, meth
   const gateway = getActiveGateway();
   const totalAmount = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
   const customer = await getOrSyncDatabaseUser(userId, { select: "name email", lean: true });
-  // Falls back to the URL Vercel injects, so a deployment that forgot
-  // APP_BASE_URL still sends shoppers back to itself over https rather than
-  // failing the gateway's https check. Production domain first, so a payment
-  // started on a preview build still returns to the stable URL.
-  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
-  const baseUrl = (
-    process.env.APP_BASE_URL
-    || process.env.NEXT_PUBLIC_APP_URL
-    || (vercelUrl ? `https://${vercelUrl}` : "")
-  ).replace(/\/$/, "");
+  // Flutterwave rejects http redirect URLs. Prefer any configured https URL,
+  // including Vercel's injected deployment URL, before falling back to the first
+  // configured value so the provider can return a precise setup error.
+  const baseUrl = resolvePaymentReturnBaseUrl();
 
   const { redirectUrl, transactionId } = await gateway.initiate({
     reference,
