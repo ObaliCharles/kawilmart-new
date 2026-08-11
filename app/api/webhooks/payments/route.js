@@ -30,6 +30,23 @@ const handleNotification = async (request, { body = null, rawBody = "" } = {}) =
     // Signatures are computed over the exact bytes received, so the raw text is
     // passed through rather than a re-serialised copy of the parsed body.
     if (!gateway.verifyWebhook(request.headers, rawBody)) {
+        // Enough to tell a wrong secret from an unexpected signing scheme
+        // without ever logging the secret itself: which header arrived, how
+        // long its value is, and how big the signed payload was.
+        const seen = ["flutterwave-signature", "verif-hash"]
+            .map((name) => {
+                const value = request.headers.get(name);
+                return value ? `${name}(len=${value.length})` : null;
+            })
+            .filter(Boolean);
+
+        console.error(
+            "Webhook signature rejected."
+            + ` Signature headers present: ${seen.length ? seen.join(", ") : "NONE"}.`
+            + ` Raw body length: ${rawBody.length}.`
+            + " If a header is present and the secret matches the Flutterwave dashboard, the signing scheme differs from what is implemented — capture these headers and compare."
+        );
+
         return NextResponse.json({ success: false, message: "Invalid signature" }, { status: 401 });
     }
 
