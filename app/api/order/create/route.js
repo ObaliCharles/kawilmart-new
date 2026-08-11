@@ -205,7 +205,10 @@ export async function POST(request) {
             console.error("Payment retry initiation failed:", error);
             return NextResponse.json({
               success: false,
-              message: "We could not reach the payment provider. Please try again shortly.",
+              // Data the shopper can fix (missing phone number) gets said
+              // plainly; anything else stays generic so internals do not leak.
+              message: error?.userMessage
+                || "We could not reach the payment provider. Please try again shortly.",
             }, { status: 502 });
           }
         }
@@ -412,7 +415,8 @@ export async function POST(request) {
 
         return NextResponse.json({
           success: false,
-          message: "We could not reach the payment provider. Please try again or choose Cash on Delivery.",
+          message: error?.userMessage
+            || "We could not reach the payment provider. Please try again or choose Cash on Delivery.",
         }, { status: 502 });
       }
     }
