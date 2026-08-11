@@ -6,14 +6,16 @@ import { settleTransaction } from "@/lib/paymentSettlement";
 // a signed JSON body, Pesapal GETs an unsigned query string, but the handling
 // is identical because neither payload is trusted: we take only the transaction
 // id from it and ask the gateway what really happened.
-const handleNotification = async (request, { body = null } = {}) => {
+const handleNotification = async (request, { body = null, rawBody = "" } = {}) => {
     const gateway = getActiveGateway();
 
     if (!gateway) {
         return NextResponse.json({ success: false, message: "No payment gateway configured" }, { status: 503 });
     }
 
-    if (!gateway.verifyWebhook(request.headers)) {
+    // Signatures are computed over the exact bytes received, so the raw text is
+    // passed through rather than a re-serialised copy of the parsed body.
+    if (!gateway.verifyWebhook(request.headers, rawBody)) {
         return NextResponse.json({ success: false, message: "Invalid signature" }, { status: 401 });
     }
 
@@ -42,8 +44,16 @@ const handleNotification = async (request, { body = null } = {}) => {
 // Flutterwave and most gateways POST a JSON body.
 export async function POST(request) {
     try {
-        const body = await request.json().catch(() => null);
-        return await handleNotification(request, { body });
+        // Read as text first: the signature covers these exact bytes, and
+        // request.json() would consume the stream and lose them.
+        const rawBody = await request.text().catch(() => "");
+        let body = null;
+        try {
+            body = rawBody ? JSON.parse(rawBody) : null;
+        } catch {
+            body = null;
+        }
+        return await handleNotification(request, { body, rawBody });
     } catch (error) {
         console.error("Payment webhook error:", error);
         // 500 asks the gateway to retry. Better than silently losing a payment.
