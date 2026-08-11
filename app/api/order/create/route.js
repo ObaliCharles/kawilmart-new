@@ -77,10 +77,10 @@ const startGatewayPayment = async ({ reference, orders, userId, addressDoc, meth
     redirectUrl: `${baseUrl}/order-placed?ref=${encodeURIComponent(reference)}`,
   });
 
-  // Some gateways (Pesapal) hand back a transaction id at checkout creation;
-  // storing it means the return page can settle even if the callback never
-  // arrives. Flutterwave returns none until the shopper actually pays, so there
-  // settlement falls back to verifying our own reference instead.
+  // Both Flutterwave v4 (charge id) and Pesapal (order tracking id) hand back a
+  // transaction handle at checkout creation. Storing it means the return page
+  // can settle even if the callback never arrives; if a gateway ever returns
+  // none, settlement falls back to verifying our own reference instead.
   if (transactionId) {
     await Order.updateMany(
       { _id: { $in: orders.map((order) => order._id) } },
@@ -122,9 +122,9 @@ export async function POST(request) {
       ? idempotencyKey.trim().slice(0, 80).replace(/[^a-zA-Z0-9_-]/g, "")
       : "";
 
-    // Gateway payments need a checkout-wide reference to use as tx_ref, and it
-    // has to be the same string the orders are keyed by so the webhook can find
-    // them again. Mint one if the client did not send it.
+    // Gateway payments need a checkout-wide reference (the gateway's merchant
+    // reference), and it has to be the same string the orders are keyed by so
+    // the webhook can find them again. Mint one if the client did not send it.
     const payUpfront = requiresUpfrontPayment(normalizedPaymentMethod);
     if (payUpfront && !safeIdempotencyKey) {
       safeIdempotencyKey = randomUUID().replace(/-/g, "");
@@ -145,7 +145,7 @@ export async function POST(request) {
         // page, timed out). The orders and their stock reservation are still
         // good, so reuse them and hand back a fresh payment link instead of
         // dead-ending on "already placed". The reference has to be new because
-        // gateways reject a replayed tx_ref.
+        // gateways reject a replayed reference.
         const isUnpaidGatewayCheckout = existingOrders.every((order) => (
           order.paymentGateway && order.paymentStatus === PAYMENT_STATUSES.PENDING
         ));
@@ -159,6 +159,7 @@ export async function POST(request) {
               orders: existingOrders,
               userId,
               addressDoc,
+              method: normalizedPaymentMethod,
             });
 
             await Order.updateMany(
@@ -358,6 +359,7 @@ export async function POST(request) {
           orders: createdOrders,
           userId,
           addressDoc,
+          method: normalizedPaymentMethod,
         });
 
         reservedStockAdjustments.length = 0;

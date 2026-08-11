@@ -13,17 +13,22 @@ const OrderPlacedContent = () => {
   const { router, getToken, fetchUserData } = useAppContext()
   const searchParams = useSearchParams()
 
-  // Our own reference, plus whatever transaction handle the gateway appends to
-  // the callback URL: Flutterwave sends tx_ref/transaction_id, Pesapal sends
-  // OrderMerchantReference/OrderTrackingId. Reading both keeps this page
-  // working whichever gateway PAYMENT_GATEWAY points at.
+  // `ref` is ours and always present, since we put it on the redirect URL.
+  // The rest are whatever the gateway appends on the way back — Flutterwave v4
+  // sends charge_id, v3 sent tx_ref/transaction_id, Pesapal sends
+  // OrderMerchantReference/OrderTrackingId. Reading all of them keeps this page
+  // working whichever gateway PAYMENT_GATEWAY points at; none is trusted, they
+  // only tell the server which transaction to re-verify.
   const reference =
     searchParams.get('ref') ||
     searchParams.get('tx_ref') ||
     searchParams.get('OrderMerchantReference') ||
     ''
   const trackingId =
-    searchParams.get('transaction_id') || searchParams.get('OrderTrackingId') || ''
+    searchParams.get('charge_id') ||
+    searchParams.get('transaction_id') ||
+    searchParams.get('OrderTrackingId') ||
+    ''
 
   const [status, setStatus] = useState(reference ? 'checking' : 'placed')
   const pollsRef = useRef(0)
