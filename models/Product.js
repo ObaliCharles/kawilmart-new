@@ -17,6 +17,10 @@ const productSchema = new mongoose.Schema({
     flashDealStartDate: { type: Date, default: null },
     flashDealEndDate: { type: Date },
     promotionType: { type: String, enum: ['none', 'flash_deal', 'featured', 'discount'], default: 'none' },
+    productStatus: { type: String, enum: ['active', 'draft', 'hidden', 'rejected'], default: 'active' },
+    moderationReason: { type: String, default: "" },
+    moderatedAt: { type: Date, default: null },
+    moderatedBy: { type: String, default: "" },
     tags: { type: [String], default: [] },
     likedBy: { type: [String], default: [] },
     likesCount: { type: Number, default: 0 },
@@ -42,6 +46,7 @@ productSchema.index({ date: -1 });
 productSchema.index({ offerPrice: 1 });
 productSchema.index({ isFlashDeal: 1 });
 productSchema.index({ promotionType: 1 });
+productSchema.index({ productStatus: 1 });
 productSchema.index({ tags: 1 });
 
 const Product = mongoose.models.product || mongoose.model('product', productSchema)

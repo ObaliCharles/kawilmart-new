@@ -7,11 +7,14 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 
 export default function AdminProducts() {
-    const { products, fetchProductData, router, formatCurrency, getToken } = useAppContext();
+    const { router, formatCurrency, getToken } = useAppContext();
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filterCat, setFilterCat] = useState('All');
+    const [filterStatus, setFilterStatus] = useState('All');
     const [deletingId, setDeletingId] = useState('');
+    const [moderatingId, setModeratingId] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -19,7 +22,16 @@ export default function AdminProducts() {
         const loadProducts = async () => {
             setLoading(true);
             try {
-                await fetchProductData();
+                const token = await getToken();
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+                const { data } = await axios.get('/api/admin/products', { headers });
+                if (isMounted) {
+                    if (data.success) {
+                        setProducts(data.products || []);
+                    } else {
+                        toast.error(data.message || 'Failed to load products');
+                    }
+                }
             } finally {
                 if (isMounted) {
                     setLoading(false);
@@ -37,12 +49,24 @@ export default function AdminProducts() {
     }, []);
 
     const categories = ['All', ...new Set(products.map(p => p.category))];
+    const statuses = ['All', 'active', 'draft', 'hidden', 'rejected'];
 
     const filtered = products.filter(p => {
         const matchCat = filterCat === 'All' || p.category === filterCat;
-        const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
-        return matchCat && matchSearch;
+        const matchStatus = filterStatus === 'All' || (p.productStatus || 'active') === filterStatus;
+        const searchable = [p.name, p.category, p.seller?.name, p.seller?.email].join(' ').toLowerCase();
+        const matchSearch = !search || searchable.includes(search.toLowerCase());
+        return matchCat && matchStatus && matchSearch;
     });
+
+    const refreshProducts = async () => {
+        const token = await getToken();
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const { data } = await axios.get('/api/admin/products', { headers });
+        if (data.success) {
+            setProducts(data.products || []);
+        }
+    };
 
     const deleteProduct = async (productId) => {
         if (!window.confirm('Delete this product? This action cannot be undone.')) {
@@ -57,7 +81,7 @@ export default function AdminProducts() {
 
             if (data.success) {
                 toast.success(data.message || 'Product deleted');
-                await fetchProductData({ background: true });
+                setProducts((current) => current.filter((product) => product._id !== productId));
             } else {
                 toast.error(data.message || 'Failed to delete product');
             }
@@ -65,6 +89,39 @@ export default function AdminProducts() {
             toast.error(error?.response?.data?.message || error.message || 'Failed to delete product');
         } finally {
             setDeletingId('');
+        }
+    };
+
+    const updateModeration = async (productId, productStatus) => {
+        try {
+            setModeratingId(productId);
+            const token = await getToken();
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const currentProduct = products.find((product) => product._id === productId);
+            const moderationReason = ['hidden', 'rejected'].includes(productStatus)
+                ? window.prompt('Reason shown in admin records:', currentProduct?.moderationReason || '')
+                : currentProduct?.moderationReason || '';
+
+            if (moderationReason === null) {
+                return;
+            }
+
+            const { data } = await axios.patch('/api/admin/products', {
+                productId,
+                productStatus,
+                moderationReason,
+            }, { headers });
+
+            if (data.success) {
+                toast.success(data.message || 'Product updated');
+                await refreshProducts();
+            } else {
+                toast.error(data.message || 'Failed to update product');
+            }
+        } catch (error) {
+            toast.error(error?.response?.data?.message || error.message || 'Failed to update product');
+        } finally {
+            setModeratingId('');
         }
     };
 
@@ -109,6 +166,21 @@ export default function AdminProducts() {
                         </button>
                     ))}
                 </div>
+                <div className="flex flex-wrap gap-2">
+                    {statuses.map(status => (
+                        <button
+                            key={status}
+                            onClick={() => setFilterStatus(status)}
+                            className={`px-3 py-2 rounded-lg text-sm capitalize transition ${
+                                filterStatus === status
+                                    ? 'bg-gray-950 text-white font-medium'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                        >
+                            {status}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Products Grid */}
@@ -139,6 +211,16 @@ export default function AdminProducts() {
                             <div className="p-3">
                                 <p className="font-medium text-gray-800 text-sm truncate">{product.name}</p>
                                 <p className="text-xs text-gray-400 mt-0.5">{product.category}</p>
+                                <p className="mt-0.5 truncate text-[11px] text-gray-400">{product.seller?.name || 'Unknown seller'}</p>
+                                <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
+                                    (product.productStatus || 'active') === 'active'
+                                        ? 'bg-emerald-50 text-emerald-700'
+                                        : (product.productStatus || 'active') === 'rejected'
+                                            ? 'bg-red-50 text-red-700'
+                                            : 'bg-amber-50 text-amber-700'
+                                }`}>
+                                    {product.productStatus || 'active'}
+                                </span>
                                 <div className="flex items-baseline gap-2 mt-1">
                                     <p className="text-orange-600 font-bold text-sm">{formatCurrency(product.offerPrice)}</p>
                                     {product.price > product.offerPrice && (
@@ -166,6 +248,20 @@ export default function AdminProducts() {
                                         {deletingId === product._id ? '...' : 'Delete'}
                                     </button>
                                 </div>
+                                <select
+                                    value={product.productStatus || 'active'}
+                                    disabled={moderatingId === product._id}
+                                    onChange={(event) => updateModeration(product._id, event.target.value)}
+                                    className="mt-1.5 w-full rounded-full bg-gray-50 px-2 py-1.5 text-xs font-medium text-gray-700 outline-none ring-1 ring-gray-100 disabled:opacity-60"
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="hidden">Hidden</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                                {product.moderationReason ? (
+                                    <p className="mt-1 line-clamp-2 text-[10px] text-red-500">{product.moderationReason}</p>
+                                ) : null}
                             </div>
                         </div>
                     );

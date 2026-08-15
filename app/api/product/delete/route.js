@@ -6,6 +6,7 @@ import { getRequestUserId } from "@/lib/requestAuth";
 import Product from "@/models/Product";
 import { NextResponse } from "next/server";
 import User from "@/models/User";
+import { writeAuditLog } from "@/lib/auditLog";
 
 export async function POST(request) {
     try {
@@ -44,6 +45,19 @@ export async function POST(request) {
         if (!deletedProduct) {
             return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 });
         }
+
+        await writeAuditLog({
+            actorId: userId,
+            action: "product.deleted",
+            targetType: "product",
+            targetId: String(deletedProduct._id),
+            summary: `Product deleted: ${deletedProduct.name}`,
+            metadata: {
+                sellerId: deletedProduct.userId,
+                productStatus: deletedProduct.productStatus || "active",
+                adminDelete: isAdmin,
+            },
+        });
 
         return NextResponse.json({ success: true, message: "Product deleted successfully" });
     } catch (error) {

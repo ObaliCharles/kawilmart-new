@@ -20,7 +20,15 @@ const getRealTestimonials = async () => {
   try {
     await connectDB();
 
-    const products = await Product.find({ "reviews.0": { $exists: true } })
+    const products = await Product.find({
+      "reviews.0": { $exists: true },
+      $or: [
+        { productStatus: "active" },
+        { productStatus: { $exists: false } },
+        { productStatus: "" },
+        { productStatus: null },
+      ],
+    })
       .select("name reviews")
       .limit(40)
       .lean();

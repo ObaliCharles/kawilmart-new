@@ -17,6 +17,7 @@ import {
 import { notifyUsers } from "@/lib/notifyUsers";
 import { serializeAdminOrder } from "@/lib/orderSerialization";
 import { RIDER_ASSIGNMENT_STATUSES } from "@/lib/orderLifecycle";
+import { writeAuditLog } from "@/lib/auditLog";
 import {
     applyOrderStatusTransition,
     assignRiderToOrder,
@@ -250,6 +251,20 @@ export async function PUT(request) {
             order.save(),
             ...touchedDocs.map((doc) => doc.save()),
         ]);
+
+        await writeAuditLog({
+            actorId: userId,
+            action: "order.updated",
+            targetType: "order",
+            targetId: String(order._id),
+            summary: `Admin updated order ${formatShortOrderId(order._id)}: ${updatedFields.join(", ")}`,
+            metadata: {
+                updatedFields,
+                status: order.status,
+                riderId: order.riderId || "",
+                sellerId: order.sellerId || "",
+            },
+        });
 
         if (customerNotifications.length > 0) {
             outboundNotifications.push(

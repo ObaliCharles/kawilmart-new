@@ -352,6 +352,15 @@ const OrderSummary = () => {
               );
             })}
           </div>
+          {paymentMethod !== PAYMENT_METHODS.COD ? (
+            <div className="mt-2 rounded-lg bg-emerald-50 px-2.5 py-2 text-[10.5px] leading-4 text-emerald-800">
+              Secure online payment by Flutterwave. Your stock is reserved for 30 minutes while you complete payment, then you return to Wilwa automatically.
+            </div>
+          ) : (
+            <div className="mt-2 rounded-lg bg-gray-50 px-2.5 py-2 text-[10.5px] leading-4 text-gray-500">
+              Pay when your order arrives. Seller and rider contact details unlock as the order progresses.
+            </div>
+          )}
         </div>
 
         <div className="space-y-1 border-t border-gray-100 pt-2 text-[11px]">

@@ -6,6 +6,7 @@ import { getSellerAccessState } from "@/lib/sellerBilling";
 import { getRequestUserId } from "@/lib/requestAuth";
 import { isUploadedFile, uploadFileToCloudinary } from "@/lib/cloudinary";
 import { parseTagsInput } from "@/lib/parseTagsInput";
+import { writeAuditLog } from "@/lib/auditLog";
 import { NextResponse } from "next/server";
 import Product from "@/models/Product";
 import User from "@/models/User";
@@ -91,9 +92,28 @@ export async function POST(request) {
         existingProduct.image = image;
         if (isAdmin) {
             existingProduct.tags = await parseTagsInput(formData);
+            const productStatus = formData.get("productStatus");
+            if (["active", "draft", "hidden", "rejected"].includes(productStatus)) {
+                existingProduct.productStatus = productStatus;
+                existingProduct.moderationReason = String(formData.get("moderationReason") || "").trim();
+                existingProduct.moderatedAt = new Date();
+                existingProduct.moderatedBy = userId;
+            }
         }
 
         await existingProduct.save();
+
+        await writeAuditLog({
+            actorId: userId,
+            action: "product.updated",
+            targetType: "product",
+            targetId: String(existingProduct._id),
+            summary: `Product updated: ${existingProduct.name}`,
+            metadata: {
+                sellerId: existingProduct.userId,
+                productStatus: existingProduct.productStatus || "active",
+            },
+        });
 
         return NextResponse.json({
             success: true,

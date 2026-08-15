@@ -33,6 +33,18 @@ export async function POST(request) {
 
         await connectDB();
 
+        const product = await Product.findById(productId).select("_id productStatus");
+        if (!product) {
+            return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 });
+        }
+
+        if (isFlashDeal && !["", null, undefined, "active"].includes(product.productStatus)) {
+            return NextResponse.json({
+                success: false,
+                message: "Only active products can be promoted",
+            }, { status: 400 });
+        }
+
         const updateData = {
             isFlashDeal: Boolean(isFlashDeal),
             flashDealStartDate: isFlashDeal && startDate && !Number.isNaN(startDate.getTime()) ? startDate : null,

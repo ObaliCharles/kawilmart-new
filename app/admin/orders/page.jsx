@@ -12,6 +12,7 @@ export default function AdminOrders() {
     const [riders, setRiders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState('All');
+    const [filterPayment, setFilterPayment] = useState('All');
     const [updatingId, setUpdatingId] = useState(null);
 
     useEffect(() => {
@@ -71,7 +72,11 @@ export default function AdminOrders() {
         }
     };
 
-    const filtered = filterStatus === 'All' ? orders : orders.filter(o => o.status === filterStatus);
+    const filtered = orders.filter((order) => {
+        const statusMatches = filterStatus === 'All' || order.status === filterStatus;
+        const paymentMatches = filterPayment === 'All' || order.paymentStatus === filterPayment;
+        return statusMatches && paymentMatches;
+    });
 
     if (loading) return <OrdersManagementPageSkeleton showTabs />;
 
@@ -104,6 +109,22 @@ export default function AdminOrders() {
                 ))}
             </div>
 
+            <div className="scrollbar-none -mx-3 flex gap-1.5 overflow-x-auto px-3 sm:mx-0 sm:flex-wrap sm:px-0">
+                {['All', ...new Set(orders.map((order) => order.paymentStatus || 'Pending'))].map(status => (
+                    <button
+                        key={status}
+                        onClick={() => setFilterPayment(status)}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                            filterPayment === status
+                                ? 'bg-orange-600 text-white'
+                                : 'bg-orange-50 text-orange-700 hover:bg-orange-100'
+                        }`}
+                    >
+                        {status === 'All' ? 'All payments' : status}
+                    </button>
+                ))}
+            </div>
+
             {/* Mobile: card list */}
             <div className="space-y-2.5 lg:hidden">
                 {filtered.length === 0 ? (
@@ -128,6 +149,15 @@ export default function AdminOrders() {
                             <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${getOrderStatusBadgeClass(order.status)}`}>
                                 {getOrderStatusDisplay(order.status)}
                             </span>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                order.paymentStatus === 'Paid'
+                                    ? 'bg-emerald-50 text-emerald-700'
+                                    : order.paymentStatus === 'Failed'
+                                        ? 'bg-red-50 text-red-700'
+                                        : 'bg-amber-50 text-amber-700'
+                            }`}>
+                                {order.paymentStatus || 'Pending'} · {order.paymentMethodLabel}
+                            </span>
                             {order.address ? (
                                 <span className="text-[10px] text-gray-400">{order.address.fullName} · {order.address.city}</span>
                             ) : null}
@@ -137,6 +167,13 @@ export default function AdminOrders() {
                                 </span>
                             ))}
                         </div>
+                        {order.paymentGateway ? (
+                            <div className="mt-2 rounded-lg bg-gray-50 p-2 text-[10px] text-gray-500">
+                                <p className="font-semibold text-gray-700">{order.paymentGateway}</p>
+                                <p className="truncate">Ref: {order.paymentReference || 'Pending'}</p>
+                                <p className="truncate">Tx: {order.paymentTransactionId || 'Not assigned yet'}</p>
+                            </div>
+                        ) : null}
                         <div className="mt-2.5 grid grid-cols-2 gap-2">
                             <select
                                 value={order.riderId || ''}
@@ -181,7 +218,7 @@ export default function AdminOrders() {
                                 <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Order</th>
                                 <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Items</th>
                                 <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Address</th>
-                                <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                                <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Payment</th>
                                 <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Date</th>
                                 <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Rider</th>
                                 <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-gray-500">Status</th>
@@ -226,8 +263,26 @@ export default function AdminOrders() {
                                             </>
                                         ) : '-'}
                                     </td>
-                                    <td className="px-4 py-3 font-semibold text-gray-800">
-                                        {formatCurrency(order.amount)}
+                                    <td className="px-4 py-3">
+                                        <p className="font-semibold text-gray-800">{formatCurrency(order.amount)}</p>
+                                        <p className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                            order.paymentStatus === 'Paid'
+                                                ? 'bg-emerald-50 text-emerald-700'
+                                                : order.paymentStatus === 'Failed'
+                                                    ? 'bg-red-50 text-red-700'
+                                                    : 'bg-amber-50 text-amber-700'
+                                        }`}>
+                                            {order.paymentStatus || 'Pending'} · {order.paymentMethodLabel}
+                                        </p>
+                                        {order.paymentGateway ? (
+                                            <div className="mt-1.5 max-w-[190px] space-y-0.5 text-[10px] text-gray-400">
+                                                <p className="font-semibold text-gray-500">{order.paymentGateway}</p>
+                                                <p className="truncate">Ref: {order.paymentReference || 'Pending'}</p>
+                                                <p className="truncate">Tx: {order.paymentTransactionId || 'Not assigned yet'}</p>
+                                                {order.paymentInitiatedAt ? <p>Started: {new Date(order.paymentInitiatedAt).toLocaleString()}</p> : null}
+                                                {order.paymentPaidAt ? <p>Paid: {new Date(order.paymentPaidAt).toLocaleString()}</p> : null}
+                                            </div>
+                                        ) : null}
                                     </td>
                                     <td className="px-4 py-3 text-gray-500 text-xs">
                                         {new Date(order.date).toLocaleDateString()}
