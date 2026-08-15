@@ -3,12 +3,15 @@ import React, { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import Image from 'next/image';
 import { ProductGridPageSkeleton } from '@/components/dashboard/DashboardSkeletons';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 export default function AdminProducts() {
-    const { products, fetchProductData, router, formatCurrency } = useAppContext();
+    const { products, fetchProductData, router, formatCurrency, getToken } = useAppContext();
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filterCat, setFilterCat] = useState('All');
+    const [deletingId, setDeletingId] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -40,6 +43,30 @@ export default function AdminProducts() {
         const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
         return matchCat && matchSearch;
     });
+
+    const deleteProduct = async (productId) => {
+        if (!window.confirm('Delete this product? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            setDeletingId(productId);
+            const token = await getToken();
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const { data } = await axios.post('/api/product/delete', { productId }, { headers });
+
+            if (data.success) {
+                toast.success(data.message || 'Product deleted');
+                await fetchProductData({ background: true });
+            } else {
+                toast.error(data.message || 'Failed to delete product');
+            }
+        } catch (error) {
+            toast.error(error?.response?.data?.message || error.message || 'Failed to delete product');
+        } finally {
+            setDeletingId('');
+        }
+    };
 
     if (loading) return <ProductGridPageSkeleton />;
 
@@ -118,12 +145,27 @@ export default function AdminProducts() {
                                         <p className="text-xs text-gray-400 line-through">{formatCurrency(product.price)}</p>
                                     )}
                                 </div>
-                                <button
-                                    onClick={() => router.push('/product/' + product._id)}
-                                    className="mt-2 w-full rounded-full bg-orange-50 py-1.5 text-xs font-medium text-orange-700 transition hover:bg-orange-100"
-                                >
-                                    View Product
-                                </button>
+                                <div className="mt-2 grid grid-cols-3 gap-1.5">
+                                    <button
+                                        onClick={() => router.push('/product/' + product._id)}
+                                        className="rounded-full bg-orange-50 py-1.5 text-xs font-medium text-orange-700 transition hover:bg-orange-100"
+                                    >
+                                        View
+                                    </button>
+                                    <button
+                                        onClick={() => router.push('/seller?edit=' + product._id)}
+                                        className="rounded-full bg-gray-100 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-200"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => deleteProduct(product._id)}
+                                        disabled={deletingId === product._id}
+                                        className="rounded-full bg-red-50 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 disabled:opacity-60"
+                                    >
+                                        {deletingId === product._id ? '...' : 'Delete'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     );

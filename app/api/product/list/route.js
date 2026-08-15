@@ -1,8 +1,7 @@
 import connectDB from "@/config/db";
 import { sanitizeApiErrorMessage } from "@/lib/apiErrors";
-import { getStorefrontProducts } from "@/lib/getStorefrontProducts";
+import { countStorefrontProducts, getStorefrontProducts } from "@/lib/getStorefrontProducts";
 import { getRequestAuth } from "@/lib/requestAuth";
-import Product from "@/models/Product";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
@@ -26,7 +25,7 @@ export async function GET(request) {
 
         const [products, total] = await Promise.all([
             getStorefrontProducts({ limit, page, userId, search, category }),
-            Product.estimatedDocumentCount(),
+            countStorefrontProducts({ search, category }),
         ])
 
         const response = NextResponse.json({

@@ -43,7 +43,7 @@ export async function POST(request) {
             }
         }
 
-        const existingProduct = await Product.findOne({ _id: productId, userId });
+        const existingProduct = await Product.findOne(isAdmin ? { _id: productId } : { _id: productId, userId });
         if (!existingProduct) {
             return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 });
         }

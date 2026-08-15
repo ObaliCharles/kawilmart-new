@@ -5,6 +5,7 @@ import Banner from "@/models/Banner";
 import Product from "@/models/Product";
 import { generateSellerInvoicesForPeriod } from "@/lib/sellerInvoiceGeneration";
 import { computeBannerLifecycleStatus } from "@/lib/bannerStatus";
+import { expireStalePendingGatewayOrders } from "@/lib/paymentSettlement";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "kawilmart-next" });
@@ -157,5 +158,16 @@ export const expireFlashDeals = inngest.createFunction(
         );
 
         return { success: true, expiredCount: result.modifiedCount || 0 };
+    }
+);
+
+export const expireStaleGatewayCheckouts = inngest.createFunction(
+    {
+        id: "expire-stale-gateway-checkouts",
+    },
+    { cron: "*/10 * * * *" },
+    async () => {
+        const result = await expireStalePendingGatewayOrders({ olderThanMinutes: 30 });
+        return { success: true, ...result };
     }
 );

@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
 import React from "react";
+import axios from "axios";
 import ProductRating from "@/components/ProductRating";
 import { ProductDetailSkeleton } from "@/components/PageSkeletons";
 import ProductActivityChips from "@/components/ProductActivityChips";
@@ -22,10 +23,12 @@ const Product = () => {
 
     const { id } = useParams();
 
-    const { products, addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike, triggerCartFly, fetchProductData: refreshCatalogue } = useAppContext()
+    const { products, addToCart, formatCurrency, navigate, prefetchRoute, toggleProductLike, triggerCartFly, fetchProductData: refreshCatalogue, getToken, authReady } = useAppContext()
 
     const [mainImage, setMainImage] = useState(null);
     const [productData, setProductData] = useState(null);
+    const [loadingProduct, setLoadingProduct] = useState(true);
+    const [productError, setProductError] = useState("");
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [liking, setLiking] = useState(false);
     const mainImageRef = useRef(null);
@@ -33,16 +36,61 @@ const Product = () => {
     const [addedFeedback, setAddedFeedback] = useState(false);
     const feedbackTimeoutRef = useRef(null);
 
-    const fetchProductData = async () => {
-        const product = products.find(product => product._id === id);
-        setProductData(product);
-    }
-
     useEffect(() => {
-        fetchProductData();
-        // Product details are derived from route params and context products.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id, products])
+        let ignore = false;
+
+        const loadProduct = async () => {
+            if (!id) {
+                return;
+            }
+
+            const cachedProduct = products.find((product) => product._id === id);
+            if (cachedProduct) {
+                setProductData(cachedProduct);
+                setProductError("");
+                setLoadingProduct(false);
+                return;
+            }
+
+            setLoadingProduct(true);
+            setProductError("");
+
+            try {
+                let headers = {};
+                if (authReady) {
+                    const token = await getToken().catch(() => null);
+                    headers = token ? { Authorization: `Bearer ${token}` } : {};
+                }
+
+                const { data } = await axios.get(`/api/product/item?productId=${encodeURIComponent(id)}`, { headers });
+                if (ignore) {
+                    return;
+                }
+
+                if (data.success) {
+                    setProductData(data.product);
+                } else {
+                    setProductData(null);
+                    setProductError(data.message || "Product not found");
+                }
+            } catch (error) {
+                if (!ignore) {
+                    setProductData(null);
+                    setProductError(error?.response?.data?.message || "Product not found");
+                }
+            } finally {
+                if (!ignore) {
+                    setLoadingProduct(false);
+                }
+            }
+        };
+
+        void loadProduct();
+
+        return () => {
+            ignore = true;
+        };
+    }, [authReady, getToken, id, products])
 
     const handleLikeClick = async () => {
         if (!productData || liking) {
@@ -64,7 +112,7 @@ const Product = () => {
         setCartAction(null);
 
         if (result?.success) {
-            triggerCartFly(mainImageRef.current, mainImage || productData.image[0]);
+            triggerCartFly(mainImageRef.current, mainImage || productData.image?.[0]);
             setAddedFeedback(true);
             if (feedbackTimeoutRef.current) {
                 window.clearTimeout(feedbackTimeoutRef.current);
@@ -123,6 +171,28 @@ const Product = () => {
         };
     }, []);
 
+    if (!loadingProduct && !productData) {
+        return (
+            <>
+                <Navbar />
+                <main className="mx-auto min-h-[55vh] max-w-3xl px-4 py-16 text-center">
+                    <h1 className="text-2xl font-bold text-gray-950">Product unavailable</h1>
+                    <p className="mt-2 text-sm text-gray-500">
+                        {productError || "This product may have been removed or the seller account is currently unavailable."}
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => navigate("/all-products")}
+                        className="mt-6 rounded-full bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700"
+                    >
+                        Browse products
+                    </button>
+                </main>
+                <Footer />
+            </>
+        );
+    }
+
     return productData ? (<>
         <Navbar />
         <div className="bg-white px-4 py-8 pb-24 sm:px-6 md:px-10 lg:px-12">
@@ -133,7 +203,7 @@ const Product = () => {
               <div className="grid grid-cols-1 gap-8 md:grid-cols-[45fr_55fr] md:gap-8 lg:gap-10">
                 <div className="grid gap-4 sm:grid-cols-[72px_minmax(0,1fr)]">
                     <div className="order-2 grid grid-cols-5 gap-2 sm:order-1 sm:grid-cols-1">
-                        {productData.image.slice(0, 6).map((image, index) => (
+                        {(productData.image || []).slice(0, 6).map((image, index) => (
                             <div
                                 key={index}
                                 onClick={() => setMainImage(image)}
@@ -156,7 +226,7 @@ const Product = () => {
                           <Image src={assets.search_icon} alt="" className="h-5 w-5" />
                         </button>
                         <Image
-                            src={mainImage || productData.image[0]}
+                            src={mainImage || productData.image?.[0] || assets.upload_area}
                             alt={productData.name}
                             className="aspect-square w-full bg-white object-contain p-5"
                             width={1280}

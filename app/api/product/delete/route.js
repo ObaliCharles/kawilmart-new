@@ -39,7 +39,7 @@ export async function POST(request) {
             }
         }
 
-        const deletedProduct = await Product.findOneAndDelete({ _id: productId, userId });
+        const deletedProduct = await Product.findOneAndDelete(isAdmin ? { _id: productId } : { _id: productId, userId });
 
         if (!deletedProduct) {
             return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 });

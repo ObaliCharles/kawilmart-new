@@ -1,4 +1,5 @@
 import connectDB from "@/config/db";
+import authAdmin from "@/lib/authAdmin";
 import authSeller from "@/lib/authSeller";
 import { getRequestUserId } from "@/lib/requestAuth";
 import Product from "@/models/Product";
@@ -7,7 +8,10 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
     try {
         const userId = await getRequestUserId(request);
-        const isSeller = await authSeller(userId);
+        const [isSeller, isAdmin] = await Promise.all([
+            authSeller(userId),
+            authAdmin(userId),
+        ]);
 
         if (!isSeller) {
             return NextResponse.json({ success: false, message: "not authorized" }, { status: 401 });
@@ -22,7 +26,7 @@ export async function GET(request) {
 
         await connectDB();
 
-        const product = await Product.findOne({ _id: productId, userId });
+        const product = await Product.findOne(isAdmin ? { _id: productId } : { _id: productId, userId });
 
         if (!product) {
             return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 });

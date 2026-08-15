@@ -258,7 +258,9 @@ export const AppContextProvider = (props) => {
             const startTime = Date.now()
             const { data } = await axios.get('/api/product/list', { headers, timeout: 15000 })
             const endTime = Date.now()
-            console.log(`📦 Products fetched in ${endTime - startTime}ms`)
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`Products fetched in ${endTime - startTime}ms`)
+            }
             if (data.success) {
                 startTransition(() => {
                     setProducts(data.products)

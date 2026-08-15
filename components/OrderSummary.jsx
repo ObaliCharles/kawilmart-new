@@ -18,13 +18,13 @@ const PAYMENT_OPTIONS = [
   {
     value: PAYMENT_METHODS.MTN_MOMO,
     label: "MTN Mobile Money",
-    hint: "Pay the rider via MoMo",
+    hint: "Pay securely online before delivery",
     mark: <span className="rounded-sm bg-[#FFCC00] px-1 py-0.5 text-[8px] font-black leading-none text-black">MTN</span>,
   },
   {
     value: PAYMENT_METHODS.AIRTEL_MONEY,
     label: "Airtel Money",
-    hint: "Pay the rider via Airtel",
+    hint: "Pay securely online before delivery",
     mark: <span className="text-[9px] font-black lowercase text-[#E40000]">airtel</span>,
   },
 ];
