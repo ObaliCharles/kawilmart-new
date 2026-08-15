@@ -107,7 +107,7 @@ export async function GET(request) {
             const access = role === 'rider'
                 ? getRiderAccessState(dbUser)
                 : getSellerAccessState(dbUser);
-            const billing = role === 'seller'
+            const billing = role === 'seller' || role === 'admin'
                 ? buildSellerInvoiceSnapshot({ seller: dbUser, orders: sellerOrders })
                 : role === 'rider'
                     ? buildRiderInvoiceSnapshot({ rider: dbUser, orders: riderOrders })

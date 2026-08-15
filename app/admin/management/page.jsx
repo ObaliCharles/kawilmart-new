@@ -166,6 +166,10 @@ const getSubscriptionFieldMap = (activeTab) => (
         }
 );
 
+const isSellerManagementEntry = (entity = {}) => (
+    entity?.role === 'seller' || entity?.role === 'admin'
+);
+
 const buildManagementDraft = (entity = null) => ({
     businessName: entity?.businessName || '',
     businessLocation: entity?.businessLocation || '',
@@ -187,13 +191,13 @@ const buildManagementDraft = (entity = null) => ({
     legalNotes: entity?.legalNotes || '',
     verificationNotes: entity?.verificationNotes || '',
     isVerified: Boolean(entity?.isVerified),
-    sellerSubscriptionPlan: entity?.role === 'seller' ? entity?.subscription?.plan || 'standard' : 'standard',
-    sellerSubscriptionStatus: entity?.role === 'seller' ? entity?.subscription?.status || 'active' : 'active',
-    sellerSubscriptionFee: entity?.role === 'seller' ? entity?.subscription?.monthlyFee || 0 : 0,
-    sellerSubscriptionLastPaidAt: entity?.role === 'seller' ? normalizeDateInput(entity?.subscription?.lastPaidAt) : '',
-    sellerSubscriptionNextBillingDate: entity?.role === 'seller' ? normalizeDateInput(entity?.subscription?.nextBillingDate) : '',
-    sellerAccessUntil: entity?.role === 'seller' ? normalizeDateInput(entity?.subscription?.accessUntil) : '',
-    sellerBillingNotes: entity?.role === 'seller' ? entity?.subscription?.billingNotes || '' : '',
+    sellerSubscriptionPlan: isSellerManagementEntry(entity) ? entity?.subscription?.plan || 'standard' : 'standard',
+    sellerSubscriptionStatus: isSellerManagementEntry(entity) ? entity?.subscription?.status || 'active' : 'active',
+    sellerSubscriptionFee: isSellerManagementEntry(entity) ? entity?.subscription?.monthlyFee || 0 : 0,
+    sellerSubscriptionLastPaidAt: isSellerManagementEntry(entity) ? normalizeDateInput(entity?.subscription?.lastPaidAt) : '',
+    sellerSubscriptionNextBillingDate: isSellerManagementEntry(entity) ? normalizeDateInput(entity?.subscription?.nextBillingDate) : '',
+    sellerAccessUntil: isSellerManagementEntry(entity) ? normalizeDateInput(entity?.subscription?.accessUntil) : '',
+    sellerBillingNotes: isSellerManagementEntry(entity) ? entity?.subscription?.billingNotes || '' : '',
     riderBaseLocation: entity?.riderBaseLocation || '',
     vehicleType: entity?.vehicleType || 'motorcycle',
     licensePlate: entity?.licensePlate || '',
@@ -443,7 +447,11 @@ export default function AdminManagement() {
     }, [searchQuery, vendorApplications]);
 
     const tabEntities = useMemo(() => (
-        users.filter((entry) => entry.role === activeTab)
+        users.filter((entry) => (
+            activeTab === 'seller'
+                ? isSellerManagementEntry(entry)
+                : entry.role === activeTab
+        ))
     ), [users, activeTab]);
 
     const filteredEntities = useMemo(() => {
@@ -701,7 +709,7 @@ export default function AdminManagement() {
                     <TabButton
                         active={activeTab === 'seller'}
                         onClick={() => handleTabChange('seller')}
-                        badge={users.filter((entry) => entry.role === 'seller').length || undefined}
+                        badge={users.filter((entry) => isSellerManagementEntry(entry)).length || undefined}
                     >
                         Sellers
                     </TabButton>
