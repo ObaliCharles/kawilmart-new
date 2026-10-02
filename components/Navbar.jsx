@@ -1030,10 +1030,11 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
                 <input
                   autoFocus
                   type="text"
+                  enterKeyHint="search"
                   placeholder={hasPlaceholderWords ? "" : "Search for products, brands..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="min-w-0 w-full py-2 text-xs outline-none placeholder:text-gray-400"
+                  className="min-w-0 w-full py-2 text-base outline-none placeholder:text-gray-400"
                 />
               </div>
               {searchQuery ? (
