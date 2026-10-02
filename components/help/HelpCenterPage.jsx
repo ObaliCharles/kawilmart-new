@@ -56,12 +56,8 @@ const FAQS = [
     answer: "Open My Orders from your account menu. Every order shows a live status timeline from Placed through to Delivered, plus the rider's details once they accept the job.",
   },
   {
-    question: "How do I pay with MTN Mobile Money?",
-    answer: "Choose MTN Mobile Money at checkout. Payment is collected on delivery, so have the amount ready in your MoMo wallet when the rider arrives.",
-  },
-  {
-    question: "How do I pay with Airtel Money?",
-    answer: "Select Airtel Money at checkout. Like MTN, it is settled on delivery. The rider confirms payment before handing your items over.",
+    question: "How do I pay for my order?",
+    answer: "Cash on Delivery is currently the only payment method. Pay the rider in cash when your order arrives.",
   },
   {
     question: "How long does delivery take?",

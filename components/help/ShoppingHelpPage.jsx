@@ -49,7 +49,7 @@ const steps = [
   {
     icon: "pay",
     title: "Pay on delivery",
-    body: "Choose Cash, MTN Mobile Money or Airtel Money. All three are collected when your order reaches you. Nothing is charged when you place it.",
+    body: "Choose Cash on Delivery and pay the rider in cash when your order reaches you. Nothing is charged when you place it.",
     cta: { label: "Payment methods", href: "/payment-methods" },
   },
   {

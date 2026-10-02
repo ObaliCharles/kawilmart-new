@@ -79,13 +79,6 @@ const JOURNEY = [
   { year: "2028", title: "The Future", body: "Continuing to innovate and make shopping better for everyone.", status: "ahead" },
 ];
 
-// Only the rails we actually process. Card networks were deliberately left out
-// so this page does not promise payment methods checkout cannot take.
-const PARTNERS = [
-  { key: "mtn", node: <span className="rounded-[3px] bg-[#FFCC00] px-2 py-1 text-[11px] font-black leading-none text-black">MTN</span> },
-  { key: "airtel", node: <span className="text-[15px] font-black lowercase tracking-tight text-[#E40000]">airtel</span> },
-];
-
 const AVATAR_TONES = [
   "bg-orange-100 text-orange-700",
   "bg-emerald-100 text-emerald-700",
@@ -415,14 +408,9 @@ const AboutPageContent = ({ about, testimonials = [] }) => {
           <div className="reveal-up premium-card p-5">
             <SectionTitle className="!text-left !text-[15px] md:!text-[18px]">Payments We Accept</SectionTitle>
             <p className="mt-2 text-[12px] leading-[18px] text-gray-500">
-              Mobile money and cash on delivery, collected when your order arrives.
+              Cash on delivery. Pay when your order arrives.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-2.5">
-              {PARTNERS.map((partner) => (
-                <span key={partner.key} className="flex h-11 min-w-[4.5rem] items-center justify-center rounded-lg bg-gray-50 px-3 ring-1 ring-gray-100">
-                  {partner.node}
-                </span>
-              ))}
               <span className="flex h-11 items-center justify-center rounded-lg bg-gray-50 px-3 text-[11px] font-bold text-gray-600 ring-1 ring-gray-100">
                 Cash on delivery
               </span>

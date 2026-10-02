@@ -15,18 +15,6 @@ const PAYMENT_OPTIONS = [
     hint: "Pay when you receive it",
     mark: <span className="text-[9px] font-bold text-gray-600">CASH</span>,
   },
-  {
-    value: PAYMENT_METHODS.MTN_MOMO,
-    label: "MTN Mobile Money",
-    hint: "Pay securely online before delivery",
-    mark: <span className="rounded-sm bg-[#FFCC00] px-1 py-0.5 text-[8px] font-black leading-none text-black">MTN</span>,
-  },
-  {
-    value: PAYMENT_METHODS.AIRTEL_MONEY,
-    label: "Airtel Money",
-    hint: "Pay securely online before delivery",
-    mark: <span className="text-[9px] font-black lowercase text-[#E40000]">airtel</span>,
-  },
 ];
 
 const createIdempotencyKey = () => {
@@ -64,7 +52,7 @@ const OrderSummary = () => {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(PAYMENT_METHOD_SAVE_KEY);
-      if (saved && Object.values(PAYMENT_METHODS).includes(saved)) {
+      if (saved === PAYMENT_METHODS.COD) {
         setPaymentMethod(saved);
       }
     } catch {

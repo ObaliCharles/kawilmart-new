@@ -17,8 +17,8 @@ const LOGO_FILE = "/wilwa-email-logo.png";
 
 const BOILERPLATE =
   "Wilwa is a Ugandan online marketplace for everyday essentials, connecting local sellers with buyers " +
-  "across the country. Shoppers browse products from independent vendors in one catalogue and pay the way " +
-  "they already do: cash, MTN Mobile Money or Airtel Money, all collected on delivery. Sellers get their " +
+  "across the country. Shoppers browse products from independent vendors in one catalogue and pay " +
+  "cash on delivery. Sellers get their " +
   "own storefront and dashboard to list stock, manage orders and track earnings.";
 
 const Icon = ({ type, className = "h-5 w-5" }) => {
@@ -60,8 +60,8 @@ const fastFacts = [
   {
     icon: "pay",
     label: "How buyers pay",
-    value: "Cash, MTN MoMo, Airtel Money",
-    detail: "All three are collected on delivery. Nothing is charged at the moment the order is placed.",
+    value: "Cash on Delivery",
+    detail: "Pay the rider in cash when your order arrives. Nothing is charged when you place the order.",
   },
   {
     icon: "grid",

@@ -34,8 +34,8 @@ const Icon = ({ type, className = "h-5 w-5" }) => {
 const guides = [
   {
     icon: "pay",
-    title: "Paying with mobile money",
-    body: "Pick Cash, MTN Mobile Money or Airtel Money at checkout. All three are collected when the rider hands your order over. Nothing leaves your wallet when you place it. Have the exact amount ready in your MoMo balance so the handover is quick.",
+    title: "Paying for your order",
+    body: "Choose Cash on Delivery at checkout and pay the rider in cash when your order arrives. Nothing is charged when you place the order.",
     action: "Payment methods",
     href: "/payment-methods",
     tone: "text-emerald-600 bg-emerald-50",

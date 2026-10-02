@@ -8,13 +8,13 @@ import {
   DELIVERY_MODES,
   ORDER_STATUSES,
   PAYMENT_METHOD_LABELS,
+  PAYMENT_METHODS,
   PAYMENT_STATUSES,
   RIDER_ASSIGNMENT_STATUSES,
   buildOrderFinancials,
   calculateDeliveryFee,
   getDeliveryModeLabel,
   normalizeDeliveryMode,
-  normalizePaymentMethod,
 } from "@/lib/orderLifecycle";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rateLimit";
 import { getProductStockSnapshot } from "@/lib/productStock";
@@ -113,7 +113,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const userId = await getRequestUserId(request);
-    const { address, items, deliveryMode, paymentMethod, idempotencyKey } = await request.json();
+    const { address, items, deliveryMode, idempotencyKey } = await request.json();
 
     if (!userId) return NextResponse.json({ success: false, message: "No userId found" });
 
@@ -128,7 +128,7 @@ export async function POST(request) {
     }
 
     const normalizedDeliveryMode = normalizeDeliveryMode(deliveryMode);
-    const normalizedPaymentMethod = normalizePaymentMethod(paymentMethod);
+    const normalizedPaymentMethod = PAYMENT_METHODS.COD;
 
     // Idempotent replay: if this checkout key already produced orders (e.g. a
     // retried request after a network hiccup), acknowledge instead of

@@ -11,18 +11,6 @@ import toast from "react-hot-toast";
 // is genuinely the one preselected at checkout rather than a cosmetic setting.
 const PAYMENT_METHOD_SAVE_KEY = "kw_checkout_payment_method";
 
-const MtnMark = () => (
-  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FFCC00]">
-    <span className="text-[10px] font-black leading-none text-black">MTN</span>
-  </span>
-);
-
-const AirtelMark = () => (
-  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E40000]">
-    <span className="text-[9px] font-black lowercase leading-none text-white">airtel</span>
-  </span>
-);
-
 const CashMark = () => (
   <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
     <svg className="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -38,18 +26,6 @@ const PAYMENT_OPTIONS = [
     label: "Cash on Delivery",
     description: "Pay the rider in cash when your order arrives.",
     mark: <CashMark />,
-  },
-  {
-    value: PAYMENT_METHODS.MTN_MOMO,
-    label: "MTN Mobile Money",
-    description: "Pay from your MTN MoMo wallet.",
-    mark: <MtnMark />,
-  },
-  {
-    value: PAYMENT_METHODS.AIRTEL_MONEY,
-    label: "Airtel Money",
-    description: "Pay from your Airtel Money wallet.",
-    mark: <AirtelMark />,
   },
 ];
 
@@ -68,7 +44,7 @@ const PaymentMethodsPage = () => {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(PAYMENT_METHOD_SAVE_KEY);
-      if (saved && Object.values(PAYMENT_METHODS).includes(saved)) {
+      if (saved === PAYMENT_METHODS.COD) {
         setPreferredMethod(saved);
       }
     } catch {
@@ -153,9 +129,9 @@ const PaymentMethodsPage = () => {
               <h2 className="text-[13px] font-bold text-gray-950">How payment works</h2>
               <ul className="mt-2.5 space-y-2.5">
                 {[
-                  "Your preferred method is preselected at checkout. You can still switch it per order.",
-                  "Mobile money is collected on delivery. Have the amount ready on your phone when the rider arrives.",
-                  "You only pay once your order is in your hands. Nothing is charged when you place it.",
+                  "Cash on Delivery is currently the only payment method available.",
+                  "Pay the rider in cash when your order arrives.",
+                  "You only pay once your order is in your hands.",
                 ].map((line) => (
                   <li key={line} className="flex gap-2.5">
                     <span className="mt-[3px] flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-600">
