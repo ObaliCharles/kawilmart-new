@@ -40,6 +40,31 @@ const securityHeaders = [
     },
 ];
 
+const noIndexHeaders = [
+    {
+        key: 'X-Robots-Tag',
+        value: 'noindex, nofollow, noarchive',
+    },
+];
+
+const privatePageSources = [
+    '/add-address',
+    '/address-book',
+    '/cart',
+    '/inbox',
+    '/my-orders',
+    '/notifications',
+    '/order-placed',
+    '/payment-methods',
+    '/sign-in/:path*',
+    '/sign-up/:path*',
+    '/track-order',
+    '/wishlist',
+    '/admin/:path*',
+    '/dashboard/:path*',
+    '/seller/:path*',
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     // Lets CI/checks build into an isolated dir so a running `next dev`
@@ -81,6 +106,10 @@ const nextConfig = {
                 source: '/:path*',
                 headers: securityHeaders,
             },
+            ...privatePageSources.map((source) => ({
+                source,
+                headers: noIndexHeaders,
+            })),
         ];
     },
 };

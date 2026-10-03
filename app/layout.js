@@ -7,6 +7,31 @@ import RouteLoader from "@/components/RouteLoader";
 import RouteShell from "@/components/RouteShell";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "https://wilwa.ug";
+const normalizedSiteUrl = siteUrl.replace(/\/$/, "");
+const siteSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${normalizedSiteUrl}/#organization`,
+      name: "Wilwa",
+      url: normalizedSiteUrl,
+      logo: `${normalizedSiteUrl}/wilwa-email-logo.png`,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${normalizedSiteUrl}/#website`,
+      url: normalizedSiteUrl,
+      name: "Wilwa",
+      publisher: { "@id": `${normalizedSiteUrl}/#organization` },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${normalizedSiteUrl}/all-products?search={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+  ],
+};
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
@@ -48,6 +73,12 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema).replace(/</g, "\\u003c") }}
+        />
+      </head>
       <body className="antialiased text-gray-700" >
         <ClerkProvider
           signInUrl="/sign-in"
