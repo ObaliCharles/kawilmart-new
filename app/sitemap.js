@@ -2,8 +2,9 @@ import connectDB from "@/config/db";
 import Product from "@/models/Product";
 import User from "@/models/User";
 import { getSellerAccessState } from "@/lib/sellerBilling";
+import { getSiteUrl } from "@/lib/siteUrl";
 
-const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "https://wilwa.ug").replace(/\/$/, "");
+const siteUrl = getSiteUrl();
 
 const publicPages = [
   "",

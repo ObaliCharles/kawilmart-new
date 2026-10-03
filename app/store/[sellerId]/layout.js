@@ -2,8 +2,9 @@ import connectDB from "@/config/db";
 import User from "@/models/User";
 import Product from "@/models/Product";
 import { getSellerAccessState } from "@/lib/sellerBilling";
+import { getSiteUrl } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "";
+const siteUrl = getSiteUrl();
 
 const activeProductQuery = {
   $or: [

@@ -5,8 +5,9 @@ import { Toaster } from "react-hot-toast";
 import { ClerkProvider } from "@clerk/nextjs";
 import RouteLoader from "@/components/RouteLoader";
 import RouteShell from "@/components/RouteShell";
+import { getSiteUrl } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "https://wilwa.ug";
+const siteUrl = getSiteUrl();
 const normalizedSiteUrl = siteUrl.replace(/\/$/, "");
 const siteSchema = {
   "@context": "https://schema.org",

@@ -1,6 +1,7 @@
 import { getStorefrontProductById } from "@/lib/getStorefrontProducts";
+import { getSiteUrl } from "@/lib/siteUrl";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "";
+const siteUrl = getSiteUrl();
 
 const escapeJsonForHtml = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
 

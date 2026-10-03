@@ -1,4 +1,6 @@
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "https://wilwa.ug";
+import { getSiteUrl } from "@/lib/siteUrl";
+
+const siteUrl = getSiteUrl();
 
 export default function robots() {
   return {
