@@ -6,9 +6,33 @@ import { ClerkProvider } from "@clerk/nextjs";
 import RouteLoader from "@/components/RouteLoader";
 import RouteShell from "@/components/RouteShell";
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "https://wilwa.ug";
+
 export const metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Wilwa | Northern Uganda's Trusted Online Store",
-  description: "Shop fashion, beauty, electronics, home essentials, and more with Wilwa",
+  description: "Shop fashion, beauty, electronics, home essentials, and more from trusted local sellers on Wilwa, Uganda's online marketplace.",
+  applicationName: "Wilwa",
+  keywords: ["online shopping Uganda", "Northern Uganda marketplace", "buy online Uganda", "Wilwa", "Uganda ecommerce"],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "en_UG",
+    url: "/",
+    siteName: "Wilwa",
+    title: "Wilwa | Northern Uganda's Trusted Online Store",
+    description: "Shop fashion, beauty, electronics, home essentials, and more from trusted local sellers on Wilwa.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Wilwa | Northern Uganda's Trusted Online Store",
+    description: "Shop trusted local sellers on Wilwa, Uganda's online marketplace.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
 };
 
 // Without this, Android browsers lay the page out at a 980px virtual viewport

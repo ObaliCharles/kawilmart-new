@@ -6,6 +6,10 @@ import { getStorefrontProductsSafe } from "@/lib/getStorefrontProducts";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 const Home = async () => {
   const [siteContent, initialProducts] = await Promise.all([
     getResolvedSiteContentFromBanners(),

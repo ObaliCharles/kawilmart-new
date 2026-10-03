@@ -5,6 +5,12 @@ import { getStorefrontProductsSafe } from "@/lib/getStorefrontProducts";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Shop by Category | Wilwa",
+  description: "Browse fashion, electronics, beauty, home essentials, groceries and more from trusted sellers on Wilwa Uganda.",
+  alternates: { canonical: "/categories" },
+};
+
 const CategoriesPage = async () => {
   const initialProducts = await getStorefrontProductsSafe();
 
