@@ -724,6 +724,11 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
     }
   };
 
+  const openNearbySearch = () => {
+    closeSearchPanel();
+    navigate('/all-products?nearMe=1');
+  };
+
   const closeDropdown = () => setOpenDropdown(null);
 
   const toggleDropdown = (name) => {
@@ -1056,6 +1061,13 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
               Cancel
             </button>
           </form>
+          <div className="flex shrink-0 items-center border-b border-gray-100 px-4 py-2.5">
+            <button type="button" onClick={openNearbySearch} className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 text-[11.5px] font-semibold text-orange-700 transition hover:bg-orange-100">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 10c0 5.1-8 11-8 11S4 15.1 4 10a8 8 0 1 1 16 0Z" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.8"/></svg>
+              Search near me
+            </button>
+            <span className="ml-2 text-[11px] text-gray-500">Use your location to sort nearby listings.</span>
+          </div>
           {/* pb clears the bottom dock + raised cart FAB, which stay on top */}
           <div className="flex-1 overflow-y-auto overscroll-contain pb-20">
             <MobileSearchBody {...searchPanelProps} />
@@ -1213,6 +1225,9 @@ const Navbar = ({ hideMobileHeader = false, mobilePageTitle = "", showMobilePage
                 />
               </div>
             </div>
+            <button type="button" onClick={openNearbySearch} className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold text-gray-600 transition hover:bg-orange-50 hover:text-orange-700 lg:flex" aria-label="Find products near me">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 10c0 5.1-8 11-8 11S4 15.1 4 10a8 8 0 1 1 16 0Z" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.8"/></svg> Near me
+            </button>
             <button type="submit" className="m-1 flex h-9 shrink-0 items-center rounded-full bg-orange-600 px-5 text-[12.5px] font-semibold text-white transition hover:bg-orange-700">
               Search
             </button>

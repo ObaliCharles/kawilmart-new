@@ -655,6 +655,7 @@ const MobileProductCard = ({ product, navigate, prefetchRoute, formatCurrency, t
         <span className="text-orange-500">★</span>
         {activity.hasRating ? activity.displayRating.toFixed(1) : "New"} · {soldCount > 0 ? `${soldCount} sold` : "Fresh"}
       </span>
+      {(product.publicLocation?.displayName || product.sellerLocation || product.location) ? <span className="mt-1 flex min-w-0 items-center gap-1 truncate text-[10px] font-medium text-gray-500"><svg className="h-3 w-3 shrink-0 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 10c0 5.1-8 11-8 11S4 15.1 4 10a8 8 0 1 1 16 0Z" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.8"/></svg><span className="truncate">{product.publicLocation?.displayName || product.sellerLocation || product.location}</span></span> : null}
       <span className="mt-2 flex flex-wrap items-center gap-2">
         <span className="text-sm font-extrabold text-gray-950">{formatCurrency(offerPrice)}</span>
         {originalPrice > offerPrice ? <span className="text-[10px] text-rose-300 line-through">{formatCurrency(originalPrice)}</span> : null}

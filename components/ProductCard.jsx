@@ -180,9 +180,10 @@ const ProductCard = ({ product }) => {
                 <span>{hasRating ? rating.toFixed(1) : "New"}{reviewCount > 0 ? ` (${reviewCount})` : ""}</span>
             </div>
 
-            {product.publicLocation?.displayName || product.publicLocation?.distanceLabel ? (
-                <p className="mt-1 truncate text-[10px] font-medium text-gray-500" title={product.publicLocation?.displayName || undefined}>
-                    📍 {[product.publicLocation?.displayName, product.publicLocation?.distanceLabel].filter(Boolean).join(' · ')}
+            {product.publicLocation?.displayName || product.publicLocation?.distanceLabel || product.sellerLocation || product.location ? (
+                <p className="mt-1 flex min-w-0 items-center gap-1 truncate text-[10px] font-medium text-gray-500" title={product.publicLocation?.displayName || product.sellerLocation || product.location || undefined}>
+                    <svg className="h-3 w-3 shrink-0 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 10c0 5.1-8 11-8 11S4 15.1 4 10a8 8 0 1 1 16 0Z" stroke="currentColor" strokeWidth="1.8"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.8"/></svg>
+                    <span className="truncate">{[product.publicLocation?.displayName || product.sellerLocation || product.location, product.publicLocation?.distanceLabel].filter(Boolean).join(' · ')}</span>
                 </p>
             ) : null}
 

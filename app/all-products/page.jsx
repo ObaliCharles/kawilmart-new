@@ -483,10 +483,12 @@ function AllProductsInner() {
   const [loadingLocationProducts, setLoadingLocationProducts] = useState(false);
   const [requestingLocation, setRequestingLocation] = useState(false);
   const [locationMessage, setLocationMessage] = useState('');
+  const [gpsAreaLabel, setGpsAreaLabel] = useState('');
   // Infinite scroll: instead of paginating, we grow the visible window as the
   // shopper nears the bottom of the grid (marketplace-style browsing).
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const loadMoreRef = useRef(null);
+  const nearMeAutoStartedRef = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -746,6 +748,18 @@ function AllProductsInner() {
         return;
       }
       setBuyerCoordinates({ lat: position.coords.latitude, lng: position.coords.longitude });
+      const nearestArea = areas
+        .filter((area) => Number.isFinite(area.lat) && Number.isFinite(area.lng))
+        .reduce((closest, area) => {
+          const distance = ((position.coords.latitude - area.lat) ** 2) + ((position.coords.longitude - area.lng) ** 2);
+          return !closest || distance < closest.distance ? { area, distance } : closest;
+        }, null);
+      if (nearestArea) {
+        const parent = nearestArea.area.parentId
+          ? areas.find((area) => String(area._id) === String(nearestArea.area.parentId))
+          : null;
+        setGpsAreaLabel([nearestArea.area.name, parent?.name].filter(Boolean).join(', '));
+      }
       setLocationMode('gps');
     }, (error) => {
       setRequestingLocation(false);
@@ -756,8 +770,18 @@ function AllProductsInner() {
           ? 'Location took too long. Try again or choose an area.'
           : "We couldn't get your location. Choose your area instead.";
       setLocationMessage(message);
-    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
   };
+
+  useEffect(() => {
+    if (searchParams.get('nearMe') === '1' && !nearMeAutoStartedRef.current) {
+      nearMeAutoStartedRef.current = true;
+      activateNearMe();
+    }
+    // `activateNearMe` intentionally reads the latest area data when invoked.
+    // The ref prevents query-param navigation from requesting GPS more than once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const cityAreas = areas.filter((area) => area.type === 'CITY');
   const manualCity = areas.find((area) => String(area._id) === String(manualCityId));
   const manualChildren = manualCity ? areas.filter((area) => String(area.parentId) === String(manualCity._id)) : [];
@@ -1020,20 +1044,20 @@ function AllProductsInner() {
           <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-3 py-2.5 sm:px-4">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-600"><LocationPin className="h-4 w-4" /></span>
             <div className="mr-auto"><p className="text-xs font-bold text-slate-900">Shop your area</p><p className="text-[11px] text-slate-500">Use GPS once, or browse any city.</p></div>
-            {locationMode === 'gps' ? <span className="hidden items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700 sm:inline-flex"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Location on</span> : null}
+            {locationMode === 'gps' ? <span className="hidden max-w-[13rem] items-center gap-1 truncate rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700 sm:inline-flex"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" /><span className="truncate">{gpsAreaLabel ? `Near ${gpsAreaLabel}` : 'Location on'}</span></span> : null}
           </div>
           <div className="flex flex-wrap items-center gap-2 p-2.5 sm:px-4 sm:py-3">
           <button type="button" onClick={activateNearMe} disabled={requestingLocation} className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3.5 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:cursor-wait ${locationMode === 'gps' ? 'bg-orange-600 text-white shadow-sm' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
             {requestingLocation ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <LocationPin className="h-4 w-4" />}
             {requestingLocation ? 'Finding you…' : locationMode === 'gps' ? 'Using your location' : 'Near me'}
           </button>
-          <button type="button" onClick={() => { setLocationMode('manual'); setBuyerCoordinates(null); setLocationMessage(''); }} className={`inline-flex min-h-10 items-center gap-2 rounded-lg border px-3.5 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-orange-200 ${locationMode === 'manual' ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'}`}>
+          <button type="button" onClick={() => { setLocationMode('manual'); setBuyerCoordinates(null); setGpsAreaLabel(''); setLocationMessage(''); }} className={`inline-flex min-h-10 items-center gap-2 rounded-lg border px-3.5 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-orange-200 ${locationMode === 'manual' ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'}`}>
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20h16M5 20V8l7-4 7 4v12M9 20v-5h6v5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg> Browse an area
           </button>
           {locationMode === 'gps' ? (
             <div className="flex flex-wrap items-center gap-1.5">
               {[1, 5, 10, 25].map((radius) => <button key={radius} type="button" onClick={() => setRadiusKm(radius)} className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition ${radiusKm === radius ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{radius} km</button>)}
-              <button type="button" onClick={() => { setLocationMode('none'); setBuyerCoordinates(null); setLocationMessage(''); }} className="ml-1 rounded-md px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100">Clear</button>
+              <button type="button" onClick={() => { setLocationMode('none'); setBuyerCoordinates(null); setGpsAreaLabel(''); setLocationMessage(''); }} className="ml-1 rounded-md px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100">Clear</button>
             </div>
           ) : null}
           {locationMode === 'manual' ? (

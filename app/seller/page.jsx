@@ -743,15 +743,15 @@ const AddProductInner = () => {
         setGettingLocation(false);
         return;
       }
-      const cities = areas.filter((area) => area.type === 'CITY' && Number.isFinite(area.lat) && Number.isFinite(area.lng));
-      const nearest = cities.reduce((closest, area) => {
+      const supportedAreas = areas.filter((area) => Number.isFinite(area.lat) && Number.isFinite(area.lng));
+      const nearest = supportedAreas.reduce((closest, area) => {
         const distance = ((latitude - area.lat) ** 2) + ((longitude - area.lng) ** 2);
         return !closest || distance < closest.distance ? { area, distance } : closest;
       }, null);
       if (!nearest || nearest.distance > 0.25) {
         toast.error("Location is temporarily unavailable. Choose your area manually.");
       } else {
-        setCityAreaId(String(nearest.area._id));
+        setCityAreaId(String(nearest.area.type === 'CITY' ? nearest.area._id : nearest.area.parentId));
         setAreaId(String(nearest.area._id));
         setLocationLat(latitude);
         setLocationLng(longitude);
@@ -764,7 +764,7 @@ const AddProductInner = () => {
     }, () => {
       setGettingLocation(false);
       toast.error("Couldn't get your location. Choose your area manually.");
-    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
   };
 
   const handleInvoiceDownload = async () => {
