@@ -449,10 +449,13 @@ const AddProductInner = () => {
   const [areaId, setAreaId] = useState('');
   const [locationLat, setLocationLat] = useState(null);
   const [locationLng, setLocationLng] = useState(null);
+  const [locationAccuracy, setLocationAccuracy] = useState('exact');
   const [landmark, setLandmark] = useState('');
   const [meetupSpot, setMeetupSpot] = useState('');
   const [locationTouched, setLocationTouched] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [shopLocation, setShopLocation] = useState(null);
+  const [savingShopLocation, setSavingShopLocation] = useState(false);
   const [tags, setTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
   const [loadingProduct, setLoadingProduct] = useState(false);
@@ -487,6 +490,7 @@ const AddProductInner = () => {
     setAreaId('');
     setLocationLat(null);
     setLocationLng(null);
+    setLocationAccuracy('exact');
     setLandmark('');
     setMeetupSpot('');
     setLocationTouched(false);
@@ -529,6 +533,22 @@ const AddProductInner = () => {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    if (!authReady || !user) return;
+    let active = true;
+    (async () => {
+      try {
+        const token = await getToken();
+        const { data } = await axios.get('/api/seller/shop-location', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        if (active && data.success) setShopLocation(data.shopLocation);
+      } catch {
+        // A saved shop location is optional; listing creation remains available.
+      }
+    })();
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authReady, user]);
+
   const fetchProductDetails = async () => {
     if (!editId) {
       resetForm();
@@ -559,6 +579,7 @@ const AddProductInner = () => {
         setAreaId(product.areaId ? String(product.areaId) : '');
         setLocationLat(product.lat ?? null);
         setLocationLng(product.lng ?? null);
+        setLocationAccuracy(product.locationAccuracy === 'area' ? 'area' : 'exact');
         setLandmark(product.landmark || '');
         setMeetupSpot(product.meetupSpot || '');
         setLocationTouched(false);
@@ -647,6 +668,7 @@ const AddProductInner = () => {
     if (locationTouched) {
       formData.append('areaId', areaId);
       formData.append('cityAreaId', cityAreaId);
+      formData.append('locationAccuracy', locationAccuracy);
       if (locationLat !== null && locationLng !== null) {
         formData.append('lat', String(locationLat));
         formData.append('lng', String(locationLng));
@@ -717,8 +739,11 @@ const AddProductInner = () => {
     const selected = areas.find((area) => String(area._id) === String(nextAreaId || nextCityId));
     setCityAreaId(nextCityId);
     setAreaId(nextAreaId || nextCityId);
-    setLocationLat(null);
-    setLocationLng(null);
+    // A manually selected supported area has a centroid. Saving it makes the
+    // listing discoverable by Near me until the seller captures an exact pin.
+    setLocationLat(Number.isFinite(selected?.lat) ? selected.lat : null);
+    setLocationLng(Number.isFinite(selected?.lng) ? selected.lng : null);
+    setLocationAccuracy('area');
     setLocationTouched(true);
     if (selected) {
       const label = [areas.find((area) => String(area._id) === String(selected.parentId))?.name, selected.name].filter(Boolean).join(', ');
@@ -755,6 +780,7 @@ const AddProductInner = () => {
         setAreaId(String(nearest.area._id));
         setLocationLat(latitude);
         setLocationLng(longitude);
+        setLocationAccuracy('exact');
         setLocationTouched(true);
         setLocation((previous) => previous || nearest.area.name);
         setSellerLocation((previous) => previous || nearest.area.name);
@@ -765,6 +791,42 @@ const AddProductInner = () => {
       setGettingLocation(false);
       toast.error("Couldn't get your location. Choose your area manually.");
     }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  };
+
+  const useSavedShopLocation = () => {
+    if (!shopLocation?.areaId) return;
+    const savedArea = areas.find((area) => String(area._id) === String(shopLocation.areaId));
+    const cityId = savedArea?.type === 'CITY' ? savedArea._id : savedArea?.parentId;
+    setCityAreaId(cityId ? String(cityId) : '');
+    setAreaId(String(shopLocation.areaId));
+    setLocationLat(shopLocation.lat ?? null);
+    setLocationLng(shopLocation.lng ?? null);
+    setLocationAccuracy(shopLocation.pinSource === 'exact' ? 'exact' : 'area');
+    setLandmark(shopLocation.landmark || '');
+    setMeetupSpot(shopLocation.meetupSpot || '');
+    setLocationTouched(true);
+    const city = savedArea?.parentId ? areas.find((area) => String(area._id) === String(savedArea.parentId)) : null;
+    const label = [city?.name, savedArea?.name].filter(Boolean).join(', ');
+    if (label) { setLocation(label); setSellerLocation(label); }
+    toast.success(shopLocation.hasPrecisePin ? 'Saved shop pin applied to this listing.' : 'Saved shop area applied to this listing.');
+  };
+
+  const saveAsShopLocation = async () => {
+    if (!areaId) { toast.error('Choose the shop area first.'); return; }
+    try {
+      setSavingShopLocation(true);
+      const token = await getToken();
+      const { data } = await axios.patch('/api/seller/shop-location', {
+        areaId, lat: locationLat, lng: locationLng, landmark, meetupSpot, pinSource: locationAccuracy,
+      }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!data.success) { toast.error(data.message || 'Could not save shop location.'); return; }
+      setShopLocation(data.shopLocation);
+      toast.success(data.shopLocation.hasPrecisePin ? 'Shop pin saved for future listings.' : 'Shop area saved. Capture the pin at the shop later for precise nearby search.');
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Could not save shop location.');
+    } finally {
+      setSavingShopLocation(false);
+    }
   };
 
   const handleInvoiceDownload = async () => {
@@ -1570,14 +1632,17 @@ const AddProductInner = () => {
                       <h2 id="product-location-heading" className="text-base font-semibold text-gray-950">Location</h2>
                       <p className="mt-0.5 text-xs text-gray-500">Where is this product? Buyers see your general area, not your exact location.</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={useCurrentLocation}
-                      disabled={gettingLocation || loadingAreas}
-                      className="rounded-lg border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {gettingLocation ? 'Getting location…' : '📍 Use my current location'}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      {shopLocation?.areaId ? <button type="button" onClick={useSavedShopLocation} disabled={loadingAreas} className="rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60">Use saved shop location</button> : null}
+                      <button
+                        type="button"
+                        onClick={useCurrentLocation}
+                        disabled={gettingLocation || loadingAreas}
+                        className="rounded-lg border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {gettingLocation ? 'Getting location…' : 'Use my current location'}
+                      </button>
+                    </div>
                   </div>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div className="flex flex-col gap-1">
@@ -1615,7 +1680,11 @@ const AddProductInner = () => {
                       <input id="meetup-spot" value={meetupSpot} onChange={(event) => { setMeetupSpot(event.target.value); setLocationTouched(true); }} placeholder="e.g., Total Pece" className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400" />
                     </div>
                   </div>
-                  {locationLat !== null && locationLng !== null ? <p className="mt-3 text-xs font-medium text-emerald-700">Current location captured privately. Buyers will only see a blurred general area.</p> : null}
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5">
+                    <p className="text-xs text-gray-600">Posting away from your shop? Save its location once, then reuse it for every listing.</p>
+                    <button type="button" onClick={saveAsShopLocation} disabled={!areaId || savingShopLocation} className="text-xs font-semibold text-orange-700 transition hover:text-orange-800 disabled:cursor-not-allowed disabled:text-gray-400">{savingShopLocation ? 'Saving…' : 'Save as my shop location'}</button>
+                  </div>
+                  {locationLat !== null && locationLng !== null ? <p className={`mt-3 text-xs font-medium ${locationAccuracy === 'area' ? 'text-amber-700' : 'text-emerald-700'}`}>{locationAccuracy === 'area' ? 'Approximate area pin set, so this listing can appear in nearby results. Use your current location at the shop later for exact distance.' : 'Private exact pin captured. Buyers only see a blurred general area.'}</p> : shopLocation?.areaId ? <p className="mt-3 text-xs text-gray-500">Your saved shop area is ready. For accurate nearby results, capture its private pin while you are at the shop.</p> : null}
                 </section>
 
                 <div className="flex flex-col gap-1">

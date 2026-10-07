@@ -21,6 +21,9 @@ const productSchema = new mongoose.Schema({
     lng: { type: Number, default: null, min: -180, max: 180 },
     publicLat: { type: Number, default: null, min: -90, max: 90 },
     publicLng: { type: Number, default: null, min: -180, max: 180 },
+    // `area` means the area centroid is used until the seller captures the
+    // actual shop pin; exact coordinates remain private in either case.
+    locationAccuracy: { type: String, enum: ["exact", "area"], default: "exact" },
     meetupSpot: { type: String, default: null, maxlength: 200 },
     isFlashDeal: { type: Boolean, default: false },
     flashDealStartDate: { type: Date, default: null },

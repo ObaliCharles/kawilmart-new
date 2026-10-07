@@ -60,6 +60,13 @@ const userSchema = new mongoose.Schema({
     sellerLocationCity: { type: String, default: "" },
     sellerLocationRegion: { type: String, default: "" },
     sellerLocationCountry: { type: String, default: "Uganda" },
+    // Private reusable shop pin for listings created while the seller is away.
+    sellerShopAreaId: { type: mongoose.Schema.Types.ObjectId, ref: "Area", default: null },
+    sellerShopLat: { type: Number, default: null, min: -90, max: 90 },
+    sellerShopLng: { type: Number, default: null, min: -180, max: 180 },
+    sellerShopPinSource: { type: String, enum: ["exact", "area"], default: "area" },
+    sellerShopLandmark: { type: String, default: "", maxlength: 200 },
+    sellerShopMeetupSpot: { type: String, default: "", maxlength: 200 },
     sellerBadgeLabel: { type: String, default: "" },
     sellerBadgeTone: { type: String, enum: ['emerald', 'sky', 'amber', 'violet', 'slate'], default: 'emerald' },
     sellerBadgeGrantedAt: { type: Date, default: null },
