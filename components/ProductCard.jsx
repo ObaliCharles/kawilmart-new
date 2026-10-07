@@ -180,6 +180,12 @@ const ProductCard = ({ product }) => {
                 <span>{hasRating ? rating.toFixed(1) : "New"}{reviewCount > 0 ? ` (${reviewCount})` : ""}</span>
             </div>
 
+            {product.publicLocation?.displayName || product.publicLocation?.distanceLabel ? (
+                <p className="mt-1 truncate text-[10px] font-medium text-gray-500" title={product.publicLocation?.displayName || undefined}>
+                    📍 {[product.publicLocation?.displayName, product.publicLocation?.distanceLabel].filter(Boolean).join(' · ')}
+                </p>
+            ) : null}
+
             <div className="mt-1.5 space-y-1">
                 {stockSnapshot.hasTrackedStock ? (
                     <div className="space-y-0.5">

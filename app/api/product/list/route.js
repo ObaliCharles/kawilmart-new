@@ -3,6 +3,7 @@ import { sanitizeApiErrorMessage } from "@/lib/apiErrors";
 import { countStorefrontProducts, getStorefrontProducts } from "@/lib/getStorefrontProducts";
 import { getRequestAuth } from "@/lib/requestAuth";
 import { NextResponse } from "next/server";
+import { ALLOWED_RADIUS_KM, areValidCoordinates } from "@/lib/productLocation";
 
 export async function GET(request) {
     try {
@@ -22,9 +23,21 @@ export async function GET(request) {
         const page = parseInt(searchParams.get('page')) || 1
         const search = searchParams.get('search') || ''
         const category = searchParams.get('category') || ''
+        const areaId = searchParams.get('areaId') || ''
+        const lat = Number(searchParams.get('lat'))
+        const lng = Number(searchParams.get('lng'))
+        const radiusKm = Number(searchParams.get('radiusKm'))
+        const hasCoordinates = searchParams.has('lat') || searchParams.has('lng')
+        if (hasCoordinates && !areValidCoordinates(lat, lng)) {
+            return NextResponse.json({ success: false, message: 'Location is invalid. Choose your area instead.' }, { status: 400 });
+        }
+        if (searchParams.has('radiusKm') && !ALLOWED_RADIUS_KM.includes(radiusKm)) {
+            return NextResponse.json({ success: false, message: 'Please choose a valid radius.' }, { status: 400 });
+        }
+        const buyerCoordinates = hasCoordinates ? { lat, lng } : null
 
         const [products, total] = await Promise.all([
-            getStorefrontProducts({ limit, page, userId, search, category }),
+            getStorefrontProducts({ limit, page, userId, search, category, areaId, buyerCoordinates, radiusKm }),
             countStorefrontProducts({ search, category }),
         ])
 
@@ -39,7 +52,7 @@ export async function GET(request) {
         // Add cache headers for better performance
         response.headers.set(
             'Cache-Control',
-            userId ? 'private, no-store' : 'public, s-maxage=300, stale-while-revalidate=600'
+            userId || hasCoordinates ? 'private, no-store' : 'public, s-maxage=300, stale-while-revalidate=600'
         )
 
         return response

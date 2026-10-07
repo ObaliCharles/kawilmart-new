@@ -324,8 +324,14 @@ const Product = ({ initialProduct = null }) => {
                             </div>
                             <div>
                                 <span className="block text-gray-400">Item location</span>
-                                <span className="font-medium text-gray-800">{productData.location || productData.sellerLocation || 'Location pending'}</span>
+                                <span className="font-medium text-gray-800">{productData.publicLocation?.displayName || productData.location || productData.sellerLocation || 'Location pending'}</span>
                             </div>
+                            {productData.publicLocation?.meetupSpot ? (
+                                <div>
+                                    <span className="block text-gray-400">Meetup</span>
+                                    <span className="font-medium text-gray-800">{productData.publicLocation.meetupSpot}</span>
+                                </div>
+                            ) : null}
                             <div>
                                 <span className="block text-gray-400">Trending near</span>
                                 <span className="font-medium text-gray-800">{getLocationLabel(productData.sellerLocation || productData.location)}</span>

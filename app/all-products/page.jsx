@@ -466,6 +466,15 @@ function AllProductsInner() {
   const [selectedTags, setSelectedTags] = useState(initialTags);
   const [manualTagOptions, setManualTagOptions] = useState([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [areas, setAreas] = useState([]);
+  const [locationMode, setLocationMode] = useState('none');
+  const [manualAreaId, setManualAreaId] = useState('');
+  const [manualCityId, setManualCityId] = useState('');
+  const [buyerCoordinates, setBuyerCoordinates] = useState(null);
+  const [radiusKm, setRadiusKm] = useState(10);
+  const [locationProducts, setLocationProducts] = useState([]);
+  const [loadingLocationProducts, setLoadingLocationProducts] = useState(false);
+  const [locationMessage, setLocationMessage] = useState('');
   // Infinite scroll: instead of paginating, we grow the visible window as the
   // shopper nears the bottom of the grid (marketplace-style browsing).
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -482,6 +491,43 @@ function AllProductsInner() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    axios.get('/api/areas').then(({ data }) => {
+      if (active && data.success) setAreas(data.areas || []);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (locationMode === 'none' || (locationMode === 'manual' && !manualAreaId) || (locationMode === 'gps' && !buyerCoordinates)) {
+      return;
+    }
+    let active = true;
+    setLoadingLocationProducts(true);
+    const params = new URLSearchParams({ limit: '1000' });
+    if (locationMode === 'manual') params.set('areaId', manualAreaId);
+    if (locationMode === 'gps') {
+      params.set('lat', String(buyerCoordinates.lat));
+      params.set('lng', String(buyerCoordinates.lng));
+      params.set('radiusKm', String(radiusKm));
+    }
+    axios.get(`/api/product/list?${params}`).then(({ data }) => {
+      if (!active) return;
+      if (data.success) {
+        setLocationProducts(data.products || []);
+        setLocationMessage('');
+      } else {
+        setLocationMessage(data.message || 'Location is temporarily unavailable. Browse by area instead.');
+      }
+    }).catch(() => {
+      if (active) setLocationMessage('Location is temporarily unavailable. Browse by area instead.');
+    }).finally(() => {
+      if (active) setLoadingLocationProducts(false);
+    });
+    return () => { active = false; };
+  }, [locationMode, manualAreaId, buyerCoordinates, radiusKm]);
 
 
   const tagOptions = useMemo(() => {
@@ -521,8 +567,9 @@ function AllProductsInner() {
     setVisibleCount(PAGE_SIZE);
   }, [selectedCategory, selectedSubcategory, selectedPriceRange, selectedCondition, selectedBrand, selectedRating, selectedTags, searchQuery, selectedSeller, effectiveSortBy]);
 
+  const sourceProducts = locationMode === 'none' ? products : locationProducts;
   const brandOptions = useMemo(() => {
-    const counts = products.reduce((acc, product) => {
+    const counts = sourceProducts.reduce((acc, product) => {
       const brand = getBrandLabel(product);
       acc.set(brand, (acc.get(brand) || 0) + 1);
       return acc;
@@ -532,10 +579,10 @@ function AllProductsInner() {
       .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
       .slice(0, 10)
       .map(([label, count]) => ({ label, value: label, count }));
-  }, [products]);
+  }, [sourceProducts]);
 
   const filterAndSort = () => {
-    let filtered = products.map((product) => ({
+    let filtered = sourceProducts.map((product) => ({
       product,
       searchScore: hasActiveSearch ? getProductSearchScore(product, deferredSearchQuery) : 0,
     }));
@@ -635,7 +682,7 @@ function AllProductsInner() {
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [hasMoreProducts, filteredProducts.length]);
-  const sellerReferenceProduct = selectedSeller ? products.find((product) => product.userId === selectedSeller) : null;
+  const sellerReferenceProduct = selectedSeller ? sourceProducts.find((product) => product.userId === selectedSeller) : null;
   const sellerFilterLabel = sellerReferenceProduct?.sellerProfile?.name || sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
   const selectedSubcategoryRecord = selectedSubcategory && selectedCategoryMeta
@@ -655,6 +702,30 @@ function AllProductsInner() {
     setSelectedRating(0);
     setSelectedTags([]);
   };
+
+  const activateNearMe = () => {
+    if (!navigator.geolocation) {
+      setLocationMode('manual');
+      setLocationMessage("Location isn't available. Browse by area instead.");
+      return;
+    }
+    setLocationMessage('');
+    navigator.geolocation.getCurrentPosition((position) => {
+      if (!Number.isFinite(position.coords.latitude) || !Number.isFinite(position.coords.longitude) || position.coords.accuracy > 10000) {
+        setLocationMode('manual');
+        setLocationMessage("We couldn't get your location. Choose your area instead.");
+        return;
+      }
+      setBuyerCoordinates({ lat: position.coords.latitude, lng: position.coords.longitude });
+      setLocationMode('gps');
+    }, () => {
+      setLocationMode('manual');
+      setLocationMessage("We couldn't get your location. Choose your area instead.");
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+  };
+  const cityAreas = areas.filter((area) => area.type === 'CITY');
+  const manualCity = areas.find((area) => String(area._id) === String(manualCityId));
+  const manualChildren = manualCity ? areas.filter((area) => String(area.parentId) === String(manualCity._id)) : [];
 
   const toggleTag = (slug) => {
     setSelectedTags((prev) => (prev.includes(slug) ? prev.filter((tag) => tag !== slug) : [...prev, slug]));
@@ -894,6 +965,32 @@ function AllProductsInner() {
           </div>
         </section>
 
+        <section className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-2.5" aria-label="Location browsing">
+          <button type="button" onClick={activateNearMe} className={`rounded-md px-3 py-2 text-xs font-semibold transition ${locationMode === 'gps' ? 'bg-orange-600 text-white' : 'border border-gray-200 text-gray-800 hover:border-orange-300 hover:text-orange-700'}`}>
+            📍 Near me
+          </button>
+          <button type="button" onClick={() => { setLocationMode('manual'); setBuyerCoordinates(null); }} className={`rounded-md px-3 py-2 text-xs font-semibold transition ${locationMode === 'manual' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+            Explore an area
+          </button>
+          {locationMode === 'gps' ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[1, 5, 10, 25].map((radius) => <button key={radius} type="button" onClick={() => setRadiusKm(radius)} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${radiusKm === radius ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{radius} km</button>)}
+              <button type="button" onClick={() => { setLocationMode('none'); setBuyerCoordinates(null); setLocationMessage(''); }} className="ml-1 text-[11px] font-medium text-gray-500 underline">Clear</button>
+            </div>
+          ) : null}
+          {locationMode === 'manual' ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <select value={manualCityId} onChange={(event) => { setManualCityId(event.target.value); setManualAreaId(event.target.value); }} className="rounded-md border border-gray-200 px-2.5 py-2 text-xs outline-none focus:border-orange-500">
+                <option value="">Choose a city</option>
+                {cityAreas.map((area) => <option key={area._id} value={area._id}>{area.name}</option>)}
+              </select>
+              {manualChildren.length ? <select value={manualAreaId === manualCityId ? '' : manualAreaId} onChange={(event) => setManualAreaId(event.target.value || manualCityId)} className="rounded-md border border-gray-200 px-2.5 py-2 text-xs outline-none focus:border-orange-500"><option value="">All areas in {manualCity.name}</option>{manualChildren.map((area) => <option key={area._id} value={area._id}>{area.name}</option>)}</select> : null}
+              {manualAreaId ? <button type="button" onClick={() => { setLocationMode('none'); setManualAreaId(''); setManualCityId(''); }} className="text-[11px] font-medium text-gray-500 underline">Clear</button> : null}
+            </div>
+          ) : null}
+          {locationMessage ? <p className="basis-full text-xs text-amber-700">{locationMessage}</p> : null}
+        </section>
+
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="text-base font-bold text-gray-950">{compactHeading ? resultsLabel : selectedCategoryMeta?.label || "All Products"}</p>
@@ -1106,13 +1203,14 @@ function AllProductsInner() {
 
           {/* Products */}
           <div className="flex-1">
-            {loadingProducts ? (
+            {loadingProducts || loadingLocationProducts ? (
               <ProductsGridSkeleton showHeader={false} />
             ) : filteredProducts.length === 0 ? (
               <div className="flex h-64 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 text-gray-400">
                 <span className="mb-4 text-5xl">?</span>
-                <p className="text-lg font-medium">No products found</p>
-                <p className="text-sm">Try adjusting your filters</p>
+                <p className="text-lg font-medium">{locationMode === 'gps' ? `Nothing found within ${radiusKm} km` : 'No products found'}</p>
+                <p className="text-sm">{locationMode === 'gps' && radiusKm < 25 ? `Try products within ${[1, 5, 10, 25].find((value) => value > radiusKm)} km.` : 'Try adjusting your filters'}</p>
+                {locationMode === 'gps' && radiusKm < 25 ? <button type="button" onClick={() => setRadiusKm([1, 5, 10, 25].find((value) => value > radiusKm))} className="mt-3 rounded-md bg-orange-600 px-3 py-2 text-xs font-semibold text-white">Show products within {[1, 5, 10, 25].find((value) => value > radiusKm)} km</button> : null}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 pb-4 min-[480px]:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
