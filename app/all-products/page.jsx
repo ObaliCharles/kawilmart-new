@@ -56,6 +56,10 @@ const ratingOptions = [
 const filterCategoryHighlights = marketplaceFilterCategories.slice(0, 8);
 const mobileRailCategories = marketplaceFilterCategories;
 
+const LocationPin = ({ className = "h-4 w-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 10c0 5.1-8 11-8 11S4 15.1 4 10a8 8 0 1 1 16 0Z" stroke="currentColor" strokeWidth="1.8" /><circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.8" /></svg>
+);
+
 const CategoryGlyph = ({ className = "h-4 w-4", category = "all" }) => {
   const iconPaths = {
     all: "M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z",
@@ -477,6 +481,7 @@ function AllProductsInner() {
   const [locationPage, setLocationPage] = useState(1);
   const [locationTotal, setLocationTotal] = useState(0);
   const [loadingLocationProducts, setLoadingLocationProducts] = useState(false);
+  const [requestingLocation, setRequestingLocation] = useState(false);
   const [locationMessage, setLocationMessage] = useState('');
   // Infinite scroll: instead of paginating, we grow the visible window as the
   // shopper nears the bottom of the grid (marketplace-style browsing).
@@ -721,24 +726,37 @@ function AllProductsInner() {
   };
 
   const activateNearMe = () => {
+    if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+      setLocationMode('manual');
+      setLocationMessage('Location needs a secure HTTPS connection. Browse by area instead.');
+      return;
+    }
     if (!navigator.geolocation) {
       setLocationMode('manual');
       setLocationMessage("Location isn't available. Browse by area instead.");
       return;
     }
     setLocationMessage('');
+    setRequestingLocation(true);
     navigator.geolocation.getCurrentPosition((position) => {
-      if (!Number.isFinite(position.coords.latitude) || !Number.isFinite(position.coords.longitude) || position.coords.accuracy > 10000) {
+      setRequestingLocation(false);
+      if (!Number.isFinite(position.coords.latitude) || !Number.isFinite(position.coords.longitude)) {
         setLocationMode('manual');
         setLocationMessage("We couldn't get your location. Choose your area instead.");
         return;
       }
       setBuyerCoordinates({ lat: position.coords.latitude, lng: position.coords.longitude });
       setLocationMode('gps');
-    }, () => {
+    }, (error) => {
+      setRequestingLocation(false);
       setLocationMode('manual');
-      setLocationMessage("We couldn't get your location. Choose your area instead.");
-    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+      const message = error?.code === error?.PERMISSION_DENIED
+        ? 'Location permission is off. Enable it in your browser settings or choose an area.'
+        : error?.code === error?.TIMEOUT
+          ? 'Location took too long. Try again or choose an area.'
+          : "We couldn't get your location. Choose your area instead.";
+      setLocationMessage(message);
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
   };
   const cityAreas = areas.filter((area) => area.type === 'CITY');
   const manualCity = areas.find((area) => String(area._id) === String(manualCityId));
@@ -998,30 +1016,38 @@ function AllProductsInner() {
           </div>
         </section>
 
-        <section className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-2.5" aria-label="Location browsing">
-          <button type="button" onClick={activateNearMe} className={`rounded-md px-3 py-2 text-xs font-semibold transition ${locationMode === 'gps' ? 'bg-orange-600 text-white' : 'border border-gray-200 text-gray-800 hover:border-orange-300 hover:text-orange-700'}`}>
-            📍 Near me
+        <section className="mb-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)]" aria-label="Location browsing">
+          <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-3 py-2.5 sm:px-4">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-600"><LocationPin className="h-4 w-4" /></span>
+            <div className="mr-auto"><p className="text-xs font-bold text-slate-900">Shop your area</p><p className="text-[11px] text-slate-500">Use GPS once, or browse any city.</p></div>
+            {locationMode === 'gps' ? <span className="hidden items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700 sm:inline-flex"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Location on</span> : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 p-2.5 sm:px-4 sm:py-3">
+          <button type="button" onClick={activateNearMe} disabled={requestingLocation} className={`inline-flex min-h-10 items-center gap-2 rounded-lg px-3.5 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-orange-300 disabled:cursor-wait ${locationMode === 'gps' ? 'bg-orange-600 text-white shadow-sm' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>
+            {requestingLocation ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" /> : <LocationPin className="h-4 w-4" />}
+            {requestingLocation ? 'Finding you…' : locationMode === 'gps' ? 'Using your location' : 'Near me'}
           </button>
-          <button type="button" onClick={() => { setLocationMode('manual'); setBuyerCoordinates(null); }} className={`rounded-md px-3 py-2 text-xs font-semibold transition ${locationMode === 'manual' ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'}`}>
-            Explore an area
+          <button type="button" onClick={() => { setLocationMode('manual'); setBuyerCoordinates(null); setLocationMessage(''); }} className={`inline-flex min-h-10 items-center gap-2 rounded-lg border px-3.5 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-orange-200 ${locationMode === 'manual' ? 'border-orange-200 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'}`}>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20h16M5 20V8l7-4 7 4v12M9 20v-5h6v5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg> Browse an area
           </button>
           {locationMode === 'gps' ? (
             <div className="flex flex-wrap items-center gap-1.5">
-              {[1, 5, 10, 25].map((radius) => <button key={radius} type="button" onClick={() => setRadiusKm(radius)} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${radiusKm === radius ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{radius} km</button>)}
-              <button type="button" onClick={() => { setLocationMode('none'); setBuyerCoordinates(null); setLocationMessage(''); }} className="ml-1 text-[11px] font-medium text-gray-500 underline">Clear</button>
+              {[1, 5, 10, 25].map((radius) => <button key={radius} type="button" onClick={() => setRadiusKm(radius)} className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition ${radiusKm === radius ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{radius} km</button>)}
+              <button type="button" onClick={() => { setLocationMode('none'); setBuyerCoordinates(null); setLocationMessage(''); }} className="ml-1 rounded-md px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100">Clear</button>
             </div>
           ) : null}
           {locationMode === 'manual' ? (
             <div className="flex flex-wrap items-center gap-2">
-              <select value={manualCityId} onChange={(event) => { setManualCityId(event.target.value); setManualAreaId(event.target.value); }} className="rounded-md border border-gray-200 px-2.5 py-2 text-xs outline-none focus:border-orange-500">
+              <select aria-label="City" value={manualCityId} onChange={(event) => { setManualCityId(event.target.value); setManualAreaId(event.target.value); }} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100">
                 <option value="">Choose a city</option>
                 {cityAreas.map((area) => <option key={area._id} value={area._id}>{area.name}</option>)}
               </select>
-              {manualChildren.length ? <select value={manualAreaId === manualCityId ? '' : manualAreaId} onChange={(event) => setManualAreaId(event.target.value || manualCityId)} className="rounded-md border border-gray-200 px-2.5 py-2 text-xs outline-none focus:border-orange-500"><option value="">All areas in {manualCity.name}</option>{manualChildren.map((area) => <option key={area._id} value={area._id}>{area.name}</option>)}</select> : null}
-              {manualAreaId ? <button type="button" onClick={() => { setLocationMode('none'); setManualAreaId(''); setManualCityId(''); }} className="text-[11px] font-medium text-gray-500 underline">Clear</button> : null}
+              {manualChildren.length ? <select aria-label="Area" value={manualAreaId === manualCityId ? '' : manualAreaId} onChange={(event) => setManualAreaId(event.target.value || manualCityId)} className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"><option value="">All areas in {manualCity.name}</option>{manualChildren.map((area) => <option key={area._id} value={area._id}>{area.name}</option>)}</select> : null}
+              {manualAreaId ? <button type="button" onClick={() => { setLocationMode('none'); setManualAreaId(''); setManualCityId(''); }} className="rounded-md px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100">Clear</button> : null}
             </div>
           ) : null}
-          {locationMessage ? <p className="basis-full text-xs text-amber-700">{locationMessage}</p> : null}
+          </div>
+          {locationMessage ? <div className="flex items-start gap-2 border-t border-amber-100 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 sm:px-4"><svg className="mt-0.5 h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/><path d="M12 8v5m0 3h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>{locationMessage}</div> : null}
         </section>
 
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">

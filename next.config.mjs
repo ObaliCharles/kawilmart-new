@@ -36,7 +36,9 @@ const securityHeaders = [
     },
     {
         key: 'Permissions-Policy',
-        value: 'camera=(), microphone=(), geolocation=()',
+        // Browser geolocation was previously disabled for the entire site.
+        // Keep it first-party only; the API still validates every coordinate.
+        value: 'camera=(), microphone=(), geolocation=(self)',
     },
 ];
 

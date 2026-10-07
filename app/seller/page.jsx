@@ -727,6 +727,10 @@ const AddProductInner = () => {
     }
   };
   const useCurrentLocation = () => {
+    if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+      toast.error('Location needs a secure HTTPS connection. Choose your area manually.');
+      return;
+    }
     if (!navigator.geolocation) {
       toast.error("Couldn't get your location. Choose your area manually.");
       return;
@@ -734,7 +738,7 @@ const AddProductInner = () => {
     setGettingLocation(true);
     navigator.geolocation.getCurrentPosition((position) => {
       const { latitude, longitude, accuracy } = position.coords;
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !Number.isFinite(accuracy) || accuracy > 10000) {
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
         toast.error("Couldn't get your location. Choose your area manually.");
         setGettingLocation(false);
         return;
@@ -760,7 +764,7 @@ const AddProductInner = () => {
     }, () => {
       setGettingLocation(false);
       toast.error("Couldn't get your location. Choose your area manually.");
-    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
   };
 
   const handleInvoiceDownload = async () => {
