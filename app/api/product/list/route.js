@@ -1,6 +1,6 @@
 import connectDB from "@/config/db";
 import { sanitizeApiErrorMessage } from "@/lib/apiErrors";
-import { countStorefrontProducts, getStorefrontProducts } from "@/lib/getStorefrontProducts";
+import { countStorefrontProducts, getStorefrontProducts, getStorefrontProductsPage } from "@/lib/getStorefrontProducts";
 import { getRequestAuth } from "@/lib/requestAuth";
 import { NextResponse } from "next/server";
 import { ALLOWED_RADIUS_KM, areValidCoordinates } from "@/lib/productLocation";
@@ -36,17 +36,20 @@ export async function GET(request) {
         }
         const buyerCoordinates = hasCoordinates ? { lat, lng } : null
 
-        const [products, total] = await Promise.all([
-            getStorefrontProducts({ limit, page, userId, search, category, areaId, buyerCoordinates, radiusKm }),
-            countStorefrontProducts({ search, category }),
-        ])
+        const locationAware = Boolean(areaId || buyerCoordinates);
+        const [locationResult, total] = await Promise.all([
+            locationAware ? getStorefrontProductsPage({ limit, page, userId, search, category, areaId, buyerCoordinates, radiusKm }) : null,
+            locationAware ? null : countStorefrontProducts({ search, category }),
+        ]);
+        const products = locationResult ? locationResult.products : await getStorefrontProducts({ limit, page, userId, search, category });
+        const resultTotal = locationResult ? locationResult.total : total;
 
         const response = NextResponse.json({
             success: true,
             products,
-            total,
+            total: resultTotal,
             page,
-            totalPages: Math.ceil(total / limit)
+            totalPages: Math.ceil(resultTotal / limit)
         })
 
         // Add cache headers for better performance

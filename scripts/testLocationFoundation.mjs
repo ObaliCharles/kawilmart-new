@@ -7,6 +7,7 @@ import {
     areValidCoordinates,
     calculateDistanceKm,
     createBlurredPublicCoordinates,
+    getBoundingBox,
     getPublicProductLocation,
 } from "../lib/productLocation.js";
 import { INITIAL_AREA_SEED } from "../lib/locationAreaSeed.js";
@@ -21,6 +22,11 @@ const privatePoint = { lat: 2.781667, lng: 32.299167 };
 assert.equal(areValidCoordinates(privatePoint.lat, privatePoint.lng), true);
 assert.equal(areValidCoordinates(91, privatePoint.lng), false);
 assert.equal(areValidCoordinates(privatePoint.lat, 181), false);
+
+const bounds = getBoundingBox(privatePoint.lat, privatePoint.lng, 10);
+assert.ok(bounds.minLat < privatePoint.lat && bounds.maxLat > privatePoint.lat, "Bounding box must contain its centre latitude");
+assert.ok(bounds.minLng < privatePoint.lng && bounds.maxLng > privatePoint.lng, "Bounding box must contain its centre longitude");
+assert.equal(getBoundingBox(91, privatePoint.lng, 10), null, "Invalid coordinates must not create a bounding box");
 
 for (let index = 0; index < 25; index += 1) {
     const blurred = createBlurredPublicCoordinates(privatePoint.lat, privatePoint.lng);

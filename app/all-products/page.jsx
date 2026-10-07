@@ -473,6 +473,8 @@ function AllProductsInner() {
   const [buyerCoordinates, setBuyerCoordinates] = useState(null);
   const [radiusKm, setRadiusKm] = useState(10);
   const [locationProducts, setLocationProducts] = useState([]);
+  const [locationPage, setLocationPage] = useState(1);
+  const [locationTotal, setLocationTotal] = useState(0);
   const [loadingLocationProducts, setLoadingLocationProducts] = useState(false);
   const [locationMessage, setLocationMessage] = useState('');
   // Infinite scroll: instead of paginating, we grow the visible window as the
@@ -506,7 +508,7 @@ function AllProductsInner() {
     }
     let active = true;
     setLoadingLocationProducts(true);
-    const params = new URLSearchParams({ limit: '1000' });
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), page: String(locationPage) });
     if (locationMode === 'manual') params.set('areaId', manualAreaId);
     if (locationMode === 'gps') {
       params.set('lat', String(buyerCoordinates.lat));
@@ -516,7 +518,8 @@ function AllProductsInner() {
     axios.get(`/api/product/list?${params}`).then(({ data }) => {
       if (!active) return;
       if (data.success) {
-        setLocationProducts(data.products || []);
+        setLocationProducts((previous) => locationPage === 1 ? (data.products || []) : [...previous, ...(data.products || [])]);
+        setLocationTotal(Number(data.total) || 0);
         setLocationMessage('');
       } else {
         setLocationMessage(data.message || 'Location is temporarily unavailable. Browse by area instead.');
@@ -527,6 +530,11 @@ function AllProductsInner() {
       if (active) setLoadingLocationProducts(false);
     });
     return () => { active = false; };
+  }, [locationMode, manualAreaId, buyerCoordinates, radiusKm, locationPage]);
+
+  useEffect(() => {
+    setLocationPage(1);
+    setLocationProducts([]);
   }, [locationMode, manualAreaId, buyerCoordinates, radiusKm]);
 
 
@@ -665,8 +673,10 @@ function AllProductsInner() {
   };
 
   const filteredProducts = filterAndSort();
-  const visibleProducts = filteredProducts.slice(0, visibleCount);
-  const hasMoreProducts = visibleCount < filteredProducts.length;
+  const visibleProducts = locationMode === 'none' ? filteredProducts.slice(0, visibleCount) : filteredProducts;
+  const hasMoreProducts = locationMode === 'none'
+    ? visibleCount < filteredProducts.length
+    : locationProducts.length < locationTotal;
 
   // Load the next batch when the sentinel below the grid scrolls into view.
   useEffect(() => {
@@ -675,13 +685,14 @@ function AllProductsInner() {
 
     const observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) {
-        setVisibleCount((count) => count + PAGE_SIZE);
+        if (locationMode === 'none') setVisibleCount((count) => count + PAGE_SIZE);
+        else if (!loadingLocationProducts) setLocationPage((current) => current + 1);
       }
     }, { rootMargin: "600px 0px" });
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMoreProducts, filteredProducts.length]);
+  }, [hasMoreProducts, filteredProducts.length, loadingLocationProducts, locationMode]);
   const sellerReferenceProduct = selectedSeller ? sourceProducts.find((product) => product.userId === selectedSeller) : null;
   const sellerFilterLabel = sellerReferenceProduct?.sellerProfile?.name || sellerReferenceProduct?.sellerLocation || sellerReferenceProduct?.location || "Seller collection";
   const selectedCategoryMeta = selectedCategory !== "All" ? getCategoryMeta(selectedCategory) : null;
