@@ -6,6 +6,7 @@ import { getSellerAccessState } from "@/lib/sellerBilling";
 import { getRequestUserId } from "@/lib/requestAuth";
 import { uploadFileToCloudinary } from "@/lib/cloudinary";
 import { parseTagsInput } from "@/lib/parseTagsInput";
+import { parseProductLocationInput } from "@/lib/productLocationInput";
 import { NextResponse } from "next/server";
 import Product from "@/models/Product";
 import User from "@/models/User";
@@ -49,6 +50,7 @@ export async function POST(request) {
         const location = formData.get('location');
         const sellerContact = formData.get('sellerContact');
         const sellerLocation = formData.get('sellerLocation');
+        const productLocation = await parseProductLocationInput(formData);
 
         const files = formData.getAll('images');
 
@@ -76,6 +78,7 @@ export async function POST(request) {
             location,
             sellerContact,
             sellerLocation,
+            ...(productLocation.configured ? productLocation.value : {}),
             tags,
             date: Date.now(),
         });

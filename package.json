@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "test:location": "node --conditions react-server scripts/testLocationFoundation.mjs",
     "test:location-db": "node --conditions react-server scripts/testLocationFoundation.mjs --verify-db",
+    "test:seller-location": "node --conditions react-server scripts/testSellerLocationInput.mjs",
     "seed:areas": "node scripts/seedAreas.mjs",
     "migrate:product-location": "node scripts/migrateProductLocation.mjs"
   },

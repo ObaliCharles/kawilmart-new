@@ -7,6 +7,7 @@ import { getRequestUserId } from "@/lib/requestAuth";
 import { isUploadedFile, uploadFileToCloudinary } from "@/lib/cloudinary";
 import { parseTagsInput } from "@/lib/parseTagsInput";
 import { writeAuditLog } from "@/lib/auditLog";
+import { parseProductLocationInput } from "@/lib/productLocationInput";
 import { NextResponse } from "next/server";
 import Product from "@/models/Product";
 import User from "@/models/User";
@@ -89,6 +90,10 @@ export async function POST(request) {
         existingProduct.location = formData.get("location");
         existingProduct.sellerContact = formData.get("sellerContact");
         existingProduct.sellerLocation = formData.get("sellerLocation");
+        const productLocation = await parseProductLocationInput(formData, { existingProduct });
+        if (productLocation.configured) {
+            Object.assign(existingProduct, productLocation.value);
+        }
         existingProduct.image = image;
         if (isAdmin) {
             existingProduct.tags = await parseTagsInput(formData);

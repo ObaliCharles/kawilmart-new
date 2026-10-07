@@ -443,6 +443,16 @@ const AddProductInner = () => {
   const [location, setLocation] = useState('');
   const [sellerContact, setSellerContact] = useState('');
   const [sellerLocation, setSellerLocation] = useState('');
+  const [areas, setAreas] = useState([]);
+  const [loadingAreas, setLoadingAreas] = useState(false);
+  const [cityAreaId, setCityAreaId] = useState('');
+  const [areaId, setAreaId] = useState('');
+  const [locationLat, setLocationLat] = useState(null);
+  const [locationLng, setLocationLng] = useState(null);
+  const [landmark, setLandmark] = useState('');
+  const [meetupSpot, setMeetupSpot] = useState('');
+  const [locationTouched, setLocationTouched] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
   const [tags, setTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
   const [loadingProduct, setLoadingProduct] = useState(false);
@@ -473,6 +483,13 @@ const AddProductInner = () => {
     setLocation('');
     setSellerContact('');
     setSellerLocation('');
+    setCityAreaId('');
+    setAreaId('');
+    setLocationLat(null);
+    setLocationLng(null);
+    setLandmark('');
+    setMeetupSpot('');
+    setLocationTouched(false);
     setTags([]);
   };
 
@@ -498,6 +515,19 @@ const AddProductInner = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
+
+  useEffect(() => {
+    let active = true;
+    setLoadingAreas(true);
+    axios.get('/api/areas').then(({ data }) => {
+      if (active && data.success) setAreas(data.areas || []);
+    }).catch(() => {
+      // The existing listing flow remains usable when the optional area service is unavailable.
+    }).finally(() => {
+      if (active) setLoadingAreas(false);
+    });
+    return () => { active = false; };
+  }, []);
 
   const fetchProductDetails = async () => {
     if (!editId) {
@@ -525,6 +555,13 @@ const AddProductInner = () => {
         setLocation(product.location || '');
         setSellerContact(product.sellerContact || '');
         setSellerLocation(product.sellerLocation || '');
+        setCityAreaId(product.areaId ? '' : '');
+        setAreaId(product.areaId ? String(product.areaId) : '');
+        setLocationLat(product.lat ?? null);
+        setLocationLng(product.lng ?? null);
+        setLandmark(product.landmark || '');
+        setMeetupSpot(product.meetupSpot || '');
+        setLocationTouched(false);
         setTags(Array.isArray(product.tags) ? product.tags : []);
       } else {
         toast.error(data.message || 'Failed to load product details');
@@ -606,6 +643,17 @@ const AddProductInner = () => {
     formData.append('location', location);
     formData.append('sellerContact', sellerContact);
     formData.append('sellerLocation', sellerLocation);
+    formData.append('locationConfigured', String(locationTouched));
+    if (locationTouched) {
+      formData.append('areaId', areaId);
+      formData.append('cityAreaId', cityAreaId);
+      if (locationLat !== null && locationLng !== null) {
+        formData.append('lat', String(locationLat));
+        formData.append('lng', String(locationLng));
+      }
+      formData.append('landmark', landmark);
+      formData.append('meetupSpot', meetupSpot);
+    }
     if (isAdmin) {
       formData.append('tags', JSON.stringify(tags));
     }
@@ -659,6 +707,60 @@ const AddProductInner = () => {
   const scrollToForm = () => {
     const formElement = document.getElementById('seller-product-form');
     formElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const cityAreas = useMemo(() => areas.filter((area) => area.type === 'CITY'), [areas]);
+  const selectedAreaRecord = useMemo(() => areas.find((area) => String(area._id) === String(areaId)), [areas, areaId]);
+  const selectedCity = cityAreaId || (selectedAreaRecord?.type === 'CITY' ? areaId : selectedAreaRecord?.parentId ? String(selectedAreaRecord.parentId) : '');
+  const childAreas = useMemo(() => areas.filter((area) => String(area.parentId || '') === String(selectedCity || '')), [areas, selectedCity]);
+  const setManualArea = (nextCityId, nextAreaId = '') => {
+    const selected = areas.find((area) => String(area._id) === String(nextAreaId || nextCityId));
+    setCityAreaId(nextCityId);
+    setAreaId(nextAreaId || nextCityId);
+    setLocationLat(null);
+    setLocationLng(null);
+    setLocationTouched(true);
+    if (selected) {
+      const label = [areas.find((area) => String(area._id) === String(selected.parentId))?.name, selected.name].filter(Boolean).join(', ');
+      setLocation((previous) => previous || label);
+      setSellerLocation((previous) => previous || label);
+    }
+  };
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Couldn't get your location. Choose your area manually.");
+      return;
+    }
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { latitude, longitude, accuracy } = position.coords;
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !Number.isFinite(accuracy) || accuracy > 10000) {
+        toast.error("Couldn't get your location. Choose your area manually.");
+        setGettingLocation(false);
+        return;
+      }
+      const cities = areas.filter((area) => area.type === 'CITY' && Number.isFinite(area.lat) && Number.isFinite(area.lng));
+      const nearest = cities.reduce((closest, area) => {
+        const distance = ((latitude - area.lat) ** 2) + ((longitude - area.lng) ** 2);
+        return !closest || distance < closest.distance ? { area, distance } : closest;
+      }, null);
+      if (!nearest || nearest.distance > 0.25) {
+        toast.error("Location is temporarily unavailable. Choose your area manually.");
+      } else {
+        setCityAreaId(String(nearest.area._id));
+        setAreaId(String(nearest.area._id));
+        setLocationLat(latitude);
+        setLocationLng(longitude);
+        setLocationTouched(true);
+        setLocation((previous) => previous || nearest.area.name);
+        setSellerLocation((previous) => previous || nearest.area.name);
+        toast.success(`Location set near ${nearest.area.name}`);
+      }
+      setGettingLocation(false);
+    }, () => {
+      setGettingLocation(false);
+      toast.error("Couldn't get your location. Choose your area manually.");
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
   };
 
   const handleInvoiceDownload = async () => {
@@ -1458,19 +1560,63 @@ const AddProductInner = () => {
                   />
                 </div>
 
+                <section className="rounded-xl border border-gray-200 bg-gray-50/60 p-4 lg:col-span-2" aria-labelledby="product-location-heading">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h2 id="product-location-heading" className="text-base font-semibold text-gray-950">Location</h2>
+                      <p className="mt-0.5 text-xs text-gray-500">Where is this product? Buyers see your general area, not your exact location.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={useCurrentLocation}
+                      disabled={gettingLocation || loadingAreas}
+                      className="rounded-lg border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {gettingLocation ? 'Getting location…' : '📍 Use my current location'}
+                    </button>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-medium text-gray-800" htmlFor="location-city">City</label>
+                      <select
+                        id="location-city"
+                        value={selectedCity}
+                        onChange={(event) => setManualArea(event.target.value)}
+                        disabled={loadingAreas}
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 disabled:bg-gray-100"
+                      >
+                        <option value="">{loadingAreas ? 'Loading areas…' : 'Choose a city'}</option>
+                        {cityAreas.map((area) => <option key={area._id} value={area._id}>{area.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-medium text-gray-800" htmlFor="location-area">Division / parish</label>
+                      <select
+                        id="location-area"
+                        value={areaId && areaId !== selectedCity ? areaId : ''}
+                        onChange={(event) => setManualArea(selectedCity, event.target.value || selectedCity)}
+                        disabled={!selectedCity || loadingAreas}
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400 disabled:bg-gray-100"
+                      >
+                        <option value="">Choose an area (optional)</option>
+                        {childAreas.map((area) => <option key={area._id} value={area._id}>{area.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-medium text-gray-800" htmlFor="landmark">Landmark <span className="font-normal text-gray-400">(optional)</span></label>
+                      <input id="landmark" value={landmark} onChange={(event) => { setLandmark(event.target.value); setLocationTouched(true); }} placeholder="e.g., Near Pece Stadium" className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-medium text-gray-800" htmlFor="meetup-spot">Meetup spot <span className="font-normal text-gray-400">(optional, public)</span></label>
+                      <input id="meetup-spot" value={meetupSpot} onChange={(event) => { setMeetupSpot(event.target.value); setLocationTouched(true); }} placeholder="e.g., Total Pece" className="rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-orange-400" />
+                    </div>
+                  </div>
+                  {locationLat !== null && locationLng !== null ? <p className="mt-3 text-xs font-medium text-emerald-700">Current location captured privately. Buyers will only see a blurred general area.</p> : null}
+                </section>
+
                 <div className="flex flex-col gap-1">
-                  <label className="text-base font-medium text-gray-900" htmlFor="location">
-                    Product Location
-                  </label>
-                  <input
-                    id="location"
-                    type="text"
-                    placeholder="e.g., Kampala, Uganda"
-                    className="rounded-xl border border-gray-200 px-3 py-3 outline-none transition focus:border-orange-400"
-                    onChange={(e) => setLocation(e.target.value)}
-                    value={location}
-                    required
-                  />
+                  <label className="text-base font-medium text-gray-900" htmlFor="location">Product location</label>
+                  <input id="location" type="text" placeholder="e.g., Kampala, Uganda" className="rounded-xl border border-gray-200 px-3 py-3 outline-none transition focus:border-orange-400" onChange={(e) => setLocation(e.target.value)} value={location} required />
                 </div>
 
                 <div className="flex flex-col gap-1">
