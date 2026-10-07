@@ -7,7 +7,11 @@
     "dev:turbo": "NODE_OPTIONS=--dns-result-order=ipv4first next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:location": "node --conditions react-server scripts/testLocationFoundation.mjs",
+    "test:location-db": "node --conditions react-server scripts/testLocationFoundation.mjs --verify-db",
+    "seed:areas": "node scripts/seedAreas.mjs",
+    "migrate:product-location": "node scripts/migrateProductLocation.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.34.0",

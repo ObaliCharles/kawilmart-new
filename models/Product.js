@@ -13,6 +13,15 @@ const productSchema = new mongoose.Schema({
     location: { type: String, required: true },
     sellerContact: { type: String, required: true },
     sellerLocation: { type: String, required: true },
+    // Optional location foundation. `lat`/`lng` are private and must only be
+    // used server-side; public clients receive the derived `publicLocation`.
+    areaId: { type: mongoose.Schema.Types.ObjectId, ref: "Area", default: null },
+    landmark: { type: String, default: null, maxlength: 200 },
+    lat: { type: Number, default: null, min: -90, max: 90 },
+    lng: { type: Number, default: null, min: -180, max: 180 },
+    publicLat: { type: Number, default: null, min: -90, max: 90 },
+    publicLng: { type: Number, default: null, min: -180, max: 180 },
+    meetupSpot: { type: String, default: null, maxlength: 200 },
     isFlashDeal: { type: Boolean, default: false },
     flashDealStartDate: { type: Date, default: null },
     flashDealEndDate: { type: Date },
@@ -48,6 +57,8 @@ productSchema.index({ isFlashDeal: 1 });
 productSchema.index({ promotionType: 1 });
 productSchema.index({ productStatus: 1 });
 productSchema.index({ tags: 1 });
+productSchema.index({ productStatus: 1, lat: 1, lng: 1 });
+productSchema.index({ areaId: 1, productStatus: 1, date: -1 });
 
 const Product = mongoose.models.product || mongoose.model('product', productSchema)
 
