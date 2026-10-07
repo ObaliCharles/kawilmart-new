@@ -67,6 +67,7 @@ const userSchema = new mongoose.Schema({
     sellerShopPinSource: { type: String, enum: ["exact", "area"], default: "area" },
     sellerShopLandmark: { type: String, default: "", maxlength: 200 },
     sellerShopMeetupSpot: { type: String, default: "", maxlength: 200 },
+    sellerShopLocationLabel: { type: String, default: "", maxlength: 200 },
     sellerBadgeLabel: { type: String, default: "" },
     sellerBadgeTone: { type: String, enum: ['emerald', 'sky', 'amber', 'violet', 'slate'], default: 'emerald' },
     sellerBadgeGrantedAt: { type: Date, default: null },

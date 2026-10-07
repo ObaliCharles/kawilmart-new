@@ -13,6 +13,7 @@ const serializeShopLocation = (seller, area = null) => ({
     lng: Number.isFinite(seller?.sellerShopLng) ? seller.sellerShopLng : null,
     landmark: seller?.sellerShopLandmark || "",
     meetupSpot: seller?.sellerShopMeetupSpot || "",
+    label: seller?.sellerShopLocationLabel || area?.name || "",
     areaName: area?.name || "",
     parentId: area?.parentId ? String(area.parentId) : "",
     hasPrecisePin: areValidCoordinates(seller?.sellerShopLat, seller?.sellerShopLng) && seller?.sellerShopPinSource !== "area",
@@ -41,14 +42,14 @@ export async function PATCH(request) {
         const lat = body.lat === null || body.lat === undefined || body.lat === "" ? null : Number(body.lat);
         const lng = body.lng === null || body.lng === undefined || body.lng === "" ? null : Number(body.lng);
         const pinSource = body.pinSource === "exact" ? "exact" : "area";
-        if (!areaId) return NextResponse.json({ success: false, message: "Choose the shop area first." }, { status: 400 });
         if ((lat === null) !== (lng === null) || (lat !== null && !areValidCoordinates(lat, lng))) return NextResponse.json({ success: false, message: "The shop pin is invalid. Capture it again or save the area only." }, { status: 400 });
+        if (!areaId && lat === null) return NextResponse.json({ success: false, message: "Choose the shop area or capture its location first." }, { status: 400 });
         await connectDB();
-        const area = await Area.findById(areaId).lean();
-        if (!area) return NextResponse.json({ success: false, message: "Choose a valid shop area." }, { status: 400 });
+        const area = areaId ? await Area.findById(areaId).lean() : null;
+        if (areaId && !area) return NextResponse.json({ success: false, message: "Choose a valid shop area." }, { status: 400 });
         const seller = await User.findByIdAndUpdate(userId, {
-            sellerShopAreaId: area._id, sellerShopLat: lat, sellerShopLng: lng, sellerShopPinSource: pinSource,
-            sellerShopLandmark: cleanText(body.landmark), sellerShopMeetupSpot: cleanText(body.meetupSpot),
+            sellerShopAreaId: area?._id || null, sellerShopLat: lat, sellerShopLng: lng, sellerShopPinSource: pinSource,
+            sellerShopLandmark: cleanText(body.landmark), sellerShopMeetupSpot: cleanText(body.meetupSpot), sellerShopLocationLabel: cleanText(body.label),
         }, { new: true }).lean();
         return NextResponse.json({ success: true, shopLocation: serializeShopLocation(seller, area) });
     } catch {

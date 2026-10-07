@@ -747,19 +747,14 @@ function AllProductsInner() {
         setLocationMessage("We couldn't get your location. Choose your area instead.");
         return;
       }
-      setBuyerCoordinates({ lat: position.coords.latitude, lng: position.coords.longitude });
-      const nearestArea = areas
-        .filter((area) => Number.isFinite(area.lat) && Number.isFinite(area.lng))
-        .reduce((closest, area) => {
-          const distance = ((position.coords.latitude - area.lat) ** 2) + ((position.coords.longitude - area.lng) ** 2);
-          return !closest || distance < closest.distance ? { area, distance } : closest;
-        }, null);
-      if (nearestArea) {
-        const parent = nearestArea.area.parentId
-          ? areas.find((area) => String(area._id) === String(nearestArea.area.parentId))
-          : null;
-        setGpsAreaLabel([nearestArea.area.name, parent?.name].filter(Boolean).join(', '));
-      }
+      const coordinates = { lat: position.coords.latitude, lng: position.coords.longitude };
+      setBuyerCoordinates(coordinates);
+      // Do not infer Kampala/Gulu from a distant seed centroid. The nearby
+      // query uses these exact coordinates; this call supplies only its label.
+      setGpsAreaLabel('Your current location');
+      axios.get('/api/location/reverse', { params: coordinates }).then(({ data }) => {
+        if (data.success && data.label) setGpsAreaLabel(data.label);
+      }).catch(() => {});
       setLocationMode('gps');
     }, (error) => {
       setRequestingLocation(false);
