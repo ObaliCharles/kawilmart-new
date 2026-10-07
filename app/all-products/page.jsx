@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation";
 import { categoryMatchesSelection, getCategoryMeta, marketplaceFilterCategories } from "@/lib/marketplaceCategories";
 import { getProductActivitySnapshot, resolveProductTagSlugs, SYSTEM_TAG_DEFINITIONS } from "@/lib/liveCommerce";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const categories = ["All", ...marketplaceFilterCategories];
 
@@ -443,7 +444,7 @@ const getProductSearchScore = (product, query) => {
 };
 
 function AllProductsInner() {
-  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, addToCart, subcategoriesByParent } = useAppContext();
+  const { products, loadingProducts, navigate, prefetchRoute, formatCurrency, addToCart, subcategoriesByParent, user, getToken } = useAppContext();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "All";
   const initialSubcategory = searchParams.get("subcategory") || "";
@@ -546,7 +547,12 @@ function AllProductsInner() {
   }, [manualTagOptions]);
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const hasActiveSearch = deferredSearchQuery.trim().length > 0;
-  const effectiveSortBy = hasActiveSearch
+  // Nearby API results arrive pre-ranked by the server. Preserve that order
+  // when the shopper has not explicitly picked a different sort, even when a
+  // local text filter is active.
+  const effectiveSortBy = locationMode === 'gps' && sortBy === 'default'
+    ? 'default'
+    : hasActiveSearch
     ? (sortBy === "default" ? "relevance" : sortBy)
     : (sortBy === "relevance" ? "default" : sortBy);
 
@@ -740,6 +746,22 @@ function AllProductsInner() {
 
   const toggleTag = (slug) => {
     setSelectedTags((prev) => (prev.includes(slug) ? prev.filter((tag) => tag !== slug) : [...prev, slug]));
+  };
+
+  const saveCurrentSearch = async () => {
+    if (!user) { toast.error('Please sign in to save a search'); return; }
+    try {
+      const token = await getToken();
+      const locationAreaId = locationMode === 'manual' ? manualAreaId : null;
+      const label = searchQuery.trim() || (selectedCategory !== 'All' ? selectedCategory : locationMode === 'manual' ? 'Area listings' : 'Marketplace search');
+      const { data } = await axios.post('/api/saved-searches', {
+        name: label, search: searchQuery, category: selectedCategory === 'All' ? '' : selectedCategory,
+        areaId: locationAreaId, radiusKm: locationMode === 'gps' ? radiusKm : null,
+        minPrice: priceRanges[selectedPriceRange].min || null,
+        maxPrice: Number.isFinite(priceRanges[selectedPriceRange].max) ? priceRanges[selectedPriceRange].max : null,
+      }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (data.success) toast.success('Search saved. We’ll alert you about matching listings.'); else toast.error(data.message || 'Could not save this search');
+    } catch { toast.error('Could not save this search'); }
   };
 
   // On phones the panel is `static`-anchored, so it positions against the
@@ -1013,6 +1035,7 @@ function AllProductsInner() {
             ) : null}
           </div>
           <div className="flex items-center gap-2">
+            <button type="button" onClick={saveCurrentSearch} className="hidden rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 hover:border-orange-300 hover:text-orange-700 sm:inline-flex">Save search</button>
             <select
               value={effectiveSortBy}
               onChange={(e) => setSortBy(e.target.value)}

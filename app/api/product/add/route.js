@@ -7,6 +7,7 @@ import { getRequestUserId } from "@/lib/requestAuth";
 import { uploadFileToCloudinary } from "@/lib/cloudinary";
 import { parseTagsInput } from "@/lib/parseTagsInput";
 import { parseProductLocationInput } from "@/lib/productLocationInput";
+import { notifyMatchingSavedSearches } from "@/lib/savedSearches";
 import { NextResponse } from "next/server";
 import Product from "@/models/Product";
 import User from "@/models/User";
@@ -81,6 +82,12 @@ export async function POST(request) {
             ...(productLocation.configured ? productLocation.value : {}),
             tags,
             date: Date.now(),
+        });
+
+        // Notification delivery is supplementary: a listing must never fail
+        // merely because an inbox/email provider is temporarily unavailable.
+        await notifyMatchingSavedSearches(newProduct).catch((error) => {
+            console.error("Saved-search notification failed:", error?.message || error);
         });
 
         return NextResponse.json({

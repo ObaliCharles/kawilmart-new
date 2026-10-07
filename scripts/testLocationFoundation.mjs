@@ -12,6 +12,7 @@ import {
 } from "../lib/productLocation.js";
 import { INITIAL_AREA_SEED } from "../lib/locationAreaSeed.js";
 import { serializeProductForClient } from "../lib/productRating.js";
+import { getNearbyRankingScore } from "../config/locationRanking.js";
 
 assert.equal(INITIAL_AREA_SEED.length, 9);
 assert.equal(new Set(INITIAL_AREA_SEED.map((area) => area.key)).size, INITIAL_AREA_SEED.length);
@@ -27,6 +28,11 @@ const bounds = getBoundingBox(privatePoint.lat, privatePoint.lng, 10);
 assert.ok(bounds.minLat < privatePoint.lat && bounds.maxLat > privatePoint.lat, "Bounding box must contain its centre latitude");
 assert.ok(bounds.minLng < privatePoint.lng && bounds.maxLng > privatePoint.lng, "Bounding box must contain its centre longitude");
 assert.equal(getBoundingBox(91, privatePoint.lng, 10), null, "Invalid coordinates must not create a bounding box");
+
+const rankingNow = Date.now();
+const nearbyFresh = getNearbyRankingScore({ distanceKm: 1, radiusKm: 10, date: rankingNow, sellerRating: 5, now: rankingNow });
+const fartherOlder = getNearbyRankingScore({ distanceKm: 8, radiusKm: 10, date: rankingNow - (60 * 86_400_000), sellerRating: 1, now: rankingNow });
+assert.ok(nearbyFresh > fartherOlder, "Nearby fresh, highly-rated products should rank above distant old listings");
 
 for (let index = 0; index < 25; index += 1) {
     const blurred = createBlurredPublicCoordinates(privatePoint.lat, privatePoint.lng);
